@@ -1,0 +1,1929 @@
+<html>
+<head>
+<title>parse-cst.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #8a8a8a;}
+.s5 { color: #808080;}
+.s6 { color: #8a8a8a; font-style: italic;}
+.s7 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s8 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+parse-cst.js</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">{ j as _inherits</span><span class="s2">, </span><span class="s1">k as _createSuper</span><span class="s2">, </span><span class="s1">c as _classCallCheck</span><span class="s2">, </span><span class="s1">T as Type</span><span class="s2">, </span><span class="s1">b as _createClass</span><span class="s2">, </span><span class="s1">R as Range</span><span class="s2">, </span><span class="s1">N as Node</span><span class="s2">, </span><span class="s1">g as YAMLSemanticError</span><span class="s2">, </span><span class="s1">l as _get</span><span class="s2">, </span><span class="s1">m as _getPrototypeOf</span><span class="s2">, </span><span class="s1">Y as YAMLSyntaxError</span><span class="s2">, </span><span class="s1">C as Char</span><span class="s2">, </span><span class="s1">e as _defineProperty</span><span class="s2">, </span><span class="s1">P as PlainValue } from </span><span class="s3">'./PlainValue-b8036b75.js'</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">BlankLine = </span><span class="s4">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_Node) {</span>
+  <span class="s1">_inherits(BlankLine</span><span class="s2">, </span><span class="s1">_Node)</span><span class="s2">;</span>
+
+  <span class="s0">var </span><span class="s1">_super = _createSuper(BlankLine)</span><span class="s2">;</span>
+
+  <span class="s0">function </span><span class="s1">BlankLine() {</span>
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">BlankLine)</span><span class="s2">;</span>
+
+    <span class="s0">return </span><span class="s1">_super.call(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">Type.BLANK_LINE)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+  <span class="s4">/* istanbul ignore next */</span>
+
+
+  <span class="s1">_createClass(BlankLine</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;includesTrailingLines&quot;</span><span class="s2">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s5">// This is never called from anywhere, but if it were,</span>
+      <span class="s5">// this is the value it should return.</span>
+      <span class="s0">return true</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s6">/**</span>
+     <span class="s6">* Parses a blank line from the source</span>
+     <span class="s6">*</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{ParseContext} context</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} start - Index of first \n character</span>
+     <span class="s6">* </span><span class="s7">@returns </span><span class="s6">{number} - Index of the character after this</span>
+     <span class="s6">*/</span>
+
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parse&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parse(context</span><span class="s2">, </span><span class="s1">start) {</span>
+      <span class="s0">this</span><span class="s1">.context = context</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.range = </span><span class="s0">new </span><span class="s1">Range(start</span><span class="s2">, </span><span class="s1">start + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">start + </span><span class="s8">1</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s2">;</span>
+
+  <span class="s0">return </span><span class="s1">BlankLine</span><span class="s2">;</span>
+<span class="s1">}(Node)</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">CollectionItem = </span><span class="s4">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_Node) {</span>
+  <span class="s1">_inherits(CollectionItem</span><span class="s2">, </span><span class="s1">_Node)</span><span class="s2">;</span>
+
+  <span class="s0">var </span><span class="s1">_super = _createSuper(CollectionItem)</span><span class="s2">;</span>
+
+  <span class="s0">function </span><span class="s1">CollectionItem(type</span><span class="s2">, </span><span class="s1">props) {</span>
+    <span class="s0">var </span><span class="s1">_this</span><span class="s2">;</span>
+
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">CollectionItem)</span><span class="s2">;</span>
+
+    <span class="s1">_this = _super.call(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">props)</span><span class="s2">;</span>
+    <span class="s1">_this.node = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">_this</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(CollectionItem</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;includesTrailingLines&quot;</span><span class="s2">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">return </span><span class="s1">!!</span><span class="s0">this</span><span class="s1">.node &amp;&amp; </span><span class="s0">this</span><span class="s1">.node.includesTrailingLines</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s6">/**</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{ParseContext} context</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} start - Index of first character</span>
+     <span class="s6">* </span><span class="s7">@returns </span><span class="s6">{number} - Index of the character after this</span>
+     <span class="s6">*/</span>
+
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parse&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parse(context</span><span class="s2">, </span><span class="s1">start) {</span>
+      <span class="s0">this</span><span class="s1">.context = context</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">parseNode = context.parseNode</span><span class="s2">,</span>
+          <span class="s1">src = context.src</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">atLineStart = context.atLineStart</span><span class="s2">,</span>
+          <span class="s1">lineStart = context.lineStart</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(!atLineStart &amp;&amp; </span><span class="s0">this</span><span class="s1">.type === Type.SEQ_ITEM) </span><span class="s0">this</span><span class="s1">.error = </span><span class="s0">new </span><span class="s1">YAMLSemanticError(</span><span class="s0">this</span><span class="s2">, </span><span class="s3">'Sequence items must not have preceding content on the same line'</span><span class="s1">)</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">indent = atLineStart ? start - lineStart : context.indent</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">start + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">inlineComment = ch === </span><span class="s3">'#'</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">comments = []</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">blankLine = </span><span class="s0">null</span><span class="s2">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">|| ch === </span><span class="s3">'#'</span><span class="s1">) {</span>
+        <span class="s0">if </span><span class="s1">(ch === </span><span class="s3">'#'</span><span class="s1">) {</span>
+          <span class="s0">var </span><span class="s1">_end = Node.endOfLine(src</span><span class="s2">, </span><span class="s1">offset + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+
+          <span class="s1">comments.push(</span><span class="s0">new </span><span class="s1">Range(offset</span><span class="s2">, </span><span class="s1">_end))</span><span class="s2">;</span>
+          <span class="s1">offset = _end</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+          <span class="s1">atLineStart = </span><span class="s0">true</span><span class="s2">;</span>
+          <span class="s1">lineStart = offset + </span><span class="s8">1</span><span class="s2">;</span>
+          <span class="s0">var </span><span class="s1">wsEnd = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">lineStart)</span><span class="s2">;</span>
+
+          <span class="s0">if </span><span class="s1">(src[wsEnd] === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">&amp;&amp; comments.length === </span><span class="s8">0</span><span class="s1">) {</span>
+            <span class="s1">blankLine = </span><span class="s0">new </span><span class="s1">BlankLine()</span><span class="s2">;</span>
+            <span class="s1">lineStart = blankLine.parse({</span>
+              <span class="s1">src: src</span>
+            <span class="s1">}</span><span class="s2">, </span><span class="s1">lineStart)</span><span class="s2">;</span>
+          <span class="s1">}</span>
+
+          <span class="s1">offset = Node.endOfIndent(src</span><span class="s2">, </span><span class="s1">lineStart)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">ch = src[offset]</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">if </span><span class="s1">(Node.nextNodeIsIndented(ch</span><span class="s2">, </span><span class="s1">offset - (lineStart + indent)</span><span class="s2">, </span><span class="s0">this</span><span class="s1">.type !== Type.SEQ_ITEM)) {</span>
+        <span class="s0">this</span><span class="s1">.node = parseNode({</span>
+          <span class="s1">atLineStart: atLineStart</span><span class="s2">,</span>
+          <span class="s1">inCollection: </span><span class="s0">false</span><span class="s2">,</span>
+          <span class="s1">indent: indent</span><span class="s2">,</span>
+          <span class="s1">lineStart: lineStart</span><span class="s2">,</span>
+          <span class="s1">parent: </span><span class="s0">this</span>
+        <span class="s1">}</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s1">} </span><span class="s0">else if </span><span class="s1">(ch &amp;&amp; lineStart &gt; start + </span><span class="s8">1</span><span class="s1">) {</span>
+        <span class="s1">offset = lineStart - </span><span class="s8">1</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.node) {</span>
+        <span class="s0">if </span><span class="s1">(blankLine) {</span>
+          <span class="s5">// Only blank lines preceding non-empty nodes are captured. Note that</span>
+          <span class="s5">// this means that collection item range start indices do not always</span>
+          <span class="s5">// increase monotonically. -- eemeli/yaml#126</span>
+          <span class="s0">var </span><span class="s1">items = context.parent.items || context.parent.contents</span><span class="s2">;</span>
+          <span class="s0">if </span><span class="s1">(items) items.push(blankLine)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(comments.length) Array.prototype.push.apply(</span><span class="s0">this</span><span class="s1">.props</span><span class="s2">, </span><span class="s1">comments)</span><span class="s2">;</span>
+        <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.node.range.end</span><span class="s2">;</span>
+      <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+        <span class="s0">if </span><span class="s1">(inlineComment) {</span>
+          <span class="s0">var </span><span class="s1">c = comments[</span><span class="s8">0</span><span class="s1">]</span><span class="s2">;</span>
+          <span class="s0">this</span><span class="s1">.props.push(c)</span><span class="s2">;</span>
+          <span class="s1">offset = c.end</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+          <span class="s1">offset = Node.endOfLine(src</span><span class="s2">, </span><span class="s1">start + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">var </span><span class="s1">end = </span><span class="s0">this</span><span class="s1">.node ? </span><span class="s0">this</span><span class="s1">.node.valueRange.end : offset</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.valueRange = </span><span class="s0">new </span><span class="s1">Range(start</span><span class="s2">, </span><span class="s1">end)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;setOrigRanges&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">setOrigRanges(cr</span><span class="s2">, </span><span class="s1">offset) {</span>
+      <span class="s1">offset = _get(_getPrototypeOf(CollectionItem.prototype)</span><span class="s2">, </span><span class="s3">&quot;setOrigRanges&quot;</span><span class="s2">, </span><span class="s0">this</span><span class="s1">).call(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">cr</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">return this</span><span class="s1">.node ? </span><span class="s0">this</span><span class="s1">.node.setOrigRanges(cr</span><span class="s2">, </span><span class="s1">offset) : offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;toString&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">toString() {</span>
+      <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s2">,</span>
+          <span class="s1">node = </span><span class="s0">this</span><span class="s1">.node</span><span class="s2">,</span>
+          <span class="s1">range = </span><span class="s0">this</span><span class="s1">.range</span><span class="s2">,</span>
+          <span class="s1">value = </span><span class="s0">this</span><span class="s1">.value</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(value != </span><span class="s0">null</span><span class="s1">) </span><span class="s0">return </span><span class="s1">value</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">str = node ? src.slice(range.start</span><span class="s2">, </span><span class="s1">node.range.start) + String(node) : src.slice(range.start</span><span class="s2">, </span><span class="s1">range.end)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">Node.addStringTerminator(src</span><span class="s2">, </span><span class="s1">range.end</span><span class="s2">, </span><span class="s1">str)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s2">;</span>
+
+  <span class="s0">return </span><span class="s1">CollectionItem</span><span class="s2">;</span>
+<span class="s1">}(Node)</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">Comment = </span><span class="s4">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_Node) {</span>
+  <span class="s1">_inherits(Comment</span><span class="s2">, </span><span class="s1">_Node)</span><span class="s2">;</span>
+
+  <span class="s0">var </span><span class="s1">_super = _createSuper(Comment)</span><span class="s2">;</span>
+
+  <span class="s0">function </span><span class="s1">Comment() {</span>
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">Comment)</span><span class="s2">;</span>
+
+    <span class="s0">return </span><span class="s1">_super.call(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">Type.COMMENT)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+  <span class="s6">/**</span>
+   <span class="s6">* Parses a comment line from the source</span>
+   <span class="s6">*</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{ParseContext} context</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} start - Index of first character</span>
+   <span class="s6">* </span><span class="s7">@returns </span><span class="s6">{number} - Index of the character after this scalar</span>
+   <span class="s6">*/</span>
+
+
+  <span class="s1">_createClass(Comment</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parse&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parse(context</span><span class="s2">, </span><span class="s1">start) {</span>
+      <span class="s0">this</span><span class="s1">.context = context</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseComment(start)</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.range = </span><span class="s0">new </span><span class="s1">Range(start</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s2">;</span>
+
+  <span class="s0">return </span><span class="s1">Comment</span><span class="s2">;</span>
+<span class="s1">}(Node)</span><span class="s2">;</span>
+
+<span class="s0">function </span><span class="s1">grabCollectionEndComments(node) {</span>
+  <span class="s0">var </span><span class="s1">cnode = node</span><span class="s2">;</span>
+
+  <span class="s0">while </span><span class="s1">(cnode </span><span class="s0">instanceof </span><span class="s1">CollectionItem) {</span>
+    <span class="s1">cnode = cnode.node</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">if </span><span class="s1">(!(cnode </span><span class="s0">instanceof </span><span class="s1">Collection)) </span><span class="s0">return null</span><span class="s2">;</span>
+  <span class="s0">var </span><span class="s1">len = cnode.items.length</span><span class="s2">;</span>
+  <span class="s0">var </span><span class="s1">ci = -</span><span class="s8">1</span><span class="s2">;</span>
+
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = len - </span><span class="s8">1</span><span class="s2">; </span><span class="s1">i &gt;= </span><span class="s8">0</span><span class="s2">; </span><span class="s1">--i) {</span>
+    <span class="s0">var </span><span class="s1">n = cnode.items[i]</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(n.type === Type.COMMENT) {</span>
+      <span class="s5">// Keep sufficiently indented comments with preceding node</span>
+      <span class="s0">var </span><span class="s1">_n$context = n.context</span><span class="s2">,</span>
+          <span class="s1">indent = _n$context.indent</span><span class="s2">,</span>
+          <span class="s1">lineStart = _n$context.lineStart</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(indent &gt; </span><span class="s8">0 </span><span class="s1">&amp;&amp; n.range.start &gt;= lineStart + indent) </span><span class="s0">break</span><span class="s2">;</span>
+      <span class="s1">ci = i</span><span class="s2">;</span>
+    <span class="s1">} </span><span class="s0">else if </span><span class="s1">(n.type === Type.BLANK_LINE) ci = i</span><span class="s2">;</span><span class="s0">else break</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">if </span><span class="s1">(ci === -</span><span class="s8">1</span><span class="s1">) </span><span class="s0">return null</span><span class="s2">;</span>
+  <span class="s0">var </span><span class="s1">ca = cnode.items.splice(ci</span><span class="s2">, </span><span class="s1">len - ci)</span><span class="s2">;</span>
+  <span class="s0">var </span><span class="s1">prevEnd = ca[</span><span class="s8">0</span><span class="s1">].range.start</span><span class="s2">;</span>
+
+  <span class="s0">while </span><span class="s1">(</span><span class="s0">true</span><span class="s1">) {</span>
+    <span class="s1">cnode.range.end = prevEnd</span><span class="s2">;</span>
+    <span class="s0">if </span><span class="s1">(cnode.valueRange &amp;&amp; cnode.valueRange.end &gt; prevEnd) cnode.valueRange.end = prevEnd</span><span class="s2">;</span>
+    <span class="s0">if </span><span class="s1">(cnode === node) </span><span class="s0">break</span><span class="s2">;</span>
+    <span class="s1">cnode = cnode.context.parent</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">ca</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">var </span><span class="s1">Collection = </span><span class="s4">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_Node) {</span>
+  <span class="s1">_inherits(Collection</span><span class="s2">, </span><span class="s1">_Node)</span><span class="s2">;</span>
+
+  <span class="s0">var </span><span class="s1">_super = _createSuper(Collection)</span><span class="s2">;</span>
+
+  <span class="s0">function </span><span class="s1">Collection(firstItem) {</span>
+    <span class="s0">var </span><span class="s1">_this</span><span class="s2">;</span>
+
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">Collection)</span><span class="s2">;</span>
+
+    <span class="s1">_this = _super.call(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">firstItem.type === Type.SEQ_ITEM ? Type.SEQ : Type.MAP)</span><span class="s2">;</span>
+
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = firstItem.props.length - </span><span class="s8">1</span><span class="s2">; </span><span class="s1">i &gt;= </span><span class="s8">0</span><span class="s2">; </span><span class="s1">--i) {</span>
+      <span class="s0">if </span><span class="s1">(firstItem.props[i].start &lt; firstItem.context.lineStart) {</span>
+        <span class="s5">// props on previous line are assumed by the collection</span>
+        <span class="s1">_this.props = firstItem.props.slice(</span><span class="s8">0</span><span class="s2">, </span><span class="s1">i + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+        <span class="s1">firstItem.props = firstItem.props.slice(i + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+        <span class="s0">var </span><span class="s1">itemRange = firstItem.props[</span><span class="s8">0</span><span class="s1">] || firstItem.valueRange</span><span class="s2">;</span>
+        <span class="s1">firstItem.range.start = itemRange.start</span><span class="s2">;</span>
+        <span class="s0">break</span><span class="s2">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_this.items = [firstItem]</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">ec = grabCollectionEndComments(firstItem)</span><span class="s2">;</span>
+    <span class="s0">if </span><span class="s1">(ec) Array.prototype.push.apply(_this.items</span><span class="s2">, </span><span class="s1">ec)</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">_this</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(Collection</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;includesTrailingLines&quot;</span><span class="s2">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">return this</span><span class="s1">.items.length &gt; </span><span class="s8">0</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s6">/**</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{ParseContext} context</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} start - Index of first character</span>
+     <span class="s6">* </span><span class="s7">@returns </span><span class="s6">{number} - Index of the character after this</span>
+     <span class="s6">*/</span>
+
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parse&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parse(context</span><span class="s2">, </span><span class="s1">start) {</span>
+      <span class="s0">this</span><span class="s1">.context = context</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">parseNode = context.parseNode</span><span class="s2">,</span>
+          <span class="s1">src = context.src</span><span class="s2">; </span><span class="s5">// It's easier to recalculate lineStart here rather than tracking down the</span>
+      <span class="s5">// last context from which to read it -- eemeli/yaml#2</span>
+
+      <span class="s0">var </span><span class="s1">lineStart = Node.startOfLine(src</span><span class="s2">, </span><span class="s1">start)</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">firstItem = </span><span class="s0">this</span><span class="s1">.items[</span><span class="s8">0</span><span class="s1">]</span><span class="s2">; </span><span class="s5">// First-item context needs to be correct for later comment handling</span>
+      <span class="s5">// -- eemeli/yaml#17</span>
+
+      <span class="s1">firstItem.context.parent = </span><span class="s0">this</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.valueRange = Range.copy(firstItem.valueRange)</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">indent = firstItem.range.start - firstItem.context.lineStart</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = start</span><span class="s2">;</span>
+      <span class="s1">offset = Node.normalizeOffset(src</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">atLineStart = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">lineStart) === offset</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">prevIncludesTrailingLines = </span><span class="s0">false</span><span class="s2">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch) {</span>
+        <span class="s0">while </span><span class="s1">(ch === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">|| ch === </span><span class="s3">'#'</span><span class="s1">) {</span>
+          <span class="s0">if </span><span class="s1">(atLineStart &amp;&amp; ch === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">&amp;&amp; !prevIncludesTrailingLines) {</span>
+            <span class="s0">var </span><span class="s1">blankLine = </span><span class="s0">new </span><span class="s1">BlankLine()</span><span class="s2">;</span>
+            <span class="s1">offset = blankLine.parse({</span>
+              <span class="s1">src: src</span>
+            <span class="s1">}</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+            <span class="s0">this</span><span class="s1">.valueRange.end = offset</span><span class="s2">;</span>
+
+            <span class="s0">if </span><span class="s1">(offset &gt;= src.length) {</span>
+              <span class="s1">ch = </span><span class="s0">null</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">this</span><span class="s1">.items.push(blankLine)</span><span class="s2">;</span>
+            <span class="s1">offset -= </span><span class="s8">1</span><span class="s2">; </span><span class="s5">// blankLine.parse() consumes terminal newline</span>
+          <span class="s1">} </span><span class="s0">else if </span><span class="s1">(ch === </span><span class="s3">'#'</span><span class="s1">) {</span>
+            <span class="s0">if </span><span class="s1">(offset &lt; lineStart + indent &amp;&amp; !Collection.nextContentHasIndent(src</span><span class="s2">, </span><span class="s1">offset</span><span class="s2">, </span><span class="s1">indent)) {</span>
+              <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">var </span><span class="s1">comment = </span><span class="s0">new </span><span class="s1">Comment()</span><span class="s2">;</span>
+            <span class="s1">offset = comment.parse({</span>
+              <span class="s1">indent: indent</span><span class="s2">,</span>
+              <span class="s1">lineStart: lineStart</span><span class="s2">,</span>
+              <span class="s1">src: src</span>
+            <span class="s1">}</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+            <span class="s0">this</span><span class="s1">.items.push(comment)</span><span class="s2">;</span>
+            <span class="s0">this</span><span class="s1">.valueRange.end = offset</span><span class="s2">;</span>
+
+            <span class="s0">if </span><span class="s1">(offset &gt;= src.length) {</span>
+              <span class="s1">ch = </span><span class="s0">null</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s1">}</span>
+          <span class="s1">}</span>
+
+          <span class="s1">lineStart = offset + </span><span class="s8">1</span><span class="s2">;</span>
+          <span class="s1">offset = Node.endOfIndent(src</span><span class="s2">, </span><span class="s1">lineStart)</span><span class="s2">;</span>
+
+          <span class="s0">if </span><span class="s1">(Node.atBlank(src</span><span class="s2">, </span><span class="s1">offset)) {</span>
+            <span class="s0">var </span><span class="s1">wsEnd = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+            <span class="s0">var </span><span class="s1">next = src[wsEnd]</span><span class="s2">;</span>
+
+            <span class="s0">if </span><span class="s1">(!next || next === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">|| next === </span><span class="s3">'#'</span><span class="s1">) {</span>
+              <span class="s1">offset = wsEnd</span><span class="s2">;</span>
+            <span class="s1">}</span>
+          <span class="s1">}</span>
+
+          <span class="s1">ch = src[offset]</span><span class="s2">;</span>
+          <span class="s1">atLineStart = </span><span class="s0">true</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(!ch) {</span>
+          <span class="s0">break</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(offset !== lineStart + indent &amp;&amp; (atLineStart || ch !== </span><span class="s3">':'</span><span class="s1">)) {</span>
+          <span class="s0">if </span><span class="s1">(offset &lt; lineStart + indent) {</span>
+            <span class="s0">if </span><span class="s1">(lineStart &gt; start) offset = lineStart</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+          <span class="s1">} </span><span class="s0">else if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.error) {</span>
+            <span class="s0">var </span><span class="s1">msg = </span><span class="s3">'All collection items must start at the same column'</span><span class="s2">;</span>
+            <span class="s0">this</span><span class="s1">.error = </span><span class="s0">new </span><span class="s1">YAMLSyntaxError(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">msg)</span><span class="s2">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(firstItem.type === Type.SEQ_ITEM) {</span>
+          <span class="s0">if </span><span class="s1">(ch !== </span><span class="s3">'-'</span><span class="s1">) {</span>
+            <span class="s0">if </span><span class="s1">(lineStart &gt; start) offset = lineStart</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+          <span class="s1">}</span>
+        <span class="s1">} </span><span class="s0">else if </span><span class="s1">(ch === </span><span class="s3">'-' </span><span class="s1">&amp;&amp; !</span><span class="s0">this</span><span class="s1">.error) {</span>
+          <span class="s5">// map key may start with -, as long as it's followed by a non-whitespace char</span>
+          <span class="s0">var </span><span class="s1">_next = src[offset + </span><span class="s8">1</span><span class="s1">]</span><span class="s2">;</span>
+
+          <span class="s0">if </span><span class="s1">(!_next || _next === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">|| _next === </span><span class="s3">'</span><span class="s2">\t</span><span class="s3">' </span><span class="s1">|| _next === </span><span class="s3">' '</span><span class="s1">) {</span>
+            <span class="s0">var </span><span class="s1">_msg = </span><span class="s3">'A collection cannot be both a mapping and a sequence'</span><span class="s2">;</span>
+            <span class="s0">this</span><span class="s1">.error = </span><span class="s0">new </span><span class="s1">YAMLSyntaxError(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">_msg)</span><span class="s2">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">var </span><span class="s1">node = parseNode({</span>
+          <span class="s1">atLineStart: atLineStart</span><span class="s2">,</span>
+          <span class="s1">inCollection: </span><span class="s0">true</span><span class="s2">,</span>
+          <span class="s1">indent: indent</span><span class="s2">,</span>
+          <span class="s1">lineStart: lineStart</span><span class="s2">,</span>
+          <span class="s1">parent: </span><span class="s0">this</span>
+        <span class="s1">}</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+        <span class="s0">if </span><span class="s1">(!node) </span><span class="s0">return </span><span class="s1">offset</span><span class="s2">; </span><span class="s5">// at next document start</span>
+
+        <span class="s0">this</span><span class="s1">.items.push(node)</span><span class="s2">;</span>
+        <span class="s0">this</span><span class="s1">.valueRange.end = node.valueRange.end</span><span class="s2">;</span>
+        <span class="s1">offset = Node.normalizeOffset(src</span><span class="s2">, </span><span class="s1">node.range.end)</span><span class="s2">;</span>
+        <span class="s1">ch = src[offset]</span><span class="s2">;</span>
+        <span class="s1">atLineStart = </span><span class="s0">false</span><span class="s2">;</span>
+        <span class="s1">prevIncludesTrailingLines = node.includesTrailingLines</span><span class="s2">; </span><span class="s5">// Need to reset lineStart and atLineStart here if preceding node's range</span>
+        <span class="s5">// has advanced to check the current line's indentation level</span>
+        <span class="s5">// -- eemeli/yaml#10 &amp; eemeli/yaml#38</span>
+
+        <span class="s0">if </span><span class="s1">(ch) {</span>
+          <span class="s0">var </span><span class="s1">ls = offset - </span><span class="s8">1</span><span class="s2">;</span>
+          <span class="s0">var </span><span class="s1">prev = src[ls]</span><span class="s2">;</span>
+
+          <span class="s0">while </span><span class="s1">(prev === </span><span class="s3">' ' </span><span class="s1">|| prev === </span><span class="s3">'</span><span class="s2">\t</span><span class="s3">'</span><span class="s1">) {</span>
+            <span class="s1">prev = src[--ls]</span><span class="s2">;</span>
+          <span class="s1">}</span>
+
+          <span class="s0">if </span><span class="s1">(prev === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) {</span>
+            <span class="s1">lineStart = ls + </span><span class="s8">1</span><span class="s2">;</span>
+            <span class="s1">atLineStart = </span><span class="s0">true</span><span class="s2">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">var </span><span class="s1">ec = grabCollectionEndComments(node)</span><span class="s2">;</span>
+        <span class="s0">if </span><span class="s1">(ec) Array.prototype.push.apply(</span><span class="s0">this</span><span class="s1">.items</span><span class="s2">, </span><span class="s1">ec)</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;setOrigRanges&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">setOrigRanges(cr</span><span class="s2">, </span><span class="s1">offset) {</span>
+      <span class="s1">offset = _get(_getPrototypeOf(Collection.prototype)</span><span class="s2">, </span><span class="s3">&quot;setOrigRanges&quot;</span><span class="s2">, </span><span class="s0">this</span><span class="s1">).call(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">cr</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.items.forEach(</span><span class="s0">function </span><span class="s1">(node) {</span>
+        <span class="s1">offset = node.setOrigRanges(cr</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s1">})</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;toString&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">toString() {</span>
+      <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s2">,</span>
+          <span class="s1">items = </span><span class="s0">this</span><span class="s1">.items</span><span class="s2">,</span>
+          <span class="s1">range = </span><span class="s0">this</span><span class="s1">.range</span><span class="s2">,</span>
+          <span class="s1">value = </span><span class="s0">this</span><span class="s1">.value</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(value != </span><span class="s0">null</span><span class="s1">) </span><span class="s0">return </span><span class="s1">value</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">str = src.slice(range.start</span><span class="s2">, </span><span class="s1">items[</span><span class="s8">0</span><span class="s1">].range.start) + String(items[</span><span class="s8">0</span><span class="s1">])</span><span class="s2">;</span>
+
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s8">1</span><span class="s2">; </span><span class="s1">i &lt; items.length</span><span class="s2">; </span><span class="s1">++i) {</span>
+        <span class="s0">var </span><span class="s1">item = items[i]</span><span class="s2">;</span>
+        <span class="s0">var </span><span class="s1">_item$context = item.context</span><span class="s2">,</span>
+            <span class="s1">atLineStart = _item$context.atLineStart</span><span class="s2">,</span>
+            <span class="s1">indent = _item$context.indent</span><span class="s2">;</span>
+        <span class="s0">if </span><span class="s1">(atLineStart) </span><span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">_i = </span><span class="s8">0</span><span class="s2">; </span><span class="s1">_i &lt; indent</span><span class="s2">; </span><span class="s1">++_i) {</span>
+          <span class="s1">str += </span><span class="s3">' '</span><span class="s2">;</span>
+        <span class="s1">}</span>
+        <span class="s1">str += String(item)</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">Node.addStringTerminator(src</span><span class="s2">, </span><span class="s1">range.end</span><span class="s2">, </span><span class="s1">str)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}]</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;nextContentHasIndent&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">nextContentHasIndent(src</span><span class="s2">, </span><span class="s1">offset</span><span class="s2">, </span><span class="s1">indent) {</span>
+      <span class="s0">var </span><span class="s1">lineStart = Node.endOfLine(src</span><span class="s2">, </span><span class="s1">offset) + </span><span class="s8">1</span><span class="s2">;</span>
+      <span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">lineStart)</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(!ch) </span><span class="s0">return false</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(offset &gt;= lineStart + indent) </span><span class="s0">return true</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(ch !== </span><span class="s3">'#' </span><span class="s1">&amp;&amp; ch !== </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) </span><span class="s0">return false</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">Collection.nextContentHasIndent(src</span><span class="s2">, </span><span class="s1">offset</span><span class="s2">, </span><span class="s1">indent)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s2">;</span>
+
+  <span class="s0">return </span><span class="s1">Collection</span><span class="s2">;</span>
+<span class="s1">}(Node)</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">Directive = </span><span class="s4">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_Node) {</span>
+  <span class="s1">_inherits(Directive</span><span class="s2">, </span><span class="s1">_Node)</span><span class="s2">;</span>
+
+  <span class="s0">var </span><span class="s1">_super = _createSuper(Directive)</span><span class="s2">;</span>
+
+  <span class="s0">function </span><span class="s1">Directive() {</span>
+    <span class="s0">var </span><span class="s1">_this</span><span class="s2">;</span>
+
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">Directive)</span><span class="s2">;</span>
+
+    <span class="s1">_this = _super.call(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">Type.DIRECTIVE)</span><span class="s2">;</span>
+    <span class="s1">_this.name = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">_this</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(Directive</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parameters&quot;</span><span class="s2">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">var </span><span class="s1">raw = </span><span class="s0">this</span><span class="s1">.rawValue</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">raw ? raw.trim().split(</span><span class="s8">/[ \t]+/</span><span class="s1">) : []</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parseName&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parseName(start) {</span>
+      <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = start</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s2">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch &amp;&amp; ch !== </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">&amp;&amp; ch !== </span><span class="s3">'</span><span class="s2">\t</span><span class="s3">' </span><span class="s1">&amp;&amp; ch !== </span><span class="s3">' '</span><span class="s1">) {</span>
+        <span class="s1">ch = src[offset += </span><span class="s8">1</span><span class="s1">]</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">this</span><span class="s1">.name = src.slice(start</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parseParameters&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parseParameters(start) {</span>
+      <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = start</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s2">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch &amp;&amp; ch !== </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">&amp;&amp; ch !== </span><span class="s3">'#'</span><span class="s1">) {</span>
+        <span class="s1">ch = src[offset += </span><span class="s8">1</span><span class="s1">]</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">this</span><span class="s1">.valueRange = </span><span class="s0">new </span><span class="s1">Range(start</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parse&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parse(context</span><span class="s2">, </span><span class="s1">start) {</span>
+      <span class="s0">this</span><span class="s1">.context = context</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseName(start + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+      <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseParameters(offset)</span><span class="s2">;</span>
+      <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseComment(offset)</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.range = </span><span class="s0">new </span><span class="s1">Range(start</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s2">;</span>
+
+  <span class="s0">return </span><span class="s1">Directive</span><span class="s2">;</span>
+<span class="s1">}(Node)</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">Document = </span><span class="s4">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_Node) {</span>
+  <span class="s1">_inherits(Document</span><span class="s2">, </span><span class="s1">_Node)</span><span class="s2">;</span>
+
+  <span class="s0">var </span><span class="s1">_super = _createSuper(Document)</span><span class="s2">;</span>
+
+  <span class="s0">function </span><span class="s1">Document() {</span>
+    <span class="s0">var </span><span class="s1">_this</span><span class="s2">;</span>
+
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">Document)</span><span class="s2">;</span>
+
+    <span class="s1">_this = _super.call(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">Type.DOCUMENT)</span><span class="s2">;</span>
+    <span class="s1">_this.directives = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s1">_this.contents = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s1">_this.directivesEndMarker = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s1">_this.documentEndMarker = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">_this</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(Document</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parseDirectives&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parseDirectives(start) {</span>
+      <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.directives = []</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">atLineStart = </span><span class="s0">true</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">hasDirectives = </span><span class="s0">false</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = start</span><span class="s2">;</span>
+
+      <span class="s0">while </span><span class="s1">(!Node.atDocumentBoundary(src</span><span class="s2">, </span><span class="s1">offset</span><span class="s2">, </span><span class="s1">Char.DIRECTIVES_END)) {</span>
+        <span class="s1">offset = Document.startCommentOrEndBlankLine(src</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+
+        <span class="s0">switch </span><span class="s1">(src[offset]) {</span>
+          <span class="s0">case </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">:</span>
+            <span class="s0">if </span><span class="s1">(atLineStart) {</span>
+              <span class="s0">var </span><span class="s1">blankLine = </span><span class="s0">new </span><span class="s1">BlankLine()</span><span class="s2">;</span>
+              <span class="s1">offset = blankLine.parse({</span>
+                <span class="s1">src: src</span>
+              <span class="s1">}</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+
+              <span class="s0">if </span><span class="s1">(offset &lt; src.length) {</span>
+                <span class="s0">this</span><span class="s1">.directives.push(blankLine)</span><span class="s2">;</span>
+              <span class="s1">}</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+              <span class="s1">offset += </span><span class="s8">1</span><span class="s2">;</span>
+              <span class="s1">atLineStart = </span><span class="s0">true</span><span class="s2">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">break</span><span class="s2">;</span>
+
+          <span class="s0">case </span><span class="s3">'#'</span><span class="s1">:</span>
+            <span class="s1">{</span>
+              <span class="s0">var </span><span class="s1">comment = </span><span class="s0">new </span><span class="s1">Comment()</span><span class="s2">;</span>
+              <span class="s1">offset = comment.parse({</span>
+                <span class="s1">src: src</span>
+              <span class="s1">}</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+              <span class="s0">this</span><span class="s1">.directives.push(comment)</span><span class="s2">;</span>
+              <span class="s1">atLineStart = </span><span class="s0">false</span><span class="s2">;</span>
+            <span class="s1">}</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+          <span class="s0">case </span><span class="s3">'%'</span><span class="s1">:</span>
+            <span class="s1">{</span>
+              <span class="s0">var </span><span class="s1">directive = </span><span class="s0">new </span><span class="s1">Directive()</span><span class="s2">;</span>
+              <span class="s1">offset = directive.parse({</span>
+                <span class="s1">parent: </span><span class="s0">this</span><span class="s2">,</span>
+                <span class="s1">src: src</span>
+              <span class="s1">}</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+              <span class="s0">this</span><span class="s1">.directives.push(directive)</span><span class="s2">;</span>
+              <span class="s1">hasDirectives = </span><span class="s0">true</span><span class="s2">;</span>
+              <span class="s1">atLineStart = </span><span class="s0">false</span><span class="s2">;</span>
+            <span class="s1">}</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+          <span class="s0">default</span><span class="s1">:</span>
+            <span class="s0">if </span><span class="s1">(hasDirectives) {</span>
+              <span class="s0">this</span><span class="s1">.error = </span><span class="s0">new </span><span class="s1">YAMLSemanticError(</span><span class="s0">this</span><span class="s2">, </span><span class="s3">'Missing directives-end indicator line'</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">} </span><span class="s0">else if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.directives.length &gt; </span><span class="s8">0</span><span class="s1">) {</span>
+              <span class="s0">this</span><span class="s1">.contents = </span><span class="s0">this</span><span class="s1">.directives</span><span class="s2">;</span>
+              <span class="s0">this</span><span class="s1">.directives = []</span><span class="s2">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">if </span><span class="s1">(src[offset]) {</span>
+        <span class="s0">this</span><span class="s1">.directivesEndMarker = </span><span class="s0">new </span><span class="s1">Range(offset</span><span class="s2">, </span><span class="s1">offset + </span><span class="s8">3</span><span class="s1">)</span><span class="s2">;</span>
+        <span class="s0">return </span><span class="s1">offset + </span><span class="s8">3</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">if </span><span class="s1">(hasDirectives) {</span>
+        <span class="s0">this</span><span class="s1">.error = </span><span class="s0">new </span><span class="s1">YAMLSemanticError(</span><span class="s0">this</span><span class="s2">, </span><span class="s3">'Missing directives-end indicator line'</span><span class="s1">)</span><span class="s2">;</span>
+      <span class="s1">} </span><span class="s0">else if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.directives.length &gt; </span><span class="s8">0</span><span class="s1">) {</span>
+        <span class="s0">this</span><span class="s1">.contents = </span><span class="s0">this</span><span class="s1">.directives</span><span class="s2">;</span>
+        <span class="s0">this</span><span class="s1">.directives = []</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parseContents&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parseContents(start) {</span>
+      <span class="s0">var </span><span class="s1">_this$context = </span><span class="s0">this</span><span class="s1">.context</span><span class="s2">,</span>
+          <span class="s1">parseNode = _this$context.parseNode</span><span class="s2">,</span>
+          <span class="s1">src = _this$context.src</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.contents) </span><span class="s0">this</span><span class="s1">.contents = []</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">lineStart = start</span><span class="s2">;</span>
+
+      <span class="s0">while </span><span class="s1">(src[lineStart - </span><span class="s8">1</span><span class="s1">] === </span><span class="s3">'-'</span><span class="s1">) {</span>
+        <span class="s1">lineStart -= </span><span class="s8">1</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">var </span><span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">start)</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">atLineStart = lineStart === start</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.valueRange = </span><span class="s0">new </span><span class="s1">Range(offset)</span><span class="s2">;</span>
+
+      <span class="s0">while </span><span class="s1">(!Node.atDocumentBoundary(src</span><span class="s2">, </span><span class="s1">offset</span><span class="s2">, </span><span class="s1">Char.DOCUMENT_END)) {</span>
+        <span class="s0">switch </span><span class="s1">(src[offset]) {</span>
+          <span class="s0">case </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">:</span>
+            <span class="s0">if </span><span class="s1">(atLineStart) {</span>
+              <span class="s0">var </span><span class="s1">blankLine = </span><span class="s0">new </span><span class="s1">BlankLine()</span><span class="s2">;</span>
+              <span class="s1">offset = blankLine.parse({</span>
+                <span class="s1">src: src</span>
+              <span class="s1">}</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+
+              <span class="s0">if </span><span class="s1">(offset &lt; src.length) {</span>
+                <span class="s0">this</span><span class="s1">.contents.push(blankLine)</span><span class="s2">;</span>
+              <span class="s1">}</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+              <span class="s1">offset += </span><span class="s8">1</span><span class="s2">;</span>
+              <span class="s1">atLineStart = </span><span class="s0">true</span><span class="s2">;</span>
+            <span class="s1">}</span>
+
+            <span class="s1">lineStart = offset</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+          <span class="s0">case </span><span class="s3">'#'</span><span class="s1">:</span>
+            <span class="s1">{</span>
+              <span class="s0">var </span><span class="s1">comment = </span><span class="s0">new </span><span class="s1">Comment()</span><span class="s2">;</span>
+              <span class="s1">offset = comment.parse({</span>
+                <span class="s1">src: src</span>
+              <span class="s1">}</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+              <span class="s0">this</span><span class="s1">.contents.push(comment)</span><span class="s2">;</span>
+              <span class="s1">atLineStart = </span><span class="s0">false</span><span class="s2">;</span>
+            <span class="s1">}</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+          <span class="s0">default</span><span class="s1">:</span>
+            <span class="s1">{</span>
+              <span class="s0">var </span><span class="s1">iEnd = Node.endOfIndent(src</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+              <span class="s0">var </span><span class="s1">context = {</span>
+                <span class="s1">atLineStart: atLineStart</span><span class="s2">,</span>
+                <span class="s1">indent: -</span><span class="s8">1</span><span class="s2">,</span>
+                <span class="s1">inFlow: </span><span class="s0">false</span><span class="s2">,</span>
+                <span class="s1">inCollection: </span><span class="s0">false</span><span class="s2">,</span>
+                <span class="s1">lineStart: lineStart</span><span class="s2">,</span>
+                <span class="s1">parent: </span><span class="s0">this</span>
+              <span class="s1">}</span><span class="s2">;</span>
+              <span class="s0">var </span><span class="s1">node = parseNode(context</span><span class="s2">, </span><span class="s1">iEnd)</span><span class="s2">;</span>
+              <span class="s0">if </span><span class="s1">(!node) </span><span class="s0">return this</span><span class="s1">.valueRange.end = iEnd</span><span class="s2">; </span><span class="s5">// at next document start</span>
+
+              <span class="s0">this</span><span class="s1">.contents.push(node)</span><span class="s2">;</span>
+              <span class="s1">offset = node.range.end</span><span class="s2">;</span>
+              <span class="s1">atLineStart = </span><span class="s0">false</span><span class="s2">;</span>
+              <span class="s0">var </span><span class="s1">ec = grabCollectionEndComments(node)</span><span class="s2">;</span>
+              <span class="s0">if </span><span class="s1">(ec) Array.prototype.push.apply(</span><span class="s0">this</span><span class="s1">.contents</span><span class="s2">, </span><span class="s1">ec)</span><span class="s2">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s1">offset = Document.startCommentOrEndBlankLine(src</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">this</span><span class="s1">.valueRange.end = offset</span><span class="s2">;</span>
+
+      <span class="s0">if </span><span class="s1">(src[offset]) {</span>
+        <span class="s0">this</span><span class="s1">.documentEndMarker = </span><span class="s0">new </span><span class="s1">Range(offset</span><span class="s2">, </span><span class="s1">offset + </span><span class="s8">3</span><span class="s1">)</span><span class="s2">;</span>
+        <span class="s1">offset += </span><span class="s8">3</span><span class="s2">;</span>
+
+        <span class="s0">if </span><span class="s1">(src[offset]) {</span>
+          <span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+
+          <span class="s0">if </span><span class="s1">(src[offset] === </span><span class="s3">'#'</span><span class="s1">) {</span>
+            <span class="s0">var </span><span class="s1">_comment = </span><span class="s0">new </span><span class="s1">Comment()</span><span class="s2">;</span>
+
+            <span class="s1">offset = _comment.parse({</span>
+              <span class="s1">src: src</span>
+            <span class="s1">}</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+            <span class="s0">this</span><span class="s1">.contents.push(_comment)</span><span class="s2">;</span>
+          <span class="s1">}</span>
+
+          <span class="s0">switch </span><span class="s1">(src[offset]) {</span>
+            <span class="s0">case </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">:</span>
+              <span class="s1">offset += </span><span class="s8">1</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s1">undefined:</span>
+              <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">default</span><span class="s1">:</span>
+              <span class="s0">this</span><span class="s1">.error = </span><span class="s0">new </span><span class="s1">YAMLSyntaxError(</span><span class="s0">this</span><span class="s2">, </span><span class="s3">'Document end marker line cannot have a non-comment suffix'</span><span class="s1">)</span><span class="s2">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s6">/**</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{ParseContext} context</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} start - Index of first character</span>
+     <span class="s6">* </span><span class="s7">@returns </span><span class="s6">{number} - Index of the character after this</span>
+     <span class="s6">*/</span>
+
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parse&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parse(context</span><span class="s2">, </span><span class="s1">start) {</span>
+      <span class="s1">context.root = </span><span class="s0">this</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.context = context</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">src = context.src</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = src.charCodeAt(start) === </span><span class="s8">0xfeff </span><span class="s1">? start + </span><span class="s8">1 </span><span class="s1">: start</span><span class="s2">; </span><span class="s5">// skip BOM</span>
+
+      <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseDirectives(offset)</span><span class="s2">;</span>
+      <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseContents(offset)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;setOrigRanges&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">setOrigRanges(cr</span><span class="s2">, </span><span class="s1">offset) {</span>
+      <span class="s1">offset = _get(_getPrototypeOf(Document.prototype)</span><span class="s2">, </span><span class="s3">&quot;setOrigRanges&quot;</span><span class="s2">, </span><span class="s0">this</span><span class="s1">).call(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">cr</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.directives.forEach(</span><span class="s0">function </span><span class="s1">(node) {</span>
+        <span class="s1">offset = node.setOrigRanges(cr</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s1">})</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.directivesEndMarker) offset = </span><span class="s0">this</span><span class="s1">.directivesEndMarker.setOrigRange(cr</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.contents.forEach(</span><span class="s0">function </span><span class="s1">(node) {</span>
+        <span class="s1">offset = node.setOrigRanges(cr</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s1">})</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.documentEndMarker) offset = </span><span class="s0">this</span><span class="s1">.documentEndMarker.setOrigRange(cr</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;toString&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">toString() {</span>
+      <span class="s0">var </span><span class="s1">contents = </span><span class="s0">this</span><span class="s1">.contents</span><span class="s2">,</span>
+          <span class="s1">directives = </span><span class="s0">this</span><span class="s1">.directives</span><span class="s2">,</span>
+          <span class="s1">value = </span><span class="s0">this</span><span class="s1">.value</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(value != </span><span class="s0">null</span><span class="s1">) </span><span class="s0">return </span><span class="s1">value</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">str = directives.join(</span><span class="s3">''</span><span class="s1">)</span><span class="s2">;</span>
+
+      <span class="s0">if </span><span class="s1">(contents.length &gt; </span><span class="s8">0</span><span class="s1">) {</span>
+        <span class="s0">if </span><span class="s1">(directives.length &gt; </span><span class="s8">0 </span><span class="s1">|| contents[</span><span class="s8">0</span><span class="s1">].type === Type.COMMENT) str += </span><span class="s3">'---</span><span class="s2">\n</span><span class="s3">'</span><span class="s2">;</span>
+        <span class="s1">str += contents.join(</span><span class="s3">''</span><span class="s1">)</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">if </span><span class="s1">(str[str.length - </span><span class="s8">1</span><span class="s1">] !== </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) str += </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">str</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}]</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;startCommentOrEndBlankLine&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">startCommentOrEndBlankLine(src</span><span class="s2">, </span><span class="s1">start) {</span>
+      <span class="s0">var </span><span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">start)</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">ch === </span><span class="s3">'#' </span><span class="s1">|| ch === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">? offset : start</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s2">;</span>
+
+  <span class="s0">return </span><span class="s1">Document</span><span class="s2">;</span>
+<span class="s1">}(Node)</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">Alias = </span><span class="s4">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_Node) {</span>
+  <span class="s1">_inherits(Alias</span><span class="s2">, </span><span class="s1">_Node)</span><span class="s2">;</span>
+
+  <span class="s0">var </span><span class="s1">_super = _createSuper(Alias)</span><span class="s2">;</span>
+
+  <span class="s0">function </span><span class="s1">Alias() {</span>
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">Alias)</span><span class="s2">;</span>
+
+    <span class="s0">return </span><span class="s1">_super.apply(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">arguments)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(Alias</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parse&quot;</span><span class="s2">,</span>
+    <span class="s1">value:</span>
+    <span class="s6">/**</span>
+     <span class="s6">* Parses an *alias from the source</span>
+     <span class="s6">*</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{ParseContext} context</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} start - Index of first character</span>
+     <span class="s6">* </span><span class="s7">@returns </span><span class="s6">{number} - Index of the character after this scalar</span>
+     <span class="s6">*/</span>
+    <span class="s0">function </span><span class="s1">parse(context</span><span class="s2">, </span><span class="s1">start) {</span>
+      <span class="s0">this</span><span class="s1">.context = context</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">src = context.src</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = Node.endOfIdentifier(src</span><span class="s2">, </span><span class="s1">start + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.valueRange = </span><span class="s0">new </span><span class="s1">Range(start + </span><span class="s8">1</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseComment(offset)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s2">;</span>
+
+  <span class="s0">return </span><span class="s1">Alias</span><span class="s2">;</span>
+<span class="s1">}(Node)</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">Chomp = {</span>
+  <span class="s1">CLIP: </span><span class="s3">'CLIP'</span><span class="s2">,</span>
+  <span class="s1">KEEP: </span><span class="s3">'KEEP'</span><span class="s2">,</span>
+  <span class="s1">STRIP: </span><span class="s3">'STRIP'</span>
+<span class="s1">}</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">BlockValue = </span><span class="s4">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_Node) {</span>
+  <span class="s1">_inherits(BlockValue</span><span class="s2">, </span><span class="s1">_Node)</span><span class="s2">;</span>
+
+  <span class="s0">var </span><span class="s1">_super = _createSuper(BlockValue)</span><span class="s2">;</span>
+
+  <span class="s0">function </span><span class="s1">BlockValue(type</span><span class="s2">, </span><span class="s1">props) {</span>
+    <span class="s0">var </span><span class="s1">_this</span><span class="s2">;</span>
+
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">BlockValue)</span><span class="s2">;</span>
+
+    <span class="s1">_this = _super.call(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">props)</span><span class="s2">;</span>
+    <span class="s1">_this.blockIndent = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s1">_this.chomping = Chomp.CLIP</span><span class="s2">;</span>
+    <span class="s1">_this.header = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">_this</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(BlockValue</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;includesTrailingLines&quot;</span><span class="s2">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">return this</span><span class="s1">.chomping === Chomp.KEEP</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;strValue&quot;</span><span class="s2">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.valueRange || !</span><span class="s0">this</span><span class="s1">.context) </span><span class="s0">return null</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">_this$valueRange = </span><span class="s0">this</span><span class="s1">.valueRange</span><span class="s2">,</span>
+          <span class="s1">start = _this$valueRange.start</span><span class="s2">,</span>
+          <span class="s1">end = _this$valueRange.end</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">_this$context = </span><span class="s0">this</span><span class="s1">.context</span><span class="s2">,</span>
+          <span class="s1">indent = _this$context.indent</span><span class="s2">,</span>
+          <span class="s1">src = _this$context.src</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.valueRange.isEmpty()) </span><span class="s0">return </span><span class="s3">''</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">lastNewLine = </span><span class="s0">null</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">ch = src[end - </span><span class="s8">1</span><span class="s1">]</span><span class="s2">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">|| ch === </span><span class="s3">'</span><span class="s2">\t</span><span class="s3">' </span><span class="s1">|| ch === </span><span class="s3">' '</span><span class="s1">) {</span>
+        <span class="s1">end -= </span><span class="s8">1</span><span class="s2">;</span>
+
+        <span class="s0">if </span><span class="s1">(end &lt;= start) {</span>
+          <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.chomping === Chomp.KEEP) </span><span class="s0">break</span><span class="s2">;</span><span class="s0">else return </span><span class="s3">''</span><span class="s2">; </span><span class="s5">// probably never happens</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(ch === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) lastNewLine = end</span><span class="s2">;</span>
+        <span class="s1">ch = src[end - </span><span class="s8">1</span><span class="s1">]</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">var </span><span class="s1">keepStart = end + </span><span class="s8">1</span><span class="s2">;</span>
+
+      <span class="s0">if </span><span class="s1">(lastNewLine) {</span>
+        <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.chomping === Chomp.KEEP) {</span>
+          <span class="s1">keepStart = lastNewLine</span><span class="s2">;</span>
+          <span class="s1">end = </span><span class="s0">this</span><span class="s1">.valueRange.end</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+          <span class="s1">end = lastNewLine</span><span class="s2">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">var </span><span class="s1">bi = indent + </span><span class="s0">this</span><span class="s1">.blockIndent</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">folded = </span><span class="s0">this</span><span class="s1">.type === Type.BLOCK_FOLDED</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">atStart = </span><span class="s0">true</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">str = </span><span class="s3">''</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">sep = </span><span class="s3">''</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">prevMoreIndented = </span><span class="s0">false</span><span class="s2">;</span>
+
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = start</span><span class="s2">; </span><span class="s1">i &lt; end</span><span class="s2">; </span><span class="s1">++i) {</span>
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">j = </span><span class="s8">0</span><span class="s2">; </span><span class="s1">j &lt; bi</span><span class="s2">; </span><span class="s1">++j) {</span>
+          <span class="s0">if </span><span class="s1">(src[i] !== </span><span class="s3">' '</span><span class="s1">) </span><span class="s0">break</span><span class="s2">;</span>
+          <span class="s1">i += </span><span class="s8">1</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">var </span><span class="s1">_ch = src[i]</span><span class="s2">;</span>
+
+        <span class="s0">if </span><span class="s1">(_ch === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) {</span>
+          <span class="s0">if </span><span class="s1">(sep === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) str += </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s2">;</span><span class="s0">else </span><span class="s1">sep = </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+          <span class="s0">var </span><span class="s1">lineEnd = Node.endOfLine(src</span><span class="s2">, </span><span class="s1">i)</span><span class="s2">;</span>
+          <span class="s0">var </span><span class="s1">line = src.slice(i</span><span class="s2">, </span><span class="s1">lineEnd)</span><span class="s2">;</span>
+          <span class="s1">i = lineEnd</span><span class="s2">;</span>
+
+          <span class="s0">if </span><span class="s1">(folded &amp;&amp; (_ch === </span><span class="s3">' ' </span><span class="s1">|| _ch === </span><span class="s3">'</span><span class="s2">\t</span><span class="s3">'</span><span class="s1">) &amp;&amp; i &lt; keepStart) {</span>
+            <span class="s0">if </span><span class="s1">(sep === </span><span class="s3">' '</span><span class="s1">) sep = </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s2">;</span><span class="s0">else if </span><span class="s1">(!prevMoreIndented &amp;&amp; !atStart &amp;&amp; sep === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) sep = </span><span class="s3">'</span><span class="s2">\n\n</span><span class="s3">'</span><span class="s2">;</span>
+            <span class="s1">str += sep + line</span><span class="s2">; </span><span class="s5">//+ ((lineEnd &lt; end &amp;&amp; src[lineEnd]) || '')</span>
+
+            <span class="s1">sep = lineEnd &lt; end &amp;&amp; src[lineEnd] || </span><span class="s3">''</span><span class="s2">;</span>
+            <span class="s1">prevMoreIndented = </span><span class="s0">true</span><span class="s2">;</span>
+          <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s1">str += sep + line</span><span class="s2">;</span>
+            <span class="s1">sep = folded &amp;&amp; i &lt; keepStart ? </span><span class="s3">' ' </span><span class="s1">: </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s2">;</span>
+            <span class="s1">prevMoreIndented = </span><span class="s0">false</span><span class="s2">;</span>
+          <span class="s1">}</span>
+
+          <span class="s0">if </span><span class="s1">(atStart &amp;&amp; line !== </span><span class="s3">''</span><span class="s1">) atStart = </span><span class="s0">false</span><span class="s2">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return this</span><span class="s1">.chomping === Chomp.STRIP ? str : str + </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parseBlockHeader&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parseBlockHeader(start) {</span>
+      <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = start + </span><span class="s8">1</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">bi = </span><span class="s3">''</span><span class="s2">;</span>
+
+      <span class="s0">while </span><span class="s1">(</span><span class="s0">true</span><span class="s1">) {</span>
+        <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s2">;</span>
+
+        <span class="s0">switch </span><span class="s1">(ch) {</span>
+          <span class="s0">case </span><span class="s3">'-'</span><span class="s1">:</span>
+            <span class="s0">this</span><span class="s1">.chomping = Chomp.STRIP</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+          <span class="s0">case </span><span class="s3">'+'</span><span class="s1">:</span>
+            <span class="s0">this</span><span class="s1">.chomping = Chomp.KEEP</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+          <span class="s0">case </span><span class="s3">'0'</span><span class="s1">:</span>
+          <span class="s0">case </span><span class="s3">'1'</span><span class="s1">:</span>
+          <span class="s0">case </span><span class="s3">'2'</span><span class="s1">:</span>
+          <span class="s0">case </span><span class="s3">'3'</span><span class="s1">:</span>
+          <span class="s0">case </span><span class="s3">'4'</span><span class="s1">:</span>
+          <span class="s0">case </span><span class="s3">'5'</span><span class="s1">:</span>
+          <span class="s0">case </span><span class="s3">'6'</span><span class="s1">:</span>
+          <span class="s0">case </span><span class="s3">'7'</span><span class="s1">:</span>
+          <span class="s0">case </span><span class="s3">'8'</span><span class="s1">:</span>
+          <span class="s0">case </span><span class="s3">'9'</span><span class="s1">:</span>
+            <span class="s1">bi += ch</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+          <span class="s0">default</span><span class="s1">:</span>
+            <span class="s0">this</span><span class="s1">.blockIndent = Number(bi) || </span><span class="s0">null</span><span class="s2">;</span>
+            <span class="s0">this</span><span class="s1">.header = </span><span class="s0">new </span><span class="s1">Range(start</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+            <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">offset += </span><span class="s8">1</span><span class="s2">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parseBlockValue&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parseBlockValue(start) {</span>
+      <span class="s0">var </span><span class="s1">_this$context2 = </span><span class="s0">this</span><span class="s1">.context</span><span class="s2">,</span>
+          <span class="s1">indent = _this$context2.indent</span><span class="s2">,</span>
+          <span class="s1">src = _this$context2.src</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">explicit = !!</span><span class="s0">this</span><span class="s1">.blockIndent</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = start</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">valueEnd = start</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">minBlockIndent = </span><span class="s8">1</span><span class="s2">;</span>
+
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s2">; </span><span class="s1">ch === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s2">; </span><span class="s1">ch = src[offset]) {</span>
+        <span class="s1">offset += </span><span class="s8">1</span><span class="s2">;</span>
+        <span class="s0">if </span><span class="s1">(Node.atDocumentBoundary(src</span><span class="s2">, </span><span class="s1">offset)) </span><span class="s0">break</span><span class="s2">;</span>
+        <span class="s0">var </span><span class="s1">end = Node.endOfBlockIndent(src</span><span class="s2">, </span><span class="s1">indent</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">; </span><span class="s5">// should not include tab?</span>
+
+        <span class="s0">if </span><span class="s1">(end === </span><span class="s0">null</span><span class="s1">) </span><span class="s0">break</span><span class="s2">;</span>
+        <span class="s0">var </span><span class="s1">_ch2 = src[end]</span><span class="s2">;</span>
+        <span class="s0">var </span><span class="s1">lineIndent = end - (offset + indent)</span><span class="s2">;</span>
+
+        <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.blockIndent) {</span>
+          <span class="s5">// no explicit block indent, none yet detected</span>
+          <span class="s0">if </span><span class="s1">(src[end] !== </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) {</span>
+            <span class="s5">// first line with non-whitespace content</span>
+            <span class="s0">if </span><span class="s1">(lineIndent &lt; minBlockIndent) {</span>
+              <span class="s0">var </span><span class="s1">msg = </span><span class="s3">'Block scalars with more-indented leading empty lines must use an explicit indentation indicator'</span><span class="s2">;</span>
+              <span class="s0">this</span><span class="s1">.error = </span><span class="s0">new </span><span class="s1">YAMLSemanticError(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">msg)</span><span class="s2">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">this</span><span class="s1">.blockIndent = lineIndent</span><span class="s2">;</span>
+          <span class="s1">} </span><span class="s0">else if </span><span class="s1">(lineIndent &gt; minBlockIndent) {</span>
+            <span class="s5">// empty line with more whitespace</span>
+            <span class="s1">minBlockIndent = lineIndent</span><span class="s2">;</span>
+          <span class="s1">}</span>
+        <span class="s1">} </span><span class="s0">else if </span><span class="s1">(_ch2 &amp;&amp; _ch2 !== </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">&amp;&amp; lineIndent &lt; </span><span class="s0">this</span><span class="s1">.blockIndent) {</span>
+          <span class="s0">if </span><span class="s1">(src[end] === </span><span class="s3">'#'</span><span class="s1">) </span><span class="s0">break</span><span class="s2">;</span>
+
+          <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.error) {</span>
+            <span class="s0">var </span><span class="s1">_src = explicit ? </span><span class="s3">'explicit indentation indicator' </span><span class="s1">: </span><span class="s3">'first line'</span><span class="s2">;</span>
+
+            <span class="s0">var </span><span class="s1">_msg = </span><span class="s3">&quot;Block scalars must not be less indented than their &quot;</span><span class="s1">.concat(_src)</span><span class="s2">;</span>
+
+            <span class="s0">this</span><span class="s1">.error = </span><span class="s0">new </span><span class="s1">YAMLSemanticError(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">_msg)</span><span class="s2">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(src[end] === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) {</span>
+          <span class="s1">offset = end</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+          <span class="s1">offset = valueEnd = Node.endOfLine(src</span><span class="s2">, </span><span class="s1">end)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.chomping !== Chomp.KEEP) {</span>
+        <span class="s1">offset = src[valueEnd] ? valueEnd + </span><span class="s8">1 </span><span class="s1">: valueEnd</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">this</span><span class="s1">.valueRange = </span><span class="s0">new </span><span class="s1">Range(start + </span><span class="s8">1</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s6">/**</span>
+     <span class="s6">* Parses a block value from the source</span>
+     <span class="s6">*</span>
+     <span class="s6">* Accepted forms are:</span>
+     <span class="s6">* ```</span>
+     <span class="s6">* BS</span>
+     <span class="s6">* block</span>
+     <span class="s6">* lines</span>
+     <span class="s6">*</span>
+     <span class="s6">* BS #comment</span>
+     <span class="s6">* block</span>
+     <span class="s6">* lines</span>
+     <span class="s6">* ```</span>
+     <span class="s6">* where the block style BS matches the regexp `[|&gt;][-+1-9]*` and block lines</span>
+     <span class="s6">* are empty or have an indent level greater than `indent`.</span>
+     <span class="s6">*</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{ParseContext} context</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} start - Index of first character</span>
+     <span class="s6">* </span><span class="s7">@returns </span><span class="s6">{number} - Index of the character after this block</span>
+     <span class="s6">*/</span>
+
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parse&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parse(context</span><span class="s2">, </span><span class="s1">start) {</span>
+      <span class="s0">this</span><span class="s1">.context = context</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">src = context.src</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseBlockHeader(start)</span><span class="s2">;</span>
+      <span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseComment(offset)</span><span class="s2">;</span>
+      <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseBlockValue(offset)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;setOrigRanges&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">setOrigRanges(cr</span><span class="s2">, </span><span class="s1">offset) {</span>
+      <span class="s1">offset = _get(_getPrototypeOf(BlockValue.prototype)</span><span class="s2">, </span><span class="s3">&quot;setOrigRanges&quot;</span><span class="s2">, </span><span class="s0">this</span><span class="s1">).call(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">cr</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">return this</span><span class="s1">.header ? </span><span class="s0">this</span><span class="s1">.header.setOrigRange(cr</span><span class="s2">, </span><span class="s1">offset) : offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s2">;</span>
+
+  <span class="s0">return </span><span class="s1">BlockValue</span><span class="s2">;</span>
+<span class="s1">}(Node)</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">FlowCollection = </span><span class="s4">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_Node) {</span>
+  <span class="s1">_inherits(FlowCollection</span><span class="s2">, </span><span class="s1">_Node)</span><span class="s2">;</span>
+
+  <span class="s0">var </span><span class="s1">_super = _createSuper(FlowCollection)</span><span class="s2">;</span>
+
+  <span class="s0">function </span><span class="s1">FlowCollection(type</span><span class="s2">, </span><span class="s1">props) {</span>
+    <span class="s0">var </span><span class="s1">_this</span><span class="s2">;</span>
+
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">FlowCollection)</span><span class="s2">;</span>
+
+    <span class="s1">_this = _super.call(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">props)</span><span class="s2">;</span>
+    <span class="s1">_this.items = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">_this</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(FlowCollection</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;prevNodeIsJsonLike&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">prevNodeIsJsonLike() {</span>
+      <span class="s0">var </span><span class="s1">idx = arguments.length &gt; </span><span class="s8">0 </span><span class="s1">&amp;&amp; arguments[</span><span class="s8">0</span><span class="s1">] !== undefined ? arguments[</span><span class="s8">0</span><span class="s1">] : </span><span class="s0">this</span><span class="s1">.items.length</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">node = </span><span class="s0">this</span><span class="s1">.items[idx - </span><span class="s8">1</span><span class="s1">]</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">!!node &amp;&amp; (node.jsonLike || node.type === Type.COMMENT &amp;&amp; </span><span class="s0">this</span><span class="s1">.prevNodeIsJsonLike(idx - </span><span class="s8">1</span><span class="s1">))</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s6">/**</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{ParseContext} context</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} start - Index of first character</span>
+     <span class="s6">* </span><span class="s7">@returns </span><span class="s6">{number} - Index of the character after this</span>
+     <span class="s6">*/</span>
+
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parse&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parse(context</span><span class="s2">, </span><span class="s1">start) {</span>
+      <span class="s0">this</span><span class="s1">.context = context</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">parseNode = context.parseNode</span><span class="s2">,</span>
+          <span class="s1">src = context.src</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">indent = context.indent</span><span class="s2">,</span>
+          <span class="s1">lineStart = context.lineStart</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">char = src[start]</span><span class="s2">; </span><span class="s5">// { or [</span>
+
+      <span class="s0">this</span><span class="s1">.items = [{</span>
+        <span class="s1">char: char</span><span class="s2">,</span>
+        <span class="s1">offset: start</span>
+      <span class="s1">}]</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">start + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+      <span class="s1">char = src[offset]</span><span class="s2">;</span>
+
+      <span class="s0">while </span><span class="s1">(char &amp;&amp; char !== </span><span class="s3">']' </span><span class="s1">&amp;&amp; char !== </span><span class="s3">'}'</span><span class="s1">) {</span>
+        <span class="s0">switch </span><span class="s1">(char) {</span>
+          <span class="s0">case </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">:</span>
+            <span class="s1">{</span>
+              <span class="s1">lineStart = offset + </span><span class="s8">1</span><span class="s2">;</span>
+              <span class="s0">var </span><span class="s1">wsEnd = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">lineStart)</span><span class="s2">;</span>
+
+              <span class="s0">if </span><span class="s1">(src[wsEnd] === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) {</span>
+                <span class="s0">var </span><span class="s1">blankLine = </span><span class="s0">new </span><span class="s1">BlankLine()</span><span class="s2">;</span>
+                <span class="s1">lineStart = blankLine.parse({</span>
+                  <span class="s1">src: src</span>
+                <span class="s1">}</span><span class="s2">, </span><span class="s1">lineStart)</span><span class="s2">;</span>
+                <span class="s0">this</span><span class="s1">.items.push(blankLine)</span><span class="s2">;</span>
+              <span class="s1">}</span>
+
+              <span class="s1">offset = Node.endOfIndent(src</span><span class="s2">, </span><span class="s1">lineStart)</span><span class="s2">;</span>
+
+              <span class="s0">if </span><span class="s1">(offset &lt;= lineStart + indent) {</span>
+                <span class="s1">char = src[offset]</span><span class="s2">;</span>
+
+                <span class="s0">if </span><span class="s1">(offset &lt; lineStart + indent || char !== </span><span class="s3">']' </span><span class="s1">&amp;&amp; char !== </span><span class="s3">'}'</span><span class="s1">) {</span>
+                  <span class="s0">var </span><span class="s1">msg = </span><span class="s3">'Insufficient indentation in flow collection'</span><span class="s2">;</span>
+                  <span class="s0">this</span><span class="s1">.error = </span><span class="s0">new </span><span class="s1">YAMLSemanticError(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">msg)</span><span class="s2">;</span>
+                <span class="s1">}</span>
+              <span class="s1">}</span>
+            <span class="s1">}</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+          <span class="s0">case </span><span class="s3">','</span><span class="s1">:</span>
+            <span class="s1">{</span>
+              <span class="s0">this</span><span class="s1">.items.push({</span>
+                <span class="s1">char: char</span><span class="s2">,</span>
+                <span class="s1">offset: offset</span>
+              <span class="s1">})</span><span class="s2">;</span>
+              <span class="s1">offset += </span><span class="s8">1</span><span class="s2">;</span>
+            <span class="s1">}</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+          <span class="s0">case </span><span class="s3">'#'</span><span class="s1">:</span>
+            <span class="s1">{</span>
+              <span class="s0">var </span><span class="s1">comment = </span><span class="s0">new </span><span class="s1">Comment()</span><span class="s2">;</span>
+              <span class="s1">offset = comment.parse({</span>
+                <span class="s1">src: src</span>
+              <span class="s1">}</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+              <span class="s0">this</span><span class="s1">.items.push(comment)</span><span class="s2">;</span>
+            <span class="s1">}</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+          <span class="s0">case </span><span class="s3">'?'</span><span class="s1">:</span>
+          <span class="s0">case </span><span class="s3">':'</span><span class="s1">:</span>
+            <span class="s1">{</span>
+              <span class="s0">var </span><span class="s1">next = src[offset + </span><span class="s8">1</span><span class="s1">]</span><span class="s2">;</span>
+
+              <span class="s0">if </span><span class="s1">(next === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">|| next === </span><span class="s3">'</span><span class="s2">\t</span><span class="s3">' </span><span class="s1">|| next === </span><span class="s3">' ' </span><span class="s1">|| next === </span><span class="s3">',' </span><span class="s1">|| </span><span class="s5">// in-flow : after JSON-like key does not need to be followed by whitespace</span>
+              <span class="s1">char === </span><span class="s3">':' </span><span class="s1">&amp;&amp; </span><span class="s0">this</span><span class="s1">.prevNodeIsJsonLike()) {</span>
+                <span class="s0">this</span><span class="s1">.items.push({</span>
+                  <span class="s1">char: char</span><span class="s2">,</span>
+                  <span class="s1">offset: offset</span>
+                <span class="s1">})</span><span class="s2">;</span>
+                <span class="s1">offset += </span><span class="s8">1</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+              <span class="s1">}</span>
+            <span class="s1">}</span>
+          <span class="s5">// fallthrough</span>
+
+          <span class="s0">default</span><span class="s1">:</span>
+            <span class="s1">{</span>
+              <span class="s0">var </span><span class="s1">node = parseNode({</span>
+                <span class="s1">atLineStart: </span><span class="s0">false</span><span class="s2">,</span>
+                <span class="s1">inCollection: </span><span class="s0">false</span><span class="s2">,</span>
+                <span class="s1">inFlow: </span><span class="s0">true</span><span class="s2">,</span>
+                <span class="s1">indent: -</span><span class="s8">1</span><span class="s2">,</span>
+                <span class="s1">lineStart: lineStart</span><span class="s2">,</span>
+                <span class="s1">parent: </span><span class="s0">this</span>
+              <span class="s1">}</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+
+              <span class="s0">if </span><span class="s1">(!node) {</span>
+                <span class="s5">// at next document start</span>
+                <span class="s0">this</span><span class="s1">.valueRange = </span><span class="s0">new </span><span class="s1">Range(start</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+                <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+              <span class="s1">}</span>
+
+              <span class="s0">this</span><span class="s1">.items.push(node)</span><span class="s2">;</span>
+              <span class="s1">offset = Node.normalizeOffset(src</span><span class="s2">, </span><span class="s1">node.range.end)</span><span class="s2">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+        <span class="s1">char = src[offset]</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">this</span><span class="s1">.valueRange = </span><span class="s0">new </span><span class="s1">Range(start</span><span class="s2">, </span><span class="s1">offset + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+
+      <span class="s0">if </span><span class="s1">(char) {</span>
+        <span class="s0">this</span><span class="s1">.items.push({</span>
+          <span class="s1">char: char</span><span class="s2">,</span>
+          <span class="s1">offset: offset</span>
+        <span class="s1">})</span><span class="s2">;</span>
+        <span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">offset + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+        <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseComment(offset)</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;setOrigRanges&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">setOrigRanges(cr</span><span class="s2">, </span><span class="s1">offset) {</span>
+      <span class="s1">offset = _get(_getPrototypeOf(FlowCollection.prototype)</span><span class="s2">, </span><span class="s3">&quot;setOrigRanges&quot;</span><span class="s2">, </span><span class="s0">this</span><span class="s1">).call(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">cr</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.items.forEach(</span><span class="s0">function </span><span class="s1">(node) {</span>
+        <span class="s0">if </span><span class="s1">(node </span><span class="s0">instanceof </span><span class="s1">Node) {</span>
+          <span class="s1">offset = node.setOrigRanges(cr</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else if </span><span class="s1">(cr.length === </span><span class="s8">0</span><span class="s1">) {</span>
+          <span class="s1">node.origOffset = node.offset</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+          <span class="s0">var </span><span class="s1">i = offset</span><span class="s2">;</span>
+
+          <span class="s0">while </span><span class="s1">(i &lt; cr.length) {</span>
+            <span class="s0">if </span><span class="s1">(cr[i] &gt; node.offset) </span><span class="s0">break</span><span class="s2">;</span><span class="s0">else </span><span class="s1">++i</span><span class="s2">;</span>
+          <span class="s1">}</span>
+
+          <span class="s1">node.origOffset = node.offset + i</span><span class="s2">;</span>
+          <span class="s1">offset = i</span><span class="s2">;</span>
+        <span class="s1">}</span>
+      <span class="s1">})</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;toString&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">toString() {</span>
+      <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s2">,</span>
+          <span class="s1">items = </span><span class="s0">this</span><span class="s1">.items</span><span class="s2">,</span>
+          <span class="s1">range = </span><span class="s0">this</span><span class="s1">.range</span><span class="s2">,</span>
+          <span class="s1">value = </span><span class="s0">this</span><span class="s1">.value</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(value != </span><span class="s0">null</span><span class="s1">) </span><span class="s0">return </span><span class="s1">value</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">nodes = items.filter(</span><span class="s0">function </span><span class="s1">(item) {</span>
+        <span class="s0">return </span><span class="s1">item </span><span class="s0">instanceof </span><span class="s1">Node</span><span class="s2">;</span>
+      <span class="s1">})</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">str = </span><span class="s3">''</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">prevEnd = range.start</span><span class="s2">;</span>
+      <span class="s1">nodes.forEach(</span><span class="s0">function </span><span class="s1">(node) {</span>
+        <span class="s0">var </span><span class="s1">prefix = src.slice(prevEnd</span><span class="s2">, </span><span class="s1">node.range.start)</span><span class="s2">;</span>
+        <span class="s1">prevEnd = node.range.end</span><span class="s2">;</span>
+        <span class="s1">str += prefix + String(node)</span><span class="s2">;</span>
+
+        <span class="s0">if </span><span class="s1">(str[str.length - </span><span class="s8">1</span><span class="s1">] === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">&amp;&amp; src[prevEnd - </span><span class="s8">1</span><span class="s1">] !== </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">&amp;&amp; src[prevEnd] === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) {</span>
+          <span class="s5">// Comment range does not include the terminal newline, but its</span>
+          <span class="s5">// stringified value does. Without this fix, newlines at comment ends</span>
+          <span class="s5">// get duplicated.</span>
+          <span class="s1">prevEnd += </span><span class="s8">1</span><span class="s2">;</span>
+        <span class="s1">}</span>
+      <span class="s1">})</span><span class="s2">;</span>
+      <span class="s1">str += src.slice(prevEnd</span><span class="s2">, </span><span class="s1">range.end)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">Node.addStringTerminator(src</span><span class="s2">, </span><span class="s1">range.end</span><span class="s2">, </span><span class="s1">str)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s2">;</span>
+
+  <span class="s0">return </span><span class="s1">FlowCollection</span><span class="s2">;</span>
+<span class="s1">}(Node)</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">QuoteDouble = </span><span class="s4">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_Node) {</span>
+  <span class="s1">_inherits(QuoteDouble</span><span class="s2">, </span><span class="s1">_Node)</span><span class="s2">;</span>
+
+  <span class="s0">var </span><span class="s1">_super = _createSuper(QuoteDouble)</span><span class="s2">;</span>
+
+  <span class="s0">function </span><span class="s1">QuoteDouble() {</span>
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">QuoteDouble)</span><span class="s2">;</span>
+
+    <span class="s0">return </span><span class="s1">_super.apply(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">arguments)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(QuoteDouble</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;strValue&quot;</span><span class="s2">,</span>
+    <span class="s1">get:</span>
+    <span class="s6">/**</span>
+     <span class="s6">* </span><span class="s7">@returns </span><span class="s6">{string | { str: string, errors: YAMLSyntaxError[] }}</span>
+     <span class="s6">*/</span>
+    <span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.valueRange || !</span><span class="s0">this</span><span class="s1">.context) </span><span class="s0">return null</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">errors = []</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">_this$valueRange = </span><span class="s0">this</span><span class="s1">.valueRange</span><span class="s2">,</span>
+          <span class="s1">start = _this$valueRange.start</span><span class="s2">,</span>
+          <span class="s1">end = _this$valueRange.end</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">_this$context = </span><span class="s0">this</span><span class="s1">.context</span><span class="s2">,</span>
+          <span class="s1">indent = _this$context.indent</span><span class="s2">,</span>
+          <span class="s1">src = _this$context.src</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(src[end - </span><span class="s8">1</span><span class="s1">] !== </span><span class="s3">'&quot;'</span><span class="s1">) errors.push(</span><span class="s0">new </span><span class="s1">YAMLSyntaxError(</span><span class="s0">this</span><span class="s2">, </span><span class="s3">'Missing closing &quot;quote'</span><span class="s1">))</span><span class="s2">; </span><span class="s5">// Using String#replace is too painful with escaped newlines preceded by</span>
+      <span class="s5">// escaped backslashes; also, this should be faster.</span>
+
+      <span class="s0">var </span><span class="s1">str = </span><span class="s3">''</span><span class="s2">;</span>
+
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = start + </span><span class="s8">1</span><span class="s2">; </span><span class="s1">i &lt; end - </span><span class="s8">1</span><span class="s2">; </span><span class="s1">++i) {</span>
+        <span class="s0">var </span><span class="s1">ch = src[i]</span><span class="s2">;</span>
+
+        <span class="s0">if </span><span class="s1">(ch === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) {</span>
+          <span class="s0">if </span><span class="s1">(Node.atDocumentBoundary(src</span><span class="s2">, </span><span class="s1">i + </span><span class="s8">1</span><span class="s1">)) errors.push(</span><span class="s0">new </span><span class="s1">YAMLSemanticError(</span><span class="s0">this</span><span class="s2">, </span><span class="s3">'Document boundary indicators are not allowed within string values'</span><span class="s1">))</span><span class="s2">;</span>
+
+          <span class="s0">var </span><span class="s1">_Node$foldNewline = Node.foldNewline(src</span><span class="s2">, </span><span class="s1">i</span><span class="s2">, </span><span class="s1">indent)</span><span class="s2">,</span>
+              <span class="s1">fold = _Node$foldNewline.fold</span><span class="s2">,</span>
+              <span class="s1">offset = _Node$foldNewline.offset</span><span class="s2">,</span>
+              <span class="s1">error = _Node$foldNewline.error</span><span class="s2">;</span>
+
+          <span class="s1">str += fold</span><span class="s2">;</span>
+          <span class="s1">i = offset</span><span class="s2">;</span>
+          <span class="s0">if </span><span class="s1">(error) errors.push(</span><span class="s0">new </span><span class="s1">YAMLSemanticError(</span><span class="s0">this</span><span class="s2">, </span><span class="s3">'Multi-line double-quoted string needs to be sufficiently indented'</span><span class="s1">))</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else if </span><span class="s1">(ch === </span><span class="s3">'</span><span class="s2">\\</span><span class="s3">'</span><span class="s1">) {</span>
+          <span class="s1">i += </span><span class="s8">1</span><span class="s2">;</span>
+
+          <span class="s0">switch </span><span class="s1">(src[i]) {</span>
+            <span class="s0">case </span><span class="s3">'0'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">'</span><span class="s2">\0</span><span class="s3">'</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s5">// null character</span>
+
+            <span class="s0">case </span><span class="s3">'a'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">'</span><span class="s2">\x07</span><span class="s3">'</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s5">// bell character</span>
+
+            <span class="s0">case </span><span class="s3">'b'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">'</span><span class="s2">\b</span><span class="s3">'</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s5">// backspace</span>
+
+            <span class="s0">case </span><span class="s3">'e'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">'</span><span class="s2">\x1b</span><span class="s3">'</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s5">// escape character</span>
+
+            <span class="s0">case </span><span class="s3">'f'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">'</span><span class="s2">\f</span><span class="s3">'</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s5">// form feed</span>
+
+            <span class="s0">case </span><span class="s3">'n'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s5">// line feed</span>
+
+            <span class="s0">case </span><span class="s3">'r'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">'</span><span class="s2">\r</span><span class="s3">'</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s5">// carriage return</span>
+
+            <span class="s0">case </span><span class="s3">'t'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">'</span><span class="s2">\t</span><span class="s3">'</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s5">// horizontal tab</span>
+
+            <span class="s0">case </span><span class="s3">'v'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">'</span><span class="s2">\v</span><span class="s3">'</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s5">// vertical tab</span>
+
+            <span class="s0">case </span><span class="s3">'N'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">&quot;</span><span class="s2">\x85</span><span class="s3">&quot;</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s5">// Unicode next line</span>
+
+            <span class="s0">case </span><span class="s3">'_'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">&quot;</span><span class="s2">\xA0</span><span class="s3">&quot;</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s5">// Unicode non-breaking space</span>
+
+            <span class="s0">case </span><span class="s3">'L'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">&quot;</span><span class="s2">\u2028</span><span class="s3">&quot;</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s5">// Unicode line separator</span>
+
+            <span class="s0">case </span><span class="s3">'P'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">&quot;</span><span class="s2">\u2029</span><span class="s3">&quot;</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+            <span class="s5">// Unicode paragraph separator</span>
+
+            <span class="s0">case </span><span class="s3">' '</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">' '</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'&quot;'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">'&quot;'</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'/'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">'/'</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'</span><span class="s2">\\</span><span class="s3">'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">'</span><span class="s2">\\</span><span class="s3">'</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'</span><span class="s2">\t</span><span class="s3">'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s3">'</span><span class="s2">\t</span><span class="s3">'</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'x'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s0">this</span><span class="s1">.parseCharCode(i + </span><span class="s8">1</span><span class="s2">, </span><span class="s8">2</span><span class="s2">, </span><span class="s1">errors)</span><span class="s2">;</span>
+              <span class="s1">i += </span><span class="s8">2</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'u'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s0">this</span><span class="s1">.parseCharCode(i + </span><span class="s8">1</span><span class="s2">, </span><span class="s8">4</span><span class="s2">, </span><span class="s1">errors)</span><span class="s2">;</span>
+              <span class="s1">i += </span><span class="s8">4</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'U'</span><span class="s1">:</span>
+              <span class="s1">str += </span><span class="s0">this</span><span class="s1">.parseCharCode(i + </span><span class="s8">1</span><span class="s2">, </span><span class="s8">8</span><span class="s2">, </span><span class="s1">errors)</span><span class="s2">;</span>
+              <span class="s1">i += </span><span class="s8">8</span><span class="s2">;</span>
+              <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">:</span>
+              <span class="s5">// skip escaped newlines, but still trim the following line</span>
+              <span class="s0">while </span><span class="s1">(src[i + </span><span class="s8">1</span><span class="s1">] === </span><span class="s3">' ' </span><span class="s1">|| src[i + </span><span class="s8">1</span><span class="s1">] === </span><span class="s3">'</span><span class="s2">\t</span><span class="s3">'</span><span class="s1">) {</span>
+                <span class="s1">i += </span><span class="s8">1</span><span class="s2">;</span>
+              <span class="s1">}</span>
+
+              <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">default</span><span class="s1">:</span>
+              <span class="s1">errors.push(</span><span class="s0">new </span><span class="s1">YAMLSyntaxError(</span><span class="s0">this</span><span class="s2">, </span><span class="s3">&quot;Invalid escape sequence &quot;</span><span class="s1">.concat(src.substr(i - </span><span class="s8">1</span><span class="s2">, </span><span class="s8">2</span><span class="s1">))))</span><span class="s2">;</span>
+              <span class="s1">str += </span><span class="s3">'</span><span class="s2">\\</span><span class="s3">' </span><span class="s1">+ src[i]</span><span class="s2">;</span>
+          <span class="s1">}</span>
+        <span class="s1">} </span><span class="s0">else if </span><span class="s1">(ch === </span><span class="s3">' ' </span><span class="s1">|| ch === </span><span class="s3">'</span><span class="s2">\t</span><span class="s3">'</span><span class="s1">) {</span>
+          <span class="s5">// trim trailing whitespace</span>
+          <span class="s0">var </span><span class="s1">wsStart = i</span><span class="s2">;</span>
+          <span class="s0">var </span><span class="s1">next = src[i + </span><span class="s8">1</span><span class="s1">]</span><span class="s2">;</span>
+
+          <span class="s0">while </span><span class="s1">(next === </span><span class="s3">' ' </span><span class="s1">|| next === </span><span class="s3">'</span><span class="s2">\t</span><span class="s3">'</span><span class="s1">) {</span>
+            <span class="s1">i += </span><span class="s8">1</span><span class="s2">;</span>
+            <span class="s1">next = src[i + </span><span class="s8">1</span><span class="s1">]</span><span class="s2">;</span>
+          <span class="s1">}</span>
+
+          <span class="s0">if </span><span class="s1">(next !== </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) str += i &gt; wsStart ? src.slice(wsStart</span><span class="s2">, </span><span class="s1">i + </span><span class="s8">1</span><span class="s1">) : ch</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+          <span class="s1">str += ch</span><span class="s2">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">errors.length &gt; </span><span class="s8">0 </span><span class="s1">? {</span>
+        <span class="s1">errors: errors</span><span class="s2">,</span>
+        <span class="s1">str: str</span>
+      <span class="s1">} : str</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parseCharCode&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parseCharCode(offset</span><span class="s2">, </span><span class="s1">length</span><span class="s2">, </span><span class="s1">errors) {</span>
+      <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">cc = src.substr(offset</span><span class="s2">, </span><span class="s1">length)</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">ok = cc.length === length &amp;&amp; </span><span class="s8">/^[0-9a-fA-F]+$/</span><span class="s1">.test(cc)</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">code = ok ? parseInt(cc</span><span class="s2">, </span><span class="s8">16</span><span class="s1">) : NaN</span><span class="s2">;</span>
+
+      <span class="s0">if </span><span class="s1">(isNaN(code)) {</span>
+        <span class="s1">errors.push(</span><span class="s0">new </span><span class="s1">YAMLSyntaxError(</span><span class="s0">this</span><span class="s2">, </span><span class="s3">&quot;Invalid escape sequence &quot;</span><span class="s1">.concat(src.substr(offset - </span><span class="s8">2</span><span class="s2">, </span><span class="s1">length + </span><span class="s8">2</span><span class="s1">))))</span><span class="s2">;</span>
+        <span class="s0">return </span><span class="s1">src.substr(offset - </span><span class="s8">2</span><span class="s2">, </span><span class="s1">length + </span><span class="s8">2</span><span class="s1">)</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">String.fromCodePoint(code)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s6">/**</span>
+     <span class="s6">* Parses a &quot;double quoted&quot; value from the source</span>
+     <span class="s6">*</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{ParseContext} context</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} start - Index of first character</span>
+     <span class="s6">* </span><span class="s7">@returns </span><span class="s6">{number} - Index of the character after this scalar</span>
+     <span class="s6">*/</span>
+
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parse&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parse(context</span><span class="s2">, </span><span class="s1">start) {</span>
+      <span class="s0">this</span><span class="s1">.context = context</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">src = context.src</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = QuoteDouble.endOfQuote(src</span><span class="s2">, </span><span class="s1">start + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.valueRange = </span><span class="s0">new </span><span class="s1">Range(start</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseComment(offset)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}]</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;endOfQuote&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">endOfQuote(src</span><span class="s2">, </span><span class="s1">offset) {</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s2">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch &amp;&amp; ch !== </span><span class="s3">'&quot;'</span><span class="s1">) {</span>
+        <span class="s1">offset += ch === </span><span class="s3">'</span><span class="s2">\\</span><span class="s3">' </span><span class="s1">? </span><span class="s8">2 </span><span class="s1">: </span><span class="s8">1</span><span class="s2">;</span>
+        <span class="s1">ch = src[offset]</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">offset + </span><span class="s8">1</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s2">;</span>
+
+  <span class="s0">return </span><span class="s1">QuoteDouble</span><span class="s2">;</span>
+<span class="s1">}(Node)</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">QuoteSingle = </span><span class="s4">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_Node) {</span>
+  <span class="s1">_inherits(QuoteSingle</span><span class="s2">, </span><span class="s1">_Node)</span><span class="s2">;</span>
+
+  <span class="s0">var </span><span class="s1">_super = _createSuper(QuoteSingle)</span><span class="s2">;</span>
+
+  <span class="s0">function </span><span class="s1">QuoteSingle() {</span>
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">QuoteSingle)</span><span class="s2">;</span>
+
+    <span class="s0">return </span><span class="s1">_super.apply(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">arguments)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(QuoteSingle</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;strValue&quot;</span><span class="s2">,</span>
+    <span class="s1">get:</span>
+    <span class="s6">/**</span>
+     <span class="s6">* </span><span class="s7">@returns </span><span class="s6">{string | { str: string, errors: YAMLSyntaxError[] }}</span>
+     <span class="s6">*/</span>
+    <span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.valueRange || !</span><span class="s0">this</span><span class="s1">.context) </span><span class="s0">return null</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">errors = []</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">_this$valueRange = </span><span class="s0">this</span><span class="s1">.valueRange</span><span class="s2">,</span>
+          <span class="s1">start = _this$valueRange.start</span><span class="s2">,</span>
+          <span class="s1">end = _this$valueRange.end</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">_this$context = </span><span class="s0">this</span><span class="s1">.context</span><span class="s2">,</span>
+          <span class="s1">indent = _this$context.indent</span><span class="s2">,</span>
+          <span class="s1">src = _this$context.src</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(src[end - </span><span class="s8">1</span><span class="s1">] !== </span><span class="s3">&quot;'&quot;</span><span class="s1">) errors.push(</span><span class="s0">new </span><span class="s1">YAMLSyntaxError(</span><span class="s0">this</span><span class="s2">, </span><span class="s3">&quot;Missing closing 'quote&quot;</span><span class="s1">))</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">str = </span><span class="s3">''</span><span class="s2">;</span>
+
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = start + </span><span class="s8">1</span><span class="s2">; </span><span class="s1">i &lt; end - </span><span class="s8">1</span><span class="s2">; </span><span class="s1">++i) {</span>
+        <span class="s0">var </span><span class="s1">ch = src[i]</span><span class="s2">;</span>
+
+        <span class="s0">if </span><span class="s1">(ch === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) {</span>
+          <span class="s0">if </span><span class="s1">(Node.atDocumentBoundary(src</span><span class="s2">, </span><span class="s1">i + </span><span class="s8">1</span><span class="s1">)) errors.push(</span><span class="s0">new </span><span class="s1">YAMLSemanticError(</span><span class="s0">this</span><span class="s2">, </span><span class="s3">'Document boundary indicators are not allowed within string values'</span><span class="s1">))</span><span class="s2">;</span>
+
+          <span class="s0">var </span><span class="s1">_Node$foldNewline = Node.foldNewline(src</span><span class="s2">, </span><span class="s1">i</span><span class="s2">, </span><span class="s1">indent)</span><span class="s2">,</span>
+              <span class="s1">fold = _Node$foldNewline.fold</span><span class="s2">,</span>
+              <span class="s1">offset = _Node$foldNewline.offset</span><span class="s2">,</span>
+              <span class="s1">error = _Node$foldNewline.error</span><span class="s2">;</span>
+
+          <span class="s1">str += fold</span><span class="s2">;</span>
+          <span class="s1">i = offset</span><span class="s2">;</span>
+          <span class="s0">if </span><span class="s1">(error) errors.push(</span><span class="s0">new </span><span class="s1">YAMLSemanticError(</span><span class="s0">this</span><span class="s2">, </span><span class="s3">'Multi-line single-quoted string needs to be sufficiently indented'</span><span class="s1">))</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else if </span><span class="s1">(ch === </span><span class="s3">&quot;'&quot;</span><span class="s1">) {</span>
+          <span class="s1">str += ch</span><span class="s2">;</span>
+          <span class="s1">i += </span><span class="s8">1</span><span class="s2">;</span>
+          <span class="s0">if </span><span class="s1">(src[i] !== </span><span class="s3">&quot;'&quot;</span><span class="s1">) errors.push(</span><span class="s0">new </span><span class="s1">YAMLSyntaxError(</span><span class="s0">this</span><span class="s2">, </span><span class="s3">'Unescaped single quote? This should not happen.'</span><span class="s1">))</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else if </span><span class="s1">(ch === </span><span class="s3">' ' </span><span class="s1">|| ch === </span><span class="s3">'</span><span class="s2">\t</span><span class="s3">'</span><span class="s1">) {</span>
+          <span class="s5">// trim trailing whitespace</span>
+          <span class="s0">var </span><span class="s1">wsStart = i</span><span class="s2">;</span>
+          <span class="s0">var </span><span class="s1">next = src[i + </span><span class="s8">1</span><span class="s1">]</span><span class="s2">;</span>
+
+          <span class="s0">while </span><span class="s1">(next === </span><span class="s3">' ' </span><span class="s1">|| next === </span><span class="s3">'</span><span class="s2">\t</span><span class="s3">'</span><span class="s1">) {</span>
+            <span class="s1">i += </span><span class="s8">1</span><span class="s2">;</span>
+            <span class="s1">next = src[i + </span><span class="s8">1</span><span class="s1">]</span><span class="s2">;</span>
+          <span class="s1">}</span>
+
+          <span class="s0">if </span><span class="s1">(next !== </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) str += i &gt; wsStart ? src.slice(wsStart</span><span class="s2">, </span><span class="s1">i + </span><span class="s8">1</span><span class="s1">) : ch</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+          <span class="s1">str += ch</span><span class="s2">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">errors.length &gt; </span><span class="s8">0 </span><span class="s1">? {</span>
+        <span class="s1">errors: errors</span><span class="s2">,</span>
+        <span class="s1">str: str</span>
+      <span class="s1">} : str</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s6">/**</span>
+     <span class="s6">* Parses a 'single quoted' value from the source</span>
+     <span class="s6">*</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{ParseContext} context</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} start - Index of first character</span>
+     <span class="s6">* </span><span class="s7">@returns </span><span class="s6">{number} - Index of the character after this scalar</span>
+     <span class="s6">*/</span>
+
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parse&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parse(context</span><span class="s2">, </span><span class="s1">start) {</span>
+      <span class="s0">this</span><span class="s1">.context = context</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">src = context.src</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = QuoteSingle.endOfQuote(src</span><span class="s2">, </span><span class="s1">start + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+      <span class="s0">this</span><span class="s1">.valueRange = </span><span class="s0">new </span><span class="s1">Range(start</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseComment(offset)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}]</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;endOfQuote&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">endOfQuote(src</span><span class="s2">, </span><span class="s1">offset) {</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s2">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch) {</span>
+        <span class="s0">if </span><span class="s1">(ch === </span><span class="s3">&quot;'&quot;</span><span class="s1">) {</span>
+          <span class="s0">if </span><span class="s1">(src[offset + </span><span class="s8">1</span><span class="s1">] !== </span><span class="s3">&quot;'&quot;</span><span class="s1">) </span><span class="s0">break</span><span class="s2">;</span>
+          <span class="s1">ch = src[offset += </span><span class="s8">2</span><span class="s1">]</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+          <span class="s1">ch = src[offset += </span><span class="s8">1</span><span class="s1">]</span><span class="s2">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">offset + </span><span class="s8">1</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s2">;</span>
+
+  <span class="s0">return </span><span class="s1">QuoteSingle</span><span class="s2">;</span>
+<span class="s1">}(Node)</span><span class="s2">;</span>
+
+<span class="s0">function </span><span class="s1">createNewNode(type</span><span class="s2">, </span><span class="s1">props) {</span>
+  <span class="s0">switch </span><span class="s1">(type) {</span>
+    <span class="s0">case </span><span class="s1">Type.ALIAS:</span>
+      <span class="s0">return new </span><span class="s1">Alias(type</span><span class="s2">, </span><span class="s1">props)</span><span class="s2">;</span>
+
+    <span class="s0">case </span><span class="s1">Type.BLOCK_FOLDED:</span>
+    <span class="s0">case </span><span class="s1">Type.BLOCK_LITERAL:</span>
+      <span class="s0">return new </span><span class="s1">BlockValue(type</span><span class="s2">, </span><span class="s1">props)</span><span class="s2">;</span>
+
+    <span class="s0">case </span><span class="s1">Type.FLOW_MAP:</span>
+    <span class="s0">case </span><span class="s1">Type.FLOW_SEQ:</span>
+      <span class="s0">return new </span><span class="s1">FlowCollection(type</span><span class="s2">, </span><span class="s1">props)</span><span class="s2">;</span>
+
+    <span class="s0">case </span><span class="s1">Type.MAP_KEY:</span>
+    <span class="s0">case </span><span class="s1">Type.MAP_VALUE:</span>
+    <span class="s0">case </span><span class="s1">Type.SEQ_ITEM:</span>
+      <span class="s0">return new </span><span class="s1">CollectionItem(type</span><span class="s2">, </span><span class="s1">props)</span><span class="s2">;</span>
+
+    <span class="s0">case </span><span class="s1">Type.COMMENT:</span>
+    <span class="s0">case </span><span class="s1">Type.PLAIN:</span>
+      <span class="s0">return new </span><span class="s1">PlainValue(type</span><span class="s2">, </span><span class="s1">props)</span><span class="s2">;</span>
+
+    <span class="s0">case </span><span class="s1">Type.QUOTE_DOUBLE:</span>
+      <span class="s0">return new </span><span class="s1">QuoteDouble(type</span><span class="s2">, </span><span class="s1">props)</span><span class="s2">;</span>
+
+    <span class="s0">case </span><span class="s1">Type.QUOTE_SINGLE:</span>
+      <span class="s0">return new </span><span class="s1">QuoteSingle(type</span><span class="s2">, </span><span class="s1">props)</span><span class="s2">;</span>
+
+    <span class="s4">/* istanbul ignore next */</span>
+
+    <span class="s0">default</span><span class="s1">:</span>
+      <span class="s0">return null</span><span class="s2">;</span>
+    <span class="s5">// should never happen</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+<span class="s6">/**</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{boolean} atLineStart - Node starts at beginning of line</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{boolean} inFlow - true if currently in a flow context</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{boolean} inCollection - true if currently in a collection context</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} indent - Current level of indentation</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} lineStart - Start of the current line</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Node} parent - The parent of the node</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} src - Source of the YAML document</span>
+ <span class="s6">*/</span>
+
+
+<span class="s0">var </span><span class="s1">ParseContext = </span><span class="s4">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s0">function </span><span class="s1">ParseContext() {</span>
+    <span class="s0">var </span><span class="s1">_this = </span><span class="s0">this</span><span class="s2">;</span>
+
+    <span class="s0">var </span><span class="s1">orig = arguments.length &gt; </span><span class="s8">0 </span><span class="s1">&amp;&amp; arguments[</span><span class="s8">0</span><span class="s1">] !== undefined ? arguments[</span><span class="s8">0</span><span class="s1">] : {}</span><span class="s2">;</span>
+
+    <span class="s0">var </span><span class="s1">_ref = arguments.length &gt; </span><span class="s8">1 </span><span class="s1">&amp;&amp; arguments[</span><span class="s8">1</span><span class="s1">] !== undefined ? arguments[</span><span class="s8">1</span><span class="s1">] : {}</span><span class="s2">,</span>
+        <span class="s1">atLineStart = _ref.atLineStart</span><span class="s2">,</span>
+        <span class="s1">inCollection = _ref.inCollection</span><span class="s2">,</span>
+        <span class="s1">inFlow = _ref.inFlow</span><span class="s2">,</span>
+        <span class="s1">indent = _ref.indent</span><span class="s2">,</span>
+        <span class="s1">lineStart = _ref.lineStart</span><span class="s2">,</span>
+        <span class="s1">parent = _ref.parent</span><span class="s2">;</span>
+
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">ParseContext)</span><span class="s2">;</span>
+
+    <span class="s1">_defineProperty(</span><span class="s0">this</span><span class="s2">, </span><span class="s3">&quot;parseNode&quot;</span><span class="s2">, </span><span class="s0">function </span><span class="s1">(overlay</span><span class="s2">, </span><span class="s1">start) {</span>
+      <span class="s0">if </span><span class="s1">(Node.atDocumentBoundary(_this.src</span><span class="s2">, </span><span class="s1">start)) </span><span class="s0">return null</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">context = </span><span class="s0">new </span><span class="s1">ParseContext(_this</span><span class="s2">, </span><span class="s1">overlay)</span><span class="s2">;</span>
+
+      <span class="s0">var </span><span class="s1">_context$parseProps = context.parseProps(start)</span><span class="s2">,</span>
+          <span class="s1">props = _context$parseProps.props</span><span class="s2">,</span>
+          <span class="s1">type = _context$parseProps.type</span><span class="s2">,</span>
+          <span class="s1">valueStart = _context$parseProps.valueStart</span><span class="s2">;</span>
+
+      <span class="s0">var </span><span class="s1">node = createNewNode(type</span><span class="s2">, </span><span class="s1">props)</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">offset = node.parse(context</span><span class="s2">, </span><span class="s1">valueStart)</span><span class="s2">;</span>
+      <span class="s1">node.range = </span><span class="s0">new </span><span class="s1">Range(start</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s4">/* istanbul ignore if */</span>
+
+      <span class="s0">if </span><span class="s1">(offset &lt;= start) {</span>
+        <span class="s5">// This should never happen, but if it does, let's make sure to at least</span>
+        <span class="s5">// step one character forward to avoid a busy loop.</span>
+        <span class="s1">node.error = </span><span class="s0">new </span><span class="s1">Error(</span><span class="s3">&quot;Node#parse consumed no characters&quot;</span><span class="s1">)</span><span class="s2">;</span>
+        <span class="s1">node.error.parseEnd = offset</span><span class="s2">;</span>
+        <span class="s1">node.error.source = node</span><span class="s2">;</span>
+        <span class="s1">node.range.end = start + </span><span class="s8">1</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">if </span><span class="s1">(context.nodeStartsCollection(node)) {</span>
+        <span class="s0">if </span><span class="s1">(!node.error &amp;&amp; !context.atLineStart &amp;&amp; context.parent.type === Type.DOCUMENT) {</span>
+          <span class="s1">node.error = </span><span class="s0">new </span><span class="s1">YAMLSyntaxError(node</span><span class="s2">, </span><span class="s3">'Block collection must not have preceding content here (e.g. directives-end indicator)'</span><span class="s1">)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">var </span><span class="s1">collection = </span><span class="s0">new </span><span class="s1">Collection(node)</span><span class="s2">;</span>
+        <span class="s1">offset = collection.parse(</span><span class="s0">new </span><span class="s1">ParseContext(context)</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+        <span class="s1">collection.range = </span><span class="s0">new </span><span class="s1">Range(start</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+        <span class="s0">return </span><span class="s1">collection</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">node</span><span class="s2">;</span>
+    <span class="s1">})</span><span class="s2">;</span>
+
+    <span class="s0">this</span><span class="s1">.atLineStart = atLineStart != </span><span class="s0">null </span><span class="s1">? atLineStart : orig.atLineStart || </span><span class="s0">false</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.inCollection = inCollection != </span><span class="s0">null </span><span class="s1">? inCollection : orig.inCollection || </span><span class="s0">false</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.inFlow = inFlow != </span><span class="s0">null </span><span class="s1">? inFlow : orig.inFlow || </span><span class="s0">false</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.indent = indent != </span><span class="s0">null </span><span class="s1">? indent : orig.indent</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.lineStart = lineStart != </span><span class="s0">null </span><span class="s1">? lineStart : orig.lineStart</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.parent = parent != </span><span class="s0">null </span><span class="s1">? parent : orig.parent || {}</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.root = orig.root</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.src = orig.src</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(ParseContext</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;nodeStartsCollection&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">nodeStartsCollection(node) {</span>
+      <span class="s0">var </span><span class="s1">inCollection = </span><span class="s0">this</span><span class="s1">.inCollection</span><span class="s2">,</span>
+          <span class="s1">inFlow = </span><span class="s0">this</span><span class="s1">.inFlow</span><span class="s2">,</span>
+          <span class="s1">src = </span><span class="s0">this</span><span class="s1">.src</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(inCollection || inFlow) </span><span class="s0">return false</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(node </span><span class="s0">instanceof </span><span class="s1">CollectionItem) </span><span class="s0">return true</span><span class="s2">; </span><span class="s5">// check for implicit key</span>
+
+      <span class="s0">var </span><span class="s1">offset = node.range.end</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(src[offset] === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">' </span><span class="s1">|| src[offset - </span><span class="s8">1</span><span class="s1">] === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) </span><span class="s0">return false</span><span class="s2">;</span>
+      <span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">src[offset] === </span><span class="s3">':'</span><span class="s2">;</span>
+    <span class="s1">} </span><span class="s5">// Anchor and tag are before type, which determines the node implementation</span>
+    <span class="s5">// class; hence this intermediate step.</span>
+
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parseProps&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parseProps(offset) {</span>
+      <span class="s0">var </span><span class="s1">inFlow = </span><span class="s0">this</span><span class="s1">.inFlow</span><span class="s2">,</span>
+          <span class="s1">parent = </span><span class="s0">this</span><span class="s1">.parent</span><span class="s2">,</span>
+          <span class="s1">src = </span><span class="s0">this</span><span class="s1">.src</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">props = []</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">lineHasProps = </span><span class="s0">false</span><span class="s2">;</span>
+      <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.atLineStart ? Node.endOfIndent(src</span><span class="s2">, </span><span class="s1">offset) : Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s2">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch === Char.ANCHOR || ch === Char.COMMENT || ch === Char.TAG || ch === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) {</span>
+        <span class="s0">if </span><span class="s1">(ch === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">) {</span>
+          <span class="s0">var </span><span class="s1">inEnd = offset</span><span class="s2">;</span>
+          <span class="s0">var </span><span class="s1">lineStart = </span><span class="s0">void </span><span class="s8">0</span><span class="s2">;</span>
+
+          <span class="s0">do </span><span class="s1">{</span>
+            <span class="s1">lineStart = inEnd + </span><span class="s8">1</span><span class="s2">;</span>
+            <span class="s1">inEnd = Node.endOfIndent(src</span><span class="s2">, </span><span class="s1">lineStart)</span><span class="s2">;</span>
+          <span class="s1">} </span><span class="s0">while </span><span class="s1">(src[inEnd] === </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">)</span><span class="s2">;</span>
+
+          <span class="s0">var </span><span class="s1">indentDiff = inEnd - (lineStart + </span><span class="s0">this</span><span class="s1">.indent)</span><span class="s2">;</span>
+          <span class="s0">var </span><span class="s1">noIndicatorAsIndent = parent.type === Type.SEQ_ITEM &amp;&amp; parent.context.atLineStart</span><span class="s2">;</span>
+          <span class="s0">if </span><span class="s1">(src[inEnd] !== </span><span class="s3">'#' </span><span class="s1">&amp;&amp; !Node.nextNodeIsIndented(src[inEnd]</span><span class="s2">, </span><span class="s1">indentDiff</span><span class="s2">, </span><span class="s1">!noIndicatorAsIndent)) </span><span class="s0">break</span><span class="s2">;</span>
+          <span class="s0">this</span><span class="s1">.atLineStart = </span><span class="s0">true</span><span class="s2">;</span>
+          <span class="s0">this</span><span class="s1">.lineStart = lineStart</span><span class="s2">;</span>
+          <span class="s1">lineHasProps = </span><span class="s0">false</span><span class="s2">;</span>
+          <span class="s1">offset = inEnd</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else if </span><span class="s1">(ch === Char.COMMENT) {</span>
+          <span class="s0">var </span><span class="s1">end = Node.endOfLine(src</span><span class="s2">, </span><span class="s1">offset + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+          <span class="s1">props.push(</span><span class="s0">new </span><span class="s1">Range(offset</span><span class="s2">, </span><span class="s1">end))</span><span class="s2">;</span>
+          <span class="s1">offset = end</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+          <span class="s0">var </span><span class="s1">_end = Node.endOfIdentifier(src</span><span class="s2">, </span><span class="s1">offset + </span><span class="s8">1</span><span class="s1">)</span><span class="s2">;</span>
+
+          <span class="s0">if </span><span class="s1">(ch === Char.TAG &amp;&amp; src[_end] === </span><span class="s3">',' </span><span class="s1">&amp;&amp; </span><span class="s8">/^[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+,\d\d\d\d(-\d\d){0,2}\/\S/</span><span class="s1">.test(src.slice(offset + </span><span class="s8">1</span><span class="s2">, </span><span class="s1">_end + </span><span class="s8">13</span><span class="s1">))) {</span>
+            <span class="s5">// Let's presume we're dealing with a YAML 1.0 domain tag here, rather</span>
+            <span class="s5">// than an empty but 'foo.bar' private-tagged node in a flow collection</span>
+            <span class="s5">// followed without whitespace by a plain string starting with a year</span>
+            <span class="s5">// or date divided by something.</span>
+            <span class="s1">_end = Node.endOfIdentifier(src</span><span class="s2">, </span><span class="s1">_end + </span><span class="s8">5</span><span class="s1">)</span><span class="s2">;</span>
+          <span class="s1">}</span>
+
+          <span class="s1">props.push(</span><span class="s0">new </span><span class="s1">Range(offset</span><span class="s2">, </span><span class="s1">_end))</span><span class="s2">;</span>
+          <span class="s1">lineHasProps = </span><span class="s0">true</span><span class="s2">;</span>
+          <span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s2">, </span><span class="s1">_end)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">ch = src[offset]</span><span class="s2">;</span>
+      <span class="s1">} </span><span class="s5">// '- &amp;a : b' has an anchor on an empty node</span>
+
+
+      <span class="s0">if </span><span class="s1">(lineHasProps &amp;&amp; ch === </span><span class="s3">':' </span><span class="s1">&amp;&amp; Node.atBlank(src</span><span class="s2">, </span><span class="s1">offset + </span><span class="s8">1</span><span class="s2">, </span><span class="s0">true</span><span class="s1">)) offset -= </span><span class="s8">1</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">type = ParseContext.parseType(src</span><span class="s2">, </span><span class="s1">offset</span><span class="s2">, </span><span class="s1">inFlow)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">{</span>
+        <span class="s1">props: props</span><span class="s2">,</span>
+        <span class="s1">type: type</span><span class="s2">,</span>
+        <span class="s1">valueStart: offset</span>
+      <span class="s1">}</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s6">/**</span>
+     <span class="s6">* Parses a node from the source</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{ParseContext} overlay</span>
+     <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} start - Index of first non-whitespace character for the node</span>
+     <span class="s6">* </span><span class="s7">@returns </span><span class="s6">{?Node} - null if at a document boundary</span>
+     <span class="s6">*/</span>
+
+  <span class="s1">}]</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;parseType&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parseType(src</span><span class="s2">, </span><span class="s1">offset</span><span class="s2">, </span><span class="s1">inFlow) {</span>
+      <span class="s0">switch </span><span class="s1">(src[offset]) {</span>
+        <span class="s0">case </span><span class="s3">'*'</span><span class="s1">:</span>
+          <span class="s0">return </span><span class="s1">Type.ALIAS</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s3">'&gt;'</span><span class="s1">:</span>
+          <span class="s0">return </span><span class="s1">Type.BLOCK_FOLDED</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s3">'|'</span><span class="s1">:</span>
+          <span class="s0">return </span><span class="s1">Type.BLOCK_LITERAL</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s3">'{'</span><span class="s1">:</span>
+          <span class="s0">return </span><span class="s1">Type.FLOW_MAP</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s3">'['</span><span class="s1">:</span>
+          <span class="s0">return </span><span class="s1">Type.FLOW_SEQ</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s3">'?'</span><span class="s1">:</span>
+          <span class="s0">return </span><span class="s1">!inFlow &amp;&amp; Node.atBlank(src</span><span class="s2">, </span><span class="s1">offset + </span><span class="s8">1</span><span class="s2">, </span><span class="s0">true</span><span class="s1">) ? Type.MAP_KEY : Type.PLAIN</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s3">':'</span><span class="s1">:</span>
+          <span class="s0">return </span><span class="s1">!inFlow &amp;&amp; Node.atBlank(src</span><span class="s2">, </span><span class="s1">offset + </span><span class="s8">1</span><span class="s2">, </span><span class="s0">true</span><span class="s1">) ? Type.MAP_VALUE : Type.PLAIN</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s3">'-'</span><span class="s1">:</span>
+          <span class="s0">return </span><span class="s1">!inFlow &amp;&amp; Node.atBlank(src</span><span class="s2">, </span><span class="s1">offset + </span><span class="s8">1</span><span class="s2">, </span><span class="s0">true</span><span class="s1">) ? Type.SEQ_ITEM : Type.PLAIN</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s3">'&quot;'</span><span class="s1">:</span>
+          <span class="s0">return </span><span class="s1">Type.QUOTE_DOUBLE</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s3">&quot;'&quot;</span><span class="s1">:</span>
+          <span class="s0">return </span><span class="s1">Type.QUOTE_SINGLE</span><span class="s2">;</span>
+
+        <span class="s0">default</span><span class="s1">:</span>
+          <span class="s0">return </span><span class="s1">Type.PLAIN</span><span class="s2">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s2">;</span>
+
+  <span class="s0">return </span><span class="s1">ParseContext</span><span class="s2">;</span>
+<span class="s1">}()</span><span class="s2">;</span>
+
+<span class="s5">// Published as 'yaml/parse-cst'</span>
+<span class="s0">function </span><span class="s1">parse(src) {</span>
+  <span class="s0">var </span><span class="s1">cr = []</span><span class="s2">;</span>
+
+  <span class="s0">if </span><span class="s1">(src.indexOf(</span><span class="s3">'</span><span class="s2">\r</span><span class="s3">'</span><span class="s1">) !== -</span><span class="s8">1</span><span class="s1">) {</span>
+    <span class="s1">src = src.replace(</span><span class="s8">/\r\n?/g</span><span class="s2">, </span><span class="s0">function </span><span class="s1">(match</span><span class="s2">, </span><span class="s1">offset) {</span>
+      <span class="s0">if </span><span class="s1">(match.length &gt; </span><span class="s8">1</span><span class="s1">) cr.push(offset)</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s3">'</span><span class="s2">\n</span><span class="s3">'</span><span class="s2">;</span>
+    <span class="s1">})</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">var </span><span class="s1">documents = []</span><span class="s2">;</span>
+  <span class="s0">var </span><span class="s1">offset = </span><span class="s8">0</span><span class="s2">;</span>
+
+  <span class="s0">do </span><span class="s1">{</span>
+    <span class="s0">var </span><span class="s1">doc = </span><span class="s0">new </span><span class="s1">Document()</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">context = </span><span class="s0">new </span><span class="s1">ParseContext({</span>
+      <span class="s1">src: src</span>
+    <span class="s1">})</span><span class="s2">;</span>
+    <span class="s1">offset = doc.parse(context</span><span class="s2">, </span><span class="s1">offset)</span><span class="s2">;</span>
+    <span class="s1">documents.push(doc)</span><span class="s2">;</span>
+  <span class="s1">} </span><span class="s0">while </span><span class="s1">(offset &lt; src.length)</span><span class="s2">;</span>
+
+  <span class="s1">documents.setOrigRanges = </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">if </span><span class="s1">(cr.length === </span><span class="s8">0</span><span class="s1">) </span><span class="s0">return false</span><span class="s2">;</span>
+
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s8">1</span><span class="s2">; </span><span class="s1">i &lt; cr.length</span><span class="s2">; </span><span class="s1">++i) {</span>
+      <span class="s1">cr[i] -= i</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">crOffset = </span><span class="s8">0</span><span class="s2">;</span>
+
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">_i = </span><span class="s8">0</span><span class="s2">; </span><span class="s1">_i &lt; documents.length</span><span class="s2">; </span><span class="s1">++_i) {</span>
+      <span class="s1">crOffset = documents[_i].setOrigRanges(cr</span><span class="s2">, </span><span class="s1">crOffset)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">cr.splice(</span><span class="s8">0</span><span class="s2">, </span><span class="s1">cr.length)</span><span class="s2">;</span>
+    <span class="s0">return true</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">;</span>
+
+  <span class="s1">documents.toString = </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">return </span><span class="s1">documents.join(</span><span class="s3">'...</span><span class="s2">\n</span><span class="s3">'</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">;</span>
+
+  <span class="s0">return </span><span class="s1">documents</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export </span><span class="s1">{ parse }</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

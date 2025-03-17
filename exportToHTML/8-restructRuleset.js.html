@@ -1,0 +1,200 @@
+<html>
+<head>
+<title>8-restructRuleset.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+.s6 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+8-restructRuleset.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">List = require(</span><span class="s2">'css-tree'</span><span class="s1">).List</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">walk = require(</span><span class="s2">'css-tree'</span><span class="s1">).walk</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">utils = require(</span><span class="s2">'./utils'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">calcSelectorLength(list) {</span>
+    <span class="s0">var </span><span class="s1">length = </span><span class="s4">0</span><span class="s3">;</span>
+
+    <span class="s1">list.each(</span><span class="s0">function</span><span class="s1">(data) {</span>
+        <span class="s1">length += data.id.length + </span><span class="s4">1</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s0">return </span><span class="s1">length - </span><span class="s4">1</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">calcDeclarationsLength(tokens) {</span>
+    <span class="s0">var </span><span class="s1">length = </span><span class="s4">0</span><span class="s3">;</span>
+
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; tokens.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+        <span class="s1">length += tokens[i].length</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">(</span>
+        <span class="s1">length +          </span><span class="s5">// declarations</span>
+        <span class="s1">tokens.length - </span><span class="s4">1 </span><span class="s5">// delimeters</span>
+    <span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">processRule(node</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">list) {</span>
+    <span class="s0">var </span><span class="s1">avoidRulesMerge = </span><span class="s0">this</span><span class="s1">.block !== </span><span class="s0">null </span><span class="s1">? </span><span class="s0">this</span><span class="s1">.block.avoidRulesMerge : </span><span class="s0">false</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">selectors = node.prelude.children</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">block = node.block</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">disallowDownMarkers = Object.create(</span><span class="s0">null</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">allowMergeUp = </span><span class="s0">true</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">allowMergeDown = </span><span class="s0">true</span><span class="s3">;</span>
+
+    <span class="s1">list.prevUntil(item.prev</span><span class="s3">, </span><span class="s0">function</span><span class="s1">(prev</span><span class="s3">, </span><span class="s1">prevItem) {</span>
+        <span class="s0">var </span><span class="s1">prevBlock = prev.block</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">prevType = prev.type</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(prevType !== </span><span class="s2">'Rule'</span><span class="s1">) {</span>
+            <span class="s0">var </span><span class="s1">unsafe = utils.unsafeToSkipNode.call(selectors</span><span class="s3">, </span><span class="s1">prev)</span><span class="s3">;</span>
+
+            <span class="s0">if </span><span class="s1">(!unsafe &amp;&amp; prevType === </span><span class="s2">'Atrule' </span><span class="s1">&amp;&amp; prevBlock) {</span>
+                <span class="s1">walk(prevBlock</span><span class="s3">, </span><span class="s1">{</span>
+                    <span class="s1">visit: </span><span class="s2">'Rule'</span><span class="s3">,</span>
+                    <span class="s1">enter: </span><span class="s0">function</span><span class="s1">(node) {</span>
+                        <span class="s1">node.prelude.children.each(</span><span class="s0">function</span><span class="s1">(data) {</span>
+                            <span class="s1">disallowDownMarkers[data.compareMarker] = </span><span class="s0">true</span><span class="s3">;</span>
+                        <span class="s1">})</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">})</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">return </span><span class="s1">unsafe</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">var </span><span class="s1">prevSelectors = prev.prelude.children</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(node.pseudoSignature !== prev.pseudoSignature) {</span>
+            <span class="s0">return true</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">allowMergeDown = !prevSelectors.some(</span><span class="s0">function</span><span class="s1">(selector) {</span>
+            <span class="s0">return </span><span class="s1">selector.compareMarker </span><span class="s0">in </span><span class="s1">disallowDownMarkers</span><span class="s3">;</span>
+        <span class="s1">})</span><span class="s3">;</span>
+
+        <span class="s5">// try prev ruleset if simpleselectors has no equal specifity and element selector</span>
+        <span class="s0">if </span><span class="s1">(!allowMergeDown &amp;&amp; !allowMergeUp) {</span>
+            <span class="s0">return true</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s5">// try to join by selectors</span>
+        <span class="s0">if </span><span class="s1">(allowMergeUp &amp;&amp; utils.isEqualSelectors(prevSelectors</span><span class="s3">, </span><span class="s1">selectors)) {</span>
+            <span class="s1">prevBlock.children.appendList(block.children)</span><span class="s3">;</span>
+            <span class="s1">list.remove(item)</span><span class="s3">;</span>
+            <span class="s0">return true</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s5">// try to join by properties</span>
+        <span class="s0">var </span><span class="s1">diff = utils.compareDeclarations(block.children</span><span class="s3">, </span><span class="s1">prevBlock.children)</span><span class="s3">;</span>
+
+        <span class="s5">// console.log(diff.eq, diff.ne1, diff.ne2);</span>
+
+        <span class="s0">if </span><span class="s1">(diff.eq.length) {</span>
+            <span class="s0">if </span><span class="s1">(!diff.ne1.length &amp;&amp; !diff.ne2.length) {</span>
+                <span class="s5">// equal blocks</span>
+                <span class="s0">if </span><span class="s1">(allowMergeDown) {</span>
+                    <span class="s1">utils.addSelectors(selectors</span><span class="s3">, </span><span class="s1">prevSelectors)</span><span class="s3">;</span>
+                    <span class="s1">list.remove(prevItem)</span><span class="s3">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">return true</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s0">else if </span><span class="s1">(!avoidRulesMerge) { </span><span class="s6">/* probably we don't need to prevent those merges for @keyframes 
+                                              TODO: need to be checked */</span>
+
+                <span class="s0">if </span><span class="s1">(diff.ne1.length &amp;&amp; !diff.ne2.length) {</span>
+                    <span class="s5">// prevBlock is subset block</span>
+                    <span class="s0">var </span><span class="s1">selectorLength = calcSelectorLength(selectors)</span><span class="s3">;</span>
+                    <span class="s0">var </span><span class="s1">blockLength = calcDeclarationsLength(diff.eq)</span><span class="s3">; </span><span class="s5">// declarations length</span>
+
+                    <span class="s0">if </span><span class="s1">(allowMergeUp &amp;&amp; selectorLength &lt; blockLength) {</span>
+                        <span class="s1">utils.addSelectors(prevSelectors</span><span class="s3">, </span><span class="s1">selectors)</span><span class="s3">;</span>
+                        <span class="s1">block.children = </span><span class="s0">new </span><span class="s1">List().fromArray(diff.ne1)</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">} </span><span class="s0">else if </span><span class="s1">(!diff.ne1.length &amp;&amp; diff.ne2.length) {</span>
+                    <span class="s5">// node is subset of prevBlock</span>
+                    <span class="s0">var </span><span class="s1">selectorLength = calcSelectorLength(prevSelectors)</span><span class="s3">;</span>
+                    <span class="s0">var </span><span class="s1">blockLength = calcDeclarationsLength(diff.eq)</span><span class="s3">; </span><span class="s5">// declarations length</span>
+
+                    <span class="s0">if </span><span class="s1">(allowMergeDown &amp;&amp; selectorLength &lt; blockLength) {</span>
+                        <span class="s1">utils.addSelectors(selectors</span><span class="s3">, </span><span class="s1">prevSelectors)</span><span class="s3">;</span>
+                        <span class="s1">prevBlock.children = </span><span class="s0">new </span><span class="s1">List().fromArray(diff.ne2)</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                    <span class="s5">// diff.ne1.length &amp;&amp; diff.ne2.length</span>
+                    <span class="s5">// extract equal block</span>
+                    <span class="s0">var </span><span class="s1">newSelector = {</span>
+                        <span class="s1">type: </span><span class="s2">'SelectorList'</span><span class="s3">,</span>
+                        <span class="s1">loc: </span><span class="s0">null</span><span class="s3">,</span>
+                        <span class="s1">children: utils.addSelectors(prevSelectors.copy()</span><span class="s3">, </span><span class="s1">selectors)</span>
+                    <span class="s1">}</span><span class="s3">;</span>
+                    <span class="s0">var </span><span class="s1">newBlockLength = calcSelectorLength(newSelector.children) + </span><span class="s4">2</span><span class="s3">; </span><span class="s5">// selectors length + curly braces length</span>
+                    <span class="s0">var </span><span class="s1">blockLength = calcDeclarationsLength(diff.eq)</span><span class="s3">; </span><span class="s5">// declarations length</span>
+
+                    <span class="s5">// create new ruleset if declarations length greater than</span>
+                    <span class="s5">// ruleset description overhead</span>
+                    <span class="s0">if </span><span class="s1">(blockLength &gt;= newBlockLength) {</span>
+                        <span class="s0">var </span><span class="s1">newItem = list.createItem({</span>
+                            <span class="s1">type: </span><span class="s2">'Rule'</span><span class="s3">,</span>
+                            <span class="s1">loc: </span><span class="s0">null</span><span class="s3">,</span>
+                            <span class="s1">prelude: newSelector</span><span class="s3">,</span>
+                            <span class="s1">block: {</span>
+                                <span class="s1">type: </span><span class="s2">'Block'</span><span class="s3">,</span>
+                                <span class="s1">loc: </span><span class="s0">null</span><span class="s3">,</span>
+                                <span class="s1">children: </span><span class="s0">new </span><span class="s1">List().fromArray(diff.eq)</span>
+                            <span class="s1">}</span><span class="s3">,</span>
+                            <span class="s1">pseudoSignature: node.pseudoSignature</span>
+                        <span class="s1">})</span><span class="s3">;</span>
+
+                        <span class="s1">block.children = </span><span class="s0">new </span><span class="s1">List().fromArray(diff.ne1)</span><span class="s3">;</span>
+                        <span class="s1">prevBlock.children = </span><span class="s0">new </span><span class="s1">List().fromArray(diff.ne2overrided)</span><span class="s3">;</span>
+
+                        <span class="s0">if </span><span class="s1">(allowMergeUp) {</span>
+                            <span class="s1">list.insert(newItem</span><span class="s3">, </span><span class="s1">prevItem)</span><span class="s3">;</span>
+                        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                            <span class="s1">list.insert(newItem</span><span class="s3">, </span><span class="s1">item)</span><span class="s3">;</span>
+                        <span class="s1">}</span>
+
+                        <span class="s0">return true</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(allowMergeUp) {</span>
+            <span class="s5">// TODO: disallow up merge only if any property interception only (i.e. diff.ne2overrided.length &gt; 0);</span>
+            <span class="s5">// await property families to find property interception correctly</span>
+            <span class="s1">allowMergeUp = !prevSelectors.some(</span><span class="s0">function</span><span class="s1">(prevSelector) {</span>
+                <span class="s0">return </span><span class="s1">selectors.some(</span><span class="s0">function</span><span class="s1">(selector) {</span>
+                    <span class="s0">return </span><span class="s1">selector.compareMarker === prevSelector.compareMarker</span><span class="s3">;</span>
+                <span class="s1">})</span><span class="s3">;</span>
+            <span class="s1">})</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">prevSelectors.each(</span><span class="s0">function</span><span class="s1">(data) {</span>
+            <span class="s1">disallowDownMarkers[data.compareMarker] = </span><span class="s0">true</span><span class="s3">;</span>
+        <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">restructRule(ast) {</span>
+    <span class="s1">walk(ast</span><span class="s3">, </span><span class="s1">{</span>
+        <span class="s1">visit: </span><span class="s2">'Rule'</span><span class="s3">,</span>
+        <span class="s1">reverse: </span><span class="s0">true</span><span class="s3">,</span>
+        <span class="s1">enter: processRule</span>
+    <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

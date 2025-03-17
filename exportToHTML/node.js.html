@@ -1,0 +1,39 @@
+<html>
+<head>
+<title>node.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+node.js</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">{ readFileSync</span><span class="s2">, </span><span class="s1">statSync</span><span class="s2">, </span><span class="s1">writeFile } from </span><span class="s3">'fs'</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">{ format } from </span><span class="s3">'util'</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">{ resolve } from </span><span class="s3">'path'</span><span class="s2">;</span>
+<span class="s0">export default </span><span class="s1">{</span>
+    <span class="s1">fs: {</span>
+        <span class="s1">readFileSync</span><span class="s2">,</span>
+        <span class="s1">writeFile</span>
+    <span class="s1">}</span><span class="s2">,</span>
+    <span class="s1">format</span><span class="s2">,</span>
+    <span class="s1">resolve</span><span class="s2">,</span>
+    <span class="s1">exists: (file) =&gt; {</span>
+        <span class="s0">try </span><span class="s1">{</span>
+            <span class="s0">return </span><span class="s1">statSync(file).isFile()</span><span class="s2">;</span>
+        <span class="s1">}</span>
+        <span class="s0">catch </span><span class="s1">(err) {</span>
+            <span class="s0">return false</span><span class="s2">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

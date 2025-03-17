@@ -1,0 +1,140 @@
+<html>
+<head>
+<title>general.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #8a8a8a;}
+.s5 { color: #808080;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+general.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">attributes = require(</span><span class="s2">&quot;./attributes.js&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">Pseudos = require(</span><span class="s2">&quot;./pseudos&quot;</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">/* 
+    all available rules 
+*/</span>
+<span class="s1">module.exports = {</span>
+    <span class="s1">__proto__: </span><span class="s0">null</span><span class="s3">,</span>
+
+    <span class="s1">attribute: attributes.compile</span><span class="s3">,</span>
+    <span class="s1">pseudo: Pseudos.compile</span><span class="s3">,</span>
+
+    <span class="s5">//tags</span>
+    <span class="s1">tag: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">var </span><span class="s1">name = data.name</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s0">return function </span><span class="s1">tag(elem) {</span>
+            <span class="s0">return </span><span class="s1">adapter.getName(elem) === name &amp;&amp; next(elem)</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+
+    <span class="s5">//traversal</span>
+    <span class="s1">descendant: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s5">// eslint-disable-next-line no-undef</span>
+        <span class="s0">var </span><span class="s1">isFalseCache = </span><span class="s0">typeof </span><span class="s1">WeakSet !== </span><span class="s2">&quot;undefined&quot; </span><span class="s1">? </span><span class="s0">new </span><span class="s1">WeakSet() : </span><span class="s0">null</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s0">return function </span><span class="s1">descendant(elem) {</span>
+            <span class="s0">var </span><span class="s1">found = </span><span class="s0">false</span><span class="s3">;</span>
+
+            <span class="s0">while </span><span class="s1">(!found &amp;&amp; (elem = adapter.getParent(elem))) {</span>
+                <span class="s0">if </span><span class="s1">(!isFalseCache || !isFalseCache.has(elem)) {</span>
+                    <span class="s1">found = next(elem)</span><span class="s3">;</span>
+                    <span class="s0">if </span><span class="s1">(!found &amp;&amp; isFalseCache) {</span>
+                        <span class="s1">isFalseCache.add(elem)</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+
+            <span class="s0">return </span><span class="s1">found</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">_flexibleDescendant: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s5">// Include element itself, only used while querying an array</span>
+        <span class="s0">return function </span><span class="s1">descendant(elem) {</span>
+            <span class="s0">var </span><span class="s1">found = next(elem)</span><span class="s3">;</span>
+
+            <span class="s0">while </span><span class="s1">(!found &amp;&amp; (elem = adapter.getParent(elem))) {</span>
+                <span class="s1">found = next(elem)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">return </span><span class="s1">found</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">parent: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">if </span><span class="s1">(options &amp;&amp; options.strict) {</span>
+            <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">&quot;Parent selector isn't part of CSS3&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s0">return function </span><span class="s1">parent(elem) {</span>
+            <span class="s0">return </span><span class="s1">adapter.getChildren(elem).some(test)</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+
+        <span class="s0">function </span><span class="s1">test(elem) {</span>
+            <span class="s0">return </span><span class="s1">adapter.isTag(elem) &amp;&amp; next(elem)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">child: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s0">return function </span><span class="s1">child(elem) {</span>
+            <span class="s0">var </span><span class="s1">parent = adapter.getParent(elem)</span><span class="s3">;</span>
+            <span class="s0">return </span><span class="s1">!!parent &amp;&amp; next(parent)</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">sibling: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s0">return function </span><span class="s1">sibling(elem) {</span>
+            <span class="s0">var </span><span class="s1">siblings = adapter.getSiblings(elem)</span><span class="s3">;</span>
+
+            <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s6">0</span><span class="s3">; </span><span class="s1">i &lt; siblings.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+                <span class="s0">if </span><span class="s1">(adapter.isTag(siblings[i])) {</span>
+                    <span class="s0">if </span><span class="s1">(siblings[i] === elem) </span><span class="s0">break</span><span class="s3">;</span>
+                    <span class="s0">if </span><span class="s1">(next(siblings[i])) </span><span class="s0">return true</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+
+            <span class="s0">return false</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">adjacent: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s0">return function </span><span class="s1">adjacent(elem) {</span>
+            <span class="s0">var </span><span class="s1">siblings = adapter.getSiblings(elem)</span><span class="s3">,</span>
+                <span class="s1">lastElement</span><span class="s3">;</span>
+
+            <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s6">0</span><span class="s3">; </span><span class="s1">i &lt; siblings.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+                <span class="s0">if </span><span class="s1">(adapter.isTag(siblings[i])) {</span>
+                    <span class="s0">if </span><span class="s1">(siblings[i] === elem) </span><span class="s0">break</span><span class="s3">;</span>
+                    <span class="s1">lastElement = siblings[i]</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+
+            <span class="s0">return </span><span class="s1">!!lastElement &amp;&amp; next(lastElement)</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">universal: </span><span class="s0">function</span><span class="s1">(next) {</span>
+        <span class="s0">return </span><span class="s1">next</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

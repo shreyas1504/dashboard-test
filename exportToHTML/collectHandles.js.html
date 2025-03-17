@@ -1,0 +1,293 @@
+<html>
+<head>
+<title>collectHandles.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a;}
+.s6 { color: #808080;}
+.s7 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+collectHandles.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">Object.defineProperty(exports</span><span class="s1">, </span><span class="s0">'__esModule'</span><span class="s1">, </span><span class="s2">{</span>
+  <span class="s2">value: </span><span class="s3">true</span>
+<span class="s2">})</span><span class="s1">;</span>
+<span class="s2">exports.default = collectHandles</span><span class="s1">;</span>
+<span class="s2">exports.formatHandleErrors = formatHandleErrors</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">asyncHooks() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireWildcard(require(</span><span class="s0">'async_hooks'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">asyncHooks = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_util() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_util = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_stripAnsi() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'strip-ansi'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_stripAnsi = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestMessageUtil() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-message-util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestMessageUtil = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestUtil() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestUtil = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireDefault(obj) {</span>
+  <span class="s3">return </span><span class="s2">obj &amp;&amp; obj.__esModule ? obj : {</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_getRequireWildcardCache(nodeInterop) {</span>
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">WeakMap !== </span><span class="s0">'function'</span><span class="s2">) </span><span class="s3">return null</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">cacheBabelInterop = </span><span class="s3">new </span><span class="s2">WeakMap()</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">cacheNodeInterop = </span><span class="s3">new </span><span class="s2">WeakMap()</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">(_getRequireWildcardCache = </span><span class="s3">function </span><span class="s2">(nodeInterop) {</span>
+    <span class="s3">return </span><span class="s2">nodeInterop ? cacheNodeInterop : cacheBabelInterop</span><span class="s1">;</span>
+  <span class="s2">})(nodeInterop)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireWildcard(obj</span><span class="s1">, </span><span class="s2">nodeInterop) {</span>
+  <span class="s3">if </span><span class="s2">(!nodeInterop &amp;&amp; obj &amp;&amp; obj.__esModule) {</span>
+    <span class="s3">return </span><span class="s2">obj</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">if </span><span class="s2">(obj === </span><span class="s3">null </span><span class="s2">|| (</span><span class="s3">typeof </span><span class="s2">obj !== </span><span class="s0">'object' </span><span class="s2">&amp;&amp; </span><span class="s3">typeof </span><span class="s2">obj !== </span><span class="s0">'function'</span><span class="s2">)) {</span>
+    <span class="s3">return </span><span class="s2">{</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">cache = _getRequireWildcardCache(nodeInterop)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(cache &amp;&amp; cache.has(obj)) {</span>
+    <span class="s3">return </span><span class="s2">cache.get(obj)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">newObj = {}</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">hasPropertyDescriptor =</span>
+    <span class="s2">Object.defineProperty &amp;&amp; Object.getOwnPropertyDescriptor</span><span class="s1">;</span>
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">key </span><span class="s3">in </span><span class="s2">obj) {</span>
+    <span class="s3">if </span><span class="s2">(key !== </span><span class="s0">'default' </span><span class="s2">&amp;&amp; Object.prototype.hasOwnProperty.call(obj</span><span class="s1">, </span><span class="s2">key)) {</span>
+      <span class="s3">var </span><span class="s2">desc = hasPropertyDescriptor</span>
+        <span class="s2">? Object.getOwnPropertyDescriptor(obj</span><span class="s1">, </span><span class="s2">key)</span>
+        <span class="s2">: </span><span class="s3">null</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(desc &amp;&amp; (desc.get || desc.set)) {</span>
+        <span class="s2">Object.defineProperty(newObj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">desc)</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s2">newObj[key] = obj[key]</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s2">newObj.default = obj</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(cache) {</span>
+    <span class="s2">cache.set(obj</span><span class="s1">, </span><span class="s2">newObj)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">newObj</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s4">*</span>
+ <span class="s4">* This source code is licensed under the MIT license found in the</span>
+ <span class="s4">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s4">*/</span>
+
+<span class="s5">/* eslint-disable local/ban-types-eventually */</span>
+<span class="s3">function </span><span class="s2">stackIsFromUser(stack) {</span>
+  <span class="s6">// Either the test file, or something required by it</span>
+  <span class="s3">if </span><span class="s2">(stack.includes(</span><span class="s0">'Runtime.requireModule'</span><span class="s2">)) {</span>
+    <span class="s3">return true</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s6">// jest-jasmine it or describe call</span>
+
+  <span class="s3">if </span><span class="s2">(stack.includes(</span><span class="s0">'asyncJestTest'</span><span class="s2">) || stack.includes(</span><span class="s0">'asyncJestLifecycle'</span><span class="s2">)) {</span>
+    <span class="s3">return true</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s6">// An async function call from within circus</span>
+
+  <span class="s3">if </span><span class="s2">(stack.includes(</span><span class="s0">'callAsyncCircusFn'</span><span class="s2">)) {</span>
+    <span class="s6">// jest-circus it or describe call</span>
+    <span class="s3">return </span><span class="s2">(</span>
+      <span class="s2">stack.includes(</span><span class="s0">'_callCircusTest'</span><span class="s2">) || stack.includes(</span><span class="s0">'_callCircusHook'</span><span class="s2">)</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return false</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">const </span><span class="s2">alwaysActive = () =&gt; </span><span class="s3">true</span><span class="s1">; </span><span class="s6">// @ts-expect-error: doesn't exist in v10 typings</span>
+
+<span class="s3">const </span><span class="s2">hasWeakRef = </span><span class="s3">typeof </span><span class="s2">WeakRef === </span><span class="s0">'function'</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">asyncSleep = (</span><span class="s7">0</span><span class="s1">, </span><span class="s2">_util().promisify)(setTimeout)</span><span class="s1">; </span><span class="s6">// Inspired by https://github.com/mafintosh/why-is-node-running/blob/master/index.js</span>
+<span class="s6">// Extracted as we want to format the result ourselves</span>
+
+<span class="s3">function </span><span class="s2">collectHandles() {</span>
+  <span class="s3">const </span><span class="s2">activeHandles = </span><span class="s3">new </span><span class="s2">Map()</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">hook = asyncHooks().createHook({</span>
+    <span class="s2">destroy(asyncId) {</span>
+      <span class="s2">activeHandles.delete(asyncId)</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">,</span>
+
+    <span class="s2">init: </span><span class="s3">function </span><span class="s2">initHook(asyncId</span><span class="s1">, </span><span class="s2">type</span><span class="s1">, </span><span class="s2">triggerAsyncId</span><span class="s1">, </span><span class="s2">resource) {</span>
+      <span class="s6">// Skip resources that should not generally prevent the process from</span>
+      <span class="s6">// exiting, not last a meaningfully long time, or otherwise shouldn't be</span>
+      <span class="s6">// tracked.</span>
+      <span class="s3">if </span><span class="s2">(</span>
+        <span class="s2">type === </span><span class="s0">'PROMISE' </span><span class="s2">||</span>
+        <span class="s2">type === </span><span class="s0">'TIMERWRAP' </span><span class="s2">||</span>
+        <span class="s2">type === </span><span class="s0">'ELDHISTOGRAM' </span><span class="s2">||</span>
+        <span class="s2">type === </span><span class="s0">'PerformanceObserver' </span><span class="s2">||</span>
+        <span class="s2">type === </span><span class="s0">'RANDOMBYTESREQUEST' </span><span class="s2">||</span>
+        <span class="s2">type === </span><span class="s0">'DNSCHANNEL' </span><span class="s2">||</span>
+        <span class="s2">type === </span><span class="s0">'ZLIB'</span>
+      <span class="s2">) {</span>
+        <span class="s3">return</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">const </span><span class="s2">error = </span><span class="s3">new </span><span class="s2">(_jestUtil().ErrorWithStack)(type</span><span class="s1">, </span><span class="s2">initHook</span><span class="s1">, </span><span class="s7">100</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s3">let </span><span class="s2">fromUser = stackIsFromUser(error.stack || </span><span class="s0">''</span><span class="s2">)</span><span class="s1">; </span><span class="s6">// If the async resource was not directly created by user code, but was</span>
+      <span class="s6">// triggered by another async resource from user code, track it and use</span>
+      <span class="s6">// the original triggering resource's stack.</span>
+
+      <span class="s3">if </span><span class="s2">(!fromUser) {</span>
+        <span class="s3">const </span><span class="s2">triggeringHandle = activeHandles.get(triggerAsyncId)</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(triggeringHandle) {</span>
+          <span class="s2">fromUser = </span><span class="s3">true</span><span class="s1">;</span>
+          <span class="s2">error.stack = triggeringHandle.error.stack</span><span class="s1">;</span>
+        <span class="s2">}</span>
+      <span class="s2">}</span>
+
+      <span class="s3">if </span><span class="s2">(fromUser) {</span>
+        <span class="s3">let </span><span class="s2">isActive</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(type === </span><span class="s0">'Timeout' </span><span class="s2">|| type === </span><span class="s0">'Immediate'</span><span class="s2">) {</span>
+          <span class="s6">// Timer that supports hasRef (Node v11+)</span>
+          <span class="s3">if </span><span class="s2">(</span><span class="s0">'hasRef' </span><span class="s3">in </span><span class="s2">resource) {</span>
+            <span class="s3">if </span><span class="s2">(hasWeakRef) {</span>
+              <span class="s6">// @ts-expect-error: doesn't exist in v10 typings</span>
+              <span class="s3">const </span><span class="s2">ref = </span><span class="s3">new </span><span class="s2">WeakRef(resource)</span><span class="s1">;</span>
+
+              <span class="s2">isActive = () =&gt; {</span>
+                <span class="s3">var </span><span class="s2">_ref$deref$hasRef</span><span class="s1">, </span><span class="s2">_ref$deref</span><span class="s1">;</span>
+
+                <span class="s3">return </span><span class="s2">(_ref$deref$hasRef =</span>
+                  <span class="s2">(_ref$deref = ref.deref()) === </span><span class="s3">null </span><span class="s2">|| _ref$deref === </span><span class="s3">void </span><span class="s7">0</span>
+                    <span class="s2">? </span><span class="s3">void </span><span class="s7">0</span>
+                    <span class="s2">: _ref$deref.hasRef()) !== </span><span class="s3">null </span><span class="s2">&amp;&amp;</span>
+                  <span class="s2">_ref$deref$hasRef !== </span><span class="s3">void </span><span class="s7">0</span>
+                  <span class="s2">? _ref$deref$hasRef</span>
+                  <span class="s2">: </span><span class="s3">false</span><span class="s1">;</span>
+              <span class="s2">}</span><span class="s1">;</span>
+            <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+              <span class="s6">// @ts-expect-error: doesn't exist in v10 typings</span>
+              <span class="s2">isActive = resource.hasRef.bind(resource)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+          <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+            <span class="s6">// Timer that doesn't support hasRef</span>
+            <span class="s2">isActive = alwaysActive</span><span class="s1">;</span>
+          <span class="s2">}</span>
+        <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+          <span class="s6">// Any other async resource</span>
+          <span class="s2">isActive = alwaysActive</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s2">activeHandles.set(asyncId</span><span class="s1">, </span><span class="s2">{</span>
+          <span class="s2">error</span><span class="s1">,</span>
+          <span class="s2">isActive</span>
+        <span class="s2">})</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">hook.enable()</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">async () =&gt; {</span>
+    <span class="s6">// Wait briefly for any async resources that have been queued for</span>
+    <span class="s6">// destruction to actually be destroyed.</span>
+    <span class="s6">// For example, Node.js TCP Servers are not destroyed until *after* their</span>
+    <span class="s6">// `close` callback runs. If someone finishes a test from the `close`</span>
+    <span class="s6">// callback, we will not yet have seen the resource be destroyed here.</span>
+    <span class="s3">await </span><span class="s2">asyncSleep(</span><span class="s7">100</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">hook.disable()</span><span class="s1">; </span><span class="s6">// Get errors for every async resource still referenced at this moment</span>
+
+    <span class="s3">const </span><span class="s2">result = Array.from(activeHandles.values())</span>
+      <span class="s2">.filter(({isActive}) =&gt; isActive())</span>
+      <span class="s2">.map(({error}) =&gt; error)</span><span class="s1">;</span>
+    <span class="s2">activeHandles.clear()</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">result</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">formatHandleErrors(errors</span><span class="s1">, </span><span class="s2">config) {</span>
+  <span class="s3">const </span><span class="s2">stacks = </span><span class="s3">new </span><span class="s2">Set()</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">(</span>
+    <span class="s2">errors</span>
+      <span class="s2">.map(err =&gt;</span>
+        <span class="s2">(</span><span class="s7">0</span><span class="s1">, </span><span class="s2">_jestMessageUtil().formatExecError)(</span>
+          <span class="s2">err</span><span class="s1">,</span>
+          <span class="s2">config</span><span class="s1">,</span>
+          <span class="s2">{</span>
+            <span class="s2">noStackTrace: </span><span class="s3">false</span>
+          <span class="s2">}</span><span class="s1">,</span>
+          <span class="s2">undefined</span><span class="s1">,</span>
+          <span class="s3">true</span>
+        <span class="s2">)</span>
+      <span class="s2">) </span><span class="s6">// E.g. timeouts might give multiple traces to the same line of code</span>
+      <span class="s6">// This hairy filtering tries to remove entries with duplicate stack traces</span>
+      <span class="s2">.filter(handle =&gt; {</span>
+        <span class="s3">const </span><span class="s2">ansiFree = (</span><span class="s7">0</span><span class="s1">, </span><span class="s2">_stripAnsi().default)(handle)</span><span class="s1">;</span>
+        <span class="s3">const </span><span class="s2">match = ansiFree.match(</span><span class="s7">/\s+at(.*)/</span><span class="s2">)</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(!match || match.length &lt; </span><span class="s7">2</span><span class="s2">) {</span>
+          <span class="s3">return true</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s3">const </span><span class="s2">stack = ansiFree.substr(ansiFree.indexOf(match[</span><span class="s7">1</span><span class="s2">])).trim()</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(stacks.has(stack)) {</span>
+          <span class="s3">return false</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s2">stacks.add(stack)</span><span class="s1">;</span>
+        <span class="s3">return true</span><span class="s1">;</span>
+      <span class="s2">})</span>
+  <span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

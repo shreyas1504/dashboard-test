@@ -1,0 +1,63 @@
+<html>
+<head>
+<title>3-disjoinRuleset.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+3-disjoinRuleset.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">List = require(</span><span class="s2">'css-tree'</span><span class="s1">).List</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">walk = require(</span><span class="s2">'css-tree'</span><span class="s1">).walk</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">processRule(node</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">list) {</span>
+    <span class="s0">var </span><span class="s1">selectors = node.prelude.children</span><span class="s3">;</span>
+
+    <span class="s4">// generate new rule sets:</span>
+    <span class="s4">// .a, .b { color: red; }</span>
+    <span class="s4">// -&gt;</span>
+    <span class="s4">// .a { color: red; }</span>
+    <span class="s4">// .b { color: red; }</span>
+
+    <span class="s4">// while there are more than 1 simple selector split for rulesets</span>
+    <span class="s0">while </span><span class="s1">(selectors.head !== selectors.tail) {</span>
+        <span class="s0">var </span><span class="s1">newSelectors = </span><span class="s0">new </span><span class="s1">List()</span><span class="s3">;</span>
+        <span class="s1">newSelectors.insert(selectors.remove(selectors.head))</span><span class="s3">;</span>
+
+        <span class="s1">list.insert(list.createItem({</span>
+            <span class="s1">type: </span><span class="s2">'Rule'</span><span class="s3">,</span>
+            <span class="s1">loc: node.loc</span><span class="s3">,</span>
+            <span class="s1">prelude: {</span>
+                <span class="s1">type: </span><span class="s2">'SelectorList'</span><span class="s3">,</span>
+                <span class="s1">loc: node.prelude.loc</span><span class="s3">,</span>
+                <span class="s1">children: newSelectors</span>
+            <span class="s1">}</span><span class="s3">,</span>
+            <span class="s1">block: {</span>
+                <span class="s1">type: </span><span class="s2">'Block'</span><span class="s3">,</span>
+                <span class="s1">loc: node.block.loc</span><span class="s3">,</span>
+                <span class="s1">children: node.block.children.copy()</span>
+            <span class="s1">}</span><span class="s3">,</span>
+            <span class="s1">pseudoSignature: node.pseudoSignature</span>
+        <span class="s1">})</span><span class="s3">, </span><span class="s1">item)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">disjoinRule(ast) {</span>
+    <span class="s1">walk(ast</span><span class="s3">, </span><span class="s1">{</span>
+        <span class="s1">visit: </span><span class="s2">'Rule'</span><span class="s3">,</span>
+        <span class="s1">reverse: </span><span class="s0">true</span><span class="s3">,</span>
+        <span class="s1">enter: processRule</span>
+    <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<html>
+<head>
+<title>legacy.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+legacy.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">DomUtils = require(</span><span class="s2">&quot;../..&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">fixture = require(</span><span class="s2">&quot;../fixture&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">assert = require(</span><span class="s2">&quot;assert&quot;</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">// Set up expected structures</span>
+<span class="s0">var </span><span class="s1">expected = {</span>
+	<span class="s1">idAsdf: fixture[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">,</span>
+	<span class="s1">tag2: []</span><span class="s3">,</span>
+	<span class="s1">typeScript: []</span>
+<span class="s1">}</span><span class="s3">;</span>
+<span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">idx = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">idx &lt; </span><span class="s5">20</span><span class="s3">; </span><span class="s1">++idx) {</span>
+	<span class="s1">expected.tag2.push(fixture[idx*</span><span class="s5">2 </span><span class="s1">+ </span><span class="s5">1</span><span class="s1">].children[</span><span class="s5">5</span><span class="s1">])</span><span class="s3">;</span>
+	<span class="s1">expected.typeScript.push(fixture[idx*</span><span class="s5">2 </span><span class="s1">+ </span><span class="s5">1</span><span class="s1">].children[</span><span class="s5">1</span><span class="s1">])</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">describe(</span><span class="s2">&quot;legacy&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+	<span class="s1">describe(</span><span class="s2">&quot;getElements&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+		<span class="s0">var </span><span class="s1">getElements = DomUtils.getElements</span><span class="s3">;</span>
+		<span class="s1">it(</span><span class="s2">&quot;returns the node with the specified ID&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.deepEqual(</span>
+				<span class="s1">getElements({ id: </span><span class="s2">&quot;asdf&quot; </span><span class="s1">}</span><span class="s3">, </span><span class="s1">fixture</span><span class="s3">, </span><span class="s0">true</span><span class="s3">, </span><span class="s5">1</span><span class="s1">)</span><span class="s3">,</span>
+				<span class="s1">[expected.idAsdf]</span>
+			<span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+		<span class="s1">it(</span><span class="s2">&quot;returns empty array for unknown IDs&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.deepEqual(getElements({ id: </span><span class="s2">&quot;asdfs&quot; </span><span class="s1">}</span><span class="s3">, </span><span class="s1">fixture</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">, </span><span class="s1">[])</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+		<span class="s1">it(</span><span class="s2">&quot;returns the nodes with the specified tag name&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.deepEqual(</span>
+				<span class="s1">getElements({ tag_name:</span><span class="s2">&quot;tag2&quot; </span><span class="s1">}</span><span class="s3">, </span><span class="s1">fixture</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">,</span>
+				<span class="s1">expected.tag2</span>
+			<span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+		<span class="s1">it(</span><span class="s2">&quot;returns empty array for unknown tag names&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.deepEqual(</span>
+				<span class="s1">getElements({ tag_name : </span><span class="s2">&quot;asdfs&quot; </span><span class="s1">}</span><span class="s3">, </span><span class="s1">fixture</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">,</span>
+				<span class="s1">[]</span>
+			<span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+		<span class="s1">it(</span><span class="s2">&quot;returns the nodes with the specified tag type&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.deepEqual(</span>
+				<span class="s1">getElements({ tag_type: </span><span class="s2">&quot;script&quot; </span><span class="s1">}</span><span class="s3">, </span><span class="s1">fixture</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">,</span>
+				<span class="s1">expected.typeScript</span>
+			<span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+		<span class="s1">it(</span><span class="s2">&quot;returns empty array for unknown tag types&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.deepEqual(</span>
+				<span class="s1">getElements({ tag_type: </span><span class="s2">&quot;video&quot; </span><span class="s1">}</span><span class="s3">, </span><span class="s1">fixture</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">,</span>
+				<span class="s1">[]</span>
+			<span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+	<span class="s1">})</span><span class="s3">;</span>
+
+	<span class="s1">describe(</span><span class="s2">&quot;getElementById&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+		<span class="s0">var </span><span class="s1">getElementById = DomUtils.getElementById</span><span class="s3">;</span>
+		<span class="s1">it(</span><span class="s2">&quot;returns the specified node&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.equal(</span>
+				<span class="s1">expected.idAsdf</span><span class="s3">,</span>
+				<span class="s1">getElementById(</span><span class="s2">&quot;asdf&quot;</span><span class="s3">, </span><span class="s1">fixture</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span>
+			<span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+		<span class="s1">it(</span><span class="s2">&quot;returns `null` for unknown IDs&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.equal(</span><span class="s0">null</span><span class="s3">, </span><span class="s1">getElementById(</span><span class="s2">&quot;asdfs&quot;</span><span class="s3">, </span><span class="s1">fixture</span><span class="s3">, </span><span class="s0">true</span><span class="s1">))</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+	<span class="s1">})</span><span class="s3">;</span>
+
+	<span class="s1">describe(</span><span class="s2">&quot;getElementsByTagName&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+		<span class="s0">var </span><span class="s1">getElementsByTagName = DomUtils.getElementsByTagName</span><span class="s3">;</span>
+		<span class="s1">it(</span><span class="s2">&quot;returns the specified nodes&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.deepEqual(</span>
+				<span class="s1">getElementsByTagName(</span><span class="s2">&quot;tag2&quot;</span><span class="s3">, </span><span class="s1">fixture</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">,</span>
+				<span class="s1">expected.tag2</span>
+			<span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+		<span class="s1">it(</span><span class="s2">&quot;returns empty array for unknown tag names&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.deepEqual(</span>
+				<span class="s1">getElementsByTagName(</span><span class="s2">&quot;tag23&quot;</span><span class="s3">, </span><span class="s1">fixture</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">,</span>
+				<span class="s1">[]</span>
+			<span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+	<span class="s1">})</span><span class="s3">;</span>
+
+	<span class="s1">describe(</span><span class="s2">&quot;getElementsByTagType&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+		<span class="s0">var </span><span class="s1">getElementsByTagType = DomUtils.getElementsByTagType</span><span class="s3">;</span>
+		<span class="s1">it(</span><span class="s2">&quot;returns the specified nodes&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.deepEqual(</span>
+				<span class="s1">getElementsByTagType(</span><span class="s2">&quot;script&quot;</span><span class="s3">, </span><span class="s1">fixture</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">,</span>
+				<span class="s1">expected.typeScript</span>
+			<span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+		<span class="s1">it(</span><span class="s2">&quot;returns empty array for unknown tag types&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.deepEqual(</span>
+				<span class="s1">getElementsByTagType(</span><span class="s2">&quot;video&quot;</span><span class="s3">, </span><span class="s1">fixture</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">,</span>
+				<span class="s1">[]</span>
+			<span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+	<span class="s1">})</span><span class="s3">;</span>
+
+	<span class="s1">describe(</span><span class="s2">&quot;getOuterHTML&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+		<span class="s0">var </span><span class="s1">getOuterHTML = DomUtils.getOuterHTML</span><span class="s3">;</span>
+		<span class="s1">it(</span><span class="s2">&quot;Correctly renders the outer HTML&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.equal(</span>
+				<span class="s1">getOuterHTML(fixture[</span><span class="s5">1</span><span class="s1">])</span><span class="s3">,</span>
+				<span class="s2">&quot;&lt;tag1 id=</span><span class="s3">\&quot;</span><span class="s2">asdf</span><span class="s3">\&quot;</span><span class="s2">&gt; &lt;script&gt;text&lt;/script&gt; &lt;!-- comment --&gt; &lt;tag2&gt; text &lt;/tag2&gt;&lt;/tag1&gt;&quot;</span>
+			<span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+	<span class="s1">})</span><span class="s3">;</span>
+
+	<span class="s1">describe(</span><span class="s2">&quot;getInnerHTML&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+		<span class="s0">var </span><span class="s1">getInnerHTML = DomUtils.getInnerHTML</span><span class="s3">;</span>
+		<span class="s1">it(</span><span class="s2">&quot;Correctly renders the inner HTML&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.equal(</span>
+				<span class="s1">getInnerHTML(fixture[</span><span class="s5">1</span><span class="s1">])</span><span class="s3">,</span>
+				<span class="s2">&quot; &lt;script&gt;text&lt;/script&gt; &lt;!-- comment --&gt; &lt;tag2&gt; text &lt;/tag2&gt;&quot;</span>
+			<span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+	<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">})</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

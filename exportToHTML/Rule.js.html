@@ -1,0 +1,240 @@
+<html>
+<head>
+<title>rule.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #8ea765;}
+.s5 { color: #808080;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+rule.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * Jake JavaScript build tool 
+ * Copyright 2112 Matthew Eernisse (mde@fleegix.org) 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *         http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+*/</span>
+
+<span class="s2">const </span><span class="s1">PROJECT_DIR = process.env.PROJECT_DIR</span><span class="s3">;</span>
+<span class="s2">const </span><span class="s1">JAKE_CMD = </span><span class="s4">`</span><span class="s1">${PROJECT_DIR}</span><span class="s4">/bin/cli.js`</span><span class="s3">;</span>
+
+<span class="s2">let </span><span class="s1">assert = require(</span><span class="s4">'assert'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">exec = require(</span><span class="s4">'child_process'</span><span class="s1">).execSync</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">fs = require(</span><span class="s4">'fs'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">{ Rule } = require(</span><span class="s4">`</span><span class="s1">${PROJECT_DIR}</span><span class="s4">/lib/rule`</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">{ rmRf } = require(</span><span class="s4">`</span><span class="s1">${PROJECT_DIR}</span><span class="s4">/lib/jake`</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s2">let </span><span class="s1">cleanUpAndNext = </span><span class="s2">function </span><span class="s1">(callback) {</span>
+  <span class="s5">// Gotta add globbing to file utils rmRf</span>
+  <span class="s2">let </span><span class="s1">tmpFiles = [</span>
+    <span class="s4">'tmp'</span>
+    <span class="s3">, </span><span class="s4">'tmp_ns'</span>
+    <span class="s3">, </span><span class="s4">'tmp_cr'</span>
+    <span class="s3">, </span><span class="s4">'tmp_p'</span>
+    <span class="s3">, </span><span class="s4">'tmp_pf'</span>
+    <span class="s3">, </span><span class="s4">'tmpbin'</span>
+    <span class="s3">, </span><span class="s4">'tmpsrc'</span>
+    <span class="s3">, </span><span class="s4">'tmp_dep1.c'</span>
+    <span class="s3">, </span><span class="s4">'tmp_dep1.o'</span>
+    <span class="s3">, </span><span class="s4">'tmp_dep1.oo'</span>
+    <span class="s3">, </span><span class="s4">'tmp_dep2.c'</span>
+    <span class="s3">, </span><span class="s4">'tmp_dep2.o'</span>
+    <span class="s3">, </span><span class="s4">'tmp_dep2.oo'</span>
+    <span class="s3">, </span><span class="s4">'foo'</span>
+    <span class="s3">, </span><span class="s4">'foo.html'</span>
+  <span class="s1">]</span><span class="s3">;</span>
+  <span class="s1">tmpFiles.forEach(</span><span class="s2">function </span><span class="s1">(f) {</span>
+    <span class="s1">rmRf(f</span><span class="s3">, </span><span class="s1">{</span>
+      <span class="s1">silent: </span><span class="s2">true</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">callback &amp;&amp; callback()</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">suite(</span><span class="s4">'rule'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+
+  <span class="s2">this</span><span class="s1">.timeout(</span><span class="s6">7000</span><span class="s1">)</span><span class="s3">;</span>
+
+  <span class="s1">setup(</span><span class="s2">function </span><span class="s1">(next) {</span>
+    <span class="s1">cleanUpAndNext(next)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+
+  <span class="s5">//  - name   foo:bin/main.o</span>
+  <span class="s5">//  - pattern    bin/%.o</span>
+  <span class="s5">//  - source    src/%.c</span>
+  <span class="s5">//</span>
+  <span class="s5">// return {</span>
+  <span class="s5">//    'dep' : 'foo:src/main.c',</span>
+  <span class="s5">//    'file': 'src/main.c'</span>
+  <span class="s5">//  };</span>
+  <span class="s1">test(</span><span class="s4">'Rule.getSource'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">src = Rule.getSource(</span><span class="s4">'foo:bin/main.o'</span><span class="s3">, </span><span class="s4">'bin/%.o'</span><span class="s3">, </span><span class="s4">'src/%.c'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'foo:src/main.c'</span><span class="s3">, </span><span class="s1">src)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'rule w/o pattern'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">out = exec( </span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q  tmp`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">output = [</span>
+      <span class="s4">&quot;tmp_dep2.c task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;tmp_dep1.c task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;cp tmp_dep1.c tmp_dep1.o task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;cp tmp_dep2.c tmp_dep2.o task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;tmp task&quot;</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s1">assert.equal( output.join(</span><span class="s4">'</span><span class="s3">\n</span><span class="s4">'</span><span class="s1">)</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">data = fs.readFileSync(process.cwd() + </span><span class="s4">'/tmp'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'src_1src_2'</span><span class="s3">, </span><span class="s1">data.toString())</span><span class="s3">;</span>
+    <span class="s1">cleanUpAndNext()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'rule w pattern w/o folder w/o namespace'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">out = exec( </span><span class="s4">`</span><span class="s1">${JAKE_CMD}  </span><span class="s4">-q  tmp_p`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">output = [</span>
+      <span class="s4">&quot;tmp_dep2.c task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;tmp_dep1.c task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;cp tmp_dep1.c tmp_dep1.oo task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;cp tmp_dep2.c tmp_dep2.oo task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;tmp pattern task&quot;</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">data</span><span class="s3">;</span>
+    <span class="s1">assert.equal( output.join(</span><span class="s4">'</span><span class="s3">\n</span><span class="s4">'</span><span class="s1">)</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+    <span class="s1">data = fs.readFileSync(process.cwd() + </span><span class="s4">'/tmp_p'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'src_1src_2 pattern'</span><span class="s3">, </span><span class="s1">data.toString())</span><span class="s3">;</span>
+    <span class="s1">cleanUpAndNext()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'rule w pattern w folder w/o namespace'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">out = exec( </span><span class="s4">`</span><span class="s1">${JAKE_CMD}  </span><span class="s4">-q  tmp_pf`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">output = [</span>
+      <span class="s4">&quot;tmpsrc/tmp_dep1.c task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;cp tmpsrc/tmp_dep1.c tmpbin/tmp_dep1.oo task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;tmpsrc/tmp_dep2.c task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;cp tmpsrc/tmp_dep2.c tmpbin/tmp_dep2.oo task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;tmp pattern folder task&quot;</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">data</span><span class="s3">;</span>
+    <span class="s1">assert.equal( output.join(</span><span class="s4">'</span><span class="s3">\n</span><span class="s4">'</span><span class="s1">)</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+    <span class="s1">data = fs.readFileSync(process.cwd() + </span><span class="s4">'/tmp_pf'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'src/src_1src/src_2 pattern folder'</span><span class="s3">, </span><span class="s1">data.toString())</span><span class="s3">;</span>
+    <span class="s1">cleanUpAndNext()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test.skip(</span><span class="s4">'rule w pattern w folder w namespace'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">out = exec( </span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q   tmp_ns`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">output = [</span>
+      <span class="s4">&quot;tmpsrc/file2.c init task&quot; </span><span class="s5">// yes</span>
+      <span class="s3">, </span><span class="s4">&quot;tmpsrc/tmp_dep2.c task&quot; </span><span class="s5">// no</span>
+      <span class="s3">, </span><span class="s4">&quot;cp tmpsrc/tmp_dep2.c tmpbin/tmp_dep2.oo task&quot; </span><span class="s5">// no</span>
+      <span class="s3">, </span><span class="s4">&quot;tmpsrc/dep1.c task&quot; </span><span class="s5">// no</span>
+      <span class="s3">, </span><span class="s4">&quot;cp tmpsrc/dep1.c tmpbin/dep1.oo ns task&quot; </span><span class="s5">// no</span>
+      <span class="s3">, </span><span class="s4">&quot;cp tmpsrc/file2.c tmpbin/file2.oo ns task&quot; </span><span class="s5">// yes</span>
+      <span class="s3">, </span><span class="s4">&quot;tmp pattern folder namespace task&quot;</span><span class="s1">]</span><span class="s3">; </span><span class="s5">// yes</span>
+    <span class="s2">let </span><span class="s1">data</span><span class="s3">;</span>
+    <span class="s1">assert.equal( output.join(</span><span class="s4">'</span><span class="s3">\n</span><span class="s4">'</span><span class="s1">)</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+    <span class="s1">data = fs.readFileSync(process.cwd() + </span><span class="s4">'/tmp_ns'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'src/src_1src/src_2src/src_3 pattern folder namespace'</span><span class="s3">, </span><span class="s1">data.toString())</span><span class="s3">;</span>
+    <span class="s1">cleanUpAndNext()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test.skip(</span><span class="s4">'rule w chain w pattern w folder w namespace'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">out = exec( </span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q tmp_cr`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">output = [</span>
+      <span class="s4">&quot;chainrule init task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;cp tmpsrc/file1.tex tmpbin/file1.dvi tex-&gt;dvi task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;cp tmpbin/file1.dvi tmpbin/file1.pdf dvi-&gt;pdf task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;cp tmpsrc/file2.tex tmpbin/file2.dvi tex-&gt;dvi task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;cp tmpbin/file2.dvi tmpbin/file2.pdf dvi-&gt;pdf task&quot;</span>
+      <span class="s3">, </span><span class="s4">&quot;tmp chainrule namespace task&quot;</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">data</span><span class="s3">;</span>
+    <span class="s1">assert.equal( output.join(</span><span class="s4">'</span><span class="s3">\n</span><span class="s4">'</span><span class="s1">)</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+    <span class="s1">data = fs.readFileSync(process.cwd() + </span><span class="s4">'/tmp_cr'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'tex1 tex2  chainrule namespace'</span><span class="s3">, </span><span class="s1">data.toString())</span><span class="s3">;</span>
+    <span class="s1">cleanUpAndNext()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+
+  <span class="s1">[</span><span class="s4">'precedence'</span><span class="s3">, </span><span class="s4">'regexPattern'</span><span class="s3">, </span><span class="s4">'sourceFunction'</span><span class="s1">].forEach(</span><span class="s2">function </span><span class="s1">(key) {</span>
+
+    <span class="s1">test(</span><span class="s4">'rule with source file not created yet (' </span><span class="s1">+ key  + </span><span class="s4">')'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s2">let </span><span class="s1">write = process.stderr.write</span><span class="s3">;</span>
+      <span class="s1">process.stderr.write = () =&gt; {}</span><span class="s3">;</span>
+      <span class="s1">rmRf(</span><span class="s4">'foo.txt'</span><span class="s3">, </span><span class="s1">{silent: </span><span class="s2">true</span><span class="s1">})</span><span class="s3">;</span>
+      <span class="s1">rmRf(</span><span class="s4">'foo.html'</span><span class="s3">, </span><span class="s1">{silent: </span><span class="s2">true</span><span class="s1">})</span><span class="s3">;</span>
+      <span class="s2">try </span><span class="s1">{</span>
+        <span class="s1">exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD}  </span><span class="s4">` </span><span class="s1">+ key + </span><span class="s4">':test'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s2">catch</span><span class="s1">(err) {</span>
+        <span class="s5">// foo.txt prereq doesn't exist yet</span>
+        <span class="s1">assert.ok(err.message.indexOf(</span><span class="s4">'Unknown task &quot;foo.html&quot;'</span><span class="s1">) &gt; -</span><span class="s6">1</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s1">process.stderr.write = write</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">test(</span><span class="s4">'rule with source file now created (' </span><span class="s1">+ key  + </span><span class="s4">')'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s1">fs.writeFileSync(</span><span class="s4">'foo.txt'</span><span class="s3">, </span><span class="s4">''</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s2">let </span><span class="s1">out = exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q  ` </span><span class="s1">+ key + </span><span class="s4">':test'</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+      <span class="s5">// Should run prereq and test task</span>
+      <span class="s2">let </span><span class="s1">output = [</span>
+        <span class="s4">'created html'</span>
+        <span class="s3">, </span><span class="s4">'ran test'</span>
+      <span class="s1">]</span><span class="s3">;</span>
+      <span class="s1">assert.equal(output.join(</span><span class="s4">'</span><span class="s3">\n</span><span class="s4">'</span><span class="s1">)</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">test(</span><span class="s4">'rule with source file modified (' </span><span class="s1">+ key  + </span><span class="s4">')'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">(next) {</span>
+      <span class="s1">setTimeout(</span><span class="s2">function </span><span class="s1">() {</span>
+        <span class="s1">fs.writeFileSync(</span><span class="s4">'foo.txt'</span><span class="s3">, </span><span class="s4">''</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s2">let </span><span class="s1">out = exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q  ` </span><span class="s1">+ key + </span><span class="s4">':test'</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+        <span class="s5">// Should again run both prereq and test task</span>
+        <span class="s2">let </span><span class="s1">output = [</span>
+          <span class="s4">'created html'</span>
+          <span class="s3">, </span><span class="s4">'ran test'</span>
+        <span class="s1">]</span><span class="s3">;</span>
+        <span class="s1">assert.equal(output.join(</span><span class="s4">'</span><span class="s3">\n</span><span class="s4">'</span><span class="s1">)</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+        <span class="s5">//next();</span>
+        <span class="s1">cleanUpAndNext(next)</span><span class="s3">;</span>
+      <span class="s1">}</span><span class="s3">, </span><span class="s6">1000</span><span class="s1">)</span><span class="s3">; </span><span class="s5">// Wait to do the touch to ensure mod-time is different</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">test(</span><span class="s4">'rule with existing objective file and no source ' </span><span class="s1">+</span>
+        <span class="s4">' (should be normal file-task) (' </span><span class="s1">+ key  + </span><span class="s4">')'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s5">// Remove just the source file</span>
+      <span class="s1">fs.writeFileSync(</span><span class="s4">'foo.html'</span><span class="s3">, </span><span class="s4">''</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">rmRf(</span><span class="s4">'foo.txt'</span><span class="s3">, </span><span class="s1">{silent: </span><span class="s2">true</span><span class="s1">})</span><span class="s3">;</span>
+      <span class="s2">let </span><span class="s1">out = exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q  ` </span><span class="s1">+ key + </span><span class="s4">':test'</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+      <span class="s5">// Should treat existing objective file as plain file-task,</span>
+      <span class="s5">// and just run test-task</span>
+      <span class="s2">let </span><span class="s1">output = [</span>
+        <span class="s4">'ran test'</span>
+      <span class="s1">]</span><span class="s3">;</span>
+      <span class="s1">assert.equal(output.join(</span><span class="s4">'</span><span class="s3">\n</span><span class="s4">'</span><span class="s1">)</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+      <span class="s1">cleanUpAndNext()</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">})</span><span class="s3">;</span>
+
+
+</pre>
+</body>
+</html>

@@ -1,0 +1,1746 @@
+<html>
+<head>
+<title>rollup</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8a8a8a;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #cc7832; font-weight: bold;}
+.s6 { color: #8a8a8a; font-style: italic;}
+.s7 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s8 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+rollup</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+
+<span class="s2">/* 
+  @license 
+    Rollup.js v2.79.2 
+    Thu, 26 Sep 2024 18:44:14 GMT - commit 48aef33cf2f2a6dfb175afb3bcd6a977c81f1d5c 
+ 
+    https://github.com/rollup/rollup 
+ 
+    Released under the MIT License. 
+*/</span>
+<span class="s3">'use strict'</span><span class="s4">;</span>
+
+<span class="s1">Object.defineProperties(exports</span><span class="s4">, </span><span class="s1">{ __esModule: { value: </span><span class="s5">true </span><span class="s1">}</span><span class="s4">, </span><span class="s1">[Symbol.toStringTag]: { value: </span><span class="s3">'Module' </span><span class="s1">} })</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">process$1 = require(</span><span class="s3">'process'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s5">const </span><span class="s1">rollup = require(</span><span class="s3">'../shared/rollup.js'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s5">const </span><span class="s1">require$$2 = require(</span><span class="s3">'util'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s5">const </span><span class="s1">require$$0$1 = require(</span><span class="s3">'fs'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s5">const </span><span class="s1">require$$0 = require(</span><span class="s3">'path'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s5">const </span><span class="s1">mergeOptions = require(</span><span class="s3">'../shared/mergeOptions.js'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s5">const </span><span class="s1">loadConfigFile_js = require(</span><span class="s3">'../shared/loadConfigFile.js'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">require(</span><span class="s3">'perf_hooks'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">require(</span><span class="s3">'crypto'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">require(</span><span class="s3">'events'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">require(</span><span class="s3">'url'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">require(</span><span class="s3">'tty'</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">help = </span><span class="s3">&quot;rollup version __VERSION__</span><span class="s4">\n</span><span class="s3">=====================================</span><span class="s4">\n\n</span><span class="s3">Usage: rollup [options] &lt;entry file&gt;</span><span class="s4">\n\n</span><span class="s3">Basic options:</span><span class="s4">\n\n</span><span class="s3">-c, --config &lt;filename&gt;     Use this config file (if argument is used but value</span><span class="s4">\n                              </span><span class="s3">is unspecified, defaults to rollup.config.js)</span><span class="s4">\n</span><span class="s3">-d, --dir &lt;dirname&gt;         Directory for chunks (if absent, prints to stdout)</span><span class="s4">\n</span><span class="s3">-e, --external &lt;ids&gt;        Comma-separate list of module IDs to exclude</span><span class="s4">\n</span><span class="s3">-f, --format &lt;format&gt;       Type of output (amd, cjs, es, iife, umd, system)</span><span class="s4">\n</span><span class="s3">-g, --globals &lt;pairs&gt;       Comma-separate list of `moduleID:Global` pairs</span><span class="s4">\n</span><span class="s3">-h, --help                  Show this help message</span><span class="s4">\n</span><span class="s3">-i, --input &lt;filename&gt;      Input (alternative to &lt;entry file&gt;)</span><span class="s4">\n</span><span class="s3">-m, --sourcemap             Generate sourcemap (`-m inline` for inline map)</span><span class="s4">\n</span><span class="s3">-n, --name &lt;name&gt;           Name for UMD export</span><span class="s4">\n</span><span class="s3">-o, --file &lt;output&gt;         Single output file (if absent, prints to stdout)</span><span class="s4">\n</span><span class="s3">-p, --plugin &lt;plugin&gt;       Use the plugin specified (may be repeated)</span><span class="s4">\n</span><span class="s3">-v, --version               Show version number</span><span class="s4">\n</span><span class="s3">-w, --watch                 Watch files in bundle and rebuild on changes</span><span class="s4">\n</span><span class="s3">--amd.id &lt;id&gt;               ID for AMD module (default is anonymous)</span><span class="s4">\n</span><span class="s3">--amd.autoId                Generate the AMD ID based off the chunk name</span><span class="s4">\n</span><span class="s3">--amd.basePath &lt;prefix&gt;     Path to prepend to auto generated AMD ID</span><span class="s4">\n</span><span class="s3">--amd.define &lt;name&gt;         Function to use in place of `define`</span><span class="s4">\n</span><span class="s3">--amd.forceJsExtensionForImports Use `.js` extension in AMD imports</span><span class="s4">\n</span><span class="s3">--assetFileNames &lt;pattern&gt;  Name pattern for emitted assets</span><span class="s4">\n</span><span class="s3">--banner &lt;text&gt;             Code to insert at top of bundle (outside wrapper)</span><span class="s4">\n</span><span class="s3">--chunkFileNames &lt;pattern&gt;  Name pattern for emitted secondary chunks</span><span class="s4">\n</span><span class="s3">--compact                   Minify wrapper code</span><span class="s4">\n</span><span class="s3">--context &lt;variable&gt;        Specify top-level `this` value</span><span class="s4">\n</span><span class="s3">--entryFileNames &lt;pattern&gt;  Name pattern for emitted entry chunks</span><span class="s4">\n</span><span class="s3">--environment &lt;values&gt;      Settings passed to config file (see example)</span><span class="s4">\n</span><span class="s3">--no-esModule               Do not add __esModule property</span><span class="s4">\n</span><span class="s3">--exports &lt;mode&gt;            Specify export mode (auto, default, named, none)</span><span class="s4">\n</span><span class="s3">--extend                    Extend global variable defined by --name</span><span class="s4">\n</span><span class="s3">--no-externalLiveBindings   Do not generate code to support live bindings</span><span class="s4">\n</span><span class="s3">--failAfterWarnings         Exit with an error if the build produced warnings</span><span class="s4">\n</span><span class="s3">--footer &lt;text&gt;             Code to insert at end of bundle (outside wrapper)</span><span class="s4">\n</span><span class="s3">--no-freeze                 Do not freeze namespace objects</span><span class="s4">\n</span><span class="s3">--no-hoistTransitiveImports Do not hoist transitive imports into entry chunks</span><span class="s4">\n</span><span class="s3">--no-indent                 Don't indent result</span><span class="s4">\n</span><span class="s3">--no-interop                Do not include interop block</span><span class="s4">\n</span><span class="s3">--inlineDynamicImports      Create single bundle when using dynamic imports</span><span class="s4">\n</span><span class="s3">--intro &lt;text&gt;              Code to insert at top of bundle (inside wrapper)</span><span class="s4">\n</span><span class="s3">--minifyInternalExports     Force or disable minification of internal exports</span><span class="s4">\n</span><span class="s3">--namespaceToStringTag      Create proper `.toString` methods for namespaces</span><span class="s4">\n</span><span class="s3">--noConflict                Generate a noConflict method for UMD globals</span><span class="s4">\n</span><span class="s3">--outro &lt;text&gt;              Code to insert at end of bundle (inside wrapper)</span><span class="s4">\n</span><span class="s3">--preferConst               Use `const` instead of `var` for exports</span><span class="s4">\n</span><span class="s3">--no-preserveEntrySignatures Avoid facade chunks for entry points</span><span class="s4">\n</span><span class="s3">--preserveModules           Preserve module structure</span><span class="s4">\n</span><span class="s3">--preserveModulesRoot       Put preserved modules under this path at root level</span><span class="s4">\n</span><span class="s3">--preserveSymlinks          Do not follow symlinks when resolving files</span><span class="s4">\n</span><span class="s3">--no-sanitizeFileName       Do not replace invalid characters in file names</span><span class="s4">\n</span><span class="s3">--shimMissingExports        Create shim variables for missing exports</span><span class="s4">\n</span><span class="s3">--silent                    Don't print warnings</span><span class="s4">\n</span><span class="s3">--sourcemapBaseUrl &lt;url&gt;    Emit absolute sourcemap URLs with given base</span><span class="s4">\n</span><span class="s3">--sourcemapExcludeSources   Do not include source code in source maps</span><span class="s4">\n</span><span class="s3">--sourcemapFile &lt;file&gt;      Specify bundle position for source maps</span><span class="s4">\n</span><span class="s3">--stdin=ext                 Specify file extension used for stdin input</span><span class="s4">\n</span><span class="s3">--no-stdin                  Do not read </span><span class="s4">\&quot;</span><span class="s3">-</span><span class="s4">\&quot; </span><span class="s3">from stdin</span><span class="s4">\n</span><span class="s3">--no-strict                 Don't emit `</span><span class="s4">\&quot;</span><span class="s3">use strict</span><span class="s4">\&quot;</span><span class="s3">;` in the generated modules</span><span class="s4">\n</span><span class="s3">--strictDeprecations        Throw errors for deprecated features</span><span class="s4">\n</span><span class="s3">--systemNullSetters         Replace empty SystemJS setters with `null`</span><span class="s4">\n</span><span class="s3">--no-treeshake              Disable tree-shaking optimisations</span><span class="s4">\n</span><span class="s3">--no-treeshake.annotations  Ignore pure call annotations</span><span class="s4">\n</span><span class="s3">--no-treeshake.moduleSideEffects Assume modules have no side-effects</span><span class="s4">\n</span><span class="s3">--no-treeshake.propertyReadSideEffects Ignore property access side-effects</span><span class="s4">\n</span><span class="s3">--no-treeshake.tryCatchDeoptimization Do not turn off try-catch-tree-shaking</span><span class="s4">\n</span><span class="s3">--no-treeshake.unknownGlobalSideEffects Assume unknown globals do not throw</span><span class="s4">\n</span><span class="s3">--waitForBundleInput        Wait for bundle input files</span><span class="s4">\n</span><span class="s3">--watch.buildDelay &lt;number&gt; Throttle watch rebuilds</span><span class="s4">\n</span><span class="s3">--no-watch.clearScreen      Do not clear the screen when rebuilding</span><span class="s4">\n</span><span class="s3">--watch.skipWrite           Do not write files to disk when watching</span><span class="s4">\n</span><span class="s3">--watch.exclude &lt;files&gt;     Exclude files from being watched</span><span class="s4">\n</span><span class="s3">--watch.include &lt;files&gt;     Limit watching to specified files</span><span class="s4">\n</span><span class="s3">--watch.onStart &lt;cmd&gt;       Shell command to run on `</span><span class="s4">\&quot;</span><span class="s3">START</span><span class="s4">\&quot;</span><span class="s3">` event</span><span class="s4">\n</span><span class="s3">--watch.onBundleStart &lt;cmd&gt; Shell command to run on `</span><span class="s4">\&quot;</span><span class="s3">BUNDLE_START</span><span class="s4">\&quot;</span><span class="s3">` event</span><span class="s4">\n</span><span class="s3">--watch.onBundleEnd &lt;cmd&gt;   Shell command to run on `</span><span class="s4">\&quot;</span><span class="s3">BUNDLE_END</span><span class="s4">\&quot;</span><span class="s3">` event</span><span class="s4">\n</span><span class="s3">--watch.onEnd &lt;cmd&gt;         Shell command to run on `</span><span class="s4">\&quot;</span><span class="s3">END</span><span class="s4">\&quot;</span><span class="s3">` event</span><span class="s4">\n</span><span class="s3">--watch.onError &lt;cmd&gt;       Shell command to run on `</span><span class="s4">\&quot;</span><span class="s3">ERROR</span><span class="s4">\&quot;</span><span class="s3">` event</span><span class="s4">\n</span><span class="s3">--validate                  Validate output</span><span class="s4">\n\n</span><span class="s3">Examples:</span><span class="s4">\n\n</span><span class="s3"># use settings in config file</span><span class="s4">\n</span><span class="s3">rollup -c</span><span class="s4">\n\n</span><span class="s3"># in config file, process.env.INCLUDE_DEPS === 'true'</span><span class="s4">\n</span><span class="s3"># and process.env.BUILD === 'production'</span><span class="s4">\n</span><span class="s3">rollup -c --environment INCLUDE_DEPS,BUILD:production</span><span class="s4">\n\n</span><span class="s3"># create CommonJS bundle.js from src/main.js</span><span class="s4">\n</span><span class="s3">rollup --format=cjs --file=bundle.js -- src/main.js</span><span class="s4">\n\n</span><span class="s3"># create self-executing IIFE using `window.jQuery`</span><span class="s4">\n</span><span class="s3"># and `window._` as external globals</span><span class="s4">\n</span><span class="s3">rollup -f iife --globals jquery:jQuery,lodash:_ </span><span class="s4">\\\n  </span><span class="s3">-i src/app.js -o build/app.js -m build/app.js.map</span><span class="s4">\n\n</span><span class="s3">Notes:</span><span class="s4">\n\n</span><span class="s3">* When piping to stdout, only inline sourcemaps are permitted</span><span class="s4">\n\n</span><span class="s3">For more information visit https://rollupjs.org</span><span class="s4">\n</span><span class="s3">&quot;</span><span class="s4">;</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* </span><span class="s7">@license</span>
+ <span class="s6">* Copyright (c) 2016, Contributors</span>
+ <span class="s6">* SPDX-License-Identifier: ISC</span>
+ <span class="s6">*/</span>
+<span class="s5">function </span><span class="s1">camelCase(str) {</span>
+    <span class="s0">// Handle the case where an argument is provided as camel case, e.g., fooBar.</span>
+    <span class="s0">// by ensuring that the string isn't already mixed case:</span>
+    <span class="s5">const </span><span class="s1">isCamelCase = str !== str.toLowerCase() &amp;&amp; str !== str.toUpperCase()</span><span class="s4">;</span>
+    <span class="s5">if </span><span class="s1">(!isCamelCase) {</span>
+        <span class="s1">str = str.toLowerCase()</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">if </span><span class="s1">(str.indexOf(</span><span class="s3">'-'</span><span class="s1">) === -</span><span class="s8">1 </span><span class="s1">&amp;&amp; str.indexOf(</span><span class="s3">'_'</span><span class="s1">) === -</span><span class="s8">1</span><span class="s1">) {</span>
+        <span class="s5">return </span><span class="s1">str</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">else </span><span class="s1">{</span>
+        <span class="s5">let </span><span class="s1">camelcase = </span><span class="s3">''</span><span class="s4">;</span>
+        <span class="s5">let </span><span class="s1">nextChrUpper = </span><span class="s5">false</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">leadingHyphens = str.match(</span><span class="s8">/^-+/</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s5">for </span><span class="s1">(</span><span class="s5">let </span><span class="s1">i = leadingHyphens ? leadingHyphens[</span><span class="s8">0</span><span class="s1">].length : </span><span class="s8">0</span><span class="s4">; </span><span class="s1">i &lt; str.length</span><span class="s4">; </span><span class="s1">i++) {</span>
+            <span class="s5">let </span><span class="s1">chr = str.charAt(i)</span><span class="s4">;</span>
+            <span class="s5">if </span><span class="s1">(nextChrUpper) {</span>
+                <span class="s1">nextChrUpper = </span><span class="s5">false</span><span class="s4">;</span>
+                <span class="s1">chr = chr.toUpperCase()</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">if </span><span class="s1">(i !== </span><span class="s8">0 </span><span class="s1">&amp;&amp; (chr === </span><span class="s3">'-' </span><span class="s1">|| chr === </span><span class="s3">'_'</span><span class="s1">)) {</span>
+                <span class="s1">nextChrUpper = </span><span class="s5">true</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(chr !== </span><span class="s3">'-' </span><span class="s1">&amp;&amp; chr !== </span><span class="s3">'_'</span><span class="s1">) {</span>
+                <span class="s1">camelcase += chr</span><span class="s4">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s5">return </span><span class="s1">camelcase</span><span class="s4">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+<span class="s5">function </span><span class="s1">decamelize(str</span><span class="s4">, </span><span class="s1">joinString) {</span>
+    <span class="s5">const </span><span class="s1">lowercase = str.toLowerCase()</span><span class="s4">;</span>
+    <span class="s1">joinString = joinString || </span><span class="s3">'-'</span><span class="s4">;</span>
+    <span class="s5">let </span><span class="s1">notCamelcase = </span><span class="s3">''</span><span class="s4">;</span>
+    <span class="s5">for </span><span class="s1">(</span><span class="s5">let </span><span class="s1">i = </span><span class="s8">0</span><span class="s4">; </span><span class="s1">i &lt; str.length</span><span class="s4">; </span><span class="s1">i++) {</span>
+        <span class="s5">const </span><span class="s1">chrLower = lowercase.charAt(i)</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">chrString = str.charAt(i)</span><span class="s4">;</span>
+        <span class="s5">if </span><span class="s1">(chrLower !== chrString &amp;&amp; i &gt; </span><span class="s8">0</span><span class="s1">) {</span>
+            <span class="s1">notCamelcase += </span><span class="s3">`</span><span class="s1">${joinString}${lowercase.charAt(i)}</span><span class="s3">`</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">else </span><span class="s1">{</span>
+            <span class="s1">notCamelcase += chrString</span><span class="s4">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s5">return </span><span class="s1">notCamelcase</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s5">function </span><span class="s1">looksLikeNumber(x) {</span>
+    <span class="s5">if </span><span class="s1">(x === </span><span class="s5">null </span><span class="s1">|| x === undefined)</span>
+        <span class="s5">return false</span><span class="s4">;</span>
+    <span class="s0">// if loaded from config, may already be a number.</span>
+    <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">x === </span><span class="s3">'number'</span><span class="s1">)</span>
+        <span class="s5">return true</span><span class="s4">;</span>
+    <span class="s0">// hexadecimal.</span>
+    <span class="s5">if </span><span class="s1">(</span><span class="s8">/^0x[0-9a-f]+$/i</span><span class="s1">.test(x))</span>
+        <span class="s5">return true</span><span class="s4">;</span>
+    <span class="s0">// don't treat 0123 as a number; as it drops the leading '0'.</span>
+    <span class="s5">if </span><span class="s1">(</span><span class="s8">/^0[^.]/</span><span class="s1">.test(x))</span>
+        <span class="s5">return false</span><span class="s4">;</span>
+    <span class="s5">return </span><span class="s8">/^[-]?(?:\d+(?:\.\d*)?|\.\d+)(e[-+]?\d+)?$/</span><span class="s1">.test(x)</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* </span><span class="s7">@license</span>
+ <span class="s6">* Copyright (c) 2016, Contributors</span>
+ <span class="s6">* SPDX-License-Identifier: ISC</span>
+ <span class="s6">*/</span>
+<span class="s0">// take an un-split argv string and tokenize it.</span>
+<span class="s5">function </span><span class="s1">tokenizeArgString(argString) {</span>
+    <span class="s5">if </span><span class="s1">(Array.isArray(argString)) {</span>
+        <span class="s5">return </span><span class="s1">argString.map(e =&gt; </span><span class="s5">typeof </span><span class="s1">e !== </span><span class="s3">'string' </span><span class="s1">? e + </span><span class="s3">'' </span><span class="s1">: e)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s1">argString = argString.trim()</span><span class="s4">;</span>
+    <span class="s5">let </span><span class="s1">i = </span><span class="s8">0</span><span class="s4">;</span>
+    <span class="s5">let </span><span class="s1">prevC = </span><span class="s5">null</span><span class="s4">;</span>
+    <span class="s5">let </span><span class="s1">c = </span><span class="s5">null</span><span class="s4">;</span>
+    <span class="s5">let </span><span class="s1">opening = </span><span class="s5">null</span><span class="s4">;</span>
+    <span class="s5">const </span><span class="s1">args = []</span><span class="s4">;</span>
+    <span class="s5">for </span><span class="s1">(</span><span class="s5">let </span><span class="s1">ii = </span><span class="s8">0</span><span class="s4">; </span><span class="s1">ii &lt; argString.length</span><span class="s4">; </span><span class="s1">ii++) {</span>
+        <span class="s1">prevC = c</span><span class="s4">;</span>
+        <span class="s1">c = argString.charAt(ii)</span><span class="s4">;</span>
+        <span class="s0">// split on spaces unless we're in quotes.</span>
+        <span class="s5">if </span><span class="s1">(c === </span><span class="s3">' ' </span><span class="s1">&amp;&amp; !opening) {</span>
+            <span class="s5">if </span><span class="s1">(!(prevC === </span><span class="s3">' '</span><span class="s1">)) {</span>
+                <span class="s1">i++</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">continue</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s0">// don't split the string if we're in matching</span>
+        <span class="s0">// opening or closing single and double quotes.</span>
+        <span class="s5">if </span><span class="s1">(c === opening) {</span>
+            <span class="s1">opening = </span><span class="s5">null</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">else if </span><span class="s1">((c === </span><span class="s3">&quot;'&quot; </span><span class="s1">|| c === </span><span class="s3">'&quot;'</span><span class="s1">) &amp;&amp; !opening) {</span>
+            <span class="s1">opening = c</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">if </span><span class="s1">(!args[i])</span>
+            <span class="s1">args[i] = </span><span class="s3">''</span><span class="s4">;</span>
+        <span class="s1">args[i] += c</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">return </span><span class="s1">args</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* </span><span class="s7">@license</span>
+ <span class="s6">* Copyright (c) 2016, Contributors</span>
+ <span class="s6">* SPDX-License-Identifier: ISC</span>
+ <span class="s6">*/</span>
+<span class="s5">var </span><span class="s1">DefaultValuesForTypeKey</span><span class="s4">;</span>
+<span class="s1">(</span><span class="s5">function </span><span class="s1">(DefaultValuesForTypeKey) {</span>
+    <span class="s1">DefaultValuesForTypeKey[</span><span class="s3">&quot;BOOLEAN&quot;</span><span class="s1">] = </span><span class="s3">&quot;boolean&quot;</span><span class="s4">;</span>
+    <span class="s1">DefaultValuesForTypeKey[</span><span class="s3">&quot;STRING&quot;</span><span class="s1">] = </span><span class="s3">&quot;string&quot;</span><span class="s4">;</span>
+    <span class="s1">DefaultValuesForTypeKey[</span><span class="s3">&quot;NUMBER&quot;</span><span class="s1">] = </span><span class="s3">&quot;number&quot;</span><span class="s4">;</span>
+    <span class="s1">DefaultValuesForTypeKey[</span><span class="s3">&quot;ARRAY&quot;</span><span class="s1">] = </span><span class="s3">&quot;array&quot;</span><span class="s4">;</span>
+<span class="s1">})(DefaultValuesForTypeKey || (DefaultValuesForTypeKey = {}))</span><span class="s4">;</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* </span><span class="s7">@license</span>
+ <span class="s6">* Copyright (c) 2016, Contributors</span>
+ <span class="s6">* SPDX-License-Identifier: ISC</span>
+ <span class="s6">*/</span>
+<span class="s5">let </span><span class="s1">mixin</span><span class="s4">;</span>
+<span class="s5">class </span><span class="s1">YargsParser {</span>
+    <span class="s1">constructor(_mixin) {</span>
+        <span class="s1">mixin = _mixin</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s1">parse(argsInput</span><span class="s4">, </span><span class="s1">options) {</span>
+        <span class="s5">const </span><span class="s1">opts = Object.assign({</span>
+            <span class="s1">alias: undefined</span><span class="s4">,</span>
+            <span class="s1">array: undefined</span><span class="s4">,</span>
+            <span class="s1">boolean: undefined</span><span class="s4">,</span>
+            <span class="s1">config: undefined</span><span class="s4">,</span>
+            <span class="s1">configObjects: undefined</span><span class="s4">,</span>
+            <span class="s1">configuration: undefined</span><span class="s4">,</span>
+            <span class="s1">coerce: undefined</span><span class="s4">,</span>
+            <span class="s1">count: undefined</span><span class="s4">,</span>
+            <span class="s5">default</span><span class="s1">: undefined</span><span class="s4">,</span>
+            <span class="s1">envPrefix: undefined</span><span class="s4">,</span>
+            <span class="s1">narg: undefined</span><span class="s4">,</span>
+            <span class="s1">normalize: undefined</span><span class="s4">,</span>
+            <span class="s1">string: undefined</span><span class="s4">,</span>
+            <span class="s1">number: undefined</span><span class="s4">,</span>
+            <span class="s1">__: undefined</span><span class="s4">,</span>
+            <span class="s1">key: undefined</span>
+        <span class="s1">}</span><span class="s4">, </span><span class="s1">options)</span><span class="s4">;</span>
+        <span class="s0">// allow a string argument to be passed in rather</span>
+        <span class="s0">// than an argv array.</span>
+        <span class="s5">const </span><span class="s1">args = tokenizeArgString(argsInput)</span><span class="s4">;</span>
+        <span class="s0">// aliases might have transitive relationships, normalize this.</span>
+        <span class="s5">const </span><span class="s1">aliases = combineAliases(Object.assign(Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">, </span><span class="s1">opts.alias))</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">configuration = Object.assign({</span>
+            <span class="s3">'boolean-negation'</span><span class="s1">: </span><span class="s5">true</span><span class="s4">,</span>
+            <span class="s3">'camel-case-expansion'</span><span class="s1">: </span><span class="s5">true</span><span class="s4">,</span>
+            <span class="s3">'combine-arrays'</span><span class="s1">: </span><span class="s5">false</span><span class="s4">,</span>
+            <span class="s3">'dot-notation'</span><span class="s1">: </span><span class="s5">true</span><span class="s4">,</span>
+            <span class="s3">'duplicate-arguments-array'</span><span class="s1">: </span><span class="s5">true</span><span class="s4">,</span>
+            <span class="s3">'flatten-duplicate-arrays'</span><span class="s1">: </span><span class="s5">true</span><span class="s4">,</span>
+            <span class="s3">'greedy-arrays'</span><span class="s1">: </span><span class="s5">true</span><span class="s4">,</span>
+            <span class="s3">'halt-at-non-option'</span><span class="s1">: </span><span class="s5">false</span><span class="s4">,</span>
+            <span class="s3">'nargs-eats-options'</span><span class="s1">: </span><span class="s5">false</span><span class="s4">,</span>
+            <span class="s3">'negation-prefix'</span><span class="s1">: </span><span class="s3">'no-'</span><span class="s4">,</span>
+            <span class="s3">'parse-numbers'</span><span class="s1">: </span><span class="s5">true</span><span class="s4">,</span>
+            <span class="s3">'parse-positional-numbers'</span><span class="s1">: </span><span class="s5">true</span><span class="s4">,</span>
+            <span class="s3">'populate--'</span><span class="s1">: </span><span class="s5">false</span><span class="s4">,</span>
+            <span class="s3">'set-placeholder-key'</span><span class="s1">: </span><span class="s5">false</span><span class="s4">,</span>
+            <span class="s3">'short-option-groups'</span><span class="s1">: </span><span class="s5">true</span><span class="s4">,</span>
+            <span class="s3">'strip-aliased'</span><span class="s1">: </span><span class="s5">false</span><span class="s4">,</span>
+            <span class="s3">'strip-dashed'</span><span class="s1">: </span><span class="s5">false</span><span class="s4">,</span>
+            <span class="s3">'unknown-options-as-args'</span><span class="s1">: </span><span class="s5">false</span>
+        <span class="s1">}</span><span class="s4">, </span><span class="s1">opts.configuration)</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">defaults = Object.assign(Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">, </span><span class="s1">opts.default)</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">configObjects = opts.configObjects || []</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">envPrefix = opts.envPrefix</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">notFlagsOption = configuration[</span><span class="s3">'populate--'</span><span class="s1">]</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">notFlagsArgv = notFlagsOption ? </span><span class="s3">'--' </span><span class="s1">: </span><span class="s3">'_'</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">newAliases = Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">defaulted = Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s0">// allow a i18n handler to be passed in, default to a fake one (util.format).</span>
+        <span class="s5">const </span><span class="s1">__ = opts.__ || mixin.format</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">flags = {</span>
+            <span class="s1">aliases: Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">,</span>
+            <span class="s1">arrays: Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">,</span>
+            <span class="s1">bools: Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">,</span>
+            <span class="s1">strings: Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">,</span>
+            <span class="s1">numbers: Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">,</span>
+            <span class="s1">counts: Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">,</span>
+            <span class="s1">normalize: Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">,</span>
+            <span class="s1">configs: Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">,</span>
+            <span class="s1">nargs: Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">,</span>
+            <span class="s1">coercions: Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">,</span>
+            <span class="s1">keys: []</span>
+        <span class="s1">}</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">negative = </span><span class="s8">/^-([0-9]+(\.[0-9]+)?|\.[0-9]+)$/</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">negatedBoolean = </span><span class="s5">new </span><span class="s1">RegExp(</span><span class="s3">'^--' </span><span class="s1">+ configuration[</span><span class="s3">'negation-prefix'</span><span class="s1">] + </span><span class="s3">'(.+)'</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">[].concat(opts.array || []).filter(Boolean).forEach(</span><span class="s5">function </span><span class="s1">(opt) {</span>
+            <span class="s5">const </span><span class="s1">key = </span><span class="s5">typeof </span><span class="s1">opt === </span><span class="s3">'object' </span><span class="s1">? opt.key : opt</span><span class="s4">;</span>
+            <span class="s0">// assign to flags[bools|strings|numbers]</span>
+            <span class="s5">const </span><span class="s1">assignment = Object.keys(opt).map(</span><span class="s5">function </span><span class="s1">(key) {</span>
+                <span class="s5">const </span><span class="s1">arrayFlagKeys = {</span>
+                    <span class="s1">boolean: </span><span class="s3">'bools'</span><span class="s4">,</span>
+                    <span class="s1">string: </span><span class="s3">'strings'</span><span class="s4">,</span>
+                    <span class="s1">number: </span><span class="s3">'numbers'</span>
+                <span class="s1">}</span><span class="s4">;</span>
+                <span class="s5">return </span><span class="s1">arrayFlagKeys[key]</span><span class="s4">;</span>
+            <span class="s1">}).filter(Boolean).pop()</span><span class="s4">;</span>
+            <span class="s0">// assign key to be coerced</span>
+            <span class="s5">if </span><span class="s1">(assignment) {</span>
+                <span class="s1">flags[assignment][key] = </span><span class="s5">true</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s1">flags.arrays[key] = </span><span class="s5">true</span><span class="s4">;</span>
+            <span class="s1">flags.keys.push(key)</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">[].concat(opts.boolean || []).filter(Boolean).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+            <span class="s1">flags.bools[key] = </span><span class="s5">true</span><span class="s4">;</span>
+            <span class="s1">flags.keys.push(key)</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">[].concat(opts.string || []).filter(Boolean).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+            <span class="s1">flags.strings[key] = </span><span class="s5">true</span><span class="s4">;</span>
+            <span class="s1">flags.keys.push(key)</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">[].concat(opts.number || []).filter(Boolean).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+            <span class="s1">flags.numbers[key] = </span><span class="s5">true</span><span class="s4">;</span>
+            <span class="s1">flags.keys.push(key)</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">[].concat(opts.count || []).filter(Boolean).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+            <span class="s1">flags.counts[key] = </span><span class="s5">true</span><span class="s4">;</span>
+            <span class="s1">flags.keys.push(key)</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">[].concat(opts.normalize || []).filter(Boolean).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+            <span class="s1">flags.normalize[key] = </span><span class="s5">true</span><span class="s4">;</span>
+            <span class="s1">flags.keys.push(key)</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+        <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">opts.narg === </span><span class="s3">'object'</span><span class="s1">) {</span>
+            <span class="s1">Object.entries(opts.narg).forEach(([key</span><span class="s4">, </span><span class="s1">value]) =&gt; {</span>
+                <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">value === </span><span class="s3">'number'</span><span class="s1">) {</span>
+                    <span class="s1">flags.nargs[key] = value</span><span class="s4">;</span>
+                    <span class="s1">flags.keys.push(key)</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">opts.coerce === </span><span class="s3">'object'</span><span class="s1">) {</span>
+            <span class="s1">Object.entries(opts.coerce).forEach(([key</span><span class="s4">, </span><span class="s1">value]) =&gt; {</span>
+                <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">value === </span><span class="s3">'function'</span><span class="s1">) {</span>
+                    <span class="s1">flags.coercions[key] = value</span><span class="s4">;</span>
+                    <span class="s1">flags.keys.push(key)</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">opts.config !== </span><span class="s3">'undefined'</span><span class="s1">) {</span>
+            <span class="s5">if </span><span class="s1">(Array.isArray(opts.config) || </span><span class="s5">typeof </span><span class="s1">opts.config === </span><span class="s3">'string'</span><span class="s1">) {</span>
+                <span class="s1">[].concat(opts.config).filter(Boolean).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+                    <span class="s1">flags.configs[key] = </span><span class="s5">true</span><span class="s4">;</span>
+                <span class="s1">})</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">opts.config === </span><span class="s3">'object'</span><span class="s1">) {</span>
+                <span class="s1">Object.entries(opts.config).forEach(([key</span><span class="s4">, </span><span class="s1">value]) =&gt; {</span>
+                    <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">value === </span><span class="s3">'boolean' </span><span class="s1">|| </span><span class="s5">typeof </span><span class="s1">value === </span><span class="s3">'function'</span><span class="s1">) {</span>
+                        <span class="s1">flags.configs[key] = value</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">})</span><span class="s4">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s0">// create a lookup table that takes into account all</span>
+        <span class="s0">// combinations of aliases: {f: ['foo'], foo: ['f']}</span>
+        <span class="s1">extendAliases(opts.key</span><span class="s4">, </span><span class="s1">aliases</span><span class="s4">, </span><span class="s1">opts.default</span><span class="s4">, </span><span class="s1">flags.arrays)</span><span class="s4">;</span>
+        <span class="s0">// apply default values to all aliases.</span>
+        <span class="s1">Object.keys(defaults).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+            <span class="s1">(flags.aliases[key] || []).forEach(</span><span class="s5">function </span><span class="s1">(alias) {</span>
+                <span class="s1">defaults[alias] = defaults[key]</span><span class="s4">;</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+        <span class="s5">let </span><span class="s1">error = </span><span class="s5">null</span><span class="s4">;</span>
+        <span class="s1">checkConfiguration()</span><span class="s4">;</span>
+        <span class="s5">let </span><span class="s1">notFlags = []</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">argv = Object.assign(Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">, </span><span class="s1">{ _: [] })</span><span class="s4">;</span>
+        <span class="s0">// TODO(bcoe): for the first pass at removing object prototype  we didn't</span>
+        <span class="s0">// remove all prototypes from objects returned by this API, we might want</span>
+        <span class="s0">// to gradually move towards doing so.</span>
+        <span class="s5">const </span><span class="s1">argvReturn = {}</span><span class="s4">;</span>
+        <span class="s5">for </span><span class="s1">(</span><span class="s5">let </span><span class="s1">i = </span><span class="s8">0</span><span class="s4">; </span><span class="s1">i &lt; args.length</span><span class="s4">; </span><span class="s1">i++) {</span>
+            <span class="s5">const </span><span class="s1">arg = args[i]</span><span class="s4">;</span>
+            <span class="s5">const </span><span class="s1">truncatedArg = arg.replace(</span><span class="s8">/^-{3,}/</span><span class="s4">, </span><span class="s3">'---'</span><span class="s1">)</span><span class="s4">;</span>
+            <span class="s5">let </span><span class="s1">broken</span><span class="s4">;</span>
+            <span class="s5">let </span><span class="s1">key</span><span class="s4">;</span>
+            <span class="s5">let </span><span class="s1">letters</span><span class="s4">;</span>
+            <span class="s5">let </span><span class="s1">m</span><span class="s4">;</span>
+            <span class="s5">let </span><span class="s1">next</span><span class="s4">;</span>
+            <span class="s5">let </span><span class="s1">value</span><span class="s4">;</span>
+            <span class="s0">// any unknown option (except for end-of-options, &quot;--&quot;)</span>
+            <span class="s5">if </span><span class="s1">(arg !== </span><span class="s3">'--' </span><span class="s1">&amp;&amp; isUnknownOptionAsArg(arg)) {</span>
+                <span class="s1">pushPositional(arg)</span><span class="s4">;</span>
+                <span class="s0">// ---, ---=, ----, etc,</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(truncatedArg.match(</span><span class="s8">/---+(=|$)/</span><span class="s1">)) {</span>
+                <span class="s0">// options without key name are invalid.</span>
+                <span class="s1">pushPositional(arg)</span><span class="s4">;</span>
+                <span class="s5">continue</span><span class="s4">;</span>
+                <span class="s0">// -- separated by =</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(arg.match(</span><span class="s8">/^--.+=/</span><span class="s1">) || (!configuration[</span><span class="s3">'short-option-groups'</span><span class="s1">] &amp;&amp; arg.match(</span><span class="s8">/^-.+=/</span><span class="s1">))) {</span>
+                <span class="s0">// Using [\s\S] instead of . because js doesn't support the</span>
+                <span class="s0">// 'dotall' regex modifier. See:</span>
+                <span class="s0">// http://stackoverflow.com/a/1068308/13216</span>
+                <span class="s1">m = arg.match(</span><span class="s8">/^--?([^=]+)=([\s\S]*)$/</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s0">// arrays format = '--f=a b c'</span>
+                <span class="s5">if </span><span class="s1">(m !== </span><span class="s5">null </span><span class="s1">&amp;&amp; Array.isArray(m) &amp;&amp; m.length &gt;= </span><span class="s8">3</span><span class="s1">) {</span>
+                    <span class="s5">if </span><span class="s1">(checkAllAliases(m[</span><span class="s8">1</span><span class="s1">]</span><span class="s4">, </span><span class="s1">flags.arrays)) {</span>
+                        <span class="s1">i = eatArray(i</span><span class="s4">, </span><span class="s1">m[</span><span class="s8">1</span><span class="s1">]</span><span class="s4">, </span><span class="s1">args</span><span class="s4">, </span><span class="s1">m[</span><span class="s8">2</span><span class="s1">])</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                    <span class="s5">else if </span><span class="s1">(checkAllAliases(m[</span><span class="s8">1</span><span class="s1">]</span><span class="s4">, </span><span class="s1">flags.nargs) !== </span><span class="s5">false</span><span class="s1">) {</span>
+                        <span class="s0">// nargs format = '--f=monkey washing cat'</span>
+                        <span class="s1">i = eatNargs(i</span><span class="s4">, </span><span class="s1">m[</span><span class="s8">1</span><span class="s1">]</span><span class="s4">, </span><span class="s1">args</span><span class="s4">, </span><span class="s1">m[</span><span class="s8">2</span><span class="s1">])</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                    <span class="s5">else </span><span class="s1">{</span>
+                        <span class="s1">setArg(m[</span><span class="s8">1</span><span class="s1">]</span><span class="s4">, </span><span class="s1">m[</span><span class="s8">2</span><span class="s1">])</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(arg.match(negatedBoolean) &amp;&amp; configuration[</span><span class="s3">'boolean-negation'</span><span class="s1">]) {</span>
+                <span class="s1">m = arg.match(negatedBoolean)</span><span class="s4">;</span>
+                <span class="s5">if </span><span class="s1">(m !== </span><span class="s5">null </span><span class="s1">&amp;&amp; Array.isArray(m) &amp;&amp; m.length &gt;= </span><span class="s8">2</span><span class="s1">) {</span>
+                    <span class="s1">key = m[</span><span class="s8">1</span><span class="s1">]</span><span class="s4">;</span>
+                    <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.arrays) ? [</span><span class="s5">false</span><span class="s1">] : </span><span class="s5">false</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s0">// -- separated by space.</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(arg.match(</span><span class="s8">/^--.+/</span><span class="s1">) || (!configuration[</span><span class="s3">'short-option-groups'</span><span class="s1">] &amp;&amp; arg.match(</span><span class="s8">/^-[^-]+/</span><span class="s1">))) {</span>
+                <span class="s1">m = arg.match(</span><span class="s8">/^--?(.+)/</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s5">if </span><span class="s1">(m !== </span><span class="s5">null </span><span class="s1">&amp;&amp; Array.isArray(m) &amp;&amp; m.length &gt;= </span><span class="s8">2</span><span class="s1">) {</span>
+                    <span class="s1">key = m[</span><span class="s8">1</span><span class="s1">]</span><span class="s4">;</span>
+                    <span class="s5">if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.arrays)) {</span>
+                        <span class="s0">// array format = '--foo a b c'</span>
+                        <span class="s1">i = eatArray(i</span><span class="s4">, </span><span class="s1">key</span><span class="s4">, </span><span class="s1">args)</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                    <span class="s5">else if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.nargs) !== </span><span class="s5">false</span><span class="s1">) {</span>
+                        <span class="s0">// nargs format = '--foo a b c'</span>
+                        <span class="s0">// should be truthy even if: flags.nargs[key] === 0</span>
+                        <span class="s1">i = eatNargs(i</span><span class="s4">, </span><span class="s1">key</span><span class="s4">, </span><span class="s1">args)</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                    <span class="s5">else </span><span class="s1">{</span>
+                        <span class="s1">next = args[i + </span><span class="s8">1</span><span class="s1">]</span><span class="s4">;</span>
+                        <span class="s5">if </span><span class="s1">(next !== undefined &amp;&amp; (!next.match(</span><span class="s8">/^-/</span><span class="s1">) ||</span>
+                            <span class="s1">next.match(negative)) &amp;&amp;</span>
+                            <span class="s1">!checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.bools) &amp;&amp;</span>
+                            <span class="s1">!checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.counts)) {</span>
+                            <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">next)</span><span class="s4">;</span>
+                            <span class="s1">i++</span><span class="s4">;</span>
+                        <span class="s1">}</span>
+                        <span class="s5">else if </span><span class="s1">(</span><span class="s8">/^(true|false)$/</span><span class="s1">.test(next)) {</span>
+                            <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">next)</span><span class="s4">;</span>
+                            <span class="s1">i++</span><span class="s4">;</span>
+                        <span class="s1">}</span>
+                        <span class="s5">else </span><span class="s1">{</span>
+                            <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">defaultValue(key))</span><span class="s4">;</span>
+                        <span class="s1">}</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+                <span class="s0">// dot-notation flag separated by '='.</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(arg.match(</span><span class="s8">/^-.\..+=/</span><span class="s1">)) {</span>
+                <span class="s1">m = arg.match(</span><span class="s8">/^-([^=]+)=([\s\S]*)$/</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s5">if </span><span class="s1">(m !== </span><span class="s5">null </span><span class="s1">&amp;&amp; Array.isArray(m) &amp;&amp; m.length &gt;= </span><span class="s8">3</span><span class="s1">) {</span>
+                    <span class="s1">setArg(m[</span><span class="s8">1</span><span class="s1">]</span><span class="s4">, </span><span class="s1">m[</span><span class="s8">2</span><span class="s1">])</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s0">// dot-notation flag separated by space.</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(arg.match(</span><span class="s8">/^-.\..+/</span><span class="s1">) &amp;&amp; !arg.match(negative)) {</span>
+                <span class="s1">next = args[i + </span><span class="s8">1</span><span class="s1">]</span><span class="s4">;</span>
+                <span class="s1">m = arg.match(</span><span class="s8">/^-(.\..+)/</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s5">if </span><span class="s1">(m !== </span><span class="s5">null </span><span class="s1">&amp;&amp; Array.isArray(m) &amp;&amp; m.length &gt;= </span><span class="s8">2</span><span class="s1">) {</span>
+                    <span class="s1">key = m[</span><span class="s8">1</span><span class="s1">]</span><span class="s4">;</span>
+                    <span class="s5">if </span><span class="s1">(next !== undefined &amp;&amp; !next.match(</span><span class="s8">/^-/</span><span class="s1">) &amp;&amp;</span>
+                        <span class="s1">!checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.bools) &amp;&amp;</span>
+                        <span class="s1">!checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.counts)) {</span>
+                        <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">next)</span><span class="s4">;</span>
+                        <span class="s1">i++</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                    <span class="s5">else </span><span class="s1">{</span>
+                        <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">defaultValue(key))</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(arg.match(</span><span class="s8">/^-[^-]+/</span><span class="s1">) &amp;&amp; !arg.match(negative)) {</span>
+                <span class="s1">letters = arg.slice(</span><span class="s8">1</span><span class="s4">, </span><span class="s1">-</span><span class="s8">1</span><span class="s1">).split(</span><span class="s3">''</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s1">broken = </span><span class="s5">false</span><span class="s4">;</span>
+                <span class="s5">for </span><span class="s1">(</span><span class="s5">let </span><span class="s1">j = </span><span class="s8">0</span><span class="s4">; </span><span class="s1">j &lt; letters.length</span><span class="s4">; </span><span class="s1">j++) {</span>
+                    <span class="s1">next = arg.slice(j + </span><span class="s8">2</span><span class="s1">)</span><span class="s4">;</span>
+                    <span class="s5">if </span><span class="s1">(letters[j + </span><span class="s8">1</span><span class="s1">] &amp;&amp; letters[j + </span><span class="s8">1</span><span class="s1">] === </span><span class="s3">'='</span><span class="s1">) {</span>
+                        <span class="s1">value = arg.slice(j + </span><span class="s8">3</span><span class="s1">)</span><span class="s4">;</span>
+                        <span class="s1">key = letters[j]</span><span class="s4">;</span>
+                        <span class="s5">if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.arrays)) {</span>
+                            <span class="s0">// array format = '-f=a b c'</span>
+                            <span class="s1">i = eatArray(i</span><span class="s4">, </span><span class="s1">key</span><span class="s4">, </span><span class="s1">args</span><span class="s4">, </span><span class="s1">value)</span><span class="s4">;</span>
+                        <span class="s1">}</span>
+                        <span class="s5">else if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.nargs) !== </span><span class="s5">false</span><span class="s1">) {</span>
+                            <span class="s0">// nargs format = '-f=monkey washing cat'</span>
+                            <span class="s1">i = eatNargs(i</span><span class="s4">, </span><span class="s1">key</span><span class="s4">, </span><span class="s1">args</span><span class="s4">, </span><span class="s1">value)</span><span class="s4">;</span>
+                        <span class="s1">}</span>
+                        <span class="s5">else </span><span class="s1">{</span>
+                            <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">value)</span><span class="s4">;</span>
+                        <span class="s1">}</span>
+                        <span class="s1">broken = </span><span class="s5">true</span><span class="s4">;</span>
+                        <span class="s5">break</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                    <span class="s5">if </span><span class="s1">(next === </span><span class="s3">'-'</span><span class="s1">) {</span>
+                        <span class="s1">setArg(letters[j]</span><span class="s4">, </span><span class="s1">next)</span><span class="s4">;</span>
+                        <span class="s5">continue</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                    <span class="s0">// current letter is an alphabetic character and next value is a number</span>
+                    <span class="s5">if </span><span class="s1">(</span><span class="s8">/[A-Za-z]/</span><span class="s1">.test(letters[j]) &amp;&amp;</span>
+                        <span class="s8">/^-?\d+(\.\d*)?(e-?\d+)?$/</span><span class="s1">.test(next) &amp;&amp;</span>
+                        <span class="s1">checkAllAliases(next</span><span class="s4">, </span><span class="s1">flags.bools) === </span><span class="s5">false</span><span class="s1">) {</span>
+                        <span class="s1">setArg(letters[j]</span><span class="s4">, </span><span class="s1">next)</span><span class="s4">;</span>
+                        <span class="s1">broken = </span><span class="s5">true</span><span class="s4">;</span>
+                        <span class="s5">break</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                    <span class="s5">if </span><span class="s1">(letters[j + </span><span class="s8">1</span><span class="s1">] &amp;&amp; letters[j + </span><span class="s8">1</span><span class="s1">].match(</span><span class="s8">/\W/</span><span class="s1">)) {</span>
+                        <span class="s1">setArg(letters[j]</span><span class="s4">, </span><span class="s1">next)</span><span class="s4">;</span>
+                        <span class="s1">broken = </span><span class="s5">true</span><span class="s4">;</span>
+                        <span class="s5">break</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                    <span class="s5">else </span><span class="s1">{</span>
+                        <span class="s1">setArg(letters[j]</span><span class="s4">, </span><span class="s1">defaultValue(letters[j]))</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+                <span class="s1">key = arg.slice(-</span><span class="s8">1</span><span class="s1">)[</span><span class="s8">0</span><span class="s1">]</span><span class="s4">;</span>
+                <span class="s5">if </span><span class="s1">(!broken &amp;&amp; key !== </span><span class="s3">'-'</span><span class="s1">) {</span>
+                    <span class="s5">if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.arrays)) {</span>
+                        <span class="s0">// array format = '-f a b c'</span>
+                        <span class="s1">i = eatArray(i</span><span class="s4">, </span><span class="s1">key</span><span class="s4">, </span><span class="s1">args)</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                    <span class="s5">else if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.nargs) !== </span><span class="s5">false</span><span class="s1">) {</span>
+                        <span class="s0">// nargs format = '-f a b c'</span>
+                        <span class="s0">// should be truthy even if: flags.nargs[key] === 0</span>
+                        <span class="s1">i = eatNargs(i</span><span class="s4">, </span><span class="s1">key</span><span class="s4">, </span><span class="s1">args)</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                    <span class="s5">else </span><span class="s1">{</span>
+                        <span class="s1">next = args[i + </span><span class="s8">1</span><span class="s1">]</span><span class="s4">;</span>
+                        <span class="s5">if </span><span class="s1">(next !== undefined &amp;&amp; (!</span><span class="s8">/^(-|--)[^-]/</span><span class="s1">.test(next) ||</span>
+                            <span class="s1">next.match(negative)) &amp;&amp;</span>
+                            <span class="s1">!checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.bools) &amp;&amp;</span>
+                            <span class="s1">!checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.counts)) {</span>
+                            <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">next)</span><span class="s4">;</span>
+                            <span class="s1">i++</span><span class="s4">;</span>
+                        <span class="s1">}</span>
+                        <span class="s5">else if </span><span class="s1">(</span><span class="s8">/^(true|false)$/</span><span class="s1">.test(next)) {</span>
+                            <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">next)</span><span class="s4">;</span>
+                            <span class="s1">i++</span><span class="s4">;</span>
+                        <span class="s1">}</span>
+                        <span class="s5">else </span><span class="s1">{</span>
+                            <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">defaultValue(key))</span><span class="s4">;</span>
+                        <span class="s1">}</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(arg.match(</span><span class="s8">/^-[0-9]$/</span><span class="s1">) &amp;&amp;</span>
+                <span class="s1">arg.match(negative) &amp;&amp;</span>
+                <span class="s1">checkAllAliases(arg.slice(</span><span class="s8">1</span><span class="s1">)</span><span class="s4">, </span><span class="s1">flags.bools)) {</span>
+                <span class="s0">// single-digit boolean alias, e.g: xargs -0</span>
+                <span class="s1">key = arg.slice(</span><span class="s8">1</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">defaultValue(key))</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(arg === </span><span class="s3">'--'</span><span class="s1">) {</span>
+                <span class="s1">notFlags = args.slice(i + </span><span class="s8">1</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s5">break</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(configuration[</span><span class="s3">'halt-at-non-option'</span><span class="s1">]) {</span>
+                <span class="s1">notFlags = args.slice(i)</span><span class="s4">;</span>
+                <span class="s5">break</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">else </span><span class="s1">{</span>
+                <span class="s1">pushPositional(arg)</span><span class="s4">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s0">// order of precedence:</span>
+        <span class="s0">// 1. command line arg</span>
+        <span class="s0">// 2. value from env var</span>
+        <span class="s0">// 3. value from config file</span>
+        <span class="s0">// 4. value from config objects</span>
+        <span class="s0">// 5. configured default value</span>
+        <span class="s1">applyEnvVars(argv</span><span class="s4">, </span><span class="s5">true</span><span class="s1">)</span><span class="s4">; </span><span class="s0">// special case: check env vars that point to config file</span>
+        <span class="s1">applyEnvVars(argv</span><span class="s4">, </span><span class="s5">false</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">setConfig(argv)</span><span class="s4">;</span>
+        <span class="s1">setConfigObjects()</span><span class="s4">;</span>
+        <span class="s1">applyDefaultsAndAliases(argv</span><span class="s4">, </span><span class="s1">flags.aliases</span><span class="s4">, </span><span class="s1">defaults</span><span class="s4">, </span><span class="s5">true</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">applyCoercions(argv)</span><span class="s4">;</span>
+        <span class="s5">if </span><span class="s1">(configuration[</span><span class="s3">'set-placeholder-key'</span><span class="s1">])</span>
+            <span class="s1">setPlaceholderKeys(argv)</span><span class="s4">;</span>
+        <span class="s0">// for any counts either not in args or without an explicit default, set to 0</span>
+        <span class="s1">Object.keys(flags.counts).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+            <span class="s5">if </span><span class="s1">(!hasKey(argv</span><span class="s4">, </span><span class="s1">key.split(</span><span class="s3">'.'</span><span class="s1">)))</span>
+                <span class="s1">setArg(key</span><span class="s4">, </span><span class="s8">0</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+        <span class="s0">// '--' defaults to undefined.</span>
+        <span class="s5">if </span><span class="s1">(notFlagsOption &amp;&amp; notFlags.length)</span>
+            <span class="s1">argv[notFlagsArgv] = []</span><span class="s4">;</span>
+        <span class="s1">notFlags.forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+            <span class="s1">argv[notFlagsArgv].push(key)</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+        <span class="s5">if </span><span class="s1">(configuration[</span><span class="s3">'camel-case-expansion'</span><span class="s1">] &amp;&amp; configuration[</span><span class="s3">'strip-dashed'</span><span class="s1">]) {</span>
+            <span class="s1">Object.keys(argv).filter(key =&gt; key !== </span><span class="s3">'--' </span><span class="s1">&amp;&amp; key.includes(</span><span class="s3">'-'</span><span class="s1">)).forEach(key =&gt; {</span>
+                <span class="s5">delete </span><span class="s1">argv[key]</span><span class="s4">;</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">if </span><span class="s1">(configuration[</span><span class="s3">'strip-aliased'</span><span class="s1">]) {</span>
+            <span class="s1">[].concat(...Object.keys(aliases).map(k =&gt; aliases[k])).forEach(alias =&gt; {</span>
+                <span class="s5">if </span><span class="s1">(configuration[</span><span class="s3">'camel-case-expansion'</span><span class="s1">] &amp;&amp; alias.includes(</span><span class="s3">'-'</span><span class="s1">)) {</span>
+                    <span class="s5">delete </span><span class="s1">argv[alias.split(</span><span class="s3">'.'</span><span class="s1">).map(prop =&gt; camelCase(prop)).join(</span><span class="s3">'.'</span><span class="s1">)]</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s5">delete </span><span class="s1">argv[alias]</span><span class="s4">;</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s0">// Push argument into positional array, applying numeric coercion:</span>
+        <span class="s5">function </span><span class="s1">pushPositional(arg) {</span>
+            <span class="s5">const </span><span class="s1">maybeCoercedNumber = maybeCoerceNumber(</span><span class="s3">'_'</span><span class="s4">, </span><span class="s1">arg)</span><span class="s4">;</span>
+            <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">maybeCoercedNumber === </span><span class="s3">'string' </span><span class="s1">|| </span><span class="s5">typeof </span><span class="s1">maybeCoercedNumber === </span><span class="s3">'number'</span><span class="s1">) {</span>
+                <span class="s1">argv._.push(maybeCoercedNumber)</span><span class="s4">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s0">// how many arguments should we consume, based</span>
+        <span class="s0">// on the nargs option?</span>
+        <span class="s5">function </span><span class="s1">eatNargs(i</span><span class="s4">, </span><span class="s1">key</span><span class="s4">, </span><span class="s1">args</span><span class="s4">, </span><span class="s1">argAfterEqualSign) {</span>
+            <span class="s5">let </span><span class="s1">ii</span><span class="s4">;</span>
+            <span class="s5">let </span><span class="s1">toEat = checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.nargs)</span><span class="s4">;</span>
+            <span class="s0">// NaN has a special meaning for the array type, indicating that one or</span>
+            <span class="s0">// more values are expected.</span>
+            <span class="s1">toEat = </span><span class="s5">typeof </span><span class="s1">toEat !== </span><span class="s3">'number' </span><span class="s1">|| isNaN(toEat) ? </span><span class="s8">1 </span><span class="s1">: toEat</span><span class="s4">;</span>
+            <span class="s5">if </span><span class="s1">(toEat === </span><span class="s8">0</span><span class="s1">) {</span>
+                <span class="s5">if </span><span class="s1">(!isUndefined(argAfterEqualSign)) {</span>
+                    <span class="s1">error = Error(__(</span><span class="s3">'Argument unexpected for: %s'</span><span class="s4">, </span><span class="s1">key))</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">defaultValue(key))</span><span class="s4">;</span>
+                <span class="s5">return </span><span class="s1">i</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">let </span><span class="s1">available = isUndefined(argAfterEqualSign) ? </span><span class="s8">0 </span><span class="s1">: </span><span class="s8">1</span><span class="s4">;</span>
+            <span class="s5">if </span><span class="s1">(configuration[</span><span class="s3">'nargs-eats-options'</span><span class="s1">]) {</span>
+                <span class="s0">// classic behavior, yargs eats positional and dash arguments.</span>
+                <span class="s5">if </span><span class="s1">(args.length - (i + </span><span class="s8">1</span><span class="s1">) + available &lt; toEat) {</span>
+                    <span class="s1">error = Error(__(</span><span class="s3">'Not enough arguments following: %s'</span><span class="s4">, </span><span class="s1">key))</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s1">available = toEat</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">else </span><span class="s1">{</span>
+                <span class="s0">// nargs will not consume flag arguments, e.g., -abc, --foo,</span>
+                <span class="s0">// and terminates when one is observed.</span>
+                <span class="s5">for </span><span class="s1">(ii = i + </span><span class="s8">1</span><span class="s4">; </span><span class="s1">ii &lt; args.length</span><span class="s4">; </span><span class="s1">ii++) {</span>
+                    <span class="s5">if </span><span class="s1">(!args[ii].match(</span><span class="s8">/^-[^0-9]/</span><span class="s1">) || args[ii].match(negative) || isUnknownOptionAsArg(args[ii]))</span>
+                        <span class="s1">available++</span><span class="s4">;</span>
+                    <span class="s5">else</span>
+                        <span class="s5">break</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s5">if </span><span class="s1">(available &lt; toEat)</span>
+                    <span class="s1">error = Error(__(</span><span class="s3">'Not enough arguments following: %s'</span><span class="s4">, </span><span class="s1">key))</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">let </span><span class="s1">consumed = Math.min(available</span><span class="s4">, </span><span class="s1">toEat)</span><span class="s4">;</span>
+            <span class="s5">if </span><span class="s1">(!isUndefined(argAfterEqualSign) &amp;&amp; consumed &gt; </span><span class="s8">0</span><span class="s1">) {</span>
+                <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">argAfterEqualSign)</span><span class="s4">;</span>
+                <span class="s1">consumed--</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">for </span><span class="s1">(ii = i + </span><span class="s8">1</span><span class="s4">; </span><span class="s1">ii &lt; (consumed + i + </span><span class="s8">1</span><span class="s1">)</span><span class="s4">; </span><span class="s1">ii++) {</span>
+                <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">args[ii])</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">return </span><span class="s1">(i + consumed)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s0">// if an option is an array, eat all non-hyphenated arguments</span>
+        <span class="s0">// following it... YUM!</span>
+        <span class="s0">// e.g., --foo apple banana cat becomes [&quot;apple&quot;, &quot;banana&quot;, &quot;cat&quot;]</span>
+        <span class="s5">function </span><span class="s1">eatArray(i</span><span class="s4">, </span><span class="s1">key</span><span class="s4">, </span><span class="s1">args</span><span class="s4">, </span><span class="s1">argAfterEqualSign) {</span>
+            <span class="s5">let </span><span class="s1">argsToSet = []</span><span class="s4">;</span>
+            <span class="s5">let </span><span class="s1">next = argAfterEqualSign || args[i + </span><span class="s8">1</span><span class="s1">]</span><span class="s4">;</span>
+            <span class="s0">// If both array and nargs are configured, enforce the nargs count:</span>
+            <span class="s5">const </span><span class="s1">nargsCount = checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.nargs)</span><span class="s4">;</span>
+            <span class="s5">if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.bools) &amp;&amp; !(</span><span class="s8">/^(true|false)$/</span><span class="s1">.test(next))) {</span>
+                <span class="s1">argsToSet.push(</span><span class="s5">true</span><span class="s1">)</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(isUndefined(next) ||</span>
+                <span class="s1">(isUndefined(argAfterEqualSign) &amp;&amp; </span><span class="s8">/^-/</span><span class="s1">.test(next) &amp;&amp; !negative.test(next) &amp;&amp; !isUnknownOptionAsArg(next))) {</span>
+                <span class="s0">// for keys without value ==&gt; argsToSet remains an empty []</span>
+                <span class="s0">// set user default value, if available</span>
+                <span class="s5">if </span><span class="s1">(defaults[key] !== undefined) {</span>
+                    <span class="s5">const </span><span class="s1">defVal = defaults[key]</span><span class="s4">;</span>
+                    <span class="s1">argsToSet = Array.isArray(defVal) ? defVal : [defVal]</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+            <span class="s5">else </span><span class="s1">{</span>
+                <span class="s0">// value in --option=value is eaten as is</span>
+                <span class="s5">if </span><span class="s1">(!isUndefined(argAfterEqualSign)) {</span>
+                    <span class="s1">argsToSet.push(processValue(key</span><span class="s4">, </span><span class="s1">argAfterEqualSign))</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s5">for </span><span class="s1">(</span><span class="s5">let </span><span class="s1">ii = i + </span><span class="s8">1</span><span class="s4">; </span><span class="s1">ii &lt; args.length</span><span class="s4">; </span><span class="s1">ii++) {</span>
+                    <span class="s5">if </span><span class="s1">((!configuration[</span><span class="s3">'greedy-arrays'</span><span class="s1">] &amp;&amp; argsToSet.length &gt; </span><span class="s8">0</span><span class="s1">) ||</span>
+                        <span class="s1">(nargsCount &amp;&amp; </span><span class="s5">typeof </span><span class="s1">nargsCount === </span><span class="s3">'number' </span><span class="s1">&amp;&amp; argsToSet.length &gt;= nargsCount))</span>
+                        <span class="s5">break</span><span class="s4">;</span>
+                    <span class="s1">next = args[ii]</span><span class="s4">;</span>
+                    <span class="s5">if </span><span class="s1">(</span><span class="s8">/^-/</span><span class="s1">.test(next) &amp;&amp; !negative.test(next) &amp;&amp; !isUnknownOptionAsArg(next))</span>
+                        <span class="s5">break</span><span class="s4">;</span>
+                    <span class="s1">i = ii</span><span class="s4">;</span>
+                    <span class="s1">argsToSet.push(processValue(key</span><span class="s4">, </span><span class="s1">next))</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+            <span class="s0">// If both array and nargs are configured, create an error if less than</span>
+            <span class="s0">// nargs positionals were found. NaN has special meaning, indicating</span>
+            <span class="s0">// that at least one value is required (more are okay).</span>
+            <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">nargsCount === </span><span class="s3">'number' </span><span class="s1">&amp;&amp; ((nargsCount &amp;&amp; argsToSet.length &lt; nargsCount) ||</span>
+                <span class="s1">(isNaN(nargsCount) &amp;&amp; argsToSet.length === </span><span class="s8">0</span><span class="s1">))) {</span>
+                <span class="s1">error = Error(__(</span><span class="s3">'Not enough arguments following: %s'</span><span class="s4">, </span><span class="s1">key))</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">argsToSet)</span><span class="s4">;</span>
+            <span class="s5">return </span><span class="s1">i</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">setArg(key</span><span class="s4">, </span><span class="s1">val) {</span>
+            <span class="s5">if </span><span class="s1">(</span><span class="s8">/-/</span><span class="s1">.test(key) &amp;&amp; configuration[</span><span class="s3">'camel-case-expansion'</span><span class="s1">]) {</span>
+                <span class="s5">const </span><span class="s1">alias = key.split(</span><span class="s3">'.'</span><span class="s1">).map(</span><span class="s5">function </span><span class="s1">(prop) {</span>
+                    <span class="s5">return </span><span class="s1">camelCase(prop)</span><span class="s4">;</span>
+                <span class="s1">}).join(</span><span class="s3">'.'</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s1">addNewAlias(key</span><span class="s4">, </span><span class="s1">alias)</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">const </span><span class="s1">value = processValue(key</span><span class="s4">, </span><span class="s1">val)</span><span class="s4">;</span>
+            <span class="s5">const </span><span class="s1">splitKey = key.split(</span><span class="s3">'.'</span><span class="s1">)</span><span class="s4">;</span>
+            <span class="s1">setKey(argv</span><span class="s4">, </span><span class="s1">splitKey</span><span class="s4">, </span><span class="s1">value)</span><span class="s4">;</span>
+            <span class="s0">// handle populating aliases of the full key</span>
+            <span class="s5">if </span><span class="s1">(flags.aliases[key]) {</span>
+                <span class="s1">flags.aliases[key].forEach(</span><span class="s5">function </span><span class="s1">(x) {</span>
+                    <span class="s5">const </span><span class="s1">keyProperties = x.split(</span><span class="s3">'.'</span><span class="s1">)</span><span class="s4">;</span>
+                    <span class="s1">setKey(argv</span><span class="s4">, </span><span class="s1">keyProperties</span><span class="s4">, </span><span class="s1">value)</span><span class="s4">;</span>
+                <span class="s1">})</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s0">// handle populating aliases of the first element of the dot-notation key</span>
+            <span class="s5">if </span><span class="s1">(splitKey.length &gt; </span><span class="s8">1 </span><span class="s1">&amp;&amp; configuration[</span><span class="s3">'dot-notation'</span><span class="s1">]) {</span>
+                <span class="s1">(flags.aliases[splitKey[</span><span class="s8">0</span><span class="s1">]] || []).forEach(</span><span class="s5">function </span><span class="s1">(x) {</span>
+                    <span class="s5">let </span><span class="s1">keyProperties = x.split(</span><span class="s3">'.'</span><span class="s1">)</span><span class="s4">;</span>
+                    <span class="s0">// expand alias with nested objects in key</span>
+                    <span class="s5">const </span><span class="s1">a = [].concat(splitKey)</span><span class="s4">;</span>
+                    <span class="s1">a.shift()</span><span class="s4">; </span><span class="s0">// nuke the old key.</span>
+                    <span class="s1">keyProperties = keyProperties.concat(a)</span><span class="s4">;</span>
+                    <span class="s0">// populate alias only if is not already an alias of the full key</span>
+                    <span class="s0">// (already populated above)</span>
+                    <span class="s5">if </span><span class="s1">(!(flags.aliases[key] || []).includes(keyProperties.join(</span><span class="s3">'.'</span><span class="s1">))) {</span>
+                        <span class="s1">setKey(argv</span><span class="s4">, </span><span class="s1">keyProperties</span><span class="s4">, </span><span class="s1">value)</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">})</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s0">// Set normalize getter and setter when key is in 'normalize' but isn't an array</span>
+            <span class="s5">if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.normalize) &amp;&amp; !checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.arrays)) {</span>
+                <span class="s5">const </span><span class="s1">keys = [key].concat(flags.aliases[key] || [])</span><span class="s4">;</span>
+                <span class="s1">keys.forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+                    <span class="s1">Object.defineProperty(argvReturn</span><span class="s4">, </span><span class="s1">key</span><span class="s4">, </span><span class="s1">{</span>
+                        <span class="s1">enumerable: </span><span class="s5">true</span><span class="s4">,</span>
+                        <span class="s1">get() {</span>
+                            <span class="s5">return </span><span class="s1">val</span><span class="s4">;</span>
+                        <span class="s1">}</span><span class="s4">,</span>
+                        <span class="s1">set(value) {</span>
+                            <span class="s1">val = </span><span class="s5">typeof </span><span class="s1">value === </span><span class="s3">'string' </span><span class="s1">? mixin.normalize(value) : value</span><span class="s4">;</span>
+                        <span class="s1">}</span>
+                    <span class="s1">})</span><span class="s4">;</span>
+                <span class="s1">})</span><span class="s4">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">addNewAlias(key</span><span class="s4">, </span><span class="s1">alias) {</span>
+            <span class="s5">if </span><span class="s1">(!(flags.aliases[key] &amp;&amp; flags.aliases[key].length)) {</span>
+                <span class="s1">flags.aliases[key] = [alias]</span><span class="s4">;</span>
+                <span class="s1">newAliases[alias] = </span><span class="s5">true</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">if </span><span class="s1">(!(flags.aliases[alias] &amp;&amp; flags.aliases[alias].length)) {</span>
+                <span class="s1">addNewAlias(alias</span><span class="s4">, </span><span class="s1">key)</span><span class="s4">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">processValue(key</span><span class="s4">, </span><span class="s1">val) {</span>
+            <span class="s0">// strings may be quoted, clean this up as we assign values.</span>
+            <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">val === </span><span class="s3">'string' </span><span class="s1">&amp;&amp;</span>
+                <span class="s1">(val[</span><span class="s8">0</span><span class="s1">] === </span><span class="s3">&quot;'&quot; </span><span class="s1">|| val[</span><span class="s8">0</span><span class="s1">] === </span><span class="s3">'&quot;'</span><span class="s1">) &amp;&amp;</span>
+                <span class="s1">val[val.length - </span><span class="s8">1</span><span class="s1">] === val[</span><span class="s8">0</span><span class="s1">]) {</span>
+                <span class="s1">val = val.substring(</span><span class="s8">1</span><span class="s4">, </span><span class="s1">val.length - </span><span class="s8">1</span><span class="s1">)</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s0">// handle parsing boolean arguments --foo=true --bar false.</span>
+            <span class="s5">if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.bools) || checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.counts)) {</span>
+                <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">val === </span><span class="s3">'string'</span><span class="s1">)</span>
+                    <span class="s1">val = val === </span><span class="s3">'true'</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">let </span><span class="s1">value = Array.isArray(val)</span>
+                <span class="s1">? val.map(</span><span class="s5">function </span><span class="s1">(v) { </span><span class="s5">return </span><span class="s1">maybeCoerceNumber(key</span><span class="s4">, </span><span class="s1">v)</span><span class="s4">; </span><span class="s1">})</span>
+                <span class="s1">: maybeCoerceNumber(key</span><span class="s4">, </span><span class="s1">val)</span><span class="s4">;</span>
+            <span class="s0">// increment a count given as arg (either no value or value parsed as boolean)</span>
+            <span class="s5">if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.counts) &amp;&amp; (isUndefined(value) || </span><span class="s5">typeof </span><span class="s1">value === </span><span class="s3">'boolean'</span><span class="s1">)) {</span>
+                <span class="s1">value = increment()</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s0">// Set normalized value when key is in 'normalize' and in 'arrays'</span>
+            <span class="s5">if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.normalize) &amp;&amp; checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.arrays)) {</span>
+                <span class="s5">if </span><span class="s1">(Array.isArray(val))</span>
+                    <span class="s1">value = val.map((val) =&gt; { </span><span class="s5">return </span><span class="s1">mixin.normalize(val)</span><span class="s4">; </span><span class="s1">})</span><span class="s4">;</span>
+                <span class="s5">else</span>
+                    <span class="s1">value = mixin.normalize(val)</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">return </span><span class="s1">value</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">maybeCoerceNumber(key</span><span class="s4">, </span><span class="s1">value) {</span>
+            <span class="s5">if </span><span class="s1">(!configuration[</span><span class="s3">'parse-positional-numbers'</span><span class="s1">] &amp;&amp; key === </span><span class="s3">'_'</span><span class="s1">)</span>
+                <span class="s5">return </span><span class="s1">value</span><span class="s4">;</span>
+            <span class="s5">if </span><span class="s1">(!checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.strings) &amp;&amp; !checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.bools) &amp;&amp; !Array.isArray(value)) {</span>
+                <span class="s5">const </span><span class="s1">shouldCoerceNumber = looksLikeNumber(value) &amp;&amp; configuration[</span><span class="s3">'parse-numbers'</span><span class="s1">] &amp;&amp; (Number.isSafeInteger(Math.floor(parseFloat(</span><span class="s3">`</span><span class="s1">${value}</span><span class="s3">`</span><span class="s1">))))</span><span class="s4">;</span>
+                <span class="s5">if </span><span class="s1">(shouldCoerceNumber || (!isUndefined(value) &amp;&amp; checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.numbers))) {</span>
+                    <span class="s1">value = Number(value)</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+            <span class="s5">return </span><span class="s1">value</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s0">// set args from config.json file, this should be</span>
+        <span class="s0">// applied last so that defaults can be applied.</span>
+        <span class="s5">function </span><span class="s1">setConfig(argv) {</span>
+            <span class="s5">const </span><span class="s1">configLookup = Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">;</span>
+            <span class="s0">// expand defaults/aliases, in-case any happen to reference</span>
+            <span class="s0">// the config.json file.</span>
+            <span class="s1">applyDefaultsAndAliases(configLookup</span><span class="s4">, </span><span class="s1">flags.aliases</span><span class="s4">, </span><span class="s1">defaults)</span><span class="s4">;</span>
+            <span class="s1">Object.keys(flags.configs).forEach(</span><span class="s5">function </span><span class="s1">(configKey) {</span>
+                <span class="s5">const </span><span class="s1">configPath = argv[configKey] || configLookup[configKey]</span><span class="s4">;</span>
+                <span class="s5">if </span><span class="s1">(configPath) {</span>
+                    <span class="s5">try </span><span class="s1">{</span>
+                        <span class="s5">let </span><span class="s1">config = </span><span class="s5">null</span><span class="s4">;</span>
+                        <span class="s5">const </span><span class="s1">resolvedConfigPath = mixin.resolve(mixin.cwd()</span><span class="s4">, </span><span class="s1">configPath)</span><span class="s4">;</span>
+                        <span class="s5">const </span><span class="s1">resolveConfig = flags.configs[configKey]</span><span class="s4">;</span>
+                        <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">resolveConfig === </span><span class="s3">'function'</span><span class="s1">) {</span>
+                            <span class="s5">try </span><span class="s1">{</span>
+                                <span class="s1">config = resolveConfig(resolvedConfigPath)</span><span class="s4">;</span>
+                            <span class="s1">}</span>
+                            <span class="s5">catch </span><span class="s1">(e) {</span>
+                                <span class="s1">config = e</span><span class="s4">;</span>
+                            <span class="s1">}</span>
+                            <span class="s5">if </span><span class="s1">(config </span><span class="s5">instanceof </span><span class="s1">Error) {</span>
+                                <span class="s1">error = config</span><span class="s4">;</span>
+                                <span class="s5">return</span><span class="s4">;</span>
+                            <span class="s1">}</span>
+                        <span class="s1">}</span>
+                        <span class="s5">else </span><span class="s1">{</span>
+                            <span class="s1">config = mixin.require(resolvedConfigPath)</span><span class="s4">;</span>
+                        <span class="s1">}</span>
+                        <span class="s1">setConfigObject(config)</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                    <span class="s5">catch </span><span class="s1">(ex) {</span>
+                        <span class="s0">// Deno will receive a PermissionDenied error if an attempt is</span>
+                        <span class="s0">// made to load config without the --allow-read flag:</span>
+                        <span class="s5">if </span><span class="s1">(ex.name === </span><span class="s3">'PermissionDenied'</span><span class="s1">)</span>
+                            <span class="s1">error = ex</span><span class="s4">;</span>
+                        <span class="s5">else if </span><span class="s1">(argv[configKey])</span>
+                            <span class="s1">error = Error(__(</span><span class="s3">'Invalid JSON config file: %s'</span><span class="s4">, </span><span class="s1">configPath))</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s0">// set args from config object.</span>
+        <span class="s0">// it recursively checks nested objects.</span>
+        <span class="s5">function </span><span class="s1">setConfigObject(config</span><span class="s4">, </span><span class="s1">prev) {</span>
+            <span class="s1">Object.keys(config).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+                <span class="s5">const </span><span class="s1">value = config[key]</span><span class="s4">;</span>
+                <span class="s5">const </span><span class="s1">fullKey = prev ? prev + </span><span class="s3">'.' </span><span class="s1">+ key : key</span><span class="s4">;</span>
+                <span class="s0">// if the value is an inner object and we have dot-notation</span>
+                <span class="s0">// enabled, treat inner objects in config the same as</span>
+                <span class="s0">// heavily nested dot notations (foo.bar.apple).</span>
+                <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">value === </span><span class="s3">'object' </span><span class="s1">&amp;&amp; value !== </span><span class="s5">null </span><span class="s1">&amp;&amp; !Array.isArray(value) &amp;&amp; configuration[</span><span class="s3">'dot-notation'</span><span class="s1">]) {</span>
+                    <span class="s0">// if the value is an object but not an array, check nested object</span>
+                    <span class="s1">setConfigObject(value</span><span class="s4">, </span><span class="s1">fullKey)</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s5">else </span><span class="s1">{</span>
+                    <span class="s0">// setting arguments via CLI takes precedence over</span>
+                    <span class="s0">// values within the config file.</span>
+                    <span class="s5">if </span><span class="s1">(!hasKey(argv</span><span class="s4">, </span><span class="s1">fullKey.split(</span><span class="s3">'.'</span><span class="s1">)) || (checkAllAliases(fullKey</span><span class="s4">, </span><span class="s1">flags.arrays) &amp;&amp; configuration[</span><span class="s3">'combine-arrays'</span><span class="s1">])) {</span>
+                        <span class="s1">setArg(fullKey</span><span class="s4">, </span><span class="s1">value)</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s0">// set all config objects passed in opts</span>
+        <span class="s5">function </span><span class="s1">setConfigObjects() {</span>
+            <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">configObjects !== </span><span class="s3">'undefined'</span><span class="s1">) {</span>
+                <span class="s1">configObjects.forEach(</span><span class="s5">function </span><span class="s1">(configObject) {</span>
+                    <span class="s1">setConfigObject(configObject)</span><span class="s4">;</span>
+                <span class="s1">})</span><span class="s4">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">applyEnvVars(argv</span><span class="s4">, </span><span class="s1">configOnly) {</span>
+            <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">envPrefix === </span><span class="s3">'undefined'</span><span class="s1">)</span>
+                <span class="s5">return</span><span class="s4">;</span>
+            <span class="s5">const </span><span class="s1">prefix = </span><span class="s5">typeof </span><span class="s1">envPrefix === </span><span class="s3">'string' </span><span class="s1">? envPrefix : </span><span class="s3">''</span><span class="s4">;</span>
+            <span class="s5">const </span><span class="s1">env = mixin.env()</span><span class="s4">;</span>
+            <span class="s1">Object.keys(env).forEach(</span><span class="s5">function </span><span class="s1">(envVar) {</span>
+                <span class="s5">if </span><span class="s1">(prefix === </span><span class="s3">'' </span><span class="s1">|| envVar.lastIndexOf(prefix</span><span class="s4">, </span><span class="s8">0</span><span class="s1">) === </span><span class="s8">0</span><span class="s1">) {</span>
+                    <span class="s0">// get array of nested keys and convert them to camel case</span>
+                    <span class="s5">const </span><span class="s1">keys = envVar.split(</span><span class="s3">'__'</span><span class="s1">).map(</span><span class="s5">function </span><span class="s1">(key</span><span class="s4">, </span><span class="s1">i) {</span>
+                        <span class="s5">if </span><span class="s1">(i === </span><span class="s8">0</span><span class="s1">) {</span>
+                            <span class="s1">key = key.substring(prefix.length)</span><span class="s4">;</span>
+                        <span class="s1">}</span>
+                        <span class="s5">return </span><span class="s1">camelCase(key)</span><span class="s4">;</span>
+                    <span class="s1">})</span><span class="s4">;</span>
+                    <span class="s5">if </span><span class="s1">(((configOnly &amp;&amp; flags.configs[keys.join(</span><span class="s3">'.'</span><span class="s1">)]) || !configOnly) &amp;&amp; !hasKey(argv</span><span class="s4">, </span><span class="s1">keys)) {</span>
+                        <span class="s1">setArg(keys.join(</span><span class="s3">'.'</span><span class="s1">)</span><span class="s4">, </span><span class="s1">env[envVar])</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">applyCoercions(argv) {</span>
+            <span class="s5">let </span><span class="s1">coerce</span><span class="s4">;</span>
+            <span class="s5">const </span><span class="s1">applied = </span><span class="s5">new </span><span class="s1">Set()</span><span class="s4">;</span>
+            <span class="s1">Object.keys(argv).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+                <span class="s5">if </span><span class="s1">(!applied.has(key)) { </span><span class="s0">// If we haven't already coerced this option via one of its aliases</span>
+                    <span class="s1">coerce = checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.coercions)</span><span class="s4">;</span>
+                    <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">coerce === </span><span class="s3">'function'</span><span class="s1">) {</span>
+                        <span class="s5">try </span><span class="s1">{</span>
+                            <span class="s5">const </span><span class="s1">value = maybeCoerceNumber(key</span><span class="s4">, </span><span class="s1">coerce(argv[key]))</span><span class="s4">;</span>
+                            <span class="s1">([].concat(flags.aliases[key] || []</span><span class="s4">, </span><span class="s1">key)).forEach(ali =&gt; {</span>
+                                <span class="s1">applied.add(ali)</span><span class="s4">;</span>
+                                <span class="s1">argv[ali] = value</span><span class="s4">;</span>
+                            <span class="s1">})</span><span class="s4">;</span>
+                        <span class="s1">}</span>
+                        <span class="s5">catch </span><span class="s1">(err) {</span>
+                            <span class="s1">error = err</span><span class="s4">;</span>
+                        <span class="s1">}</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">setPlaceholderKeys(argv) {</span>
+            <span class="s1">flags.keys.forEach((key) =&gt; {</span>
+                <span class="s0">// don't set placeholder keys for dot notation options 'foo.bar'.</span>
+                <span class="s5">if </span><span class="s1">(~key.indexOf(</span><span class="s3">'.'</span><span class="s1">))</span>
+                    <span class="s5">return</span><span class="s4">;</span>
+                <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">argv[key] === </span><span class="s3">'undefined'</span><span class="s1">)</span>
+                    <span class="s1">argv[key] = undefined</span><span class="s4">;</span>
+            <span class="s1">})</span><span class="s4">;</span>
+            <span class="s5">return </span><span class="s1">argv</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">applyDefaultsAndAliases(obj</span><span class="s4">, </span><span class="s1">aliases</span><span class="s4">, </span><span class="s1">defaults</span><span class="s4">, </span><span class="s1">canLog = </span><span class="s5">false</span><span class="s1">) {</span>
+            <span class="s1">Object.keys(defaults).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+                <span class="s5">if </span><span class="s1">(!hasKey(obj</span><span class="s4">, </span><span class="s1">key.split(</span><span class="s3">'.'</span><span class="s1">))) {</span>
+                    <span class="s1">setKey(obj</span><span class="s4">, </span><span class="s1">key.split(</span><span class="s3">'.'</span><span class="s1">)</span><span class="s4">, </span><span class="s1">defaults[key])</span><span class="s4">;</span>
+                    <span class="s5">if </span><span class="s1">(canLog)</span>
+                        <span class="s1">defaulted[key] = </span><span class="s5">true</span><span class="s4">;</span>
+                    <span class="s1">(aliases[key] || []).forEach(</span><span class="s5">function </span><span class="s1">(x) {</span>
+                        <span class="s5">if </span><span class="s1">(hasKey(obj</span><span class="s4">, </span><span class="s1">x.split(</span><span class="s3">'.'</span><span class="s1">)))</span>
+                            <span class="s5">return</span><span class="s4">;</span>
+                        <span class="s1">setKey(obj</span><span class="s4">, </span><span class="s1">x.split(</span><span class="s3">'.'</span><span class="s1">)</span><span class="s4">, </span><span class="s1">defaults[key])</span><span class="s4">;</span>
+                    <span class="s1">})</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">hasKey(obj</span><span class="s4">, </span><span class="s1">keys) {</span>
+            <span class="s5">let </span><span class="s1">o = obj</span><span class="s4">;</span>
+            <span class="s5">if </span><span class="s1">(!configuration[</span><span class="s3">'dot-notation'</span><span class="s1">])</span>
+                <span class="s1">keys = [keys.join(</span><span class="s3">'.'</span><span class="s1">)]</span><span class="s4">;</span>
+            <span class="s1">keys.slice(</span><span class="s8">0</span><span class="s4">, </span><span class="s1">-</span><span class="s8">1</span><span class="s1">).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+                <span class="s1">o = (o[key] || {})</span><span class="s4">;</span>
+            <span class="s1">})</span><span class="s4">;</span>
+            <span class="s5">const </span><span class="s1">key = keys[keys.length - </span><span class="s8">1</span><span class="s1">]</span><span class="s4">;</span>
+            <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">o !== </span><span class="s3">'object'</span><span class="s1">)</span>
+                <span class="s5">return false</span><span class="s4">;</span>
+            <span class="s5">else</span>
+                <span class="s5">return </span><span class="s1">key </span><span class="s5">in </span><span class="s1">o</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">setKey(obj</span><span class="s4">, </span><span class="s1">keys</span><span class="s4">, </span><span class="s1">value) {</span>
+            <span class="s5">let </span><span class="s1">o = obj</span><span class="s4">;</span>
+            <span class="s5">if </span><span class="s1">(!configuration[</span><span class="s3">'dot-notation'</span><span class="s1">])</span>
+                <span class="s1">keys = [keys.join(</span><span class="s3">'.'</span><span class="s1">)]</span><span class="s4">;</span>
+            <span class="s1">keys.slice(</span><span class="s8">0</span><span class="s4">, </span><span class="s1">-</span><span class="s8">1</span><span class="s1">).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+                <span class="s0">// TODO(bcoe): in the next major version of yargs, switch to</span>
+                <span class="s0">// Object.create(null) for dot notation:</span>
+                <span class="s1">key = sanitizeKey(key)</span><span class="s4">;</span>
+                <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">o === </span><span class="s3">'object' </span><span class="s1">&amp;&amp; o[key] === undefined) {</span>
+                    <span class="s1">o[key] = {}</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">o[key] !== </span><span class="s3">'object' </span><span class="s1">|| Array.isArray(o[key])) {</span>
+                    <span class="s0">// ensure that o[key] is an array, and that the last item is an empty object.</span>
+                    <span class="s5">if </span><span class="s1">(Array.isArray(o[key])) {</span>
+                        <span class="s1">o[key].push({})</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                    <span class="s5">else </span><span class="s1">{</span>
+                        <span class="s1">o[key] = [o[key]</span><span class="s4">, </span><span class="s1">{}]</span><span class="s4">;</span>
+                    <span class="s1">}</span>
+                    <span class="s0">// we want to update the empty object at the end of the o[key] array, so set o to that object</span>
+                    <span class="s1">o = o[key][o[key].length - </span><span class="s8">1</span><span class="s1">]</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s5">else </span><span class="s1">{</span>
+                    <span class="s1">o = o[key]</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">})</span><span class="s4">;</span>
+            <span class="s0">// TODO(bcoe): in the next major version of yargs, switch to</span>
+            <span class="s0">// Object.create(null) for dot notation:</span>
+            <span class="s5">const </span><span class="s1">key = sanitizeKey(keys[keys.length - </span><span class="s8">1</span><span class="s1">])</span><span class="s4">;</span>
+            <span class="s5">const </span><span class="s1">isTypeArray = checkAllAliases(keys.join(</span><span class="s3">'.'</span><span class="s1">)</span><span class="s4">, </span><span class="s1">flags.arrays)</span><span class="s4">;</span>
+            <span class="s5">const </span><span class="s1">isValueArray = Array.isArray(value)</span><span class="s4">;</span>
+            <span class="s5">let </span><span class="s1">duplicate = configuration[</span><span class="s3">'duplicate-arguments-array'</span><span class="s1">]</span><span class="s4">;</span>
+            <span class="s0">// nargs has higher priority than duplicate</span>
+            <span class="s5">if </span><span class="s1">(!duplicate &amp;&amp; checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.nargs)) {</span>
+                <span class="s1">duplicate = </span><span class="s5">true</span><span class="s4">;</span>
+                <span class="s5">if </span><span class="s1">((!isUndefined(o[key]) &amp;&amp; flags.nargs[key] === </span><span class="s8">1</span><span class="s1">) || (Array.isArray(o[key]) &amp;&amp; o[key].length === flags.nargs[key])) {</span>
+                    <span class="s1">o[key] = undefined</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+            <span class="s5">if </span><span class="s1">(value === increment()) {</span>
+                <span class="s1">o[key] = increment(o[key])</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(Array.isArray(o[key])) {</span>
+                <span class="s5">if </span><span class="s1">(duplicate &amp;&amp; isTypeArray &amp;&amp; isValueArray) {</span>
+                    <span class="s1">o[key] = configuration[</span><span class="s3">'flatten-duplicate-arrays'</span><span class="s1">] ? o[key].concat(value) : (Array.isArray(o[key][</span><span class="s8">0</span><span class="s1">]) ? o[key] : [o[key]]).concat([value])</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s5">else if </span><span class="s1">(!duplicate &amp;&amp; Boolean(isTypeArray) === Boolean(isValueArray)) {</span>
+                    <span class="s1">o[key] = value</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s5">else </span><span class="s1">{</span>
+                    <span class="s1">o[key] = o[key].concat([value])</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(o[key] === undefined &amp;&amp; isTypeArray) {</span>
+                <span class="s1">o[key] = isValueArray ? value : [value]</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">else if </span><span class="s1">(duplicate &amp;&amp; !(o[key] === undefined ||</span>
+                <span class="s1">checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.counts) ||</span>
+                <span class="s1">checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.bools))) {</span>
+                <span class="s1">o[key] = [o[key]</span><span class="s4">, </span><span class="s1">value]</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">else </span><span class="s1">{</span>
+                <span class="s1">o[key] = value</span><span class="s4">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s0">// extend the aliases list with inferred aliases.</span>
+        <span class="s5">function </span><span class="s1">extendAliases(...args) {</span>
+            <span class="s1">args.forEach(</span><span class="s5">function </span><span class="s1">(obj) {</span>
+                <span class="s1">Object.keys(obj || {}).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+                    <span class="s0">// short-circuit if we've already added a key</span>
+                    <span class="s0">// to the aliases array, for example it might</span>
+                    <span class="s0">// exist in both 'opts.default' and 'opts.key'.</span>
+                    <span class="s5">if </span><span class="s1">(flags.aliases[key])</span>
+                        <span class="s5">return</span><span class="s4">;</span>
+                    <span class="s1">flags.aliases[key] = [].concat(aliases[key] || [])</span><span class="s4">;</span>
+                    <span class="s0">// For &quot;--option-name&quot;, also set argv.optionName</span>
+                    <span class="s1">flags.aliases[key].concat(key).forEach(</span><span class="s5">function </span><span class="s1">(x) {</span>
+                        <span class="s5">if </span><span class="s1">(</span><span class="s8">/-/</span><span class="s1">.test(x) &amp;&amp; configuration[</span><span class="s3">'camel-case-expansion'</span><span class="s1">]) {</span>
+                            <span class="s5">const </span><span class="s1">c = camelCase(x)</span><span class="s4">;</span>
+                            <span class="s5">if </span><span class="s1">(c !== key &amp;&amp; flags.aliases[key].indexOf(c) === -</span><span class="s8">1</span><span class="s1">) {</span>
+                                <span class="s1">flags.aliases[key].push(c)</span><span class="s4">;</span>
+                                <span class="s1">newAliases[c] = </span><span class="s5">true</span><span class="s4">;</span>
+                            <span class="s1">}</span>
+                        <span class="s1">}</span>
+                    <span class="s1">})</span><span class="s4">;</span>
+                    <span class="s0">// For &quot;--optionName&quot;, also set argv['option-name']</span>
+                    <span class="s1">flags.aliases[key].concat(key).forEach(</span><span class="s5">function </span><span class="s1">(x) {</span>
+                        <span class="s5">if </span><span class="s1">(x.length &gt; </span><span class="s8">1 </span><span class="s1">&amp;&amp; </span><span class="s8">/[A-Z]/</span><span class="s1">.test(x) &amp;&amp; configuration[</span><span class="s3">'camel-case-expansion'</span><span class="s1">]) {</span>
+                            <span class="s5">const </span><span class="s1">c = decamelize(x</span><span class="s4">, </span><span class="s3">'-'</span><span class="s1">)</span><span class="s4">;</span>
+                            <span class="s5">if </span><span class="s1">(c !== key &amp;&amp; flags.aliases[key].indexOf(c) === -</span><span class="s8">1</span><span class="s1">) {</span>
+                                <span class="s1">flags.aliases[key].push(c)</span><span class="s4">;</span>
+                                <span class="s1">newAliases[c] = </span><span class="s5">true</span><span class="s4">;</span>
+                            <span class="s1">}</span>
+                        <span class="s1">}</span>
+                    <span class="s1">})</span><span class="s4">;</span>
+                    <span class="s1">flags.aliases[key].forEach(</span><span class="s5">function </span><span class="s1">(x) {</span>
+                        <span class="s1">flags.aliases[x] = [key].concat(flags.aliases[key].filter(</span><span class="s5">function </span><span class="s1">(y) {</span>
+                            <span class="s5">return </span><span class="s1">x !== y</span><span class="s4">;</span>
+                        <span class="s1">}))</span><span class="s4">;</span>
+                    <span class="s1">})</span><span class="s4">;</span>
+                <span class="s1">})</span><span class="s4">;</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">checkAllAliases(key</span><span class="s4">, </span><span class="s1">flag) {</span>
+            <span class="s5">const </span><span class="s1">toCheck = [].concat(flags.aliases[key] || []</span><span class="s4">, </span><span class="s1">key)</span><span class="s4">;</span>
+            <span class="s5">const </span><span class="s1">keys = Object.keys(flag)</span><span class="s4">;</span>
+            <span class="s5">const </span><span class="s1">setAlias = toCheck.find(key =&gt; keys.includes(key))</span><span class="s4">;</span>
+            <span class="s5">return </span><span class="s1">setAlias ? flag[setAlias] : </span><span class="s5">false</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">hasAnyFlag(key) {</span>
+            <span class="s5">const </span><span class="s1">flagsKeys = Object.keys(flags)</span><span class="s4">;</span>
+            <span class="s5">const </span><span class="s1">toCheck = [].concat(flagsKeys.map(k =&gt; flags[k]))</span><span class="s4">;</span>
+            <span class="s5">return </span><span class="s1">toCheck.some(</span><span class="s5">function </span><span class="s1">(flag) {</span>
+                <span class="s5">return </span><span class="s1">Array.isArray(flag) ? flag.includes(key) : flag[key]</span><span class="s4">;</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">hasFlagsMatching(arg</span><span class="s4">, </span><span class="s1">...patterns) {</span>
+            <span class="s5">const </span><span class="s1">toCheck = [].concat(...patterns)</span><span class="s4">;</span>
+            <span class="s5">return </span><span class="s1">toCheck.some(</span><span class="s5">function </span><span class="s1">(pattern) {</span>
+                <span class="s5">const </span><span class="s1">match = arg.match(pattern)</span><span class="s4">;</span>
+                <span class="s5">return </span><span class="s1">match &amp;&amp; hasAnyFlag(match[</span><span class="s8">1</span><span class="s1">])</span><span class="s4">;</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s0">// based on a simplified version of the short flag group parsing logic</span>
+        <span class="s5">function </span><span class="s1">hasAllShortFlags(arg) {</span>
+            <span class="s0">// if this is a negative number, or doesn't start with a single hyphen, it's not a short flag group</span>
+            <span class="s5">if </span><span class="s1">(arg.match(negative) || !arg.match(</span><span class="s8">/^-[^-]+/</span><span class="s1">)) {</span>
+                <span class="s5">return false</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">let </span><span class="s1">hasAllFlags = </span><span class="s5">true</span><span class="s4">;</span>
+            <span class="s5">let </span><span class="s1">next</span><span class="s4">;</span>
+            <span class="s5">const </span><span class="s1">letters = arg.slice(</span><span class="s8">1</span><span class="s1">).split(</span><span class="s3">''</span><span class="s1">)</span><span class="s4">;</span>
+            <span class="s5">for </span><span class="s1">(</span><span class="s5">let </span><span class="s1">j = </span><span class="s8">0</span><span class="s4">; </span><span class="s1">j &lt; letters.length</span><span class="s4">; </span><span class="s1">j++) {</span>
+                <span class="s1">next = arg.slice(j + </span><span class="s8">2</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s5">if </span><span class="s1">(!hasAnyFlag(letters[j])) {</span>
+                    <span class="s1">hasAllFlags = </span><span class="s5">false</span><span class="s4">;</span>
+                    <span class="s5">break</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s5">if </span><span class="s1">((letters[j + </span><span class="s8">1</span><span class="s1">] &amp;&amp; letters[j + </span><span class="s8">1</span><span class="s1">] === </span><span class="s3">'='</span><span class="s1">) ||</span>
+                    <span class="s1">next === </span><span class="s3">'-' </span><span class="s1">||</span>
+                    <span class="s1">(</span><span class="s8">/[A-Za-z]/</span><span class="s1">.test(letters[j]) &amp;&amp; </span><span class="s8">/^-?\d+(\.\d*)?(e-?\d+)?$/</span><span class="s1">.test(next)) ||</span>
+                    <span class="s1">(letters[j + </span><span class="s8">1</span><span class="s1">] &amp;&amp; letters[j + </span><span class="s8">1</span><span class="s1">].match(</span><span class="s8">/\W/</span><span class="s1">))) {</span>
+                    <span class="s5">break</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+            <span class="s5">return </span><span class="s1">hasAllFlags</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">isUnknownOptionAsArg(arg) {</span>
+            <span class="s5">return </span><span class="s1">configuration[</span><span class="s3">'unknown-options-as-args'</span><span class="s1">] &amp;&amp; isUnknownOption(arg)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">isUnknownOption(arg) {</span>
+            <span class="s1">arg = arg.replace(</span><span class="s8">/^-{3,}/</span><span class="s4">, </span><span class="s3">'--'</span><span class="s1">)</span><span class="s4">;</span>
+            <span class="s0">// ignore negative numbers</span>
+            <span class="s5">if </span><span class="s1">(arg.match(negative)) {</span>
+                <span class="s5">return false</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s0">// if this is a short option group and all of them are configured, it isn't unknown</span>
+            <span class="s5">if </span><span class="s1">(hasAllShortFlags(arg)) {</span>
+                <span class="s5">return false</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s0">// e.g. '--count=2'</span>
+            <span class="s5">const </span><span class="s1">flagWithEquals = </span><span class="s8">/^-+([^=]+?)=[\s\S]*$/</span><span class="s4">;</span>
+            <span class="s0">// e.g. '-a' or '--arg'</span>
+            <span class="s5">const </span><span class="s1">normalFlag = </span><span class="s8">/^-+([^=]+?)$/</span><span class="s4">;</span>
+            <span class="s0">// e.g. '-a-'</span>
+            <span class="s5">const </span><span class="s1">flagEndingInHyphen = </span><span class="s8">/^-+([^=]+?)-$/</span><span class="s4">;</span>
+            <span class="s0">// e.g. '-abc123'</span>
+            <span class="s5">const </span><span class="s1">flagEndingInDigits = </span><span class="s8">/^-+([^=]+?\d+)$/</span><span class="s4">;</span>
+            <span class="s0">// e.g. '-a/usr/local'</span>
+            <span class="s5">const </span><span class="s1">flagEndingInNonWordCharacters = </span><span class="s8">/^-+([^=]+?)\W+.*$/</span><span class="s4">;</span>
+            <span class="s0">// check the different types of flag styles, including negatedBoolean, a pattern defined near the start of the parse method</span>
+            <span class="s5">return </span><span class="s1">!hasFlagsMatching(arg</span><span class="s4">, </span><span class="s1">flagWithEquals</span><span class="s4">, </span><span class="s1">negatedBoolean</span><span class="s4">, </span><span class="s1">normalFlag</span><span class="s4">, </span><span class="s1">flagEndingInHyphen</span><span class="s4">, </span><span class="s1">flagEndingInDigits</span><span class="s4">, </span><span class="s1">flagEndingInNonWordCharacters)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s0">// make a best effort to pick a default value</span>
+        <span class="s0">// for an option based on name and type.</span>
+        <span class="s5">function </span><span class="s1">defaultValue(key) {</span>
+            <span class="s5">if </span><span class="s1">(!checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.bools) &amp;&amp;</span>
+                <span class="s1">!checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.counts) &amp;&amp;</span>
+                <span class="s3">`</span><span class="s1">${key}</span><span class="s3">` </span><span class="s5">in </span><span class="s1">defaults) {</span>
+                <span class="s5">return </span><span class="s1">defaults[key]</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">else </span><span class="s1">{</span>
+                <span class="s5">return </span><span class="s1">defaultForType(guessType(key))</span><span class="s4">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s0">// return a default value, given the type of a flag.,</span>
+        <span class="s5">function </span><span class="s1">defaultForType(type) {</span>
+            <span class="s5">const </span><span class="s1">def = {</span>
+                <span class="s1">[DefaultValuesForTypeKey.BOOLEAN]: </span><span class="s5">true</span><span class="s4">,</span>
+                <span class="s1">[DefaultValuesForTypeKey.STRING]: </span><span class="s3">''</span><span class="s4">,</span>
+                <span class="s1">[DefaultValuesForTypeKey.NUMBER]: undefined</span><span class="s4">,</span>
+                <span class="s1">[DefaultValuesForTypeKey.ARRAY]: []</span>
+            <span class="s1">}</span><span class="s4">;</span>
+            <span class="s5">return </span><span class="s1">def[type]</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s0">// given a flag, enforce a default type.</span>
+        <span class="s5">function </span><span class="s1">guessType(key) {</span>
+            <span class="s5">let </span><span class="s1">type = DefaultValuesForTypeKey.BOOLEAN</span><span class="s4">;</span>
+            <span class="s5">if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.strings))</span>
+                <span class="s1">type = DefaultValuesForTypeKey.STRING</span><span class="s4">;</span>
+            <span class="s5">else if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.numbers))</span>
+                <span class="s1">type = DefaultValuesForTypeKey.NUMBER</span><span class="s4">;</span>
+            <span class="s5">else if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.bools))</span>
+                <span class="s1">type = DefaultValuesForTypeKey.BOOLEAN</span><span class="s4">;</span>
+            <span class="s5">else if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.arrays))</span>
+                <span class="s1">type = DefaultValuesForTypeKey.ARRAY</span><span class="s4">;</span>
+            <span class="s5">return </span><span class="s1">type</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">function </span><span class="s1">isUndefined(num) {</span>
+            <span class="s5">return </span><span class="s1">num === undefined</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s0">// check user configuration settings for inconsistencies</span>
+        <span class="s5">function </span><span class="s1">checkConfiguration() {</span>
+            <span class="s0">// count keys should not be set as array/narg</span>
+            <span class="s1">Object.keys(flags.counts).find(key =&gt; {</span>
+                <span class="s5">if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.arrays)) {</span>
+                    <span class="s1">error = Error(__(</span><span class="s3">'Invalid configuration: %s, opts.count excludes opts.array.'</span><span class="s4">, </span><span class="s1">key))</span><span class="s4">;</span>
+                    <span class="s5">return true</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s5">else if </span><span class="s1">(checkAllAliases(key</span><span class="s4">, </span><span class="s1">flags.nargs)) {</span>
+                    <span class="s1">error = Error(__(</span><span class="s3">'Invalid configuration: %s, opts.count excludes opts.narg.'</span><span class="s4">, </span><span class="s1">key))</span><span class="s4">;</span>
+                    <span class="s5">return true</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s5">return false</span><span class="s4">;</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">return </span><span class="s1">{</span>
+            <span class="s1">aliases: Object.assign({}</span><span class="s4">, </span><span class="s1">flags.aliases)</span><span class="s4">,</span>
+            <span class="s1">argv: Object.assign(argvReturn</span><span class="s4">, </span><span class="s1">argv)</span><span class="s4">,</span>
+            <span class="s1">configuration: configuration</span><span class="s4">,</span>
+            <span class="s1">defaulted: Object.assign({}</span><span class="s4">, </span><span class="s1">defaulted)</span><span class="s4">,</span>
+            <span class="s1">error: error</span><span class="s4">,</span>
+            <span class="s1">newAliases: Object.assign({}</span><span class="s4">, </span><span class="s1">newAliases)</span>
+        <span class="s1">}</span><span class="s4">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+<span class="s0">// if any aliases reference each other, we should</span>
+<span class="s0">// merge them together.</span>
+<span class="s5">function </span><span class="s1">combineAliases(aliases) {</span>
+    <span class="s5">const </span><span class="s1">aliasArrays = []</span><span class="s4">;</span>
+    <span class="s5">const </span><span class="s1">combined = Object.create(</span><span class="s5">null</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s5">let </span><span class="s1">change = </span><span class="s5">true</span><span class="s4">;</span>
+    <span class="s0">// turn alias lookup hash {key: ['alias1', 'alias2']} into</span>
+    <span class="s0">// a simple array ['key', 'alias1', 'alias2']</span>
+    <span class="s1">Object.keys(aliases).forEach(</span><span class="s5">function </span><span class="s1">(key) {</span>
+        <span class="s1">aliasArrays.push([].concat(aliases[key]</span><span class="s4">, </span><span class="s1">key))</span><span class="s4">;</span>
+    <span class="s1">})</span><span class="s4">;</span>
+    <span class="s0">// combine arrays until zero changes are</span>
+    <span class="s0">// made in an iteration.</span>
+    <span class="s5">while </span><span class="s1">(change) {</span>
+        <span class="s1">change = </span><span class="s5">false</span><span class="s4">;</span>
+        <span class="s5">for </span><span class="s1">(</span><span class="s5">let </span><span class="s1">i = </span><span class="s8">0</span><span class="s4">; </span><span class="s1">i &lt; aliasArrays.length</span><span class="s4">; </span><span class="s1">i++) {</span>
+            <span class="s5">for </span><span class="s1">(</span><span class="s5">let </span><span class="s1">ii = i + </span><span class="s8">1</span><span class="s4">; </span><span class="s1">ii &lt; aliasArrays.length</span><span class="s4">; </span><span class="s1">ii++) {</span>
+                <span class="s5">const </span><span class="s1">intersect = aliasArrays[i].filter(</span><span class="s5">function </span><span class="s1">(v) {</span>
+                    <span class="s5">return </span><span class="s1">aliasArrays[ii].indexOf(v) !== -</span><span class="s8">1</span><span class="s4">;</span>
+                <span class="s1">})</span><span class="s4">;</span>
+                <span class="s5">if </span><span class="s1">(intersect.length) {</span>
+                    <span class="s1">aliasArrays[i] = aliasArrays[i].concat(aliasArrays[ii])</span><span class="s4">;</span>
+                    <span class="s1">aliasArrays.splice(ii</span><span class="s4">, </span><span class="s8">1</span><span class="s1">)</span><span class="s4">;</span>
+                    <span class="s1">change = </span><span class="s5">true</span><span class="s4">;</span>
+                    <span class="s5">break</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s0">// map arrays back to the hash-lookup (de-dupe while</span>
+    <span class="s0">// we're at it).</span>
+    <span class="s1">aliasArrays.forEach(</span><span class="s5">function </span><span class="s1">(aliasArray) {</span>
+        <span class="s1">aliasArray = aliasArray.filter(</span><span class="s5">function </span><span class="s1">(v</span><span class="s4">, </span><span class="s1">i</span><span class="s4">, </span><span class="s1">self) {</span>
+            <span class="s5">return </span><span class="s1">self.indexOf(v) === i</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">lastAlias = aliasArray.pop()</span><span class="s4">;</span>
+        <span class="s5">if </span><span class="s1">(lastAlias !== undefined &amp;&amp; </span><span class="s5">typeof </span><span class="s1">lastAlias === </span><span class="s3">'string'</span><span class="s1">) {</span>
+            <span class="s1">combined[lastAlias] = aliasArray</span><span class="s4">;</span>
+        <span class="s1">}</span>
+    <span class="s1">})</span><span class="s4">;</span>
+    <span class="s5">return </span><span class="s1">combined</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s0">// this function should only be called when a count is given as an arg</span>
+<span class="s0">// it is NOT called to set a default value</span>
+<span class="s0">// thus we can start the count at 1 instead of 0</span>
+<span class="s5">function </span><span class="s1">increment(orig) {</span>
+    <span class="s5">return </span><span class="s1">orig !== undefined ? orig + </span><span class="s8">1 </span><span class="s1">: </span><span class="s8">1</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s0">// TODO(bcoe): in the next major version of yargs, switch to</span>
+<span class="s0">// Object.create(null) for dot notation:</span>
+<span class="s5">function </span><span class="s1">sanitizeKey(key) {</span>
+    <span class="s5">if </span><span class="s1">(key === </span><span class="s3">'__proto__'</span><span class="s1">)</span>
+        <span class="s5">return </span><span class="s3">'___proto___'</span><span class="s4">;</span>
+    <span class="s5">return </span><span class="s1">key</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* </span><span class="s7">@fileoverview </span><span class="s6">Main entrypoint for libraries using yargs-parser in Node.js</span>
+ <span class="s6">* CJS and ESM environments.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@license</span>
+ <span class="s6">* Copyright (c) 2016, Contributors</span>
+ <span class="s6">* SPDX-License-Identifier: ISC</span>
+ <span class="s6">*/</span>
+<span class="s0">// See https://github.com/yargs/yargs-parser#supported-nodejs-versions for our</span>
+<span class="s0">// version support policy. The YARGS_MIN_NODE_VERSION is used for testing only.</span>
+<span class="s5">const </span><span class="s1">minNodeVersion = (process &amp;&amp; process.env &amp;&amp; process.env.YARGS_MIN_NODE_VERSION)</span>
+    <span class="s1">? Number(process.env.YARGS_MIN_NODE_VERSION)</span>
+    <span class="s1">: </span><span class="s8">10</span><span class="s4">;</span>
+<span class="s5">if </span><span class="s1">(process &amp;&amp; process.version) {</span>
+    <span class="s5">const </span><span class="s1">major = Number(process.version.match(</span><span class="s8">/v([^.]+)/</span><span class="s1">)[</span><span class="s8">1</span><span class="s1">])</span><span class="s4">;</span>
+    <span class="s5">if </span><span class="s1">(major &lt; minNodeVersion) {</span>
+        <span class="s5">throw </span><span class="s1">Error(</span><span class="s3">`yargs parser supports a minimum Node.js version of </span><span class="s1">${minNodeVersion}</span><span class="s3">. Read our version support policy: https://github.com/yargs/yargs-parser#supported-nodejs-versions`</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+<span class="s0">// Creates a yargs-parser instance using Node.js standard libraries:</span>
+<span class="s5">const </span><span class="s1">env = process ? process.env : {}</span><span class="s4">;</span>
+<span class="s5">const </span><span class="s1">parser = </span><span class="s5">new </span><span class="s1">YargsParser({</span>
+    <span class="s1">cwd: process.cwd</span><span class="s4">,</span>
+    <span class="s1">env: () =&gt; {</span>
+        <span class="s5">return </span><span class="s1">env</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s1">format: require$$2.format</span><span class="s4">,</span>
+    <span class="s1">normalize: require$$0.normalize</span><span class="s4">,</span>
+    <span class="s1">resolve: require$$0.resolve</span><span class="s4">,</span>
+    <span class="s0">// TODO: figure  out a  way to combine ESM and CJS coverage, such  that</span>
+    <span class="s0">// we can exercise all the lines below:</span>
+    <span class="s1">require: (path) =&gt; {</span>
+        <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">require !== </span><span class="s3">'undefined'</span><span class="s1">) {</span>
+            <span class="s5">return </span><span class="s1">require(path)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">else if </span><span class="s1">(path.match(</span><span class="s8">/\.json$/</span><span class="s1">)) {</span>
+            <span class="s5">return </span><span class="s1">require$$0$1.readFileSync(path</span><span class="s4">, </span><span class="s3">'utf8'</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">else </span><span class="s1">{</span>
+            <span class="s5">throw </span><span class="s1">Error(</span><span class="s3">'only .json config files are supported in ESM'</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+<span class="s1">})</span><span class="s4">;</span>
+<span class="s5">const </span><span class="s1">yargsParser = </span><span class="s5">function </span><span class="s1">Parser(args</span><span class="s4">, </span><span class="s1">opts) {</span>
+    <span class="s5">const </span><span class="s1">result = parser.parse(args.slice()</span><span class="s4">, </span><span class="s1">opts)</span><span class="s4">;</span>
+    <span class="s5">return </span><span class="s1">result.argv</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+<span class="s1">yargsParser.detailed = </span><span class="s5">function </span><span class="s1">(args</span><span class="s4">, </span><span class="s1">opts) {</span>
+    <span class="s5">return </span><span class="s1">parser.parse(args.slice()</span><span class="s4">, </span><span class="s1">opts)</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+<span class="s1">yargsParser.camelCase = camelCase</span><span class="s4">;</span>
+<span class="s1">yargsParser.decamelize = decamelize</span><span class="s4">;</span>
+<span class="s1">yargsParser.looksLikeNumber = looksLikeNumber</span><span class="s4">;</span>
+<span class="s5">const </span><span class="s1">argParser = yargsParser</span><span class="s4">;</span>
+
+<span class="s5">var </span><span class="s1">parseMs = milliseconds =&gt; {</span>
+	<span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">milliseconds !== </span><span class="s3">'number'</span><span class="s1">) {</span>
+		<span class="s5">throw new </span><span class="s1">TypeError(</span><span class="s3">'Expected a number'</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">const </span><span class="s1">roundTowardsZero = milliseconds &gt; </span><span class="s8">0 </span><span class="s1">? Math.floor : Math.ceil</span><span class="s4">;</span>
+
+	<span class="s5">return </span><span class="s1">{</span>
+		<span class="s1">days: roundTowardsZero(milliseconds / </span><span class="s8">86400000</span><span class="s1">)</span><span class="s4">,</span>
+		<span class="s1">hours: roundTowardsZero(milliseconds / </span><span class="s8">3600000</span><span class="s1">) % </span><span class="s8">24</span><span class="s4">,</span>
+		<span class="s1">minutes: roundTowardsZero(milliseconds / </span><span class="s8">60000</span><span class="s1">) % </span><span class="s8">60</span><span class="s4">,</span>
+		<span class="s1">seconds: roundTowardsZero(milliseconds / </span><span class="s8">1000</span><span class="s1">) % </span><span class="s8">60</span><span class="s4">,</span>
+		<span class="s1">milliseconds: roundTowardsZero(milliseconds) % </span><span class="s8">1000</span><span class="s4">,</span>
+		<span class="s1">microseconds: roundTowardsZero(milliseconds * </span><span class="s8">1000</span><span class="s1">) % </span><span class="s8">1000</span><span class="s4">,</span>
+		<span class="s1">nanoseconds: roundTowardsZero(milliseconds * </span><span class="s8">1e6</span><span class="s1">) % </span><span class="s8">1000</span>
+	<span class="s1">}</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">parseMilliseconds = parseMs</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">pluralize = (word</span><span class="s4">, </span><span class="s1">count) =&gt; count === </span><span class="s8">1 </span><span class="s1">? word : </span><span class="s3">`</span><span class="s1">${word}</span><span class="s3">s`</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">SECOND_ROUNDING_EPSILON = </span><span class="s8">0.0000001</span><span class="s4">;</span>
+
+<span class="s5">var </span><span class="s1">prettyMs = (milliseconds</span><span class="s4">, </span><span class="s1">options = {}) =&gt; {</span>
+	<span class="s5">if </span><span class="s1">(!Number.isFinite(milliseconds)) {</span>
+		<span class="s5">throw new </span><span class="s1">TypeError(</span><span class="s3">'Expected a finite number'</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">if </span><span class="s1">(options.colonNotation) {</span>
+		<span class="s1">options.compact = </span><span class="s5">false</span><span class="s4">;</span>
+		<span class="s1">options.formatSubMilliseconds = </span><span class="s5">false</span><span class="s4">;</span>
+		<span class="s1">options.separateMilliseconds = </span><span class="s5">false</span><span class="s4">;</span>
+		<span class="s1">options.verbose = </span><span class="s5">false</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">if </span><span class="s1">(options.compact) {</span>
+		<span class="s1">options.secondsDecimalDigits = </span><span class="s8">0</span><span class="s4">;</span>
+		<span class="s1">options.millisecondsDecimalDigits = </span><span class="s8">0</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">const </span><span class="s1">result = []</span><span class="s4">;</span>
+
+	<span class="s5">const </span><span class="s1">floorDecimals = (value</span><span class="s4">, </span><span class="s1">decimalDigits) =&gt; {</span>
+		<span class="s5">const </span><span class="s1">flooredInterimValue = Math.floor((value * (</span><span class="s8">10 </span><span class="s1">** decimalDigits)) + SECOND_ROUNDING_EPSILON)</span><span class="s4">;</span>
+		<span class="s5">const </span><span class="s1">flooredValue = Math.round(flooredInterimValue) / (</span><span class="s8">10 </span><span class="s1">** decimalDigits)</span><span class="s4">;</span>
+		<span class="s5">return </span><span class="s1">flooredValue.toFixed(decimalDigits)</span><span class="s4">;</span>
+	<span class="s1">}</span><span class="s4">;</span>
+
+	<span class="s5">const </span><span class="s1">add = (value</span><span class="s4">, </span><span class="s1">long</span><span class="s4">, </span><span class="s1">short</span><span class="s4">, </span><span class="s1">valueString) =&gt; {</span>
+		<span class="s5">if </span><span class="s1">((result.length === </span><span class="s8">0 </span><span class="s1">|| !options.colonNotation) &amp;&amp; value === </span><span class="s8">0 </span><span class="s1">&amp;&amp; !(options.colonNotation &amp;&amp; short === </span><span class="s3">'m'</span><span class="s1">)) {</span>
+			<span class="s5">return</span><span class="s4">;</span>
+		<span class="s1">}</span>
+
+		<span class="s1">valueString = (valueString || value || </span><span class="s3">'0'</span><span class="s1">).toString()</span><span class="s4">;</span>
+		<span class="s5">let </span><span class="s1">prefix</span><span class="s4">;</span>
+		<span class="s5">let </span><span class="s1">suffix</span><span class="s4">;</span>
+		<span class="s5">if </span><span class="s1">(options.colonNotation) {</span>
+			<span class="s1">prefix = result.length &gt; </span><span class="s8">0 </span><span class="s1">? </span><span class="s3">':' </span><span class="s1">: </span><span class="s3">''</span><span class="s4">;</span>
+			<span class="s1">suffix = </span><span class="s3">''</span><span class="s4">;</span>
+			<span class="s5">const </span><span class="s1">wholeDigits = valueString.includes(</span><span class="s3">'.'</span><span class="s1">) ? valueString.split(</span><span class="s3">'.'</span><span class="s1">)[</span><span class="s8">0</span><span class="s1">].length : valueString.length</span><span class="s4">;</span>
+			<span class="s5">const </span><span class="s1">minLength = result.length &gt; </span><span class="s8">0 </span><span class="s1">? </span><span class="s8">2 </span><span class="s1">: </span><span class="s8">1</span><span class="s4">;</span>
+			<span class="s1">valueString = </span><span class="s3">'0'</span><span class="s1">.repeat(Math.max(</span><span class="s8">0</span><span class="s4">, </span><span class="s1">minLength - wholeDigits)) + valueString</span><span class="s4">;</span>
+		<span class="s1">} </span><span class="s5">else </span><span class="s1">{</span>
+			<span class="s1">prefix = </span><span class="s3">''</span><span class="s4">;</span>
+			<span class="s1">suffix = options.verbose ? </span><span class="s3">' ' </span><span class="s1">+ pluralize(long</span><span class="s4">, </span><span class="s1">value) : short</span><span class="s4">;</span>
+		<span class="s1">}</span>
+
+		<span class="s1">result.push(prefix + valueString + suffix)</span><span class="s4">;</span>
+	<span class="s1">}</span><span class="s4">;</span>
+
+	<span class="s5">const </span><span class="s1">parsed = parseMilliseconds(milliseconds)</span><span class="s4">;</span>
+
+	<span class="s1">add(Math.trunc(parsed.days / </span><span class="s8">365</span><span class="s1">)</span><span class="s4">, </span><span class="s3">'year'</span><span class="s4">, </span><span class="s3">'y'</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">add(parsed.days % </span><span class="s8">365</span><span class="s4">, </span><span class="s3">'day'</span><span class="s4">, </span><span class="s3">'d'</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">add(parsed.hours</span><span class="s4">, </span><span class="s3">'hour'</span><span class="s4">, </span><span class="s3">'h'</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">add(parsed.minutes</span><span class="s4">, </span><span class="s3">'minute'</span><span class="s4">, </span><span class="s3">'m'</span><span class="s1">)</span><span class="s4">;</span>
+
+	<span class="s5">if </span><span class="s1">(</span>
+		<span class="s1">options.separateMilliseconds ||</span>
+		<span class="s1">options.formatSubMilliseconds ||</span>
+		<span class="s1">(!options.colonNotation &amp;&amp; milliseconds &lt; </span><span class="s8">1000</span><span class="s1">)</span>
+	<span class="s1">) {</span>
+		<span class="s1">add(parsed.seconds</span><span class="s4">, </span><span class="s3">'second'</span><span class="s4">, </span><span class="s3">'s'</span><span class="s1">)</span><span class="s4">;</span>
+		<span class="s5">if </span><span class="s1">(options.formatSubMilliseconds) {</span>
+			<span class="s1">add(parsed.milliseconds</span><span class="s4">, </span><span class="s3">'millisecond'</span><span class="s4">, </span><span class="s3">'ms'</span><span class="s1">)</span><span class="s4">;</span>
+			<span class="s1">add(parsed.microseconds</span><span class="s4">, </span><span class="s3">'microsecond'</span><span class="s4">, </span><span class="s3">'µs'</span><span class="s1">)</span><span class="s4">;</span>
+			<span class="s1">add(parsed.nanoseconds</span><span class="s4">, </span><span class="s3">'nanosecond'</span><span class="s4">, </span><span class="s3">'ns'</span><span class="s1">)</span><span class="s4">;</span>
+		<span class="s1">} </span><span class="s5">else </span><span class="s1">{</span>
+			<span class="s5">const </span><span class="s1">millisecondsAndBelow =</span>
+				<span class="s1">parsed.milliseconds +</span>
+				<span class="s1">(parsed.microseconds / </span><span class="s8">1000</span><span class="s1">) +</span>
+				<span class="s1">(parsed.nanoseconds / </span><span class="s8">1e6</span><span class="s1">)</span><span class="s4">;</span>
+
+			<span class="s5">const </span><span class="s1">millisecondsDecimalDigits =</span>
+				<span class="s5">typeof </span><span class="s1">options.millisecondsDecimalDigits === </span><span class="s3">'number' </span><span class="s1">?</span>
+					<span class="s1">options.millisecondsDecimalDigits :</span>
+					<span class="s8">0</span><span class="s4">;</span>
+
+			<span class="s5">const </span><span class="s1">roundedMiliseconds = millisecondsAndBelow &gt;= </span><span class="s8">1 </span><span class="s1">?</span>
+				<span class="s1">Math.round(millisecondsAndBelow) :</span>
+				<span class="s1">Math.ceil(millisecondsAndBelow)</span><span class="s4">;</span>
+
+			<span class="s5">const </span><span class="s1">millisecondsString = millisecondsDecimalDigits ?</span>
+				<span class="s1">millisecondsAndBelow.toFixed(millisecondsDecimalDigits) :</span>
+				<span class="s1">roundedMiliseconds</span><span class="s4">;</span>
+
+			<span class="s1">add(</span>
+				<span class="s1">Number.parseFloat(millisecondsString</span><span class="s4">, </span><span class="s8">10</span><span class="s1">)</span><span class="s4">,</span>
+				<span class="s3">'millisecond'</span><span class="s4">,</span>
+				<span class="s3">'ms'</span><span class="s4">,</span>
+				<span class="s1">millisecondsString</span>
+			<span class="s1">)</span><span class="s4">;</span>
+		<span class="s1">}</span>
+	<span class="s1">} </span><span class="s5">else </span><span class="s1">{</span>
+		<span class="s5">const </span><span class="s1">seconds = (milliseconds / </span><span class="s8">1000</span><span class="s1">) % </span><span class="s8">60</span><span class="s4">;</span>
+		<span class="s5">const </span><span class="s1">secondsDecimalDigits =</span>
+			<span class="s5">typeof </span><span class="s1">options.secondsDecimalDigits === </span><span class="s3">'number' </span><span class="s1">?</span>
+				<span class="s1">options.secondsDecimalDigits :</span>
+				<span class="s8">1</span><span class="s4">;</span>
+		<span class="s5">const </span><span class="s1">secondsFixed = floorDecimals(seconds</span><span class="s4">, </span><span class="s1">secondsDecimalDigits)</span><span class="s4">;</span>
+		<span class="s5">const </span><span class="s1">secondsString = options.keepDecimalsOnWholeSeconds ?</span>
+			<span class="s1">secondsFixed :</span>
+			<span class="s1">secondsFixed.replace(</span><span class="s8">/\.0+$/</span><span class="s4">, </span><span class="s3">''</span><span class="s1">)</span><span class="s4">;</span>
+		<span class="s1">add(Number.parseFloat(secondsString</span><span class="s4">, </span><span class="s8">10</span><span class="s1">)</span><span class="s4">, </span><span class="s3">'second'</span><span class="s4">, </span><span class="s3">'s'</span><span class="s4">, </span><span class="s1">secondsString)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">if </span><span class="s1">(result.length === </span><span class="s8">0</span><span class="s1">) {</span>
+		<span class="s5">return </span><span class="s3">'0' </span><span class="s1">+ (options.verbose ? </span><span class="s3">' milliseconds' </span><span class="s1">: </span><span class="s3">'ms'</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">if </span><span class="s1">(options.compact) {</span>
+		<span class="s5">return </span><span class="s1">result[</span><span class="s8">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">options.unitCount === </span><span class="s3">'number'</span><span class="s1">) {</span>
+		<span class="s5">const </span><span class="s1">separator = options.colonNotation ? </span><span class="s3">'' </span><span class="s1">: </span><span class="s3">' '</span><span class="s4">;</span>
+		<span class="s5">return </span><span class="s1">result.slice(</span><span class="s8">0</span><span class="s4">, </span><span class="s1">Math.max(options.unitCount</span><span class="s4">, </span><span class="s8">1</span><span class="s1">)).join(separator)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">return </span><span class="s1">options.colonNotation ? result.join(</span><span class="s3">''</span><span class="s1">) : result.join(</span><span class="s3">' '</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">ms = prettyMs</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">BYTE_UNITS = [</span>
+	<span class="s3">'B'</span><span class="s4">,</span>
+	<span class="s3">'kB'</span><span class="s4">,</span>
+	<span class="s3">'MB'</span><span class="s4">,</span>
+	<span class="s3">'GB'</span><span class="s4">,</span>
+	<span class="s3">'TB'</span><span class="s4">,</span>
+	<span class="s3">'PB'</span><span class="s4">,</span>
+	<span class="s3">'EB'</span><span class="s4">,</span>
+	<span class="s3">'ZB'</span><span class="s4">,</span>
+	<span class="s3">'YB'</span>
+<span class="s1">]</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">BIBYTE_UNITS = [</span>
+	<span class="s3">'B'</span><span class="s4">,</span>
+	<span class="s3">'kiB'</span><span class="s4">,</span>
+	<span class="s3">'MiB'</span><span class="s4">,</span>
+	<span class="s3">'GiB'</span><span class="s4">,</span>
+	<span class="s3">'TiB'</span><span class="s4">,</span>
+	<span class="s3">'PiB'</span><span class="s4">,</span>
+	<span class="s3">'EiB'</span><span class="s4">,</span>
+	<span class="s3">'ZiB'</span><span class="s4">,</span>
+	<span class="s3">'YiB'</span>
+<span class="s1">]</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">BIT_UNITS = [</span>
+	<span class="s3">'b'</span><span class="s4">,</span>
+	<span class="s3">'kbit'</span><span class="s4">,</span>
+	<span class="s3">'Mbit'</span><span class="s4">,</span>
+	<span class="s3">'Gbit'</span><span class="s4">,</span>
+	<span class="s3">'Tbit'</span><span class="s4">,</span>
+	<span class="s3">'Pbit'</span><span class="s4">,</span>
+	<span class="s3">'Ebit'</span><span class="s4">,</span>
+	<span class="s3">'Zbit'</span><span class="s4">,</span>
+	<span class="s3">'Ybit'</span>
+<span class="s1">]</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">BIBIT_UNITS = [</span>
+	<span class="s3">'b'</span><span class="s4">,</span>
+	<span class="s3">'kibit'</span><span class="s4">,</span>
+	<span class="s3">'Mibit'</span><span class="s4">,</span>
+	<span class="s3">'Gibit'</span><span class="s4">,</span>
+	<span class="s3">'Tibit'</span><span class="s4">,</span>
+	<span class="s3">'Pibit'</span><span class="s4">,</span>
+	<span class="s3">'Eibit'</span><span class="s4">,</span>
+	<span class="s3">'Zibit'</span><span class="s4">,</span>
+	<span class="s3">'Yibit'</span>
+<span class="s1">]</span><span class="s4">;</span>
+
+<span class="s2">/* 
+Formats the given number using `Number#toLocaleString`. 
+- If locale is a string, the value is expected to be a locale-key (for example: `de`). 
+- If locale is true, the system default locale is used for translation. 
+- If no value for locale is specified, the number is returned unmodified. 
+*/</span>
+<span class="s5">const </span><span class="s1">toLocaleString = (number</span><span class="s4">, </span><span class="s1">locale</span><span class="s4">, </span><span class="s1">options) =&gt; {</span>
+	<span class="s5">let </span><span class="s1">result = number</span><span class="s4">;</span>
+	<span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">locale === </span><span class="s3">'string' </span><span class="s1">|| Array.isArray(locale)) {</span>
+		<span class="s1">result = number.toLocaleString(locale</span><span class="s4">, </span><span class="s1">options)</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s5">else if </span><span class="s1">(locale === </span><span class="s5">true </span><span class="s1">|| options !== undefined) {</span>
+		<span class="s1">result = number.toLocaleString(undefined</span><span class="s4">, </span><span class="s1">options)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">return </span><span class="s1">result</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">var </span><span class="s1">prettyBytes = (number</span><span class="s4">, </span><span class="s1">options) =&gt; {</span>
+	<span class="s5">if </span><span class="s1">(!Number.isFinite(number)) {</span>
+		<span class="s5">throw new </span><span class="s1">TypeError(</span><span class="s3">`Expected a finite number, got </span><span class="s1">${</span><span class="s5">typeof </span><span class="s1">number}</span><span class="s3">: </span><span class="s1">${number}</span><span class="s3">`</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s1">options = Object.assign({bits: </span><span class="s5">false</span><span class="s4">, </span><span class="s1">binary: </span><span class="s5">false</span><span class="s1">}</span><span class="s4">, </span><span class="s1">options)</span><span class="s4">;</span>
+
+	<span class="s5">const </span><span class="s1">UNITS = options.bits ?</span>
+		<span class="s1">(options.binary ? BIBIT_UNITS : BIT_UNITS) :</span>
+		<span class="s1">(options.binary ? BIBYTE_UNITS : BYTE_UNITS)</span><span class="s4">;</span>
+
+	<span class="s5">if </span><span class="s1">(options.signed &amp;&amp; number === </span><span class="s8">0</span><span class="s1">) {</span>
+		<span class="s5">return </span><span class="s3">` 0 </span><span class="s1">${UNITS[</span><span class="s8">0</span><span class="s1">]}</span><span class="s3">`</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">const </span><span class="s1">isNegative = number &lt; </span><span class="s8">0</span><span class="s4">;</span>
+	<span class="s5">const </span><span class="s1">prefix = isNegative ? </span><span class="s3">'-' </span><span class="s1">: (options.signed ? </span><span class="s3">'+' </span><span class="s1">: </span><span class="s3">''</span><span class="s1">)</span><span class="s4">;</span>
+
+	<span class="s5">if </span><span class="s1">(isNegative) {</span>
+		<span class="s1">number = -number</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">let </span><span class="s1">localeOptions</span><span class="s4">;</span>
+
+	<span class="s5">if </span><span class="s1">(options.minimumFractionDigits !== undefined) {</span>
+		<span class="s1">localeOptions = {minimumFractionDigits: options.minimumFractionDigits}</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">if </span><span class="s1">(options.maximumFractionDigits !== undefined) {</span>
+		<span class="s1">localeOptions = Object.assign({maximumFractionDigits: options.maximumFractionDigits}</span><span class="s4">, </span><span class="s1">localeOptions)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">if </span><span class="s1">(number &lt; </span><span class="s8">1</span><span class="s1">) {</span>
+		<span class="s5">const </span><span class="s1">numberString = toLocaleString(number</span><span class="s4">, </span><span class="s1">options.locale</span><span class="s4">, </span><span class="s1">localeOptions)</span><span class="s4">;</span>
+		<span class="s5">return </span><span class="s1">prefix + numberString + </span><span class="s3">' ' </span><span class="s1">+ UNITS[</span><span class="s8">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">const </span><span class="s1">exponent = Math.min(Math.floor(options.binary ? Math.log(number) / Math.log(</span><span class="s8">1024</span><span class="s1">) : Math.log10(number) / </span><span class="s8">3</span><span class="s1">)</span><span class="s4">, </span><span class="s1">UNITS.length - </span><span class="s8">1</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s0">// eslint-disable-next-line unicorn/prefer-exponentiation-operator</span>
+	<span class="s1">number /= Math.pow(options.binary ? </span><span class="s8">1024 </span><span class="s1">: </span><span class="s8">1000</span><span class="s4">, </span><span class="s1">exponent)</span><span class="s4">;</span>
+
+	<span class="s5">if </span><span class="s1">(!localeOptions) {</span>
+		<span class="s1">number = number.toPrecision(</span><span class="s8">3</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s5">const </span><span class="s1">numberString = toLocaleString(Number(number)</span><span class="s4">, </span><span class="s1">options.locale</span><span class="s4">, </span><span class="s1">localeOptions)</span><span class="s4">;</span>
+
+	<span class="s5">const </span><span class="s1">unit = UNITS[exponent]</span><span class="s4">;</span>
+
+	<span class="s5">return </span><span class="s1">prefix + numberString + </span><span class="s3">' ' </span><span class="s1">+ unit</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">prettyBytes$1 = prettyBytes</span><span class="s4">;</span>
+
+<span class="s5">function </span><span class="s1">printTimings(timings) {</span>
+    <span class="s1">Object.entries(timings).forEach(([label</span><span class="s4">, </span><span class="s1">[time</span><span class="s4">, </span><span class="s1">memory</span><span class="s4">, </span><span class="s1">total]]) =&gt; {</span>
+        <span class="s5">const </span><span class="s1">appliedColor = label[</span><span class="s8">0</span><span class="s1">] === </span><span class="s3">'#' </span><span class="s1">? (label[</span><span class="s8">1</span><span class="s1">] !== </span><span class="s3">'#' </span><span class="s1">? loadConfigFile_js.underline : loadConfigFile_js.bold) : (text) =&gt; text</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">row = </span><span class="s3">`</span><span class="s1">${label}</span><span class="s3">: </span><span class="s1">${time.toFixed(</span><span class="s8">0</span><span class="s1">)}</span><span class="s3">ms, </span><span class="s1">${prettyBytes$1(memory)} </span><span class="s3">/ </span><span class="s1">${prettyBytes$1(total)}</span><span class="s3">`</span><span class="s4">;</span>
+        <span class="s1">console.info(appliedColor(row))</span><span class="s4">;</span>
+    <span class="s1">})</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s1">async </span><span class="s5">function </span><span class="s1">build(inputOptions</span><span class="s4">, </span><span class="s1">warnings</span><span class="s4">, </span><span class="s1">silent = </span><span class="s5">false</span><span class="s1">) {</span>
+    <span class="s5">const </span><span class="s1">outputOptions = inputOptions.output</span><span class="s4">;</span>
+    <span class="s5">const </span><span class="s1">useStdout = !outputOptions[</span><span class="s8">0</span><span class="s1">].file &amp;&amp; !outputOptions[</span><span class="s8">0</span><span class="s1">].dir</span><span class="s4">;</span>
+    <span class="s5">const </span><span class="s1">start = Date.now()</span><span class="s4">;</span>
+    <span class="s5">const </span><span class="s1">files = useStdout ? [</span><span class="s3">'stdout'</span><span class="s1">] : outputOptions.map(t =&gt; rollup.relativeId(t.file || t.dir))</span><span class="s4">;</span>
+    <span class="s5">if </span><span class="s1">(!silent) {</span>
+        <span class="s5">let </span><span class="s1">inputFiles</span><span class="s4">;</span>
+        <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">inputOptions.input === </span><span class="s3">'string'</span><span class="s1">) {</span>
+            <span class="s1">inputFiles = inputOptions.input</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">else if </span><span class="s1">(inputOptions.input </span><span class="s5">instanceof </span><span class="s1">Array) {</span>
+            <span class="s1">inputFiles = inputOptions.input.join(</span><span class="s3">', '</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">else if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">inputOptions.input === </span><span class="s3">'object' </span><span class="s1">&amp;&amp; inputOptions.input !== </span><span class="s5">null</span><span class="s1">) {</span>
+            <span class="s1">inputFiles = Object.values(inputOptions.input).join(</span><span class="s3">', '</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s1">loadConfigFile_js.stderr(loadConfigFile_js.cyan(</span><span class="s3">`</span><span class="s4">\n</span><span class="s1">${loadConfigFile_js.bold(inputFiles)} </span><span class="s3">→ </span><span class="s1">${loadConfigFile_js.bold(files.join(</span><span class="s3">', '</span><span class="s1">))}</span><span class="s3">...`</span><span class="s1">))</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">const </span><span class="s1">bundle = </span><span class="s5">await </span><span class="s1">rollup.rollup(inputOptions)</span><span class="s4">;</span>
+    <span class="s5">if </span><span class="s1">(useStdout) {</span>
+        <span class="s5">const </span><span class="s1">output = outputOptions[</span><span class="s8">0</span><span class="s1">]</span><span class="s4">;</span>
+        <span class="s5">if </span><span class="s1">(output.sourcemap &amp;&amp; output.sourcemap !== </span><span class="s3">'inline'</span><span class="s1">) {</span>
+            <span class="s1">loadConfigFile_js.handleError({</span>
+                <span class="s1">code: </span><span class="s3">'ONLY_INLINE_SOURCEMAPS'</span><span class="s4">,</span>
+                <span class="s1">message: </span><span class="s3">'Only inline sourcemaps are supported when bundling to stdout.'</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">const </span><span class="s1">{ output: outputs } = </span><span class="s5">await </span><span class="s1">bundle.generate(output)</span><span class="s4">;</span>
+        <span class="s5">for </span><span class="s1">(</span><span class="s5">const </span><span class="s1">file of outputs) {</span>
+            <span class="s5">let </span><span class="s1">source</span><span class="s4">;</span>
+            <span class="s5">if </span><span class="s1">(file.type === </span><span class="s3">'asset'</span><span class="s1">) {</span>
+                <span class="s1">source = file.source</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">else </span><span class="s1">{</span>
+                <span class="s1">source = file.code</span><span class="s4">;</span>
+                <span class="s5">if </span><span class="s1">(output.sourcemap === </span><span class="s3">'inline'</span><span class="s1">) {</span>
+                    <span class="s1">source += </span><span class="s3">`</span><span class="s4">\n</span><span class="s3">//# </span><span class="s1">${rollup.SOURCEMAPPING_URL}</span><span class="s3">=</span><span class="s1">${file.map.toUrl()}</span><span class="s4">\n</span><span class="s3">`</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+            <span class="s5">if </span><span class="s1">(outputs.length &gt; </span><span class="s8">1</span><span class="s1">)</span>
+                <span class="s1">process$1.stdout.write(</span><span class="s3">`</span><span class="s4">\n</span><span class="s1">${loadConfigFile_js.cyan(loadConfigFile_js.bold(</span><span class="s3">`//→ </span><span class="s1">${file.fileName}</span><span class="s3">:`</span><span class="s1">))}</span><span class="s4">\n</span><span class="s3">`</span><span class="s1">)</span><span class="s4">;</span>
+            <span class="s1">process$1.stdout.write(source)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">if </span><span class="s1">(!silent) {</span>
+            <span class="s1">warnings.flush()</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">return</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">await </span><span class="s1">Promise.all(outputOptions.map(bundle.write))</span><span class="s4">;</span>
+    <span class="s5">await </span><span class="s1">bundle.close()</span><span class="s4">;</span>
+    <span class="s5">if </span><span class="s1">(!silent) {</span>
+        <span class="s1">warnings.flush()</span><span class="s4">;</span>
+        <span class="s1">loadConfigFile_js.stderr(loadConfigFile_js.green(</span><span class="s3">`created </span><span class="s1">${loadConfigFile_js.bold(files.join(</span><span class="s3">', '</span><span class="s1">))} </span><span class="s3">in </span><span class="s1">${loadConfigFile_js.bold(ms(Date.now() - start))}</span><span class="s3">`</span><span class="s1">))</span><span class="s4">;</span>
+        <span class="s5">if </span><span class="s1">(bundle &amp;&amp; bundle.getTimings) {</span>
+            <span class="s1">printTimings(bundle.getTimings())</span><span class="s4">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s5">const </span><span class="s1">DEFAULT_CONFIG_BASE = </span><span class="s3">'rollup.config'</span><span class="s4">;</span>
+<span class="s1">async </span><span class="s5">function </span><span class="s1">getConfigPath(commandConfig) {</span>
+    <span class="s5">if </span><span class="s1">(commandConfig === </span><span class="s5">true</span><span class="s1">) {</span>
+        <span class="s5">return </span><span class="s1">require$$0.resolve(</span><span class="s5">await </span><span class="s1">findConfigFileNameInCwd())</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">if </span><span class="s1">(commandConfig.slice(</span><span class="s8">0</span><span class="s4">, </span><span class="s8">5</span><span class="s1">) === </span><span class="s3">'node:'</span><span class="s1">) {</span>
+        <span class="s5">const </span><span class="s1">pkgName = commandConfig.slice(</span><span class="s8">5</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s5">try </span><span class="s1">{</span>
+            <span class="s5">return </span><span class="s1">require.resolve(</span><span class="s3">`rollup-config-</span><span class="s1">${pkgName}</span><span class="s3">`</span><span class="s4">, </span><span class="s1">{ paths: [process$1.cwd()] })</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">catch </span><span class="s1">(_a) {</span>
+            <span class="s5">try </span><span class="s1">{</span>
+                <span class="s5">return </span><span class="s1">require.resolve(pkgName</span><span class="s4">, </span><span class="s1">{ paths: [process$1.cwd()] })</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s5">catch </span><span class="s1">(err) {</span>
+                <span class="s5">if </span><span class="s1">(err.code === </span><span class="s3">'MODULE_NOT_FOUND'</span><span class="s1">) {</span>
+                    <span class="s1">loadConfigFile_js.handleError({</span>
+                        <span class="s1">code: </span><span class="s3">'MISSING_EXTERNAL_CONFIG'</span><span class="s4">,</span>
+                        <span class="s1">message: </span><span class="s3">`Could not resolve config file &quot;</span><span class="s1">${commandConfig}</span><span class="s3">&quot;`</span>
+                    <span class="s1">})</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s5">throw </span><span class="s1">err</span><span class="s4">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s5">return </span><span class="s1">require$$0.resolve(commandConfig)</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s1">async </span><span class="s5">function </span><span class="s1">findConfigFileNameInCwd() {</span>
+    <span class="s5">const </span><span class="s1">filesInWorkingDir = </span><span class="s5">new </span><span class="s1">Set(</span><span class="s5">await </span><span class="s1">require$$0$1.promises.readdir(process$1.cwd()))</span><span class="s4">;</span>
+    <span class="s5">for </span><span class="s1">(</span><span class="s5">const </span><span class="s1">extension of [</span><span class="s3">'mjs'</span><span class="s4">, </span><span class="s3">'cjs'</span><span class="s4">, </span><span class="s3">'ts'</span><span class="s1">]) {</span>
+        <span class="s5">const </span><span class="s1">fileName = </span><span class="s3">`</span><span class="s1">${DEFAULT_CONFIG_BASE}</span><span class="s3">.</span><span class="s1">${extension}</span><span class="s3">`</span><span class="s4">;</span>
+        <span class="s5">if </span><span class="s1">(filesInWorkingDir.has(fileName))</span>
+            <span class="s5">return </span><span class="s1">fileName</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">return </span><span class="s3">`</span><span class="s1">${DEFAULT_CONFIG_BASE}</span><span class="s3">.js`</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s1">async </span><span class="s5">function </span><span class="s1">loadConfigFromCommand(command) {</span>
+    <span class="s5">const </span><span class="s1">warnings = loadConfigFile_js.batchWarnings()</span><span class="s4">;</span>
+    <span class="s5">if </span><span class="s1">(!command.input &amp;&amp; (command.stdin || !process$1.stdin.isTTY)) {</span>
+        <span class="s1">command.input = loadConfigFile_js.stdinName</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">const </span><span class="s1">options = mergeOptions.mergeOptions({ input: [] }</span><span class="s4">, </span><span class="s1">command</span><span class="s4">, </span><span class="s1">warnings.add)</span><span class="s4">;</span>
+    <span class="s5">await </span><span class="s1">loadConfigFile_js.addCommandPluginsToInputOptions(options</span><span class="s4">, </span><span class="s1">command)</span><span class="s4">;</span>
+    <span class="s5">return </span><span class="s1">{ options: [options]</span><span class="s4">, </span><span class="s1">warnings }</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s1">async </span><span class="s5">function </span><span class="s1">runRollup(command) {</span>
+    <span class="s5">let </span><span class="s1">inputSource</span><span class="s4">;</span>
+    <span class="s5">if </span><span class="s1">(command._.length &gt; </span><span class="s8">0</span><span class="s1">) {</span>
+        <span class="s5">if </span><span class="s1">(command.input) {</span>
+            <span class="s1">loadConfigFile_js.handleError({</span>
+                <span class="s1">code: </span><span class="s3">'DUPLICATE_IMPORT_OPTIONS'</span><span class="s4">,</span>
+                <span class="s1">message: </span><span class="s3">'Either use --input, or pass input path as argument'</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s1">inputSource = command._</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">else if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">command.input === </span><span class="s3">'string'</span><span class="s1">) {</span>
+        <span class="s1">inputSource = [command.input]</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">else </span><span class="s1">{</span>
+        <span class="s1">inputSource = command.input</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">if </span><span class="s1">(inputSource &amp;&amp; inputSource.length &gt; </span><span class="s8">0</span><span class="s1">) {</span>
+        <span class="s5">if </span><span class="s1">(inputSource.some((input) =&gt; input.includes(</span><span class="s3">'='</span><span class="s1">))) {</span>
+            <span class="s1">command.input = {}</span><span class="s4">;</span>
+            <span class="s1">inputSource.forEach((input) =&gt; {</span>
+                <span class="s5">const </span><span class="s1">equalsIndex = input.indexOf(</span><span class="s3">'='</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s5">const </span><span class="s1">value = input.substring(equalsIndex + </span><span class="s8">1</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s5">const </span><span class="s1">key = input.substring(</span><span class="s8">0</span><span class="s4">, </span><span class="s1">equalsIndex) || rollup.getAliasName(input)</span><span class="s4">;</span>
+                <span class="s1">command.input[key] = value</span><span class="s4">;</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">else </span><span class="s1">{</span>
+            <span class="s1">command.input = inputSource</span><span class="s4">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s5">if </span><span class="s1">(command.environment) {</span>
+        <span class="s5">const </span><span class="s1">environment = Array.isArray(command.environment)</span>
+            <span class="s1">? command.environment</span>
+            <span class="s1">: [command.environment]</span><span class="s4">;</span>
+        <span class="s1">environment.forEach((arg) =&gt; {</span>
+            <span class="s1">arg.split(</span><span class="s3">','</span><span class="s1">).forEach((pair) =&gt; {</span>
+                <span class="s5">const </span><span class="s1">[key</span><span class="s4">, </span><span class="s1">...value] = pair.split(</span><span class="s3">':'</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s1">process$1.env[key] = value.length === </span><span class="s8">0 </span><span class="s1">? String(</span><span class="s5">true</span><span class="s1">) : value.join(</span><span class="s3">':'</span><span class="s1">)</span><span class="s4">;</span>
+            <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">if </span><span class="s1">(mergeOptions.isWatchEnabled(command.watch)) {</span>
+        <span class="s5">await </span><span class="s1">rollup.loadFsEvents()</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">{ watch } = </span><span class="s5">await </span><span class="s1">Promise.resolve().then(() =&gt; require(</span><span class="s3">'../shared/watch-cli.js'</span><span class="s1">))</span><span class="s4">;</span>
+        <span class="s1">watch(command)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">else </span><span class="s1">{</span>
+        <span class="s5">try </span><span class="s1">{</span>
+            <span class="s5">const </span><span class="s1">{ options</span><span class="s4">, </span><span class="s1">warnings } = </span><span class="s5">await </span><span class="s1">getConfigs(command)</span><span class="s4">;</span>
+            <span class="s5">try </span><span class="s1">{</span>
+                <span class="s5">for </span><span class="s1">(</span><span class="s5">const </span><span class="s1">inputOptions of options) {</span>
+                    <span class="s5">await </span><span class="s1">build(inputOptions</span><span class="s4">, </span><span class="s1">warnings</span><span class="s4">, </span><span class="s1">command.silent)</span><span class="s4">;</span>
+                <span class="s1">}</span>
+                <span class="s5">if </span><span class="s1">(command.failAfterWarnings &amp;&amp; warnings.warningOccurred) {</span>
+                    <span class="s1">warnings.flush()</span><span class="s4">;</span>
+                    <span class="s1">loadConfigFile_js.handleError({</span>
+                        <span class="s1">code: </span><span class="s3">'FAIL_AFTER_WARNINGS'</span><span class="s4">,</span>
+                        <span class="s1">message: </span><span class="s3">'Warnings occurred and --failAfterWarnings flag present'</span>
+                    <span class="s1">})</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+            <span class="s5">catch </span><span class="s1">(err) {</span>
+                <span class="s1">warnings.flush()</span><span class="s4">;</span>
+                <span class="s1">loadConfigFile_js.handleError(err)</span><span class="s4">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s5">catch </span><span class="s1">(err) {</span>
+            <span class="s1">loadConfigFile_js.handleError(err)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+<span class="s1">async </span><span class="s5">function </span><span class="s1">getConfigs(command) {</span>
+    <span class="s5">if </span><span class="s1">(command.config) {</span>
+        <span class="s5">const </span><span class="s1">configFile = </span><span class="s5">await </span><span class="s1">getConfigPath(command.config)</span><span class="s4">;</span>
+        <span class="s5">const </span><span class="s1">{ options</span><span class="s4">, </span><span class="s1">warnings } = </span><span class="s5">await </span><span class="s1">loadConfigFile_js.loadAndParseConfigFile(configFile</span><span class="s4">, </span><span class="s1">command)</span><span class="s4">;</span>
+        <span class="s5">return </span><span class="s1">{ options</span><span class="s4">, </span><span class="s1">warnings }</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">return await </span><span class="s1">loadConfigFromCommand(command)</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s5">const </span><span class="s1">command = argParser(process$1.argv.slice(</span><span class="s8">2</span><span class="s1">)</span><span class="s4">, </span><span class="s1">{</span>
+    <span class="s1">alias: mergeOptions.commandAliases</span><span class="s4">,</span>
+    <span class="s1">configuration: { </span><span class="s3">'camel-case-expansion'</span><span class="s1">: </span><span class="s5">false </span><span class="s1">}</span>
+<span class="s1">})</span><span class="s4">;</span>
+<span class="s5">if </span><span class="s1">(command.help || (process$1.argv.length &lt;= </span><span class="s8">2 </span><span class="s1">&amp;&amp; process$1.stdin.isTTY)) {</span>
+    <span class="s1">console.log(</span><span class="s3">`</span><span class="s4">\n</span><span class="s1">${help.replace(</span><span class="s3">'__VERSION__'</span><span class="s4">, </span><span class="s1">rollup.version)}</span><span class="s4">\n</span><span class="s3">`</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s5">else if </span><span class="s1">(command.version) {</span>
+    <span class="s1">console.log(</span><span class="s3">`rollup v</span><span class="s1">${rollup.version}</span><span class="s3">`</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s5">else </span><span class="s1">{</span>
+    <span class="s5">try </span><span class="s1">{</span>
+        <span class="s1">require(</span><span class="s3">'source-map-support'</span><span class="s1">).install()</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">catch </span><span class="s1">(_a) {</span>
+        <span class="s0">// do nothing</span>
+    <span class="s1">}</span>
+    <span class="s1">runRollup(command)</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s1">exports.getConfigPath = getConfigPath</span><span class="s4">;</span>
+<span class="s1">exports.loadConfigFromCommand = loadConfigFromCommand</span><span class="s4">;</span>
+<span class="s1">exports.ms = ms</span><span class="s4">;</span>
+<span class="s1">exports.printTimings = printTimings</span><span class="s4">;</span>
+<span class="s0">//# sourceMappingURL=rollup.map</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<html>
+<head>
+<title>import.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+import.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).TYPE</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">STRING = TYPE.String</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">IDENT = TYPE.Ident</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">URL = TYPE.Url</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">FUNCTION = TYPE.Function</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">LEFTPARENTHESIS = TYPE.LeftParenthesis</span><span class="s3">;</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">parse: {</span>
+        <span class="s1">prelude: </span><span class="s0">function</span><span class="s1">() {</span>
+            <span class="s0">var </span><span class="s1">children = </span><span class="s0">this</span><span class="s1">.createList()</span><span class="s3">;</span>
+
+            <span class="s0">this</span><span class="s1">.scanner.skipSC()</span><span class="s3">;</span>
+
+            <span class="s0">switch </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenType) {</span>
+                <span class="s0">case </span><span class="s1">STRING:</span>
+                    <span class="s1">children.push(</span><span class="s0">this</span><span class="s1">.String())</span><span class="s3">;</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s1">URL:</span>
+                <span class="s0">case </span><span class="s1">FUNCTION:</span>
+                    <span class="s1">children.push(</span><span class="s0">this</span><span class="s1">.Url())</span><span class="s3">;</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+
+                <span class="s0">default</span><span class="s1">:</span>
+                    <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'String or url() is expected'</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.lookupNonWSType(</span><span class="s4">0</span><span class="s1">) === IDENT ||</span>
+                <span class="s0">this</span><span class="s1">.lookupNonWSType(</span><span class="s4">0</span><span class="s1">) === LEFTPARENTHESIS) {</span>
+                <span class="s1">children.push(</span><span class="s0">this</span><span class="s1">.WhiteSpace())</span><span class="s3">;</span>
+                <span class="s1">children.push(</span><span class="s0">this</span><span class="s1">.MediaQueryList())</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">return </span><span class="s1">children</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">,</span>
+        <span class="s1">block: </span><span class="s0">null</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

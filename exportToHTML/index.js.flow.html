@@ -1,0 +1,114 @@
+<html>
+<head>
+<title>index.js.flow</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+index.js.flow</font>
+</center></td></tr></table>
+<pre><span class="s0">// @flow strict</span>
+
+<span class="s1">type TemplateStringsArray = $ReadOnlyArray&lt;string&gt;</span><span class="s2">;</span>
+
+<span class="s3">export </span><span class="s1">type Level = $Values&lt;{</span>
+	<span class="s1">None: </span><span class="s4">0</span><span class="s2">,</span>
+	<span class="s1">Basic: </span><span class="s4">1</span><span class="s2">,</span>
+	<span class="s1">Ansi256: </span><span class="s4">2</span><span class="s2">,</span>
+	<span class="s1">TrueColor: </span><span class="s4">3</span>
+<span class="s1">}&gt;</span><span class="s2">;</span>
+
+<span class="s3">export </span><span class="s1">type ChalkOptions = {|</span>
+	<span class="s1">enabled?: boolean</span><span class="s2">,</span>
+	<span class="s1">level?: Level</span>
+<span class="s1">|}</span><span class="s2">;</span>
+
+<span class="s3">export </span><span class="s1">type ColorSupport = {|</span>
+	<span class="s1">level: Level</span><span class="s2">,</span>
+	<span class="s1">hasBasic: boolean</span><span class="s2">,</span>
+	<span class="s1">has256: boolean</span><span class="s2">,</span>
+	<span class="s1">has16m: boolean</span>
+<span class="s1">|}</span><span class="s2">;</span>
+
+<span class="s3">export interface </span><span class="s1">Chalk {</span>
+	<span class="s1">(...text: string[]): string</span><span class="s2">,</span>
+	<span class="s1">(text: TemplateStringsArray</span><span class="s2">, </span><span class="s1">...placeholders: string[]): string</span><span class="s2">,</span>
+	<span class="s1">constructor(options?: ChalkOptions): Chalk</span><span class="s2">,</span>
+	<span class="s1">enabled: boolean</span><span class="s2">,</span>
+	<span class="s1">level: Level</span><span class="s2">,</span>
+	<span class="s1">rgb(r: number</span><span class="s2">, </span><span class="s1">g: number</span><span class="s2">, </span><span class="s1">b: number): Chalk</span><span class="s2">,</span>
+	<span class="s1">hsl(h: number</span><span class="s2">, </span><span class="s1">s: number</span><span class="s2">, </span><span class="s1">l: number): Chalk</span><span class="s2">,</span>
+	<span class="s1">hsv(h: number</span><span class="s2">, </span><span class="s1">s: number</span><span class="s2">, </span><span class="s1">v: number): Chalk</span><span class="s2">,</span>
+	<span class="s1">hwb(h: number</span><span class="s2">, </span><span class="s1">w: number</span><span class="s2">, </span><span class="s1">b: number): Chalk</span><span class="s2">,</span>
+	<span class="s1">bgHex(color: string): Chalk</span><span class="s2">,</span>
+	<span class="s1">bgKeyword(color: string): Chalk</span><span class="s2">,</span>
+	<span class="s1">bgRgb(r: number</span><span class="s2">, </span><span class="s1">g: number</span><span class="s2">, </span><span class="s1">b: number): Chalk</span><span class="s2">,</span>
+	<span class="s1">bgHsl(h: number</span><span class="s2">, </span><span class="s1">s: number</span><span class="s2">, </span><span class="s1">l: number): Chalk</span><span class="s2">,</span>
+	<span class="s1">bgHsv(h: number</span><span class="s2">, </span><span class="s1">s: number</span><span class="s2">, </span><span class="s1">v: number): Chalk</span><span class="s2">,</span>
+	<span class="s1">bgHwb(h: number</span><span class="s2">, </span><span class="s1">w: number</span><span class="s2">, </span><span class="s1">b: number): Chalk</span><span class="s2">,</span>
+	<span class="s1">hex(color: string): Chalk</span><span class="s2">,</span>
+	<span class="s1">keyword(color: string): Chalk</span><span class="s2">,</span>
+
+	<span class="s1">+reset: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bold: Chalk</span><span class="s2">,</span>
+	<span class="s1">+dim: Chalk</span><span class="s2">,</span>
+	<span class="s1">+italic: Chalk</span><span class="s2">,</span>
+	<span class="s1">+underline: Chalk</span><span class="s2">,</span>
+	<span class="s1">+inverse: Chalk</span><span class="s2">,</span>
+	<span class="s1">+hidden: Chalk</span><span class="s2">,</span>
+	<span class="s1">+strikethrough: Chalk</span><span class="s2">,</span>
+
+	<span class="s1">+visible: Chalk</span><span class="s2">,</span>
+
+	<span class="s1">+black: Chalk</span><span class="s2">,</span>
+	<span class="s1">+red: Chalk</span><span class="s2">,</span>
+	<span class="s1">+green: Chalk</span><span class="s2">,</span>
+	<span class="s1">+yellow: Chalk</span><span class="s2">,</span>
+	<span class="s1">+blue: Chalk</span><span class="s2">,</span>
+	<span class="s1">+magenta: Chalk</span><span class="s2">,</span>
+	<span class="s1">+cyan: Chalk</span><span class="s2">,</span>
+	<span class="s1">+white: Chalk</span><span class="s2">,</span>
+	<span class="s1">+gray: Chalk</span><span class="s2">,</span>
+	<span class="s1">+grey: Chalk</span><span class="s2">,</span>
+	<span class="s1">+blackBright: Chalk</span><span class="s2">,</span>
+	<span class="s1">+redBright: Chalk</span><span class="s2">,</span>
+	<span class="s1">+greenBright: Chalk</span><span class="s2">,</span>
+	<span class="s1">+yellowBright: Chalk</span><span class="s2">,</span>
+	<span class="s1">+blueBright: Chalk</span><span class="s2">,</span>
+	<span class="s1">+magentaBright: Chalk</span><span class="s2">,</span>
+	<span class="s1">+cyanBright: Chalk</span><span class="s2">,</span>
+	<span class="s1">+whiteBright: Chalk</span><span class="s2">,</span>
+
+	<span class="s1">+bgBlack: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgRed: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgGreen: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgYellow: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgBlue: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgMagenta: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgCyan: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgWhite: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgBlackBright: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgRedBright: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgGreenBright: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgYellowBright: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgBlueBright: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgMagentaBright: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgCyanBright: Chalk</span><span class="s2">,</span>
+	<span class="s1">+bgWhiteBrigh: Chalk</span><span class="s2">,</span>
+
+	<span class="s1">supportsColor: ColorSupport</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s1">declare module.exports: Chalk</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

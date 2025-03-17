@@ -1,0 +1,35 @@
+<html>
+<head>
+<title>list_tasks.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+list_tasks.js</font>
+</center></td></tr></table>
+<pre><span class="s0">const </span><span class="s1">PROJECT_DIR = process.env.PROJECT_DIR</span><span class="s2">;</span>
+<span class="s0">const </span><span class="s1">JAKE_CMD = </span><span class="s3">`</span><span class="s1">${PROJECT_DIR}</span><span class="s3">/bin/cli.js`</span><span class="s2">;</span>
+
+<span class="s0">let </span><span class="s1">assert = require(</span><span class="s3">'assert'</span><span class="s1">)</span><span class="s2">;</span>
+<span class="s0">let </span><span class="s1">proc = require(</span><span class="s3">'child_process'</span><span class="s1">)</span><span class="s2">;</span>
+
+<span class="s1">suite(</span><span class="s3">'listTasks'</span><span class="s2">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">test(</span><span class="s3">'execute &quot;jake -T&quot; without any errors'</span><span class="s2">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">message = </span><span class="s3">'cannot run &quot;jake -T&quot; command'</span><span class="s2">;</span>
+    <span class="s0">let </span><span class="s1">listTasks = </span><span class="s0">function </span><span class="s1">() {</span>
+      <span class="s1">proc.execFileSync(JAKE_CMD</span><span class="s2">, </span><span class="s1">[</span><span class="s3">'-T'</span><span class="s1">])</span><span class="s2">;</span>
+    <span class="s1">}</span><span class="s2">;</span>
+    <span class="s1">assert.doesNotThrow(listTasks</span><span class="s2">, </span><span class="s1">TypeError</span><span class="s2">, </span><span class="s1">message)</span><span class="s2">;</span>
+  <span class="s1">})</span><span class="s2">;</span>
+<span class="s1">})</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

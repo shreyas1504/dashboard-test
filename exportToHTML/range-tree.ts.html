@@ -1,0 +1,180 @@
+<html>
+<head>
+<title>range-tree.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #808080;}
+.s7 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+range-tree.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">{ RangeCov } from </span><span class="s2">&quot;./types&quot;</span><span class="s3">;</span>
+
+<span class="s0">export class </span><span class="s1">RangeTree {</span>
+  <span class="s1">start: number</span><span class="s3">;</span>
+  <span class="s1">end: number</span><span class="s3">;</span>
+  <span class="s1">delta: number</span><span class="s3">;</span>
+  <span class="s1">children: RangeTree[]</span><span class="s3">;</span>
+
+  <span class="s1">constructor(</span>
+    <span class="s1">start: number</span><span class="s3">,</span>
+    <span class="s1">end: number</span><span class="s3">,</span>
+    <span class="s1">delta: number</span><span class="s3">,</span>
+    <span class="s1">children: RangeTree[]</span><span class="s3">,</span>
+  <span class="s1">) {</span>
+    <span class="s0">this</span><span class="s1">.start = start</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.end = end</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.delta = delta</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.children = children</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">/**</span>
+   <span class="s4">* </span><span class="s5">@precodition </span><span class="s4">`ranges` are well-formed and pre-order sorted</span>
+   <span class="s4">*/</span>
+  <span class="s0">static </span><span class="s1">fromSortedRanges(ranges: ReadonlyArray&lt;RangeCov&gt;): RangeTree | undefined {</span>
+    <span class="s0">let </span><span class="s1">root: RangeTree | undefined</span><span class="s3">;</span>
+    <span class="s6">// Stack of parent trees and parent counts.</span>
+    <span class="s0">const </span><span class="s1">stack: [RangeTree</span><span class="s3">, </span><span class="s1">number][] = []</span><span class="s3">;</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">range of ranges) {</span>
+      <span class="s0">const </span><span class="s1">node: RangeTree = </span><span class="s0">new </span><span class="s1">RangeTree(range.startOffset</span><span class="s3">, </span><span class="s1">range.endOffset</span><span class="s3">, </span><span class="s1">range.count</span><span class="s3">, </span><span class="s1">[])</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(root === undefined) {</span>
+        <span class="s1">root = node</span><span class="s3">;</span>
+        <span class="s1">stack.push([node</span><span class="s3">, </span><span class="s1">range.count])</span><span class="s3">;</span>
+        <span class="s0">continue</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s0">let </span><span class="s1">parent: RangeTree</span><span class="s3">;</span>
+      <span class="s0">let </span><span class="s1">parentCount: number</span><span class="s3">;</span>
+      <span class="s0">while </span><span class="s1">(</span><span class="s0">true</span><span class="s1">) {</span>
+        <span class="s1">[parent</span><span class="s3">, </span><span class="s1">parentCount] = stack[stack.length - </span><span class="s7">1</span><span class="s1">]</span><span class="s3">;</span>
+        <span class="s6">// assert: `top !== undefined` (the ranges are sorted)</span>
+        <span class="s0">if </span><span class="s1">(range.startOffset &lt; parent.end) {</span>
+          <span class="s0">break</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+          <span class="s1">stack.pop()</span><span class="s3">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+      <span class="s1">node.delta -= parentCount</span><span class="s3">;</span>
+      <span class="s1">parent.children.push(node)</span><span class="s3">;</span>
+      <span class="s1">stack.push([node</span><span class="s3">, </span><span class="s1">range.count])</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s0">return </span><span class="s1">root</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">normalize(): </span><span class="s0">void </span><span class="s1">{</span>
+    <span class="s0">const </span><span class="s1">children: RangeTree[] = []</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">curEnd: number</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">head: RangeTree | undefined</span><span class="s3">;</span>
+    <span class="s0">const </span><span class="s1">tail: RangeTree[] = []</span><span class="s3">;</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">child of </span><span class="s0">this</span><span class="s1">.children) {</span>
+      <span class="s0">if </span><span class="s1">(head === undefined) {</span>
+        <span class="s1">head = child</span><span class="s3">;</span>
+      <span class="s1">} </span><span class="s0">else if </span><span class="s1">(child.delta === head.delta &amp;&amp; child.start === curEnd!) {</span>
+        <span class="s1">tail.push(child)</span><span class="s3">;</span>
+      <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+        <span class="s1">endChain()</span><span class="s3">;</span>
+        <span class="s1">head = child</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s1">curEnd = child.end</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s0">if </span><span class="s1">(head !== undefined) {</span>
+      <span class="s1">endChain()</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(children.length === </span><span class="s7">1</span><span class="s1">) {</span>
+      <span class="s0">const </span><span class="s1">child: RangeTree = children[</span><span class="s7">0</span><span class="s1">]</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(child.start === </span><span class="s0">this</span><span class="s1">.start &amp;&amp; child.end === </span><span class="s0">this</span><span class="s1">.end) {</span>
+        <span class="s0">this</span><span class="s1">.delta += child.delta</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.children = child.children</span><span class="s3">;</span>
+        <span class="s6">// `.lazyCount` is zero for both (both are after normalization)</span>
+        <span class="s0">return</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">this</span><span class="s1">.children = children</span><span class="s3">;</span>
+
+    <span class="s0">function </span><span class="s1">endChain(): </span><span class="s0">void </span><span class="s1">{</span>
+      <span class="s0">if </span><span class="s1">(tail.length !== </span><span class="s7">0</span><span class="s1">) {</span>
+        <span class="s1">head!.end = tail[tail.length - </span><span class="s7">1</span><span class="s1">].end</span><span class="s3">;</span>
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">tailTree of tail) {</span>
+          <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">subChild of tailTree.children) {</span>
+            <span class="s1">subChild.delta += tailTree.delta - head!.delta</span><span class="s3">;</span>
+            <span class="s1">head!.children.push(subChild)</span><span class="s3">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s1">tail.length = </span><span class="s7">0</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s1">head!.normalize()</span><span class="s3">;</span>
+      <span class="s1">children.push(head!)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s4">/**</span>
+   <span class="s4">* </span><span class="s5">@precondition </span><span class="s4">`tree.start &lt; value &amp;&amp; value &lt; tree.end`</span>
+   <span class="s4">* </span><span class="s5">@return </span><span class="s4">RangeTree Right part</span>
+   <span class="s4">*/</span>
+  <span class="s1">split(value: number): RangeTree {</span>
+    <span class="s0">let </span><span class="s1">leftChildLen: number = </span><span class="s0">this</span><span class="s1">.children.length</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">mid: RangeTree | undefined</span><span class="s3">;</span>
+
+    <span class="s6">// TODO(perf): Binary search (check overhead)</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">let </span><span class="s1">i: number = </span><span class="s7">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s0">this</span><span class="s1">.children.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+      <span class="s0">const </span><span class="s1">child: RangeTree = </span><span class="s0">this</span><span class="s1">.children[i]</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(child.start &lt; value &amp;&amp; value &lt; child.end) {</span>
+        <span class="s1">mid = child.split(value)</span><span class="s3">;</span>
+        <span class="s1">leftChildLen = i + </span><span class="s7">1</span><span class="s3">;</span>
+        <span class="s0">break</span><span class="s3">;</span>
+      <span class="s1">} </span><span class="s0">else if </span><span class="s1">(child.start &gt;= value) {</span>
+        <span class="s1">leftChildLen = i</span><span class="s3">;</span>
+        <span class="s0">break</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">const </span><span class="s1">rightLen: number = </span><span class="s0">this</span><span class="s1">.children.length - leftChildLen</span><span class="s3">;</span>
+    <span class="s0">const </span><span class="s1">rightChildren: RangeTree[] = </span><span class="s0">this</span><span class="s1">.children.splice(leftChildLen</span><span class="s3">, </span><span class="s1">rightLen)</span><span class="s3">;</span>
+    <span class="s0">if </span><span class="s1">(mid !== undefined) {</span>
+      <span class="s1">rightChildren.unshift(mid)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s0">const </span><span class="s1">result: RangeTree = </span><span class="s0">new </span><span class="s1">RangeTree(</span>
+      <span class="s1">value</span><span class="s3">,</span>
+      <span class="s0">this</span><span class="s1">.end</span><span class="s3">,</span>
+      <span class="s0">this</span><span class="s1">.delta</span><span class="s3">,</span>
+      <span class="s1">rightChildren</span><span class="s3">,</span>
+    <span class="s1">)</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.end = value</span><span class="s3">;</span>
+    <span class="s0">return </span><span class="s1">result</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">/**</span>
+   <span class="s4">* Get the range coverages corresponding to the tree.</span>
+   <span class="s4">*</span>
+   <span class="s4">* The ranges are pre-order sorted.</span>
+   <span class="s4">*/</span>
+  <span class="s1">toRanges(): RangeCov[] {</span>
+    <span class="s0">const </span><span class="s1">ranges: RangeCov[] = []</span><span class="s3">;</span>
+    <span class="s6">// Stack of parent trees and counts.</span>
+    <span class="s0">const </span><span class="s1">stack: [RangeTree</span><span class="s3">, </span><span class="s1">number][] = [[</span><span class="s0">this</span><span class="s3">, </span><span class="s7">0</span><span class="s1">]]</span><span class="s3">;</span>
+    <span class="s0">while </span><span class="s1">(stack.length &gt; </span><span class="s7">0</span><span class="s1">) {</span>
+      <span class="s0">const </span><span class="s1">[cur</span><span class="s3">, </span><span class="s1">parentCount]: [RangeTree</span><span class="s3">, </span><span class="s1">number] = stack.pop()!</span><span class="s3">;</span>
+      <span class="s0">const </span><span class="s1">count: number = parentCount + cur.delta</span><span class="s3">;</span>
+      <span class="s1">ranges.push({startOffset: cur.start</span><span class="s3">, </span><span class="s1">endOffset: cur.end</span><span class="s3">, </span><span class="s1">count})</span><span class="s3">;</span>
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">let </span><span class="s1">i: number = cur.children.length - </span><span class="s7">1</span><span class="s3">; </span><span class="s1">i &gt;= </span><span class="s7">0</span><span class="s3">; </span><span class="s1">i--) {</span>
+        <span class="s1">stack.push([cur.children[i]</span><span class="s3">, </span><span class="s1">count])</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s0">return </span><span class="s1">ranges</span><span class="s3">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

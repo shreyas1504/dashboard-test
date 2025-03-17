@@ -1,0 +1,650 @@
+<html>
+<head>
+<title>entry.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8a8a8a; font-style: italic;}
+.s3 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s4 { color: #cc7832;}
+.s5 { color: #8ea765;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+entry.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">export interface </span><span class="s1">OpenDBCallbacks&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown&gt; {</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Called if this version of the database has never been opened before. Use it to specify the</span>
+     <span class="s2">* schema for the database.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">database A database instance that you can use to add/remove stores and indexes.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">oldVersion Last version of the database opened by the user.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">newVersion Whatever new version you provided.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">transaction The transaction for this upgrade.</span>
+     <span class="s2">* This is useful if you need to get data from other stores as part of a migration.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">event The event object for the associated 'upgradeneeded' event.</span>
+     <span class="s2">*/</span>
+    <span class="s1">upgrade?(database: IDBPDatabase&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">oldVersion: number</span><span class="s4">, </span><span class="s1">newVersion: number | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">transaction: IDBPTransaction&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreNames&lt;DBTypes&gt;[]</span><span class="s4">, </span><span class="s5">'versionchange'</span><span class="s1">&gt;</span><span class="s4">, </span><span class="s1">event: IDBVersionChangeEvent): </span><span class="s0">void</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Called if there are older versions of the database open on the origin, so this version cannot</span>
+     <span class="s2">* open.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">currentVersion Version of the database that's blocking this one.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">blockedVersion The version of the database being blocked (whatever version you provided to `openDB`).</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">event The event object for the associated `blocked` event.</span>
+     <span class="s2">*/</span>
+    <span class="s1">blocked?(currentVersion: number</span><span class="s4">, </span><span class="s1">blockedVersion: number | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">event: IDBVersionChangeEvent): </span><span class="s0">void</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Called if this connection is blocking a future version of the database from opening.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">currentVersion Version of the open database (whatever version you provided to `openDB`).</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">blockedVersion The version of the database that's being blocked.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">event The event object for the associated `versionchange` event.</span>
+     <span class="s2">*/</span>
+    <span class="s1">blocking?(currentVersion: number</span><span class="s4">, </span><span class="s1">blockedVersion: number | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">event: IDBVersionChangeEvent): </span><span class="s0">void</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Called if the browser abnormally terminates the connection.</span>
+     <span class="s2">* This is not called when `db.close()` is called.</span>
+     <span class="s2">*/</span>
+    <span class="s1">terminated?(): </span><span class="s0">void</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s2">/**</span>
+ <span class="s2">* Open a database.</span>
+ <span class="s2">*</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">name Name of the database.</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">version Schema version.</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">callbacks Additional callbacks.</span>
+ <span class="s2">*/</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">openDB&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown = unknown&gt;(name: string</span><span class="s4">, </span><span class="s1">version?: number</span><span class="s4">, </span><span class="s1">{ blocked</span><span class="s4">, </span><span class="s1">upgrade</span><span class="s4">, </span><span class="s1">blocking</span><span class="s4">, </span><span class="s1">terminated }?: OpenDBCallbacks&lt;DBTypes&gt;): Promise&lt;IDBPDatabase&lt;DBTypes&gt;&gt;</span><span class="s4">;</span>
+<span class="s0">export interface </span><span class="s1">DeleteDBCallbacks {</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Called if there are connections to this database open, so it cannot be deleted.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">currentVersion Version of the database that's blocking the delete operation.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">event The event object for the associated `blocked` event.</span>
+     <span class="s2">*/</span>
+    <span class="s1">blocked?(currentVersion: number</span><span class="s4">, </span><span class="s1">event: IDBVersionChangeEvent): </span><span class="s0">void</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s2">/**</span>
+ <span class="s2">* Delete a database.</span>
+ <span class="s2">*</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">name Name of the database.</span>
+ <span class="s2">*/</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">deleteDB(name: string</span><span class="s4">, </span><span class="s1">{ blocked }?: DeleteDBCallbacks): Promise&lt;</span><span class="s0">void</span><span class="s1">&gt;</span><span class="s4">;</span>
+<span class="s0">export </span><span class="s1">{ unwrap</span><span class="s4">, </span><span class="s1">wrap } from </span><span class="s5">'./wrap-idb-value.js'</span><span class="s4">;</span>
+<span class="s1">declare type KeyToKeyNoIndex&lt;T&gt; = {</span>
+    <span class="s1">[K </span><span class="s0">in </span><span class="s1">keyof T]: string </span><span class="s0">extends </span><span class="s1">K ? never : number </span><span class="s0">extends </span><span class="s1">K ? never : K</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+<span class="s1">declare type ValuesOf&lt;T&gt; = T </span><span class="s0">extends </span><span class="s1">{</span>
+    <span class="s1">[K </span><span class="s0">in </span><span class="s1">keyof T]: infer U</span><span class="s4">;</span>
+<span class="s1">} ? U : never</span><span class="s4">;</span>
+<span class="s1">declare type KnownKeys&lt;T&gt; = ValuesOf&lt;KeyToKeyNoIndex&lt;T&gt;&gt;</span><span class="s4">;</span>
+<span class="s1">declare type Omit&lt;T</span><span class="s4">, </span><span class="s1">K&gt; = Pick&lt;T</span><span class="s4">, </span><span class="s1">Exclude&lt;keyof T</span><span class="s4">, </span><span class="s1">K&gt;&gt;</span><span class="s4">;</span>
+<span class="s0">export interface </span><span class="s1">DBSchema {</span>
+    <span class="s1">[s: string]: DBSchemaValue</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s0">interface </span><span class="s1">IndexKeys {</span>
+    <span class="s1">[s: string]: IDBValidKey</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s0">interface </span><span class="s1">DBSchemaValue {</span>
+    <span class="s1">key: IDBValidKey</span><span class="s4">;</span>
+    <span class="s1">value: any</span><span class="s4">;</span>
+    <span class="s1">indexes?: IndexKeys</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s2">/**</span>
+ <span class="s2">* Extract known object store names from the DB schema type.</span>
+ <span class="s2">*</span>
+ <span class="s2">* </span><span class="s3">@template </span><span class="s2">DBTypes DB schema type, or unknown if the DB isn't typed.</span>
+ <span class="s2">*/</span>
+<span class="s0">export </span><span class="s1">declare type StoreNames&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown&gt; = DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema ? KnownKeys&lt;DBTypes&gt; : string</span><span class="s4">;</span>
+<span class="s2">/**</span>
+ <span class="s2">* Extract database value types from the DB schema type.</span>
+ <span class="s2">*</span>
+ <span class="s2">* </span><span class="s3">@template </span><span class="s2">DBTypes DB schema type, or unknown if the DB isn't typed.</span>
+ <span class="s2">* </span><span class="s3">@template </span><span class="s2">StoreName Names of the object stores to get the types of.</span>
+ <span class="s2">*/</span>
+<span class="s0">export </span><span class="s1">declare type StoreValue&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown</span><span class="s4">, </span><span class="s1">StoreName </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;&gt; = DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema ? DBTypes[StoreName][</span><span class="s5">'value'</span><span class="s1">] : any</span><span class="s4">;</span>
+<span class="s2">/**</span>
+ <span class="s2">* Extract database key types from the DB schema type.</span>
+ <span class="s2">*</span>
+ <span class="s2">* </span><span class="s3">@template </span><span class="s2">DBTypes DB schema type, or unknown if the DB isn't typed.</span>
+ <span class="s2">* </span><span class="s3">@template </span><span class="s2">StoreName Names of the object stores to get the types of.</span>
+ <span class="s2">*/</span>
+<span class="s0">export </span><span class="s1">declare type StoreKey&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown</span><span class="s4">, </span><span class="s1">StoreName </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;&gt; = DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema ? DBTypes[StoreName][</span><span class="s5">'key'</span><span class="s1">] : IDBValidKey</span><span class="s4">;</span>
+<span class="s2">/**</span>
+ <span class="s2">* Extract the names of indexes in certain object stores from the DB schema type.</span>
+ <span class="s2">*</span>
+ <span class="s2">* </span><span class="s3">@template </span><span class="s2">DBTypes DB schema type, or unknown if the DB isn't typed.</span>
+ <span class="s2">* </span><span class="s3">@template </span><span class="s2">StoreName Names of the object stores to get the types of.</span>
+ <span class="s2">*/</span>
+<span class="s0">export </span><span class="s1">declare type IndexNames&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown</span><span class="s4">, </span><span class="s1">StoreName </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;&gt; = DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema ? keyof DBTypes[StoreName][</span><span class="s5">'indexes'</span><span class="s1">] : string</span><span class="s4">;</span>
+<span class="s2">/**</span>
+ <span class="s2">* Extract the types of indexes in certain object stores from the DB schema type.</span>
+ <span class="s2">*</span>
+ <span class="s2">* </span><span class="s3">@template </span><span class="s2">DBTypes DB schema type, or unknown if the DB isn't typed.</span>
+ <span class="s2">* </span><span class="s3">@template </span><span class="s2">StoreName Names of the object stores to get the types of.</span>
+ <span class="s2">* </span><span class="s3">@template </span><span class="s2">IndexName Names of the indexes to get the types of.</span>
+ <span class="s2">*/</span>
+<span class="s0">export </span><span class="s1">declare type IndexKey&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown</span><span class="s4">, </span><span class="s1">StoreName </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;&gt; = DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema ? IndexName </span><span class="s0">extends </span><span class="s1">keyof DBTypes[StoreName][</span><span class="s5">'indexes'</span><span class="s1">] ? DBTypes[StoreName][</span><span class="s5">'indexes'</span><span class="s1">][IndexName] : IDBValidKey : IDBValidKey</span><span class="s4">;</span>
+<span class="s1">declare type CursorSource&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown</span><span class="s4">, </span><span class="s1">TxStores </span><span class="s0">extends </span><span class="s1">ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt;</span><span class="s4">, </span><span class="s1">StoreName </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | unknown</span><span class="s4">, </span><span class="s1">Mode </span><span class="s0">extends </span><span class="s1">IDBTransactionMode = </span><span class="s5">'readonly'</span><span class="s1">&gt; = IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; ? IDBPIndex&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt; : IDBPObjectStore&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">Mode&gt;</span><span class="s4">;</span>
+<span class="s1">declare type CursorKey&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown</span><span class="s4">, </span><span class="s1">StoreName </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | unknown&gt; = IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; ? IndexKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt; : StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;</span><span class="s4">;</span>
+<span class="s1">declare type IDBPDatabaseExtends = Omit&lt;IDBDatabase</span><span class="s4">, </span><span class="s5">'createObjectStore' </span><span class="s1">| </span><span class="s5">'deleteObjectStore' </span><span class="s1">| </span><span class="s5">'transaction' </span><span class="s1">| </span><span class="s5">'objectStoreNames'</span><span class="s1">&gt;</span><span class="s4">;</span>
+<span class="s2">/**</span>
+ <span class="s2">* A variation of DOMStringList with precise string types</span>
+ <span class="s2">*/</span>
+<span class="s0">export interface </span><span class="s1">TypedDOMStringList&lt;T </span><span class="s0">extends </span><span class="s1">string&gt; </span><span class="s0">extends </span><span class="s1">DOMStringList {</span>
+    <span class="s1">contains(string: T): boolean</span><span class="s4">;</span>
+    <span class="s1">item(index: number): T | </span><span class="s0">null</span><span class="s4">;</span>
+    <span class="s1">[index: number]: T</span><span class="s4">;</span>
+    <span class="s1">[Symbol.iterator](): IterableIterator&lt;T&gt;</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s0">interface </span><span class="s1">IDBTransactionOptions {</span>
+    <span class="s2">/**</span>
+     <span class="s2">* The durability of the transaction.</span>
+     <span class="s2">*</span>
+     <span class="s2">* The default is &quot;default&quot;. Using &quot;relaxed&quot; provides better performance, but with fewer</span>
+     <span class="s2">* guarantees. Web applications are encouraged to use &quot;relaxed&quot; for ephemeral data such as caches</span>
+     <span class="s2">* or quickly changing records, and &quot;strict&quot; in cases where reducing the risk of data loss</span>
+     <span class="s2">* outweighs the impact to performance and power.</span>
+     <span class="s2">*/</span>
+    <span class="s1">durability?: </span><span class="s5">'default' </span><span class="s1">| </span><span class="s5">'strict' </span><span class="s1">| </span><span class="s5">'relaxed'</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s0">export interface </span><span class="s1">IDBPDatabase&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown = unknown&gt; </span><span class="s0">extends </span><span class="s1">IDBPDatabaseExtends {</span>
+    <span class="s2">/**</span>
+     <span class="s2">* The names of stores in the database.</span>
+     <span class="s2">*/</span>
+    <span class="s1">readonly objectStoreNames: TypedDOMStringList&lt;StoreNames&lt;DBTypes&gt;&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Creates a new object store.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Throws a &quot;InvalidStateError&quot; DOMException if not called within an upgrade transaction.</span>
+     <span class="s2">*/</span>
+    <span class="s1">createObjectStore&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;&gt;(name: Name</span><span class="s4">, </span><span class="s1">optionalParameters?: IDBObjectStoreParameters): IDBPObjectStore&lt;DBTypes</span><span class="s4">, </span><span class="s1">ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt;</span><span class="s4">, </span><span class="s1">Name</span><span class="s4">, </span><span class="s5">'versionchange'</span><span class="s1">&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Deletes the object store with the given name.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Throws a &quot;InvalidStateError&quot; DOMException if not called within an upgrade transaction.</span>
+     <span class="s2">*/</span>
+    <span class="s1">deleteObjectStore(name: StoreNames&lt;DBTypes&gt;): </span><span class="s0">void</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Start a new transaction.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeNames The object store(s) this transaction needs.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">mode</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">options</span>
+     <span class="s2">*/</span>
+    <span class="s1">transaction&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">Mode </span><span class="s0">extends </span><span class="s1">IDBTransactionMode = </span><span class="s5">'readonly'</span><span class="s1">&gt;(storeNames: Name</span><span class="s4">, </span><span class="s1">mode?: Mode</span><span class="s4">, </span><span class="s1">options?: IDBTransactionOptions): IDBPTransaction&lt;DBTypes</span><span class="s4">, </span><span class="s1">[Name]</span><span class="s4">, </span><span class="s1">Mode&gt;</span><span class="s4">;</span>
+    <span class="s1">transaction&lt;Names </span><span class="s0">extends </span><span class="s1">ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt;</span><span class="s4">, </span><span class="s1">Mode </span><span class="s0">extends </span><span class="s1">IDBTransactionMode = </span><span class="s5">'readonly'</span><span class="s1">&gt;(storeNames: Names</span><span class="s4">, </span><span class="s1">mode?: Mode</span><span class="s4">, </span><span class="s1">options?: IDBTransactionOptions): IDBPTransaction&lt;DBTypes</span><span class="s4">, </span><span class="s1">Names</span><span class="s4">, </span><span class="s1">Mode&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Add a value to a store.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Rejects if an item of a given key already exists in the store.</span>
+     <span class="s2">*</span>
+     <span class="s2">* This is a shortcut that creates a transaction for this single action. If you need to do more</span>
+     <span class="s2">* than one action, create a transaction instead.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeName Name of the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">value</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">key</span>
+     <span class="s2">*/</span>
+    <span class="s1">add&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;&gt;(storeName: Name</span><span class="s4">, </span><span class="s1">value: StoreValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt;</span><span class="s4">, </span><span class="s1">key?: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt; | IDBKeyRange): Promise&lt;StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt;&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Deletes all records in a store.</span>
+     <span class="s2">*</span>
+     <span class="s2">* This is a shortcut that creates a transaction for this single action. If you need to do more</span>
+     <span class="s2">* than one action, create a transaction instead.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeName Name of the store.</span>
+     <span class="s2">*/</span>
+    <span class="s1">clear(name: StoreNames&lt;DBTypes&gt;): Promise&lt;</span><span class="s0">void</span><span class="s1">&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the number of records matching the given query in a store.</span>
+     <span class="s2">*</span>
+     <span class="s2">* This is a shortcut that creates a transaction for this single action. If you need to do more</span>
+     <span class="s2">* than one action, create a transaction instead.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeName Name of the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">key</span>
+     <span class="s2">*/</span>
+    <span class="s1">count&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;&gt;(storeName: Name</span><span class="s4">, </span><span class="s1">key?: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s1">): Promise&lt;number&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the number of records matching the given query in an index.</span>
+     <span class="s2">*</span>
+     <span class="s2">* This is a shortcut that creates a transaction for this single action. If you need to do more</span>
+     <span class="s2">* than one action, create a transaction instead.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeName Name of the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">indexName Name of the index within the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">key</span>
+     <span class="s2">*/</span>
+    <span class="s1">countFromIndex&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt;&gt;(storeName: Name</span><span class="s4">, </span><span class="s1">indexName: IndexName</span><span class="s4">, </span><span class="s1">key?: IndexKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name</span><span class="s4">, </span><span class="s1">IndexName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s1">): Promise&lt;number&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Deletes records in a store matching the given query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* This is a shortcut that creates a transaction for this single action. If you need to do more</span>
+     <span class="s2">* than one action, create a transaction instead.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeName Name of the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">key</span>
+     <span class="s2">*/</span>
+    <span class="s0">delete</span><span class="s1">&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;&gt;(storeName: Name</span><span class="s4">, </span><span class="s1">key: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt; | IDBKeyRange): Promise&lt;</span><span class="s0">void</span><span class="s1">&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the value of the first record in a store matching the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves with undefined if no match is found.</span>
+     <span class="s2">*</span>
+     <span class="s2">* This is a shortcut that creates a transaction for this single action. If you need to do more</span>
+     <span class="s2">* than one action, create a transaction instead.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeName Name of the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query</span>
+     <span class="s2">*/</span>
+    <span class="s1">get&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;&gt;(storeName: Name</span><span class="s4">, </span><span class="s1">query: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt; | IDBKeyRange): Promise&lt;StoreValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt; | undefined&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the value of the first record in an index matching the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves with undefined if no match is found.</span>
+     <span class="s2">*</span>
+     <span class="s2">* This is a shortcut that creates a transaction for this single action. If you need to do more</span>
+     <span class="s2">* than one action, create a transaction instead.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeName Name of the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">indexName Name of the index within the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query</span>
+     <span class="s2">*/</span>
+    <span class="s1">getFromIndex&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt;&gt;(storeName: Name</span><span class="s4">, </span><span class="s1">indexName: IndexName</span><span class="s4">, </span><span class="s1">query: IndexKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name</span><span class="s4">, </span><span class="s1">IndexName&gt; | IDBKeyRange): Promise&lt;StoreValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt; | undefined&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves all values in a store that match the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* This is a shortcut that creates a transaction for this single action. If you need to do more</span>
+     <span class="s2">* than one action, create a transaction instead.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeName Name of the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">count Maximum number of values to return.</span>
+     <span class="s2">*/</span>
+    <span class="s1">getAll&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;&gt;(storeName: Name</span><span class="s4">, </span><span class="s1">query?: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">count?: number): Promise&lt;StoreValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt;[]&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves all values in an index that match the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* This is a shortcut that creates a transaction for this single action. If you need to do more</span>
+     <span class="s2">* than one action, create a transaction instead.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeName Name of the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">indexName Name of the index within the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">count Maximum number of values to return.</span>
+     <span class="s2">*/</span>
+    <span class="s1">getAllFromIndex&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt;&gt;(storeName: Name</span><span class="s4">, </span><span class="s1">indexName: IndexName</span><span class="s4">, </span><span class="s1">query?: IndexKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name</span><span class="s4">, </span><span class="s1">IndexName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">count?: number): Promise&lt;StoreValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt;[]&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the keys of records in a store matching the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* This is a shortcut that creates a transaction for this single action. If you need to do more</span>
+     <span class="s2">* than one action, create a transaction instead.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeName Name of the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">count Maximum number of keys to return.</span>
+     <span class="s2">*/</span>
+    <span class="s1">getAllKeys&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;&gt;(storeName: Name</span><span class="s4">, </span><span class="s1">query?: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">count?: number): Promise&lt;StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt;[]&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the keys of records in an index matching the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* This is a shortcut that creates a transaction for this single action. If you need to do more</span>
+     <span class="s2">* than one action, create a transaction instead.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeName Name of the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">indexName Name of the index within the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">count Maximum number of keys to return.</span>
+     <span class="s2">*/</span>
+    <span class="s1">getAllKeysFromIndex&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt;&gt;(storeName: Name</span><span class="s4">, </span><span class="s1">indexName: IndexName</span><span class="s4">, </span><span class="s1">query?: IndexKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name</span><span class="s4">, </span><span class="s1">IndexName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">count?: number): Promise&lt;StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt;[]&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the key of the first record in a store that matches the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves with undefined if no match is found.</span>
+     <span class="s2">*</span>
+     <span class="s2">* This is a shortcut that creates a transaction for this single action. If you need to do more</span>
+     <span class="s2">* than one action, create a transaction instead.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeName Name of the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query</span>
+     <span class="s2">*/</span>
+    <span class="s1">getKey&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;&gt;(storeName: Name</span><span class="s4">, </span><span class="s1">query: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt; | IDBKeyRange): Promise&lt;StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt; | undefined&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the key of the first record in an index that matches the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves with undefined if no match is found.</span>
+     <span class="s2">*</span>
+     <span class="s2">* This is a shortcut that creates a transaction for this single action. If you need to do more</span>
+     <span class="s2">* than one action, create a transaction instead.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeName Name of the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">indexName Name of the index within the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query</span>
+     <span class="s2">*/</span>
+    <span class="s1">getKeyFromIndex&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt;&gt;(storeName: Name</span><span class="s4">, </span><span class="s1">indexName: IndexName</span><span class="s4">, </span><span class="s1">query: IndexKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name</span><span class="s4">, </span><span class="s1">IndexName&gt; | IDBKeyRange): Promise&lt;StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt; | undefined&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Put an item in the database.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Replaces any item with the same key.</span>
+     <span class="s2">*</span>
+     <span class="s2">* This is a shortcut that creates a transaction for this single action. If you need to do more</span>
+     <span class="s2">* than one action, create a transaction instead.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">storeName Name of the store.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">value</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">key</span>
+     <span class="s2">*/</span>
+    <span class="s1">put&lt;Name </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt;&gt;(storeName: Name</span><span class="s4">, </span><span class="s1">value: StoreValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt;</span><span class="s4">, </span><span class="s1">key?: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt; | IDBKeyRange): Promise&lt;StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">Name&gt;&gt;</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s1">declare type IDBPTransactionExtends = Omit&lt;IDBTransaction</span><span class="s4">, </span><span class="s5">'db' </span><span class="s1">| </span><span class="s5">'objectStore' </span><span class="s1">| </span><span class="s5">'objectStoreNames'</span><span class="s1">&gt;</span><span class="s4">;</span>
+<span class="s0">export interface </span><span class="s1">IDBPTransaction&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown = unknown</span><span class="s4">, </span><span class="s1">TxStores </span><span class="s0">extends </span><span class="s1">ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt; = ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt;</span><span class="s4">, </span><span class="s1">Mode </span><span class="s0">extends </span><span class="s1">IDBTransactionMode = </span><span class="s5">'readonly'</span><span class="s1">&gt; </span><span class="s0">extends </span><span class="s1">IDBPTransactionExtends {</span>
+    <span class="s2">/**</span>
+     <span class="s2">* The transaction's mode.</span>
+     <span class="s2">*/</span>
+    <span class="s1">readonly mode: Mode</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* The names of stores in scope for this transaction.</span>
+     <span class="s2">*/</span>
+    <span class="s1">readonly objectStoreNames: TypedDOMStringList&lt;TxStores[number]&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* The transaction's connection.</span>
+     <span class="s2">*/</span>
+    <span class="s1">readonly db: IDBPDatabase&lt;DBTypes&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Promise for the completion of this transaction.</span>
+     <span class="s2">*/</span>
+    <span class="s1">readonly done: Promise&lt;</span><span class="s0">void</span><span class="s1">&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* The associated object store, if the transaction covers a single store, otherwise undefined.</span>
+     <span class="s2">*/</span>
+    <span class="s1">readonly store: TxStores[</span><span class="s6">1</span><span class="s1">] </span><span class="s0">extends </span><span class="s1">undefined ? IDBPObjectStore&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">TxStores[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">, </span><span class="s1">Mode&gt; : undefined</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Returns an IDBObjectStore in the transaction's scope.</span>
+     <span class="s2">*/</span>
+    <span class="s1">objectStore&lt;StoreName </span><span class="s0">extends </span><span class="s1">TxStores[number]&gt;(name: StoreName): IDBPObjectStore&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">Mode&gt;</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s1">declare type IDBPObjectStoreExtends = Omit&lt;IDBObjectStore</span><span class="s4">, </span><span class="s5">'transaction' </span><span class="s1">| </span><span class="s5">'add' </span><span class="s1">| </span><span class="s5">'clear' </span><span class="s1">| </span><span class="s5">'count' </span><span class="s1">| </span><span class="s5">'createIndex' </span><span class="s1">| </span><span class="s5">'delete' </span><span class="s1">| </span><span class="s5">'get' </span><span class="s1">| </span><span class="s5">'getAll' </span><span class="s1">| </span><span class="s5">'getAllKeys' </span><span class="s1">| </span><span class="s5">'getKey' </span><span class="s1">| </span><span class="s5">'index' </span><span class="s1">| </span><span class="s5">'openCursor' </span><span class="s1">| </span><span class="s5">'openKeyCursor' </span><span class="s1">| </span><span class="s5">'put' </span><span class="s1">| </span><span class="s5">'indexNames'</span><span class="s1">&gt;</span><span class="s4">;</span>
+<span class="s0">export interface </span><span class="s1">IDBPObjectStore&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown = unknown</span><span class="s4">, </span><span class="s1">TxStores </span><span class="s0">extends </span><span class="s1">ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt; = ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt;</span><span class="s4">, </span><span class="s1">StoreName </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt; = StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">Mode </span><span class="s0">extends </span><span class="s1">IDBTransactionMode = </span><span class="s5">'readonly'</span><span class="s1">&gt; </span><span class="s0">extends </span><span class="s1">IDBPObjectStoreExtends {</span>
+    <span class="s2">/**</span>
+     <span class="s2">* The names of indexes in the store.</span>
+     <span class="s2">*/</span>
+    <span class="s1">readonly indexNames: TypedDOMStringList&lt;IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* The associated transaction.</span>
+     <span class="s2">*/</span>
+    <span class="s1">readonly transaction: IDBPTransaction&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">Mode&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Add a value to the store.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Rejects if an item of a given key already exists in the store.</span>
+     <span class="s2">*/</span>
+    <span class="s1">add: Mode </span><span class="s0">extends </span><span class="s5">'readonly' </span><span class="s1">? undefined : (value: StoreValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;</span><span class="s4">, </span><span class="s1">key?: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | IDBKeyRange) =&gt; Promise&lt;StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Deletes all records in store.</span>
+     <span class="s2">*/</span>
+    <span class="s1">clear: Mode </span><span class="s0">extends </span><span class="s5">'readonly' </span><span class="s1">? undefined : () =&gt; Promise&lt;</span><span class="s0">void</span><span class="s1">&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the number of records matching the given query.</span>
+     <span class="s2">*/</span>
+    <span class="s1">count(key?: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s1">): Promise&lt;number&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Creates a new index in store.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Throws an &quot;InvalidStateError&quot; DOMException if not called within an upgrade transaction.</span>
+     <span class="s2">*/</span>
+    <span class="s1">createIndex: Mode </span><span class="s0">extends </span><span class="s5">'versionchange' </span><span class="s1">? &lt;IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;&gt;(name: IndexName</span><span class="s4">, </span><span class="s1">keyPath: string | string[]</span><span class="s4">, </span><span class="s1">options?: IDBIndexParameters) =&gt; IDBPIndex&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt; : undefined</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Deletes records in store matching the given query.</span>
+     <span class="s2">*/</span>
+    <span class="s0">delete</span><span class="s1">: Mode </span><span class="s0">extends </span><span class="s5">'readonly' </span><span class="s1">? undefined : (key: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | IDBKeyRange) =&gt; Promise&lt;</span><span class="s0">void</span><span class="s1">&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the value of the first record matching the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves with undefined if no match is found.</span>
+     <span class="s2">*/</span>
+    <span class="s1">get(query: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | IDBKeyRange): Promise&lt;StoreValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | undefined&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves all values that match the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">count Maximum number of values to return.</span>
+     <span class="s2">*/</span>
+    <span class="s1">getAll(query?: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">count?: number): Promise&lt;StoreValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;[]&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the keys of records matching the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">count Maximum number of keys to return.</span>
+     <span class="s2">*/</span>
+    <span class="s1">getAllKeys(query?: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">count?: number): Promise&lt;StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;[]&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the key of the first record that matches the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves with undefined if no match is found.</span>
+     <span class="s2">*/</span>
+    <span class="s1">getKey(query: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | IDBKeyRange): Promise&lt;StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | undefined&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Get a query of a given name.</span>
+     <span class="s2">*/</span>
+    <span class="s1">index&lt;IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;&gt;(name: IndexName): IDBPIndex&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Opens a cursor over the records matching the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves with null if no matches are found.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query If null, all records match.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">direction</span>
+     <span class="s2">*/</span>
+    <span class="s1">openCursor(query?: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">direction?: IDBCursorDirection): Promise&lt;IDBPCursorWithValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">unknown</span><span class="s4">, </span><span class="s1">Mode&gt; | </span><span class="s0">null</span><span class="s1">&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Opens a cursor over the keys matching the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves with null if no matches are found.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query If null, all records match.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">direction</span>
+     <span class="s2">*/</span>
+    <span class="s1">openKeyCursor(query?: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">direction?: IDBCursorDirection): Promise&lt;IDBPCursor&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">unknown</span><span class="s4">, </span><span class="s1">Mode&gt; | </span><span class="s0">null</span><span class="s1">&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Put an item in the store.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Replaces any item with the same key.</span>
+     <span class="s2">*/</span>
+    <span class="s1">put: Mode </span><span class="s0">extends </span><span class="s5">'readonly' </span><span class="s1">? undefined : (value: StoreValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;</span><span class="s4">, </span><span class="s1">key?: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | IDBKeyRange) =&gt; Promise&lt;StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Iterate over the store.</span>
+     <span class="s2">*/</span>
+    <span class="s1">[Symbol.asyncIterator](): AsyncIterableIterator&lt;IDBPCursorWithValueIteratorValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">unknown</span><span class="s4">, </span><span class="s1">Mode&gt;&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Iterate over the records matching the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query If null, all records match.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">direction</span>
+     <span class="s2">*/</span>
+    <span class="s1">iterate(query?: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">direction?: IDBCursorDirection): AsyncIterableIterator&lt;IDBPCursorWithValueIteratorValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">unknown</span><span class="s4">, </span><span class="s1">Mode&gt;&gt;</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s1">declare type IDBPIndexExtends = Omit&lt;IDBIndex</span><span class="s4">, </span><span class="s5">'objectStore' </span><span class="s1">| </span><span class="s5">'count' </span><span class="s1">| </span><span class="s5">'get' </span><span class="s1">| </span><span class="s5">'getAll' </span><span class="s1">| </span><span class="s5">'getAllKeys' </span><span class="s1">| </span><span class="s5">'getKey' </span><span class="s1">| </span><span class="s5">'openCursor' </span><span class="s1">| </span><span class="s5">'openKeyCursor'</span><span class="s1">&gt;</span><span class="s4">;</span>
+<span class="s0">export interface </span><span class="s1">IDBPIndex&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown = unknown</span><span class="s4">, </span><span class="s1">TxStores </span><span class="s0">extends </span><span class="s1">ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt; = ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt;</span><span class="s4">, </span><span class="s1">StoreName </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt; = StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; = IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;</span><span class="s4">, </span><span class="s1">Mode </span><span class="s0">extends </span><span class="s1">IDBTransactionMode = </span><span class="s5">'readonly'</span><span class="s1">&gt; </span><span class="s0">extends </span><span class="s1">IDBPIndexExtends {</span>
+    <span class="s2">/**</span>
+     <span class="s2">* The IDBObjectStore the index belongs to.</span>
+     <span class="s2">*/</span>
+    <span class="s1">readonly objectStore: IDBPObjectStore&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">Mode&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the number of records matching the given query.</span>
+     <span class="s2">*/</span>
+    <span class="s1">count(key?: IndexKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s1">): Promise&lt;number&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the value of the first record matching the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves with undefined if no match is found.</span>
+     <span class="s2">*/</span>
+    <span class="s1">get(query: IndexKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt; | IDBKeyRange): Promise&lt;StoreValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | undefined&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves all values that match the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">count Maximum number of values to return.</span>
+     <span class="s2">*/</span>
+    <span class="s1">getAll(query?: IndexKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">count?: number): Promise&lt;StoreValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;[]&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the keys of records matching the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">count Maximum number of keys to return.</span>
+     <span class="s2">*/</span>
+    <span class="s1">getAllKeys(query?: IndexKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">count?: number): Promise&lt;StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;[]&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Retrieves the key of the first record that matches the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves with undefined if no match is found.</span>
+     <span class="s2">*/</span>
+    <span class="s1">getKey(query: IndexKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt; | IDBKeyRange): Promise&lt;StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | undefined&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Opens a cursor over the records matching the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves with null if no matches are found.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query If null, all records match.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">direction</span>
+     <span class="s2">*/</span>
+    <span class="s1">openCursor(query?: IndexKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">direction?: IDBCursorDirection): Promise&lt;IDBPCursorWithValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt; | </span><span class="s0">null</span><span class="s1">&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Opens a cursor over the keys matching the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves with null if no matches are found.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query If null, all records match.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">direction</span>
+     <span class="s2">*/</span>
+    <span class="s1">openKeyCursor(query?: IndexKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">direction?: IDBCursorDirection): Promise&lt;IDBPCursor&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt; | </span><span class="s0">null</span><span class="s1">&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Iterate over the index.</span>
+     <span class="s2">*/</span>
+    <span class="s1">[Symbol.asyncIterator](): AsyncIterableIterator&lt;IDBPCursorWithValueIteratorValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt;&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Iterate over the records matching the query.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves with null if no matches are found.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">query If null, all records match.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">direction</span>
+     <span class="s2">*/</span>
+    <span class="s1">iterate(query?: IndexKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt; | IDBKeyRange | </span><span class="s0">null</span><span class="s4">, </span><span class="s1">direction?: IDBCursorDirection): AsyncIterableIterator&lt;IDBPCursorWithValueIteratorValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt;&gt;</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s1">declare type IDBPCursorExtends = Omit&lt;IDBCursor</span><span class="s4">, </span><span class="s5">'key' </span><span class="s1">| </span><span class="s5">'primaryKey' </span><span class="s1">| </span><span class="s5">'source' </span><span class="s1">| </span><span class="s5">'advance' </span><span class="s1">| </span><span class="s5">'continue' </span><span class="s1">| </span><span class="s5">'continuePrimaryKey' </span><span class="s1">| </span><span class="s5">'delete' </span><span class="s1">| </span><span class="s5">'update'</span><span class="s1">&gt;</span><span class="s4">;</span>
+<span class="s0">export interface </span><span class="s1">IDBPCursor&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown = unknown</span><span class="s4">, </span><span class="s1">TxStores </span><span class="s0">extends </span><span class="s1">ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt; = ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt;</span><span class="s4">, </span><span class="s1">StoreName </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt; = StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | unknown = unknown</span><span class="s4">, </span><span class="s1">Mode </span><span class="s0">extends </span><span class="s1">IDBTransactionMode = </span><span class="s5">'readonly'</span><span class="s1">&gt; </span><span class="s0">extends </span><span class="s1">IDBPCursorExtends {</span>
+    <span class="s2">/**</span>
+     <span class="s2">* The key of the current index or object store item.</span>
+     <span class="s2">*/</span>
+    <span class="s1">readonly key: CursorKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* The key of the current object store item.</span>
+     <span class="s2">*/</span>
+    <span class="s1">readonly primaryKey: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Returns the IDBObjectStore or IDBIndex the cursor was opened from.</span>
+     <span class="s2">*/</span>
+    <span class="s1">readonly source: CursorSource&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Advances the cursor a given number of records.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves to null if no matching records remain.</span>
+     <span class="s2">*/</span>
+    <span class="s1">advance&lt;T&gt;(</span><span class="s0">this</span><span class="s1">: T</span><span class="s4">, </span><span class="s1">count: number): Promise&lt;T | </span><span class="s0">null</span><span class="s1">&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Advance the cursor by one record (unless 'key' is provided).</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves to null if no matching records remain.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">key Advance to the index or object store with a key equal to or greater than this value.</span>
+     <span class="s2">*/</span>
+    <span class="s0">continue</span><span class="s1">&lt;T&gt;(</span><span class="s0">this</span><span class="s1">: T</span><span class="s4">, </span><span class="s1">key?: CursorKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt;): Promise&lt;T | </span><span class="s0">null</span><span class="s1">&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Advance the cursor by given keys.</span>
+     <span class="s2">*</span>
+     <span class="s2">* The operation is 'and' – both keys must be satisfied.</span>
+     <span class="s2">*</span>
+     <span class="s2">* Resolves to null if no matching records remain.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">key Advance to the index or object store with a key equal to or greater than this value.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">primaryKey and where the object store has a key equal to or greater than this value.</span>
+     <span class="s2">*/</span>
+    <span class="s1">continuePrimaryKey&lt;T&gt;(</span><span class="s0">this</span><span class="s1">: T</span><span class="s4">, </span><span class="s1">key: CursorKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt;</span><span class="s4">, </span><span class="s1">primaryKey: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;): Promise&lt;T | </span><span class="s0">null</span><span class="s1">&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Delete the current record.</span>
+     <span class="s2">*/</span>
+    <span class="s0">delete</span><span class="s1">: Mode </span><span class="s0">extends </span><span class="s5">'readonly' </span><span class="s1">? undefined : () =&gt; Promise&lt;</span><span class="s0">void</span><span class="s1">&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Updated the current record.</span>
+     <span class="s2">*/</span>
+    <span class="s1">update: Mode </span><span class="s0">extends </span><span class="s5">'readonly' </span><span class="s1">? undefined : (value: StoreValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;) =&gt; Promise&lt;StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Iterate over the cursor.</span>
+     <span class="s2">*/</span>
+    <span class="s1">[Symbol.asyncIterator](): AsyncIterableIterator&lt;IDBPCursorIteratorValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt;&gt;</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s1">declare type IDBPCursorIteratorValueExtends&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown = unknown</span><span class="s4">, </span><span class="s1">TxStores </span><span class="s0">extends </span><span class="s1">ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt; = ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt;</span><span class="s4">, </span><span class="s1">StoreName </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt; = StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | unknown = unknown</span><span class="s4">, </span><span class="s1">Mode </span><span class="s0">extends </span><span class="s1">IDBTransactionMode = </span><span class="s5">'readonly'</span><span class="s1">&gt; = Omit&lt;IDBPCursor&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt;</span><span class="s4">, </span><span class="s5">'advance' </span><span class="s1">| </span><span class="s5">'continue' </span><span class="s1">| </span><span class="s5">'continuePrimaryKey'</span><span class="s1">&gt;</span><span class="s4">;</span>
+<span class="s0">export interface </span><span class="s1">IDBPCursorIteratorValue&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown = unknown</span><span class="s4">, </span><span class="s1">TxStores </span><span class="s0">extends </span><span class="s1">ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt; = ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt;</span><span class="s4">, </span><span class="s1">StoreName </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt; = StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | unknown = unknown</span><span class="s4">, </span><span class="s1">Mode </span><span class="s0">extends </span><span class="s1">IDBTransactionMode = </span><span class="s5">'readonly'</span><span class="s1">&gt; </span><span class="s0">extends </span><span class="s1">IDBPCursorIteratorValueExtends&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt; {</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Advances the cursor a given number of records.</span>
+     <span class="s2">*/</span>
+    <span class="s1">advance&lt;T&gt;(</span><span class="s0">this</span><span class="s1">: T</span><span class="s4">, </span><span class="s1">count: number): </span><span class="s0">void</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Advance the cursor by one record (unless 'key' is provided).</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">key Advance to the index or object store with a key equal to or greater than this value.</span>
+     <span class="s2">*/</span>
+    <span class="s0">continue</span><span class="s1">&lt;T&gt;(</span><span class="s0">this</span><span class="s1">: T</span><span class="s4">, </span><span class="s1">key?: CursorKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt;): </span><span class="s0">void</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Advance the cursor by given keys.</span>
+     <span class="s2">*</span>
+     <span class="s2">* The operation is 'and' – both keys must be satisfied.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">key Advance to the index or object store with a key equal to or greater than this value.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">primaryKey and where the object store has a key equal to or greater than this value.</span>
+     <span class="s2">*/</span>
+    <span class="s1">continuePrimaryKey&lt;T&gt;(</span><span class="s0">this</span><span class="s1">: T</span><span class="s4">, </span><span class="s1">key: CursorKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt;</span><span class="s4">, </span><span class="s1">primaryKey: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;): </span><span class="s0">void</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s0">export interface </span><span class="s1">IDBPCursorWithValue&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown = unknown</span><span class="s4">, </span><span class="s1">TxStores </span><span class="s0">extends </span><span class="s1">ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt; = ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt;</span><span class="s4">, </span><span class="s1">StoreName </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt; = StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | unknown = unknown</span><span class="s4">, </span><span class="s1">Mode </span><span class="s0">extends </span><span class="s1">IDBTransactionMode = </span><span class="s5">'readonly'</span><span class="s1">&gt; </span><span class="s0">extends </span><span class="s1">IDBPCursor&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt; {</span>
+    <span class="s2">/**</span>
+     <span class="s2">* The value of the current item.</span>
+     <span class="s2">*/</span>
+    <span class="s1">readonly value: StoreValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Iterate over the cursor.</span>
+     <span class="s2">*/</span>
+    <span class="s1">[Symbol.asyncIterator](): AsyncIterableIterator&lt;IDBPCursorWithValueIteratorValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt;&gt;</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s1">declare type IDBPCursorWithValueIteratorValueExtends&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown = unknown</span><span class="s4">, </span><span class="s1">TxStores </span><span class="s0">extends </span><span class="s1">ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt; = ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt;</span><span class="s4">, </span><span class="s1">StoreName </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt; = StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | unknown = unknown</span><span class="s4">, </span><span class="s1">Mode </span><span class="s0">extends </span><span class="s1">IDBTransactionMode = </span><span class="s5">'readonly'</span><span class="s1">&gt; = Omit&lt;IDBPCursorWithValue&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt;</span><span class="s4">, </span><span class="s5">'advance' </span><span class="s1">| </span><span class="s5">'continue' </span><span class="s1">| </span><span class="s5">'continuePrimaryKey'</span><span class="s1">&gt;</span><span class="s4">;</span>
+<span class="s0">export interface </span><span class="s1">IDBPCursorWithValueIteratorValue&lt;DBTypes </span><span class="s0">extends </span><span class="s1">DBSchema | unknown = unknown</span><span class="s4">, </span><span class="s1">TxStores </span><span class="s0">extends </span><span class="s1">ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt; = ArrayLike&lt;StoreNames&lt;DBTypes&gt;&gt;</span><span class="s4">, </span><span class="s1">StoreName </span><span class="s0">extends </span><span class="s1">StoreNames&lt;DBTypes&gt; = StoreNames&lt;DBTypes&gt;</span><span class="s4">, </span><span class="s1">IndexName </span><span class="s0">extends </span><span class="s1">IndexNames&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt; | unknown = unknown</span><span class="s4">, </span><span class="s1">Mode </span><span class="s0">extends </span><span class="s1">IDBTransactionMode = </span><span class="s5">'readonly'</span><span class="s1">&gt; </span><span class="s0">extends </span><span class="s1">IDBPCursorWithValueIteratorValueExtends&lt;DBTypes</span><span class="s4">, </span><span class="s1">TxStores</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName</span><span class="s4">, </span><span class="s1">Mode&gt; {</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Advances the cursor a given number of records.</span>
+     <span class="s2">*/</span>
+    <span class="s1">advance&lt;T&gt;(</span><span class="s0">this</span><span class="s1">: T</span><span class="s4">, </span><span class="s1">count: number): </span><span class="s0">void</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Advance the cursor by one record (unless 'key' is provided).</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">key Advance to the index or object store with a key equal to or greater than this value.</span>
+     <span class="s2">*/</span>
+    <span class="s0">continue</span><span class="s1">&lt;T&gt;(</span><span class="s0">this</span><span class="s1">: T</span><span class="s4">, </span><span class="s1">key?: CursorKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt;): </span><span class="s0">void</span><span class="s4">;</span>
+    <span class="s2">/**</span>
+     <span class="s2">* Advance the cursor by given keys.</span>
+     <span class="s2">*</span>
+     <span class="s2">* The operation is 'and' – both keys must be satisfied.</span>
+     <span class="s2">*</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">key Advance to the index or object store with a key equal to or greater than this value.</span>
+     <span class="s2">* </span><span class="s3">@param </span><span class="s2">primaryKey and where the object store has a key equal to or greater than this value.</span>
+     <span class="s2">*/</span>
+    <span class="s1">continuePrimaryKey&lt;T&gt;(</span><span class="s0">this</span><span class="s1">: T</span><span class="s4">, </span><span class="s1">key: CursorKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName</span><span class="s4">, </span><span class="s1">IndexName&gt;</span><span class="s4">, </span><span class="s1">primaryKey: StoreKey&lt;DBTypes</span><span class="s4">, </span><span class="s1">StoreName&gt;): </span><span class="s0">void</span><span class="s4">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

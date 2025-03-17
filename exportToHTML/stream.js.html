@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>stream.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+stream.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span>
+
+<span class="s2">const </span><span class="s1">util = require(</span><span class="s0">'util'</span><span class="s1">)</span>
+<span class="s2">const </span><span class="s1">Readable = require(</span><span class="s0">'stream'</span><span class="s1">).Readable</span>
+<span class="s2">const </span><span class="s1">check = require(</span><span class="s0">'check-types'</span><span class="s1">)</span>
+
+<span class="s1">util.inherits(BfjStream</span><span class="s3">, </span><span class="s1">Readable)</span>
+
+<span class="s1">module.exports = BfjStream</span>
+
+<span class="s2">function </span><span class="s1">BfjStream (read</span><span class="s3">, </span><span class="s1">options) {</span>
+  <span class="s2">if </span><span class="s1">(check.not.instanceStrict(</span><span class="s2">this</span><span class="s3">, </span><span class="s1">BfjStream)) {</span>
+    <span class="s2">return new </span><span class="s1">BfjStream(read)</span>
+  <span class="s1">}</span>
+
+  <span class="s1">check.assert.function(read</span><span class="s3">, </span><span class="s0">'Invalid read implementation'</span><span class="s1">)</span>
+
+  <span class="s2">this</span><span class="s1">._read = </span><span class="s2">function </span><span class="s1">() { </span><span class="s4">// eslint-disable-line no-underscore-dangle</span>
+    <span class="s1">read()</span>
+  <span class="s1">}</span>
+
+  <span class="s2">return </span><span class="s1">Readable.call(</span><span class="s2">this</span><span class="s3">, </span><span class="s1">options)</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

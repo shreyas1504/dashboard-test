@@ -1,0 +1,128 @@
+<html>
+<head>
+<title>1-mergeAtrule.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+1-mergeAtrule.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">List = require(</span><span class="s2">'css-tree'</span><span class="s1">).List</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">resolveKeyword = require(</span><span class="s2">'css-tree'</span><span class="s1">).keyword</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">hasOwnProperty = Object.prototype.hasOwnProperty</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">walk = require(</span><span class="s2">'css-tree'</span><span class="s1">).walk</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">addRuleToMap(map</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">list</span><span class="s3">, </span><span class="s1">single) {</span>
+    <span class="s0">var </span><span class="s1">node = item.data</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">name = resolveKeyword(node.name).basename</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">id = node.name.toLowerCase() + </span><span class="s2">'/' </span><span class="s1">+ (node.prelude ? node.prelude.id : </span><span class="s0">null</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(!hasOwnProperty.call(map</span><span class="s3">, </span><span class="s1">name)) {</span>
+        <span class="s1">map[name] = Object.create(</span><span class="s0">null</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(single) {</span>
+        <span class="s0">delete </span><span class="s1">map[name][id]</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(!hasOwnProperty.call(map[name]</span><span class="s3">, </span><span class="s1">id)) {</span>
+        <span class="s1">map[name][id] = </span><span class="s0">new </span><span class="s1">List()</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">map[name][id].append(list.remove(item))</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">relocateAtrules(ast</span><span class="s3">, </span><span class="s1">options) {</span>
+    <span class="s0">var </span><span class="s1">collected = Object.create(</span><span class="s0">null</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">topInjectPoint = </span><span class="s0">null</span><span class="s3">;</span>
+
+    <span class="s1">ast.children.each(</span><span class="s0">function</span><span class="s1">(node</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">list) {</span>
+        <span class="s0">if </span><span class="s1">(node.type === </span><span class="s2">'Atrule'</span><span class="s1">) {</span>
+            <span class="s0">var </span><span class="s1">name = resolveKeyword(node.name).basename</span><span class="s3">;</span>
+
+            <span class="s0">switch </span><span class="s1">(name) {</span>
+                <span class="s0">case </span><span class="s2">'keyframes'</span><span class="s1">:</span>
+                    <span class="s1">addRuleToMap(collected</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">list</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">;</span>
+                    <span class="s0">return</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s2">'media'</span><span class="s1">:</span>
+                    <span class="s0">if </span><span class="s1">(options.forceMediaMerge) {</span>
+                        <span class="s1">addRuleToMap(collected</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">list</span><span class="s3">, </span><span class="s0">false</span><span class="s1">)</span><span class="s3">;</span>
+                        <span class="s0">return</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">if </span><span class="s1">(topInjectPoint === </span><span class="s0">null </span><span class="s1">&amp;&amp;</span>
+                <span class="s1">name !== </span><span class="s2">'charset' </span><span class="s1">&amp;&amp;</span>
+                <span class="s1">name !== </span><span class="s2">'import'</span><span class="s1">) {</span>
+                <span class="s1">topInjectPoint = item</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s0">if </span><span class="s1">(topInjectPoint === </span><span class="s0">null</span><span class="s1">) {</span>
+                <span class="s1">topInjectPoint = item</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">atrule </span><span class="s0">in </span><span class="s1">collected) {</span>
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">id </span><span class="s0">in </span><span class="s1">collected[atrule]) {</span>
+            <span class="s1">ast.children.insertList(</span>
+                <span class="s1">collected[atrule][id]</span><span class="s3">,</span>
+                <span class="s1">atrule === </span><span class="s2">'media' </span><span class="s1">? </span><span class="s0">null </span><span class="s1">: topInjectPoint</span>
+            <span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">isMediaRule(node) {</span>
+    <span class="s0">return </span><span class="s1">node.type === </span><span class="s2">'Atrule' </span><span class="s1">&amp;&amp; node.name === </span><span class="s2">'media'</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">processAtrule(node</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">list) {</span>
+    <span class="s0">if </span><span class="s1">(!isMediaRule(node)) {</span>
+        <span class="s0">return</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">prev = item.prev &amp;&amp; item.prev.data</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(!prev || !isMediaRule(prev)) {</span>
+        <span class="s0">return</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">// merge @media with same query</span>
+    <span class="s0">if </span><span class="s1">(node.prelude &amp;&amp;</span>
+        <span class="s1">prev.prelude &amp;&amp;</span>
+        <span class="s1">node.prelude.id === prev.prelude.id) {</span>
+        <span class="s1">prev.block.children.appendList(node.block.children)</span><span class="s3">;</span>
+        <span class="s1">list.remove(item)</span><span class="s3">;</span>
+
+        <span class="s4">// TODO: use it when we can refer to several points in source</span>
+        <span class="s4">// prev.loc = {</span>
+        <span class="s4">//     primary: prev.loc,</span>
+        <span class="s4">//     merged: node.loc</span>
+        <span class="s4">// };</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">rejoinAtrule(ast</span><span class="s3">, </span><span class="s1">options) {</span>
+    <span class="s1">relocateAtrules(ast</span><span class="s3">, </span><span class="s1">options)</span><span class="s3">;</span>
+
+    <span class="s1">walk(ast</span><span class="s3">, </span><span class="s1">{</span>
+        <span class="s1">visit: </span><span class="s2">'Atrule'</span><span class="s3">,</span>
+        <span class="s1">reverse: </span><span class="s0">true</span><span class="s3">,</span>
+        <span class="s1">enter: processAtrule</span>
+    <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

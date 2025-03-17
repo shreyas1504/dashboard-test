@@ -1,0 +1,35 @@
+<html>
+<head>
+<title>SyntaxError.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+SyntaxError.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">createCustomError = require(</span><span class="s2">'../utils/createCustomError'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">SyntaxError(message</span><span class="s3">, </span><span class="s1">input</span><span class="s3">, </span><span class="s1">offset) {</span>
+    <span class="s0">var </span><span class="s1">error = createCustomError(</span><span class="s2">'SyntaxError'</span><span class="s3">, </span><span class="s1">message)</span><span class="s3">;</span>
+
+    <span class="s1">error.input = input</span><span class="s3">;</span>
+    <span class="s1">error.offset = offset</span><span class="s3">;</span>
+    <span class="s1">error.rawMessage = message</span><span class="s3">;</span>
+    <span class="s1">error.message = error.rawMessage + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">+</span>
+        <span class="s2">'  ' </span><span class="s1">+ error.input + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">+</span>
+        <span class="s2">'--' </span><span class="s1">+ </span><span class="s0">new </span><span class="s1">Array((error.offset || error.input.length) + </span><span class="s4">1</span><span class="s1">).join(</span><span class="s2">'-'</span><span class="s1">) + </span><span class="s2">'^'</span><span class="s3">;</span>
+
+    <span class="s0">return </span><span class="s1">error</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

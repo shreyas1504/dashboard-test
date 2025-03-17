@@ -1,0 +1,145 @@
+<html>
+<head>
+<title>array-set.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #6897bb;}
+.s7 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+array-set.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* -*- Mode: js; js-indent-level: 2; -*- */</span>
+<span class="s0">/* 
+ * Copyright 2011 Mozilla Foundation and contributors 
+ * Licensed under the New BSD license. See LICENSE or: 
+ * http://opensource.org/licenses/BSD-3-Clause 
+ */</span>
+
+<span class="s2">var </span><span class="s1">util = require(</span><span class="s3">'./util'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">var </span><span class="s1">has = Object.prototype.hasOwnProperty</span><span class="s4">;</span>
+<span class="s2">var </span><span class="s1">hasNativeMap = </span><span class="s2">typeof </span><span class="s1">Map !== </span><span class="s3">&quot;undefined&quot;</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* A data structure which is a combination of an array and a set. Adding a new</span>
+ <span class="s5">* member is O(1), testing for membership is O(1), and finding the index of an</span>
+ <span class="s5">* element is O(1). Removing elements from the set is not supported. Only</span>
+ <span class="s5">* strings are supported for membership.</span>
+ <span class="s5">*/</span>
+<span class="s2">function </span><span class="s1">ArraySet() {</span>
+  <span class="s2">this</span><span class="s1">._array = []</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">._set = hasNativeMap ? </span><span class="s2">new </span><span class="s1">Map() : Object.create(</span><span class="s2">null</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Static method for creating ArraySet instances from an existing array.</span>
+ <span class="s5">*/</span>
+<span class="s1">ArraySet.fromArray = </span><span class="s2">function </span><span class="s1">ArraySet_fromArray(aArray</span><span class="s4">, </span><span class="s1">aAllowDuplicates) {</span>
+  <span class="s2">var </span><span class="s1">set = </span><span class="s2">new </span><span class="s1">ArraySet()</span><span class="s4">;</span>
+  <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s6">0</span><span class="s4">, </span><span class="s1">len = aArray.length</span><span class="s4">; </span><span class="s1">i &lt; len</span><span class="s4">; </span><span class="s1">i++) {</span>
+    <span class="s1">set.add(aArray[i]</span><span class="s4">, </span><span class="s1">aAllowDuplicates)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s2">return </span><span class="s1">set</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Return how many unique items are in this ArraySet. If duplicates have been</span>
+ <span class="s5">* added, than those do not count towards the size.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s7">@returns </span><span class="s5">Number</span>
+ <span class="s5">*/</span>
+<span class="s1">ArraySet.prototype.size = </span><span class="s2">function </span><span class="s1">ArraySet_size() {</span>
+  <span class="s2">return </span><span class="s1">hasNativeMap ? </span><span class="s2">this</span><span class="s1">._set.size : Object.getOwnPropertyNames(</span><span class="s2">this</span><span class="s1">._set).length</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Add the given string to this set.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s7">@param </span><span class="s5">String aStr</span>
+ <span class="s5">*/</span>
+<span class="s1">ArraySet.prototype.add = </span><span class="s2">function </span><span class="s1">ArraySet_add(aStr</span><span class="s4">, </span><span class="s1">aAllowDuplicates) {</span>
+  <span class="s2">var </span><span class="s1">sStr = hasNativeMap ? aStr : util.toSetString(aStr)</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">isDuplicate = hasNativeMap ? </span><span class="s2">this</span><span class="s1">.has(aStr) : has.call(</span><span class="s2">this</span><span class="s1">._set</span><span class="s4">, </span><span class="s1">sStr)</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">idx = </span><span class="s2">this</span><span class="s1">._array.length</span><span class="s4">;</span>
+  <span class="s2">if </span><span class="s1">(!isDuplicate || aAllowDuplicates) {</span>
+    <span class="s2">this</span><span class="s1">._array.push(aStr)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s2">if </span><span class="s1">(!isDuplicate) {</span>
+    <span class="s2">if </span><span class="s1">(hasNativeMap) {</span>
+      <span class="s2">this</span><span class="s1">._set.set(aStr</span><span class="s4">, </span><span class="s1">idx)</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+      <span class="s2">this</span><span class="s1">._set[sStr] = idx</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Is the given string a member of this set?</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s7">@param </span><span class="s5">String aStr</span>
+ <span class="s5">*/</span>
+<span class="s1">ArraySet.prototype.has = </span><span class="s2">function </span><span class="s1">ArraySet_has(aStr) {</span>
+  <span class="s2">if </span><span class="s1">(hasNativeMap) {</span>
+    <span class="s2">return this</span><span class="s1">._set.has(aStr)</span><span class="s4">;</span>
+  <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+    <span class="s2">var </span><span class="s1">sStr = util.toSetString(aStr)</span><span class="s4">;</span>
+    <span class="s2">return </span><span class="s1">has.call(</span><span class="s2">this</span><span class="s1">._set</span><span class="s4">, </span><span class="s1">sStr)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* What is the index of the given string in the array?</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s7">@param </span><span class="s5">String aStr</span>
+ <span class="s5">*/</span>
+<span class="s1">ArraySet.prototype.indexOf = </span><span class="s2">function </span><span class="s1">ArraySet_indexOf(aStr) {</span>
+  <span class="s2">if </span><span class="s1">(hasNativeMap) {</span>
+    <span class="s2">var </span><span class="s1">idx = </span><span class="s2">this</span><span class="s1">._set.get(aStr)</span><span class="s4">;</span>
+    <span class="s2">if </span><span class="s1">(idx &gt;= </span><span class="s6">0</span><span class="s1">) {</span>
+        <span class="s2">return </span><span class="s1">idx</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+    <span class="s2">var </span><span class="s1">sStr = util.toSetString(aStr)</span><span class="s4">;</span>
+    <span class="s2">if </span><span class="s1">(has.call(</span><span class="s2">this</span><span class="s1">._set</span><span class="s4">, </span><span class="s1">sStr)) {</span>
+      <span class="s2">return this</span><span class="s1">._set[sStr]</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">'&quot;' </span><span class="s1">+ aStr + </span><span class="s3">'&quot; is not in the set.'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* What is the element at the given index?</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s7">@param </span><span class="s5">Number aIdx</span>
+ <span class="s5">*/</span>
+<span class="s1">ArraySet.prototype.at = </span><span class="s2">function </span><span class="s1">ArraySet_at(aIdx) {</span>
+  <span class="s2">if </span><span class="s1">(aIdx &gt;= </span><span class="s6">0 </span><span class="s1">&amp;&amp; aIdx &lt; </span><span class="s2">this</span><span class="s1">._array.length) {</span>
+    <span class="s2">return this</span><span class="s1">._array[aIdx]</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">'No element indexed by ' </span><span class="s1">+ aIdx)</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Returns the array representation of this set (which has the proper indices</span>
+ <span class="s5">* indicated by indexOf). Note that this is a copy of the internal array used</span>
+ <span class="s5">* for storing the members so that no one can mess with internal state.</span>
+ <span class="s5">*/</span>
+<span class="s1">ArraySet.prototype.toArray = </span><span class="s2">function </span><span class="s1">ArraySet_toArray() {</span>
+  <span class="s2">return this</span><span class="s1">._array.slice()</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">exports.ArraySet = ArraySet</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

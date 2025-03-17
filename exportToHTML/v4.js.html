@@ -1,0 +1,45 @@
+<html>
+<head>
+<title>v4.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+v4.js</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">rng from </span><span class="s2">'./rng.js'</span><span class="s3">;</span>
+<span class="s0">import </span><span class="s1">stringify from </span><span class="s2">'./stringify.js'</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">v4(options</span><span class="s3">, </span><span class="s1">buf</span><span class="s3">, </span><span class="s1">offset) {</span>
+  <span class="s1">options = options || {}</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">rnds = options.random || (options.rng || rng)()</span><span class="s3">; </span><span class="s4">// Per 4.4, set bits for version and `clock_seq_hi_and_reserved`</span>
+
+  <span class="s1">rnds[</span><span class="s5">6</span><span class="s1">] = rnds[</span><span class="s5">6</span><span class="s1">] &amp; </span><span class="s5">0x0f </span><span class="s1">| </span><span class="s5">0x40</span><span class="s3">;</span>
+  <span class="s1">rnds[</span><span class="s5">8</span><span class="s1">] = rnds[</span><span class="s5">8</span><span class="s1">] &amp; </span><span class="s5">0x3f </span><span class="s1">| </span><span class="s5">0x80</span><span class="s3">; </span><span class="s4">// Copy bytes to buffer, if provided</span>
+
+  <span class="s0">if </span><span class="s1">(buf) {</span>
+    <span class="s1">offset = offset || </span><span class="s5">0</span><span class="s3">;</span>
+
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s5">16</span><span class="s3">; </span><span class="s1">++i) {</span>
+      <span class="s1">buf[offset + i] = rnds[i]</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">buf</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">stringify(rnds)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export default </span><span class="s1">v4</span><span class="s3">;</span></pre>
+</body>
+</html>

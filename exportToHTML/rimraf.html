@@ -1,0 +1,90 @@
+<html>
+<head>
+<title>rimraf</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #6897bb;}
+.s5 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+rimraf</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+
+<span class="s2">const </span><span class="s1">rimraf = require(</span><span class="s3">'./'</span><span class="s1">)</span>
+
+<span class="s2">const </span><span class="s1">path = require(</span><span class="s3">'path'</span><span class="s1">)</span>
+
+<span class="s2">const </span><span class="s1">isRoot = arg =&gt; </span><span class="s4">/^(\/|[a-zA-Z]:\\)$/</span><span class="s1">.test(path.resolve(arg))</span>
+<span class="s2">const </span><span class="s1">filterOutRoot = arg =&gt; {</span>
+  <span class="s2">const </span><span class="s1">ok = preserveRoot === </span><span class="s2">false </span><span class="s1">|| !isRoot(arg)</span>
+  <span class="s2">if </span><span class="s1">(!ok) {</span>
+    <span class="s1">console.error(</span><span class="s3">`refusing to remove </span><span class="s1">${arg}</span><span class="s3">`</span><span class="s1">)</span>
+    <span class="s1">console.error(</span><span class="s3">'Set --no-preserve-root to allow this'</span><span class="s1">)</span>
+  <span class="s1">}</span>
+  <span class="s2">return </span><span class="s1">ok</span>
+<span class="s1">}</span>
+
+<span class="s2">let </span><span class="s1">help = </span><span class="s2">false</span>
+<span class="s2">let </span><span class="s1">dashdash = </span><span class="s2">false</span>
+<span class="s2">let </span><span class="s1">noglob = </span><span class="s2">false</span>
+<span class="s2">let </span><span class="s1">preserveRoot = </span><span class="s2">true</span>
+<span class="s2">const </span><span class="s1">args = process.argv.slice(</span><span class="s4">2</span><span class="s1">).filter(arg =&gt; {</span>
+  <span class="s2">if </span><span class="s1">(dashdash)</span>
+    <span class="s2">return </span><span class="s1">!!arg</span>
+  <span class="s2">else if </span><span class="s1">(arg === </span><span class="s3">'--'</span><span class="s1">)</span>
+    <span class="s1">dashdash = </span><span class="s2">true</span>
+  <span class="s2">else if </span><span class="s1">(arg === </span><span class="s3">'--no-glob' </span><span class="s1">|| arg === </span><span class="s3">'-G'</span><span class="s1">)</span>
+    <span class="s1">noglob = </span><span class="s2">true</span>
+  <span class="s2">else if </span><span class="s1">(arg === </span><span class="s3">'--glob' </span><span class="s1">|| arg === </span><span class="s3">'-g'</span><span class="s1">)</span>
+    <span class="s1">noglob = </span><span class="s2">false</span>
+  <span class="s2">else if </span><span class="s1">(arg.match(</span><span class="s4">/^(-+|\/)(h(elp)?|\?)$/</span><span class="s1">))</span>
+    <span class="s1">help = </span><span class="s2">true</span>
+  <span class="s2">else if </span><span class="s1">(arg === </span><span class="s3">'--preserve-root'</span><span class="s1">)</span>
+    <span class="s1">preserveRoot = </span><span class="s2">true</span>
+  <span class="s2">else if </span><span class="s1">(arg === </span><span class="s3">'--no-preserve-root'</span><span class="s1">)</span>
+    <span class="s1">preserveRoot = </span><span class="s2">false</span>
+  <span class="s2">else</span>
+    <span class="s2">return </span><span class="s1">!!arg</span>
+<span class="s1">}).filter(arg =&gt; !preserveRoot || filterOutRoot(arg))</span>
+
+<span class="s2">const </span><span class="s1">go = n =&gt; {</span>
+  <span class="s2">if </span><span class="s1">(n &gt;= args.length)</span>
+    <span class="s2">return</span>
+  <span class="s2">const </span><span class="s1">options = noglob ? { glob: </span><span class="s2">false </span><span class="s1">} : {}</span>
+  <span class="s1">rimraf(args[n]</span><span class="s5">, </span><span class="s1">options</span><span class="s5">, </span><span class="s1">er =&gt; {</span>
+    <span class="s2">if </span><span class="s1">(er)</span>
+      <span class="s2">throw </span><span class="s1">er</span>
+    <span class="s1">go(n+</span><span class="s4">1</span><span class="s1">)</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s2">if </span><span class="s1">(help || args.length === </span><span class="s4">0</span><span class="s1">) {</span>
+  <span class="s0">// If they didn't ask for help, then this is not a &quot;success&quot;</span>
+  <span class="s2">const </span><span class="s1">log = help ? console.log : console.error</span>
+  <span class="s1">log(</span><span class="s3">'Usage: rimraf &lt;path&gt; [&lt;path&gt; ...]'</span><span class="s1">)</span>
+  <span class="s1">log(</span><span class="s3">''</span><span class="s1">)</span>
+  <span class="s1">log(</span><span class="s3">'  Deletes all files and folders at &quot;path&quot; recursively.'</span><span class="s1">)</span>
+  <span class="s1">log(</span><span class="s3">''</span><span class="s1">)</span>
+  <span class="s1">log(</span><span class="s3">'Options:'</span><span class="s1">)</span>
+  <span class="s1">log(</span><span class="s3">''</span><span class="s1">)</span>
+  <span class="s1">log(</span><span class="s3">'  -h, --help          Display this usage info'</span><span class="s1">)</span>
+  <span class="s1">log(</span><span class="s3">'  -G, --no-glob       Do not expand glob patterns in arguments'</span><span class="s1">)</span>
+  <span class="s1">log(</span><span class="s3">'  -g, --glob          Expand glob patterns in arguments (default)'</span><span class="s1">)</span>
+  <span class="s1">log(</span><span class="s3">'  --preserve-root     Do not remove </span><span class="s5">\'</span><span class="s3">/</span><span class="s5">\' </span><span class="s3">(default)'</span><span class="s1">)</span>
+  <span class="s1">log(</span><span class="s3">'  --no-preserve-root  Do not treat </span><span class="s5">\'</span><span class="s3">/</span><span class="s5">\' </span><span class="s3">specially'</span><span class="s1">)</span>
+  <span class="s1">log(</span><span class="s3">'  --                  Stop parsing flags'</span><span class="s1">)</span>
+  <span class="s1">process.exit(help ? </span><span class="s4">0 </span><span class="s1">: </span><span class="s4">1</span><span class="s1">)</span>
+<span class="s1">} </span><span class="s2">else</span>
+  <span class="s1">go(</span><span class="s4">0</span><span class="s1">)</span>
+</pre>
+</body>
+</html>

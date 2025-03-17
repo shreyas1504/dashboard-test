@@ -1,0 +1,72 @@
+<html>
+<head>
+<title>removeViewBox.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #6897bb;}
+.s7 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+removeViewBox.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">exports.type = </span><span class="s0">'perItem'</span><span class="s1">;</span>
+
+<span class="s2">exports.active = </span><span class="s3">true</span><span class="s1">;</span>
+
+<span class="s2">exports.description = </span><span class="s0">'removes viewBox attribute when possible'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">viewBoxElems = [</span><span class="s0">'svg'</span><span class="s1">, </span><span class="s0">'pattern'</span><span class="s1">, </span><span class="s0">'symbol'</span><span class="s2">]</span><span class="s1">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Remove viewBox attr which coincides with a width/height box.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@see </span><span class="s4">http://www.w3.org/TR/SVG/coords.html#ViewBoxAttribute</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@example</span>
+ <span class="s4">* &lt;svg width=&quot;100&quot; height=&quot;50&quot; viewBox=&quot;0 0 100 50&quot;&gt;</span>
+ <span class="s4">*             ⬇</span>
+ <span class="s4">* &lt;svg width=&quot;100&quot; height=&quot;50&quot;&gt;</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} item current iteration item</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Boolean} if false, item will be filtered out</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@author </span><span class="s4">Kir Belevich</span>
+ <span class="s4">*/</span>
+<span class="s2">exports.fn = </span><span class="s3">function</span><span class="s2">(item) {</span>
+
+    <span class="s3">if </span><span class="s2">(</span>
+        <span class="s2">item.isElem(viewBoxElems) &amp;&amp;</span>
+        <span class="s2">item.hasAttr(</span><span class="s0">'viewBox'</span><span class="s2">) &amp;&amp;</span>
+        <span class="s2">item.hasAttr(</span><span class="s0">'width'</span><span class="s2">) &amp;&amp;</span>
+        <span class="s2">item.hasAttr(</span><span class="s0">'height'</span><span class="s2">)</span>
+    <span class="s2">) {</span>
+
+        <span class="s3">var </span><span class="s2">nums = item.attr(</span><span class="s0">'viewBox'</span><span class="s2">).value.split(</span><span class="s6">/[ ,]+/g</span><span class="s2">)</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">nums[</span><span class="s6">0</span><span class="s2">] === </span><span class="s0">'0' </span><span class="s2">&amp;&amp;</span>
+            <span class="s2">nums[</span><span class="s6">1</span><span class="s2">] === </span><span class="s0">'0' </span><span class="s2">&amp;&amp;</span>
+            <span class="s2">item.attr(</span><span class="s0">'width'</span><span class="s2">).value.replace(</span><span class="s6">/px$/</span><span class="s1">, </span><span class="s0">''</span><span class="s2">) === nums[</span><span class="s6">2</span><span class="s2">] &amp;&amp; </span><span class="s7">// could use parseFloat too</span>
+            <span class="s2">item.attr(</span><span class="s0">'height'</span><span class="s2">).value.replace(</span><span class="s6">/px$/</span><span class="s1">, </span><span class="s0">''</span><span class="s2">) === nums[</span><span class="s6">3</span><span class="s2">]</span>
+        <span class="s2">) {</span>
+            <span class="s2">item.removeAttr(</span><span class="s0">'viewBox'</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+    <span class="s2">}</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

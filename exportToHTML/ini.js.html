@@ -1,0 +1,228 @@
+<html>
+<head>
+<title>ini.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #cc7832; font-weight: bold;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ini.js</font>
+</center></td></tr></table>
+<pre><span class="s0">exports.parse = exports.decode = decode</span>
+
+<span class="s0">exports.stringify = exports.encode = encode</span>
+
+<span class="s0">exports.safe = safe</span>
+<span class="s0">exports.unsafe = unsafe</span>
+
+<span class="s1">var </span><span class="s0">eol = </span><span class="s1">typeof </span><span class="s0">process !== </span><span class="s2">'undefined' </span><span class="s0">&amp;&amp;</span>
+  <span class="s0">process.platform === </span><span class="s2">'win32' </span><span class="s0">? </span><span class="s2">'</span><span class="s3">\r\n</span><span class="s2">' </span><span class="s0">: </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span>
+
+<span class="s1">function </span><span class="s0">encode (obj</span><span class="s3">, </span><span class="s0">opt) {</span>
+  <span class="s1">var </span><span class="s0">children = []</span>
+  <span class="s1">var </span><span class="s0">out = </span><span class="s2">''</span>
+
+  <span class="s1">if </span><span class="s0">(</span><span class="s1">typeof </span><span class="s0">opt === </span><span class="s2">'string'</span><span class="s0">) {</span>
+    <span class="s0">opt = {</span>
+      <span class="s0">section: opt</span><span class="s3">,</span>
+      <span class="s0">whitespace: </span><span class="s1">false</span><span class="s3">,</span>
+    <span class="s0">}</span>
+  <span class="s0">} </span><span class="s1">else </span><span class="s0">{</span>
+    <span class="s0">opt = opt || {}</span>
+    <span class="s0">opt.whitespace = opt.whitespace === </span><span class="s1">true</span>
+  <span class="s0">}</span>
+
+  <span class="s1">var </span><span class="s0">separator = opt.whitespace ? </span><span class="s2">' = ' </span><span class="s0">: </span><span class="s2">'='</span>
+
+  <span class="s0">Object.keys(obj).forEach(</span><span class="s1">function </span><span class="s0">(k</span><span class="s3">, </span><span class="s0">_</span><span class="s3">, </span><span class="s0">__) {</span>
+    <span class="s1">var </span><span class="s0">val = obj[k]</span>
+    <span class="s1">if </span><span class="s0">(val &amp;&amp; Array.isArray(val)) {</span>
+      <span class="s0">val.forEach(</span><span class="s1">function </span><span class="s0">(item) {</span>
+        <span class="s0">out += safe(k + </span><span class="s2">'[]'</span><span class="s0">) + separator + safe(item) + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span>
+      <span class="s0">})</span>
+    <span class="s0">} </span><span class="s1">else if </span><span class="s0">(val &amp;&amp; </span><span class="s1">typeof </span><span class="s0">val === </span><span class="s2">'object'</span><span class="s0">)</span>
+      <span class="s0">children.push(k)</span>
+    <span class="s1">else</span>
+      <span class="s0">out += safe(k) + separator + safe(val) + eol</span>
+  <span class="s0">})</span>
+
+  <span class="s1">if </span><span class="s0">(opt.section &amp;&amp; out.length)</span>
+    <span class="s0">out = </span><span class="s2">'[' </span><span class="s0">+ safe(opt.section) + </span><span class="s2">']' </span><span class="s0">+ eol + out</span>
+
+  <span class="s0">children.forEach(</span><span class="s1">function </span><span class="s0">(k</span><span class="s3">, </span><span class="s0">_</span><span class="s3">, </span><span class="s0">__) {</span>
+    <span class="s1">var </span><span class="s0">nk = dotSplit(k).join(</span><span class="s2">'</span><span class="s3">\\</span><span class="s2">.'</span><span class="s0">)</span>
+    <span class="s1">var </span><span class="s0">section = (opt.section ? opt.section + </span><span class="s2">'.' </span><span class="s0">: </span><span class="s2">''</span><span class="s0">) + nk</span>
+    <span class="s1">var </span><span class="s0">child = encode(obj[k]</span><span class="s3">, </span><span class="s0">{</span>
+      <span class="s0">section: section</span><span class="s3">,</span>
+      <span class="s0">whitespace: opt.whitespace</span><span class="s3">,</span>
+    <span class="s0">})</span>
+    <span class="s1">if </span><span class="s0">(out.length &amp;&amp; child.length)</span>
+      <span class="s0">out += eol</span>
+
+    <span class="s0">out += child</span>
+  <span class="s0">})</span>
+
+  <span class="s1">return </span><span class="s0">out</span>
+<span class="s0">}</span>
+
+<span class="s1">function </span><span class="s0">dotSplit (str) {</span>
+  <span class="s1">return </span><span class="s0">str.replace(</span><span class="s4">/\1/g</span><span class="s3">, </span><span class="s2">'</span><span class="s3">\u0002</span><span class="s2">LITERAL</span><span class="s3">\\</span><span class="s2">1LITERAL</span><span class="s3">\u0002</span><span class="s2">'</span><span class="s0">)</span>
+    <span class="s0">.replace(</span><span class="s4">/\\\./g</span><span class="s3">, </span><span class="s2">'</span><span class="s3">\u0001</span><span class="s2">'</span><span class="s0">)</span>
+    <span class="s0">.split(</span><span class="s4">/\./</span><span class="s0">).map(</span><span class="s1">function </span><span class="s0">(part) {</span>
+      <span class="s1">return </span><span class="s0">part.replace(</span><span class="s4">/\1/g</span><span class="s3">, </span><span class="s2">'</span><span class="s3">\\</span><span class="s2">.'</span><span class="s0">)</span>
+        <span class="s0">.replace(</span><span class="s4">/\2LITERAL\\1LITERAL\2/g</span><span class="s3">, </span><span class="s2">'</span><span class="s3">\u0001</span><span class="s2">'</span><span class="s0">)</span>
+    <span class="s0">})</span>
+<span class="s0">}</span>
+
+<span class="s1">function </span><span class="s0">decode (str) {</span>
+  <span class="s1">var </span><span class="s0">out = {}</span>
+  <span class="s1">var </span><span class="s0">p = out</span>
+  <span class="s1">var </span><span class="s0">section = </span><span class="s1">null</span>
+  <span class="s5">//          section     |key      = value</span>
+  <span class="s1">var </span><span class="s0">re = </span><span class="s4">/^\[([^\]]*)\]$|^([^=]+)(=(.*))?$/i</span>
+  <span class="s1">var </span><span class="s0">lines = str.split(</span><span class="s4">/[\r\n]+/g</span><span class="s0">)</span>
+
+  <span class="s0">lines.forEach(</span><span class="s1">function </span><span class="s0">(line</span><span class="s3">, </span><span class="s0">_</span><span class="s3">, </span><span class="s0">__) {</span>
+    <span class="s1">if </span><span class="s0">(!line || line.match(</span><span class="s4">/^\s*[;#]/</span><span class="s0">))</span>
+      <span class="s1">return</span>
+    <span class="s1">var </span><span class="s0">match = line.match(re)</span>
+    <span class="s1">if </span><span class="s0">(!match)</span>
+      <span class="s1">return</span>
+    <span class="s1">if </span><span class="s0">(match[</span><span class="s4">1</span><span class="s0">] !== undefined) {</span>
+      <span class="s0">section = unsafe(match[</span><span class="s4">1</span><span class="s0">])</span>
+      <span class="s1">if </span><span class="s0">(section === </span><span class="s2">'__proto__'</span><span class="s0">) {</span>
+        <span class="s5">// not allowed</span>
+        <span class="s5">// keep parsing the section, but don't attach it.</span>
+        <span class="s0">p = {}</span>
+        <span class="s1">return</span>
+      <span class="s0">}</span>
+      <span class="s0">p = out[section] = out[section] || {}</span>
+      <span class="s1">return</span>
+    <span class="s0">}</span>
+    <span class="s1">var </span><span class="s0">key = unsafe(match[</span><span class="s4">2</span><span class="s0">])</span>
+    <span class="s1">if </span><span class="s0">(key === </span><span class="s2">'__proto__'</span><span class="s0">)</span>
+      <span class="s1">return</span>
+    <span class="s1">var </span><span class="s0">value = match[</span><span class="s4">3</span><span class="s0">] ? unsafe(match[</span><span class="s4">4</span><span class="s0">]) : </span><span class="s1">true</span>
+    <span class="s1">switch </span><span class="s0">(value) {</span>
+      <span class="s1">case </span><span class="s2">'true'</span><span class="s0">:</span>
+      <span class="s1">case </span><span class="s2">'false'</span><span class="s0">:</span>
+      <span class="s1">case </span><span class="s2">'null'</span><span class="s0">: value = JSON.parse(value)</span>
+    <span class="s0">}</span>
+
+    <span class="s5">// Convert keys with '[]' suffix to an array</span>
+    <span class="s1">if </span><span class="s0">(key.length &gt; </span><span class="s4">2 </span><span class="s0">&amp;&amp; key.slice(-</span><span class="s4">2</span><span class="s0">) === </span><span class="s2">'[]'</span><span class="s0">) {</span>
+      <span class="s0">key = key.substring(</span><span class="s4">0</span><span class="s3">, </span><span class="s0">key.length - </span><span class="s4">2</span><span class="s0">)</span>
+      <span class="s1">if </span><span class="s0">(key === </span><span class="s2">'__proto__'</span><span class="s0">)</span>
+        <span class="s1">return</span>
+      <span class="s1">if </span><span class="s0">(!p[key])</span>
+        <span class="s0">p[key] = []</span>
+      <span class="s1">else if </span><span class="s0">(!Array.isArray(p[key]))</span>
+        <span class="s0">p[key] = [p[key]]</span>
+    <span class="s0">}</span>
+
+    <span class="s5">// safeguard against resetting a previously defined</span>
+    <span class="s5">// array by accidentally forgetting the brackets</span>
+    <span class="s1">if </span><span class="s0">(Array.isArray(p[key]))</span>
+      <span class="s0">p[key].push(value)</span>
+    <span class="s1">else</span>
+      <span class="s0">p[key] = value</span>
+  <span class="s0">})</span>
+
+  <span class="s5">// {a:{y:1},&quot;a.b&quot;:{x:2}} --&gt; {a:{y:1,b:{x:2}}}</span>
+  <span class="s5">// use a filter to return the keys that have to be deleted.</span>
+  <span class="s0">Object.keys(out).filter(</span><span class="s1">function </span><span class="s0">(k</span><span class="s3">, </span><span class="s0">_</span><span class="s3">, </span><span class="s0">__) {</span>
+    <span class="s1">if </span><span class="s0">(!out[k] ||</span>
+      <span class="s1">typeof </span><span class="s0">out[k] !== </span><span class="s2">'object' </span><span class="s0">||</span>
+      <span class="s0">Array.isArray(out[k]))</span>
+      <span class="s1">return false</span>
+
+    <span class="s5">// see if the parent section is also an object.</span>
+    <span class="s5">// if so, add it to that, and mark this one for deletion</span>
+    <span class="s1">var </span><span class="s0">parts = dotSplit(k)</span>
+    <span class="s1">var </span><span class="s0">p = out</span>
+    <span class="s1">var </span><span class="s0">l = parts.pop()</span>
+    <span class="s1">var </span><span class="s0">nl = l.replace(</span><span class="s4">/\\\./g</span><span class="s3">, </span><span class="s2">'.'</span><span class="s0">)</span>
+    <span class="s0">parts.forEach(</span><span class="s1">function </span><span class="s0">(part</span><span class="s3">, </span><span class="s0">_</span><span class="s3">, </span><span class="s0">__) {</span>
+      <span class="s1">if </span><span class="s0">(part === </span><span class="s2">'__proto__'</span><span class="s0">)</span>
+        <span class="s1">return</span>
+      <span class="s1">if </span><span class="s0">(!p[part] || </span><span class="s1">typeof </span><span class="s0">p[part] !== </span><span class="s2">'object'</span><span class="s0">)</span>
+        <span class="s0">p[part] = {}</span>
+      <span class="s0">p = p[part]</span>
+    <span class="s0">})</span>
+    <span class="s1">if </span><span class="s0">(p === out &amp;&amp; nl === l)</span>
+      <span class="s1">return false</span>
+
+    <span class="s0">p[nl] = out[k]</span>
+    <span class="s1">return true</span>
+  <span class="s0">}).forEach(</span><span class="s1">function </span><span class="s0">(del</span><span class="s3">, </span><span class="s0">_</span><span class="s3">, </span><span class="s0">__) {</span>
+    <span class="s1">delete </span><span class="s0">out[del]</span>
+  <span class="s0">})</span>
+
+  <span class="s1">return </span><span class="s0">out</span>
+<span class="s0">}</span>
+
+<span class="s1">function </span><span class="s0">isQuoted (val) {</span>
+  <span class="s1">return </span><span class="s0">(val.charAt(</span><span class="s4">0</span><span class="s0">) === </span><span class="s2">'&quot;' </span><span class="s0">&amp;&amp; val.slice(-</span><span class="s4">1</span><span class="s0">) === </span><span class="s2">'&quot;'</span><span class="s0">) ||</span>
+    <span class="s0">(val.charAt(</span><span class="s4">0</span><span class="s0">) === </span><span class="s2">&quot;'&quot; </span><span class="s0">&amp;&amp; val.slice(-</span><span class="s4">1</span><span class="s0">) === </span><span class="s2">&quot;'&quot;</span><span class="s0">)</span>
+<span class="s0">}</span>
+
+<span class="s1">function </span><span class="s0">safe (val) {</span>
+  <span class="s1">return </span><span class="s0">(</span><span class="s1">typeof </span><span class="s0">val !== </span><span class="s2">'string' </span><span class="s0">||</span>
+    <span class="s0">val.match(</span><span class="s4">/[=\r\n]/</span><span class="s0">) ||</span>
+    <span class="s0">val.match(</span><span class="s4">/^\[/</span><span class="s0">) ||</span>
+    <span class="s0">(val.length &gt; </span><span class="s4">1 </span><span class="s0">&amp;&amp;</span>
+     <span class="s0">isQuoted(val)) ||</span>
+    <span class="s0">val !== val.trim())</span>
+    <span class="s0">? JSON.stringify(val)</span>
+    <span class="s0">: val.replace(</span><span class="s4">/;/g</span><span class="s3">, </span><span class="s2">'</span><span class="s3">\\</span><span class="s2">;'</span><span class="s0">).replace(</span><span class="s4">/#/g</span><span class="s3">, </span><span class="s2">'</span><span class="s3">\\</span><span class="s2">#'</span><span class="s0">)</span>
+<span class="s0">}</span>
+
+<span class="s1">function </span><span class="s0">unsafe (val</span><span class="s3">, </span><span class="s0">doUnesc) {</span>
+  <span class="s0">val = (val || </span><span class="s2">''</span><span class="s0">).trim()</span>
+  <span class="s1">if </span><span class="s0">(isQuoted(val)) {</span>
+    <span class="s5">// remove the single quotes before calling JSON.parse</span>
+    <span class="s1">if </span><span class="s0">(val.charAt(</span><span class="s4">0</span><span class="s0">) === </span><span class="s2">&quot;'&quot;</span><span class="s0">)</span>
+      <span class="s0">val = val.substr(</span><span class="s4">1</span><span class="s3">, </span><span class="s0">val.length - </span><span class="s4">2</span><span class="s0">)</span>
+
+    <span class="s1">try </span><span class="s0">{</span>
+      <span class="s0">val = JSON.parse(val)</span>
+    <span class="s0">} </span><span class="s1">catch </span><span class="s0">(_) {}</span>
+  <span class="s0">} </span><span class="s1">else </span><span class="s0">{</span>
+    <span class="s5">// walk the val to find the first not-escaped ; character</span>
+    <span class="s1">var </span><span class="s0">esc = </span><span class="s1">false</span>
+    <span class="s1">var </span><span class="s0">unesc = </span><span class="s2">''</span>
+    <span class="s1">for </span><span class="s0">(</span><span class="s1">var </span><span class="s0">i = </span><span class="s4">0</span><span class="s3">, </span><span class="s0">l = val.length</span><span class="s3">; </span><span class="s0">i &lt; l</span><span class="s3">; </span><span class="s0">i++) {</span>
+      <span class="s1">var </span><span class="s0">c = val.charAt(i)</span>
+      <span class="s1">if </span><span class="s0">(esc) {</span>
+        <span class="s1">if </span><span class="s0">(</span><span class="s2">'</span><span class="s3">\\</span><span class="s2">;#'</span><span class="s0">.indexOf(c) !== -</span><span class="s4">1</span><span class="s0">)</span>
+          <span class="s0">unesc += c</span>
+        <span class="s1">else</span>
+          <span class="s0">unesc += </span><span class="s2">'</span><span class="s3">\\</span><span class="s2">' </span><span class="s0">+ c</span>
+
+        <span class="s0">esc = </span><span class="s1">false</span>
+      <span class="s0">} </span><span class="s1">else if </span><span class="s0">(</span><span class="s2">';#'</span><span class="s0">.indexOf(c) !== -</span><span class="s4">1</span><span class="s0">)</span>
+        <span class="s1">break</span>
+      <span class="s1">else if </span><span class="s0">(c === </span><span class="s2">'</span><span class="s3">\\</span><span class="s2">'</span><span class="s0">)</span>
+        <span class="s0">esc = </span><span class="s1">true</span>
+      <span class="s1">else</span>
+        <span class="s0">unesc += c</span>
+    <span class="s0">}</span>
+    <span class="s1">if </span><span class="s0">(esc)</span>
+      <span class="s0">unesc += </span><span class="s2">'</span><span class="s3">\\</span><span class="s2">'</span>
+
+    <span class="s1">return </span><span class="s0">unesc.trim()</span>
+  <span class="s0">}</span>
+  <span class="s1">return </span><span class="s0">val</span>
+<span class="s0">}</span>
+</pre>
+</body>
+</html>

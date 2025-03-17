@@ -1,0 +1,378 @@
+<html>
+<head>
+<title>wbuf-test.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+wbuf-test.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">assert = require(</span><span class="s2">'assert'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">WriteBuffer = require(</span><span class="s2">'../'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s1">describe(</span><span class="s2">'WriteBuffer'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+  <span class="s0">var </span><span class="s1">w</span><span class="s3">;</span>
+  <span class="s1">beforeEach(</span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">w = </span><span class="s0">new </span><span class="s1">WriteBuffer()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s0">function </span><span class="s1">join(arr) {</span>
+    <span class="s0">return </span><span class="s1">arr.map(</span><span class="s0">function</span><span class="s1">(buf) {</span>
+      <span class="s0">return </span><span class="s1">buf.toString(</span><span class="s2">'hex'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}).join(</span><span class="s2">''</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">describe(</span><span class="s2">'.writeUInt8'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeUInt8(</span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt8(</span><span class="s4">2</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt8(</span><span class="s4">3</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt8(</span><span class="s4">4</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'01020304'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should correctly handle overflow'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.reserve(</span><span class="s4">3</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt8(</span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt8(</span><span class="s4">2</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt8(</span><span class="s4">3</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt8(</span><span class="s4">4</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'01020304'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.writeInt8'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeInt8(-</span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeInt8(</span><span class="s4">2</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'ff02'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.writeUInt16BE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeUInt16BE(</span><span class="s4">0x0102</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt16BE(</span><span class="s4">0x0304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'01020304'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should correctly handle overflow'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.reserve(</span><span class="s4">2</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.reserve(</span><span class="s4">3</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt16BE(</span><span class="s4">0x0102</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt16BE(</span><span class="s4">0x0304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt16BE(</span><span class="s4">0x0506</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'010203040506'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.writeInt16BE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeInt16BE(-</span><span class="s4">0x0102</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeInt16BE(</span><span class="s4">0x0304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'fefe0304'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.writeUInt16LE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeUInt16LE(</span><span class="s4">0x0102</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt16LE(</span><span class="s4">0x0304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'02010403'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should correctly handle overflow'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.reserve(</span><span class="s4">2</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.reserve(</span><span class="s4">3</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt16LE(</span><span class="s4">0x0102</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt16LE(</span><span class="s4">0x0304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt16LE(</span><span class="s4">0x0506</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'020104030605'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.writeInt16LE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeInt16LE(-</span><span class="s4">0x0201</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeInt16LE(</span><span class="s4">0x0304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'fffd0403'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.writeUInt24BE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeUInt24BE(</span><span class="s4">0x010203</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt24BE(</span><span class="s4">0x040506</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'010203040506'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should correctly set avail on boundary'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w = </span><span class="s0">new </span><span class="s1">WriteBuffer()</span><span class="s3">;</span>
+      <span class="s1">w.reserveRate = </span><span class="s4">4</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt16BE(</span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt24BE(</span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(w.avail</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.writeInt24BE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeInt24BE(-</span><span class="s4">0x010203</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeInt24BE(</span><span class="s4">0x040506</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'fefdfd040506'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.writeUInt24LE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeUInt24LE(</span><span class="s4">0x010203</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt24LE(</span><span class="s4">0x040506</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'030201060504'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.writeInt24LE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeInt24LE(-</span><span class="s4">0x010203</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeInt24LE(</span><span class="s4">0x040506</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'fdfdfe060504'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.writeUInt32BE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0x01020304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0x05060708</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'0102030405060708'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should write bytes on the boundary'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.reserve(</span><span class="s4">4</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt8(</span><span class="s4">0x00</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0x01020304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'0001020304'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.writeInt32BE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeInt32BE(-</span><span class="s4">0x01020304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeInt32BE(</span><span class="s4">0x05060708</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'fefdfcfc05060708'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.writeUInt32LE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeUInt32LE(</span><span class="s4">0x01020304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32LE(</span><span class="s4">0x05060708</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'0403020108070605'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should write max uint32 value'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeUInt32LE(</span><span class="s4">0xffffffff</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'ffffffff'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.combWrite'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeComb(</span><span class="s4">1</span><span class="s3">, </span><span class="s2">'le'</span><span class="s3">, </span><span class="s4">0x01</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeComb(</span><span class="s4">1</span><span class="s3">, </span><span class="s2">'be'</span><span class="s3">, </span><span class="s4">0x02</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeComb(</span><span class="s4">2</span><span class="s3">, </span><span class="s2">'le'</span><span class="s3">, </span><span class="s4">0x0102</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeComb(</span><span class="s4">2</span><span class="s3">, </span><span class="s2">'be'</span><span class="s3">, </span><span class="s4">0x0304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeComb(</span><span class="s4">3</span><span class="s3">, </span><span class="s2">'le'</span><span class="s3">, </span><span class="s4">0x010203</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeComb(</span><span class="s4">3</span><span class="s3">, </span><span class="s2">'be'</span><span class="s3">, </span><span class="s4">0x040506</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeComb(</span><span class="s4">4</span><span class="s3">, </span><span class="s2">'le'</span><span class="s3">, </span><span class="s4">0x01020304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeComb(</span><span class="s4">4</span><span class="s3">, </span><span class="s2">'be'</span><span class="s3">, </span><span class="s4">0x05060708</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">,</span>
+                   <span class="s2">'0102020103040302010405060403020105060708'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should write max uint32 value'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeUInt32LE(</span><span class="s4">0xffffffff</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'ffffffff'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.writeInt32LE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeInt32LE(-</span><span class="s4">0x01020304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeInt32LE(</span><span class="s4">0x05060708</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'fcfcfdfe08070605'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.skip'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should skip bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.skip(</span><span class="s4">4</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xdeadbeef</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(</span><span class="s4">/^.{8}deadbeef$/</span><span class="s1">.test(join(w.render())))</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should skip 0 bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s0">var </span><span class="s1">skip = w.skip(</span><span class="s4">0</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(skip.size</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xdeadbeef</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(</span><span class="s4">/^deadbeef$/</span><span class="s1">.test(join(w.render())))</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should skip bytes on the boundary'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.reserve(</span><span class="s4">4</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt8(</span><span class="s4">0x01</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">skip = w.skip(</span><span class="s4">4</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xdeadbeef</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">skip.writeUInt32BE(</span><span class="s4">0xabbabaab</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(</span><span class="s4">/^01abbabaabdeadbeef$/</span><span class="s1">.test(join(w.render())))</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should skip bytes on the boundary in two chunks'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.reserve(</span><span class="s4">4</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">skip1 = w.skip(</span><span class="s4">2</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">skip2 = w.skip(</span><span class="s4">2</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xdeadbeef</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">skip1.writeUInt16BE(</span><span class="s4">0xabba</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">skip2.writeUInt16BE(</span><span class="s4">0xbaba</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(</span><span class="s4">/^abbababadeadbeef$/</span><span class="s1">.test(join(w.render())))</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.slice'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return empty slice'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xabbadead</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.slice(</span><span class="s4">4</span><span class="s3">, </span><span class="s4">4</span><span class="s1">).render())</span><span class="s3">, </span><span class="s2">''</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'abbadead'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should return full slice'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xabbadead</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">slice = w.slice(</span><span class="s4">0</span><span class="s3">, </span><span class="s4">4</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">slice.writeUInt32BE(</span><span class="s4">0xdeadbeef</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(slice.render())</span><span class="s3">, </span><span class="s2">'deadbeef'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'deadbeef'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should return partial slice'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xabbadead</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">slice = w.slice(</span><span class="s4">0</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">slice.writeUInt24BE(</span><span class="s4">0xdeadbe</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(slice.render())</span><span class="s3">, </span><span class="s2">'deadbe'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">, </span><span class="s2">'deadbead'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should return over-the-boundary slice'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s4">16</span><span class="s3">; </span><span class="s1">i++) {</span>
+        <span class="s1">w.reserve(</span><span class="s4">3</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">w.writeUInt24BE(i)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">,</span>
+                   <span class="s2">'000000000001000002000003000004000005000006000007' </span><span class="s1">+</span>
+                       <span class="s2">'00000800000900000a00000b00000c00000d00000e00000f'</span><span class="s1">)</span><span class="s3">;</span>
+
+      <span class="s0">var </span><span class="s1">slice = w.slice(</span><span class="s4">5</span><span class="s3">, </span><span class="s4">12</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">slice.writeUInt24BE(</span><span class="s4">0xaaabac</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">slice.writeUInt24BE(</span><span class="s4">0xbabbbc</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">slice.writeUInt8(</span><span class="s4">0xcc</span><span class="s1">)</span><span class="s3">;</span>
+
+      <span class="s1">assert.equal(join(slice.render())</span><span class="s3">, </span><span class="s2">'aaabacbabbbccc'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(join(w.render())</span><span class="s3">,</span>
+                   <span class="s2">'0000000000aaabacbabbbccc000004000005000006000007' </span><span class="s1">+</span>
+                       <span class="s2">'00000800000900000a00000b00000c00000d00000e00000f'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.copyFrom'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should copy bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s0">var </span><span class="s1">tmp = </span><span class="s0">new </span><span class="s1">Buffer(</span><span class="s4">128</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; tmp.length</span><span class="s3">; </span><span class="s1">i++)</span>
+        <span class="s1">tmp[i] = i</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xdeadbeef</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.copyFrom(tmp)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xabbadead</span><span class="s1">)</span><span class="s3">;</span>
+
+      <span class="s1">assert.equal(</span>
+        <span class="s1">join(w.render())</span><span class="s3">,</span>
+        <span class="s2">'deadbeef000102030405060708090a0b0c0d0e0f101112131415161718191a1b' </span><span class="s1">+</span>
+        <span class="s2">'1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b' </span><span class="s1">+</span>
+        <span class="s2">'3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b' </span><span class="s1">+</span>
+        <span class="s2">'5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b' </span><span class="s1">+</span>
+        <span class="s2">'7c7d7e7fabbadead'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should copy bytes using offset'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s0">var </span><span class="s1">tmp = </span><span class="s0">new </span><span class="s1">Buffer(</span><span class="s4">128</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; tmp.length</span><span class="s3">; </span><span class="s1">i++)</span>
+        <span class="s1">tmp[i] = i</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xdeadbeef</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.copyFrom(tmp</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">12</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xabbadead</span><span class="s1">)</span><span class="s3">;</span>
+
+      <span class="s1">assert.equal(</span>
+        <span class="s1">join(w.render())</span><span class="s3">,</span>
+        <span class="s2">'deadbeef0a0babbadead'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.write'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should write utf8 string'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xdeadbeef</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.write(</span><span class="s2">'ohai</span><span class="s3">\u1023</span><span class="s2">'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xabbadead</span><span class="s1">)</span><span class="s3">;</span>
+
+      <span class="s1">assert.equal(</span>
+        <span class="s1">join(w.render())</span><span class="s3">,</span>
+        <span class="s2">'deadbeef' </span><span class="s1">+</span>
+            <span class="s2">'6f6861691023' </span><span class="s1">+</span>
+            <span class="s2">'abbadead'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should copy bytes using offset'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s0">var </span><span class="s1">tmp = </span><span class="s0">new </span><span class="s1">Buffer(</span><span class="s4">128</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; tmp.length</span><span class="s3">; </span><span class="s1">i++)</span>
+        <span class="s1">tmp[i] = i</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xdeadbeef</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.copyFrom(tmp</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">12</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xabbadead</span><span class="s1">)</span><span class="s3">;</span>
+
+      <span class="s1">assert.equal(</span>
+        <span class="s1">join(w.render())</span><span class="s3">,</span>
+        <span class="s2">'deadbeef0a0babbadead'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.skip'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should copy bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.reserve(</span><span class="s4">5</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">h = w.skip(</span><span class="s4">4</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xabbadead</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">h.writeUInt32BE(</span><span class="s4">0xdeadbeef</span><span class="s1">)</span><span class="s3">;</span>
+
+      <span class="s1">assert.equal(</span>
+        <span class="s1">join(w.render())</span><span class="s3">,</span>
+        <span class="s2">'deadbeefabbadead'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.forceReserve = true'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should allocate more bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">w.forceReserve = </span><span class="s0">true</span><span class="s3">;</span>
+      <span class="s1">w.reserve(</span><span class="s4">4</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xabbadead</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">w.writeUInt32BE(</span><span class="s4">0xabbadead</span><span class="s1">)</span><span class="s3">;</span>
+
+      <span class="s1">assert.equal(w.render().length</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

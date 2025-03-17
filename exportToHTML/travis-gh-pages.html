@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>travis-gh-pages</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cfd2d5;}
+.s5 { color: #808080;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+travis-gh-pages</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env bash</span>
+
+<span class="s1">set -e</span>
+
+<span class="s2">if [[ </span><span class="s3">&quot;</span><span class="s4">$TRAVIS_BRANCH</span><span class="s3">&quot; </span><span class="s2">== </span><span class="s3">&quot;master&quot; </span><span class="s2">&amp;&amp; </span><span class="s3">&quot;</span><span class="s4">$TRAVIS_PULL_REQUEST</span><span class="s3">&quot; </span><span class="s2">== </span><span class="s3">&quot;false&quot; </span><span class="s2">&amp;&amp; </span><span class="s4">$TRAVIS_JOB_NUMBER </span><span class="s2">=~ </span><span class="s3">&quot;.3&quot; </span><span class="s2">]]</span><span class="s1">; </span><span class="s2">then</span>
+  <span class="s1">git diff --name-only </span><span class="s4">$TRAVIS_COMMIT_RANGE </span><span class="s1">| grep -qE </span><span class="s3">'\.md$|^LICENSE$|travis-gh-pages$' </span><span class="s2">&amp;&amp; </span><span class="s1">{</span>
+    <span class="s1">rm -rf ../gh-pages</span>
+    <span class="s1">git clone -b gh-pages --single-branch https://</span><span class="s2">$</span><span class="s1">{GITHUB_TOKEN}@github.com/ajv-validator/ajv.git ../gh-pages</span>
+    <span class="s1">mkdir -p ../gh-pages/_source</span>
+    <span class="s1">cp *.md ../gh-pages/_source</span>
+    <span class="s1">cp LICENSE ../gh-pages/_source</span>
+    <span class="s1">currentDir=</span><span class="s2">$</span><span class="s1">(pwd)</span>
+    <span class="s1">cd ../gh-pages</span>
+    <span class="s4">$currentDir</span><span class="s1">/node_modules/.bin/gh-pages-generator</span>
+    <span class="s5"># remove logo from README</span>
+    <span class="s1">sed -i -E </span><span class="s3">&quot;s/&lt;img[^&gt;]+ajv_logo[^&gt;]+&gt;//&quot; </span><span class="s1">index.md</span>
+    <span class="s1">git config user.email </span><span class="s3">&quot;</span><span class="s4">$GIT_USER_EMAIL</span><span class="s3">&quot;</span>
+    <span class="s1">git config user.name </span><span class="s3">&quot;</span><span class="s4">$GIT_USER_NAME</span><span class="s3">&quot;</span>
+    <span class="s1">git add .</span>
+    <span class="s1">git commit -am </span><span class="s3">&quot;updated by travis build #</span><span class="s4">$TRAVIS_BUILD_NUMBER</span><span class="s3">&quot;</span>
+    <span class="s1">git push --quiet origin gh-pages </span><span class="s2">&gt; </span><span class="s1">/dev/null </span><span class="s6">2</span><span class="s1">&gt;&amp;</span><span class="s6">1</span>
+  <span class="s1">}</span>
+<span class="s2">fi</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<html>
+<head>
+<title>parse.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+parse.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">export default </span><span class="s1">parse</span><span class="s2">;</span>
+<span class="s0">export interface </span><span class="s1">Options {</span>
+    <span class="s1">lowerCaseAttributeNames?: boolean</span><span class="s2">;</span>
+    <span class="s1">lowerCaseTags?: boolean</span><span class="s2">;</span>
+    <span class="s1">xmlMode?: boolean</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">export </span><span class="s1">declare type Selector = PseudoSelector | PseudoElement | AttributeSelector | TagSelector | UniversalSelector | Traversal</span><span class="s2">;</span>
+<span class="s0">export interface </span><span class="s1">AttributeSelector {</span>
+    <span class="s1">type: </span><span class="s3">&quot;attribute&quot;</span><span class="s2">;</span>
+    <span class="s1">name: string</span><span class="s2">;</span>
+    <span class="s1">action: AttributeAction</span><span class="s2">;</span>
+    <span class="s1">value: string</span><span class="s2">;</span>
+    <span class="s1">ignoreCase: boolean</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s1">declare type DataType = Selector[][] | </span><span class="s0">null </span><span class="s1">| string</span><span class="s2">;</span>
+<span class="s0">export interface </span><span class="s1">PseudoSelector {</span>
+    <span class="s1">type: </span><span class="s3">&quot;pseudo&quot;</span><span class="s2">;</span>
+    <span class="s1">name: string</span><span class="s2">;</span>
+    <span class="s1">data: DataType</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">export interface </span><span class="s1">PseudoElement {</span>
+    <span class="s1">type: </span><span class="s3">&quot;pseudo-element&quot;</span><span class="s2">;</span>
+    <span class="s1">name: string</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">export interface </span><span class="s1">TagSelector {</span>
+    <span class="s1">type: </span><span class="s3">&quot;tag&quot;</span><span class="s2">;</span>
+    <span class="s1">name: string</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">export interface </span><span class="s1">UniversalSelector {</span>
+    <span class="s1">type: </span><span class="s3">&quot;universal&quot;</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">export interface </span><span class="s1">Traversal {</span>
+    <span class="s1">type: TraversalType</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">export </span><span class="s1">declare type AttributeAction = </span><span class="s3">&quot;any&quot; </span><span class="s1">| </span><span class="s3">&quot;element&quot; </span><span class="s1">| </span><span class="s3">&quot;end&quot; </span><span class="s1">| </span><span class="s3">&quot;equals&quot; </span><span class="s1">| </span><span class="s3">&quot;exists&quot; </span><span class="s1">| </span><span class="s3">&quot;hyphen&quot; </span><span class="s1">| </span><span class="s3">&quot;not&quot; </span><span class="s1">| </span><span class="s3">&quot;start&quot;</span><span class="s2">;</span>
+<span class="s0">export </span><span class="s1">declare type TraversalType = </span><span class="s3">&quot;adjacent&quot; </span><span class="s1">| </span><span class="s3">&quot;child&quot; </span><span class="s1">| </span><span class="s3">&quot;descendant&quot; </span><span class="s1">| </span><span class="s3">&quot;parent&quot; </span><span class="s1">| </span><span class="s3">&quot;sibling&quot;</span><span class="s2">;</span>
+<span class="s1">declare </span><span class="s0">function </span><span class="s1">parse(selector: string</span><span class="s2">, </span><span class="s1">options?: Options): Selector[][]</span><span class="s2">;</span>
+<span class="s4">//# sourceMappingURL=parse.d.ts.map</span></pre>
+</body>
+</html>

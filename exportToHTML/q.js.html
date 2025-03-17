@@ -1,0 +1,2101 @@
+<html>
+<head>
+<title>q.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8a8a8a;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8ea765;}
+.s5 { color: #cc7832;}
+.s6 { color: #6897bb;}
+.s7 { color: #8a8a8a; font-style: italic;}
+.s8 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+q.js</font>
+</center></td></tr></table>
+<pre><span class="s0">// vim:ts=4:sts=4:sw=4:</span>
+<span class="s2">/*! 
+ * 
+ * Copyright 2009-2017 Kris Kowal under the terms of the MIT 
+ * license found at https://github.com/kriskowal/q/blob/v1/LICENSE 
+ * 
+ * With parts by Tyler Close 
+ * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found 
+ * at http://www.opensource.org/licenses/mit-license.html 
+ * Forked at ref_send.js version: 2009-05-11 
+ * 
+ * With parts by Mark Miller 
+ * Copyright (C) 2011 Google Inc. 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+ */</span>
+
+<span class="s1">(</span><span class="s3">function </span><span class="s1">(definition) {</span>
+    <span class="s4">&quot;use strict&quot;</span><span class="s5">;</span>
+
+    <span class="s0">// This file will function properly as a &lt;script&gt; tag, or a module</span>
+    <span class="s0">// using CommonJS and NodeJS or RequireJS module formats.  In</span>
+    <span class="s0">// Common/Node/RequireJS, the module exports the Q API and when</span>
+    <span class="s0">// executed as a simple &lt;script&gt;, it creates a Q global instead.</span>
+
+    <span class="s0">// Montage Require</span>
+    <span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">bootstrap === </span><span class="s4">&quot;function&quot;</span><span class="s1">) {</span>
+        <span class="s1">bootstrap(</span><span class="s4">&quot;promise&quot;</span><span class="s5">, </span><span class="s1">definition)</span><span class="s5">;</span>
+
+    <span class="s0">// CommonJS</span>
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">exports === </span><span class="s4">&quot;object&quot; </span><span class="s1">&amp;&amp; </span><span class="s3">typeof </span><span class="s1">module === </span><span class="s4">&quot;object&quot;</span><span class="s1">) {</span>
+        <span class="s1">module.exports = definition()</span><span class="s5">;</span>
+
+    <span class="s0">// RequireJS</span>
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">define === </span><span class="s4">&quot;function&quot; </span><span class="s1">&amp;&amp; define.amd) {</span>
+        <span class="s1">define(definition)</span><span class="s5">;</span>
+
+    <span class="s0">// SES (Secure EcmaScript)</span>
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">ses !== </span><span class="s4">&quot;undefined&quot;</span><span class="s1">) {</span>
+        <span class="s3">if </span><span class="s1">(!ses.ok()) {</span>
+            <span class="s3">return</span><span class="s5">;</span>
+        <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+            <span class="s1">ses.makeQ = definition</span><span class="s5">;</span>
+        <span class="s1">}</span>
+
+    <span class="s0">// &lt;script&gt;</span>
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">window !== </span><span class="s4">&quot;undefined&quot; </span><span class="s1">|| </span><span class="s3">typeof </span><span class="s1">self !== </span><span class="s4">&quot;undefined&quot;</span><span class="s1">) {</span>
+        <span class="s0">// Prefer window over self for add-on scripts. Use self for</span>
+        <span class="s0">// non-windowed contexts.</span>
+        <span class="s3">var </span><span class="s1">global = </span><span class="s3">typeof </span><span class="s1">window !== </span><span class="s4">&quot;undefined&quot; </span><span class="s1">? window : self</span><span class="s5">;</span>
+
+        <span class="s0">// Get the `window` object, save the previous Q global</span>
+        <span class="s0">// and initialize Q as a global.</span>
+        <span class="s3">var </span><span class="s1">previousQ = global.Q</span><span class="s5">;</span>
+        <span class="s1">global.Q = definition()</span><span class="s5">;</span>
+
+        <span class="s0">// Add a noConflict function so Q can be removed from the</span>
+        <span class="s0">// global namespace.</span>
+        <span class="s1">global.Q.noConflict = </span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s1">global.Q = previousQ</span><span class="s5">;</span>
+            <span class="s3">return this</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">;</span>
+
+    <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+        <span class="s3">throw new </span><span class="s1">Error(</span><span class="s4">&quot;This environment was not anticipated by Q. Please file a bug.&quot;</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+<span class="s1">})(</span><span class="s3">function </span><span class="s1">() {</span>
+<span class="s4">&quot;use strict&quot;</span><span class="s5">;</span>
+
+<span class="s3">var </span><span class="s1">hasStacks = </span><span class="s3">false</span><span class="s5">;</span>
+<span class="s3">try </span><span class="s1">{</span>
+    <span class="s3">throw new </span><span class="s1">Error()</span><span class="s5">;</span>
+<span class="s1">} </span><span class="s3">catch </span><span class="s1">(e) {</span>
+    <span class="s1">hasStacks = !!e.stack</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s0">// All code after this point will be filtered from stack traces reported</span>
+<span class="s0">// by Q.</span>
+<span class="s3">var </span><span class="s1">qStartingLine = captureLine()</span><span class="s5">;</span>
+<span class="s3">var </span><span class="s1">qFileName</span><span class="s5">;</span>
+
+<span class="s0">// shims</span>
+
+<span class="s0">// used for fallback in &quot;allResolved&quot;</span>
+<span class="s3">var </span><span class="s1">noop = </span><span class="s3">function </span><span class="s1">() {}</span><span class="s5">;</span>
+
+<span class="s0">// Use the fastest possible means to execute a task in a future turn</span>
+<span class="s0">// of the event loop.</span>
+<span class="s3">var </span><span class="s1">nextTick =(</span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s0">// linked list of tasks (single, with head node)</span>
+    <span class="s3">var </span><span class="s1">head = {task: </span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s1">next: </span><span class="s3">null</span><span class="s1">}</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">tail = head</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">flushing = </span><span class="s3">false</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">requestTick = </span><span class="s3">void </span><span class="s6">0</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">isNodeJS = </span><span class="s3">false</span><span class="s5">;</span>
+    <span class="s0">// queue for late tasks, used by unhandled rejection tracking</span>
+    <span class="s3">var </span><span class="s1">laterQueue = []</span><span class="s5">;</span>
+
+    <span class="s3">function </span><span class="s1">flush() {</span>
+        <span class="s2">/* jshint loopfunc: true */</span>
+        <span class="s3">var </span><span class="s1">task</span><span class="s5">, </span><span class="s1">domain</span><span class="s5">;</span>
+
+        <span class="s3">while </span><span class="s1">(head.next) {</span>
+            <span class="s1">head = head.next</span><span class="s5">;</span>
+            <span class="s1">task = head.task</span><span class="s5">;</span>
+            <span class="s1">head.task = </span><span class="s3">void </span><span class="s6">0</span><span class="s5">;</span>
+            <span class="s1">domain = head.domain</span><span class="s5">;</span>
+
+            <span class="s3">if </span><span class="s1">(domain) {</span>
+                <span class="s1">head.domain = </span><span class="s3">void </span><span class="s6">0</span><span class="s5">;</span>
+                <span class="s1">domain.enter()</span><span class="s5">;</span>
+            <span class="s1">}</span>
+            <span class="s1">runSingle(task</span><span class="s5">, </span><span class="s1">domain)</span><span class="s5">;</span>
+
+        <span class="s1">}</span>
+        <span class="s3">while </span><span class="s1">(laterQueue.length) {</span>
+            <span class="s1">task = laterQueue.pop()</span><span class="s5">;</span>
+            <span class="s1">runSingle(task)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+        <span class="s1">flushing = </span><span class="s3">false</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s0">// runs a single function in the async queue</span>
+    <span class="s3">function </span><span class="s1">runSingle(task</span><span class="s5">, </span><span class="s1">domain) {</span>
+        <span class="s3">try </span><span class="s1">{</span>
+            <span class="s1">task()</span><span class="s5">;</span>
+
+        <span class="s1">} </span><span class="s3">catch </span><span class="s1">(e) {</span>
+            <span class="s3">if </span><span class="s1">(isNodeJS) {</span>
+                <span class="s0">// In node, uncaught exceptions are considered fatal errors.</span>
+                <span class="s0">// Re-throw them synchronously to interrupt flushing!</span>
+
+                <span class="s0">// Ensure continuation if the uncaught exception is suppressed</span>
+                <span class="s0">// listening &quot;uncaughtException&quot; events (as domains does).</span>
+                <span class="s0">// Continue in next event to avoid tick recursion.</span>
+                <span class="s3">if </span><span class="s1">(domain) {</span>
+                    <span class="s1">domain.exit()</span><span class="s5">;</span>
+                <span class="s1">}</span>
+                <span class="s1">setTimeout(flush</span><span class="s5">, </span><span class="s6">0</span><span class="s1">)</span><span class="s5">;</span>
+                <span class="s3">if </span><span class="s1">(domain) {</span>
+                    <span class="s1">domain.enter()</span><span class="s5">;</span>
+                <span class="s1">}</span>
+
+                <span class="s3">throw </span><span class="s1">e</span><span class="s5">;</span>
+
+            <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+                <span class="s0">// In browsers, uncaught exceptions are not fatal.</span>
+                <span class="s0">// Re-throw them asynchronously to avoid slow-downs.</span>
+                <span class="s1">setTimeout(</span><span class="s3">function </span><span class="s1">() {</span>
+                    <span class="s3">throw </span><span class="s1">e</span><span class="s5">;</span>
+                <span class="s1">}</span><span class="s5">, </span><span class="s6">0</span><span class="s1">)</span><span class="s5">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s3">if </span><span class="s1">(domain) {</span>
+            <span class="s1">domain.exit()</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s1">nextTick = </span><span class="s3">function </span><span class="s1">(task) {</span>
+        <span class="s1">tail = tail.next = {</span>
+            <span class="s1">task: task</span><span class="s5">,</span>
+            <span class="s1">domain: isNodeJS &amp;&amp; process.domain</span><span class="s5">,</span>
+            <span class="s1">next: </span><span class="s3">null</span>
+        <span class="s1">}</span><span class="s5">;</span>
+
+        <span class="s3">if </span><span class="s1">(!flushing) {</span>
+            <span class="s1">flushing = </span><span class="s3">true</span><span class="s5">;</span>
+            <span class="s1">requestTick()</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s5">;</span>
+
+    <span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">process === </span><span class="s4">&quot;object&quot; </span><span class="s1">&amp;&amp;</span>
+        <span class="s1">process.toString() === </span><span class="s4">&quot;[object process]&quot; </span><span class="s1">&amp;&amp; process.nextTick) {</span>
+        <span class="s0">// Ensure Q is in a real Node environment, with a `process.nextTick`.</span>
+        <span class="s0">// To see through fake Node environments:</span>
+        <span class="s0">// * Mocha test runner - exposes a `process` global without a `nextTick`</span>
+        <span class="s0">// * Browserify - exposes a `process.nexTick` function that uses</span>
+        <span class="s0">//   `setTimeout`. In this case `setImmediate` is preferred because</span>
+        <span class="s0">//    it is faster. Browserify's `process.toString()` yields</span>
+        <span class="s0">//   &quot;[object Object]&quot;, while in a real Node environment</span>
+        <span class="s0">//   `process.toString()` yields &quot;[object process]&quot;.</span>
+        <span class="s1">isNodeJS = </span><span class="s3">true</span><span class="s5">;</span>
+
+        <span class="s1">requestTick = </span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s1">process.nextTick(flush)</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">;</span>
+
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">setImmediate === </span><span class="s4">&quot;function&quot;</span><span class="s1">) {</span>
+        <span class="s0">// In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate</span>
+        <span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">window !== </span><span class="s4">&quot;undefined&quot;</span><span class="s1">) {</span>
+            <span class="s1">requestTick = setImmediate.bind(window</span><span class="s5">, </span><span class="s1">flush)</span><span class="s5">;</span>
+        <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+            <span class="s1">requestTick = </span><span class="s3">function </span><span class="s1">() {</span>
+                <span class="s1">setImmediate(flush)</span><span class="s5">;</span>
+            <span class="s1">}</span><span class="s5">;</span>
+        <span class="s1">}</span>
+
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">MessageChannel !== </span><span class="s4">&quot;undefined&quot;</span><span class="s1">) {</span>
+        <span class="s0">// modern browsers</span>
+        <span class="s0">// http://www.nonblocking.io/2011/06/windownexttick.html</span>
+        <span class="s3">var </span><span class="s1">channel = </span><span class="s3">new </span><span class="s1">MessageChannel()</span><span class="s5">;</span>
+        <span class="s0">// At least Safari Version 6.0.5 (8536.30.1) intermittently cannot create</span>
+        <span class="s0">// working message ports the first time a page loads.</span>
+        <span class="s1">channel.port1.onmessage = </span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s1">requestTick = requestPortTick</span><span class="s5">;</span>
+            <span class="s1">channel.port1.onmessage = flush</span><span class="s5">;</span>
+            <span class="s1">flush()</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">;</span>
+        <span class="s3">var </span><span class="s1">requestPortTick = </span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s0">// Opera requires us to provide a message payload, regardless of</span>
+            <span class="s0">// whether we use it.</span>
+            <span class="s1">channel.port2.postMessage(</span><span class="s6">0</span><span class="s1">)</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">;</span>
+        <span class="s1">requestTick = </span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s1">setTimeout(flush</span><span class="s5">, </span><span class="s6">0</span><span class="s1">)</span><span class="s5">;</span>
+            <span class="s1">requestPortTick()</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">;</span>
+
+    <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+        <span class="s0">// old browsers</span>
+        <span class="s1">requestTick = </span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s1">setTimeout(flush</span><span class="s5">, </span><span class="s6">0</span><span class="s1">)</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s0">// runs a task after all other tasks have been run</span>
+    <span class="s0">// this is useful for unhandled rejection tracking that needs to happen</span>
+    <span class="s0">// after all `then`d tasks have been run.</span>
+    <span class="s1">nextTick.runAfter = </span><span class="s3">function </span><span class="s1">(task) {</span>
+        <span class="s1">laterQueue.push(task)</span><span class="s5">;</span>
+        <span class="s3">if </span><span class="s1">(!flushing) {</span>
+            <span class="s1">flushing = </span><span class="s3">true</span><span class="s5">;</span>
+            <span class="s1">requestTick()</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s5">;</span>
+    <span class="s3">return </span><span class="s1">nextTick</span><span class="s5">;</span>
+<span class="s1">})()</span><span class="s5">;</span>
+
+<span class="s0">// Attempt to make generics safe in the face of downstream</span>
+<span class="s0">// modifications.</span>
+<span class="s0">// There is no situation where this is necessary.</span>
+<span class="s0">// If you need a security guarantee, these primordials need to be</span>
+<span class="s0">// deeply frozen anyway, and if you don’t need a security guarantee,</span>
+<span class="s0">// this is just plain paranoid.</span>
+<span class="s0">// However, this **might** have the nice side-effect of reducing the size of</span>
+<span class="s0">// the minified code by reducing x.call() to merely x()</span>
+<span class="s0">// See Mark Miller’s explanation of what this does.</span>
+<span class="s0">// http://wiki.ecmascript.org/doku.php?id=conventions:safe_meta_programming</span>
+<span class="s3">var </span><span class="s1">call = Function.call</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">uncurryThis(f) {</span>
+    <span class="s3">return function </span><span class="s1">() {</span>
+        <span class="s3">return </span><span class="s1">call.apply(f</span><span class="s5">, </span><span class="s1">arguments)</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s0">// This is equivalent, but slower:</span>
+<span class="s0">// uncurryThis = Function_bind.bind(Function_bind.call);</span>
+<span class="s0">// http://jsperf.com/uncurrythis</span>
+
+<span class="s3">var </span><span class="s1">array_slice = uncurryThis(Array.prototype.slice)</span><span class="s5">;</span>
+
+<span class="s3">var </span><span class="s1">array_reduce = uncurryThis(</span>
+    <span class="s1">Array.prototype.reduce || </span><span class="s3">function </span><span class="s1">(callback</span><span class="s5">, </span><span class="s1">basis) {</span>
+        <span class="s3">var </span><span class="s1">index = </span><span class="s6">0</span><span class="s5">,</span>
+            <span class="s1">length = </span><span class="s3">this</span><span class="s1">.length</span><span class="s5">;</span>
+        <span class="s0">// concerning the initial value, if one is not provided</span>
+        <span class="s3">if </span><span class="s1">(arguments.length === </span><span class="s6">1</span><span class="s1">) {</span>
+            <span class="s0">// seek to the first value in the array, accounting</span>
+            <span class="s0">// for the possibility that is is a sparse array</span>
+            <span class="s3">do </span><span class="s1">{</span>
+                <span class="s3">if </span><span class="s1">(index </span><span class="s3">in this</span><span class="s1">) {</span>
+                    <span class="s1">basis = </span><span class="s3">this</span><span class="s1">[index++]</span><span class="s5">;</span>
+                    <span class="s3">break</span><span class="s5">;</span>
+                <span class="s1">}</span>
+                <span class="s3">if </span><span class="s1">(++index &gt;= length) {</span>
+                    <span class="s3">throw new </span><span class="s1">TypeError()</span><span class="s5">;</span>
+                <span class="s1">}</span>
+            <span class="s1">} </span><span class="s3">while </span><span class="s1">(</span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+        <span class="s0">// reduce</span>
+        <span class="s3">for </span><span class="s1">(</span><span class="s5">; </span><span class="s1">index &lt; length</span><span class="s5">; </span><span class="s1">index++) {</span>
+            <span class="s0">// account for the possibility that the array is sparse</span>
+            <span class="s3">if </span><span class="s1">(index </span><span class="s3">in this</span><span class="s1">) {</span>
+                <span class="s1">basis = callback(basis</span><span class="s5">, </span><span class="s3">this</span><span class="s1">[index]</span><span class="s5">, </span><span class="s1">index)</span><span class="s5">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s3">return </span><span class="s1">basis</span><span class="s5">;</span>
+    <span class="s1">}</span>
+<span class="s1">)</span><span class="s5">;</span>
+
+<span class="s3">var </span><span class="s1">array_indexOf = uncurryThis(</span>
+    <span class="s1">Array.prototype.indexOf || </span><span class="s3">function </span><span class="s1">(value) {</span>
+        <span class="s0">// not a very good shim, but good enough for our one use of it</span>
+        <span class="s3">for </span><span class="s1">(</span><span class="s3">var </span><span class="s1">i = </span><span class="s6">0</span><span class="s5">; </span><span class="s1">i &lt; </span><span class="s3">this</span><span class="s1">.length</span><span class="s5">; </span><span class="s1">i++) {</span>
+            <span class="s3">if </span><span class="s1">(</span><span class="s3">this</span><span class="s1">[i] === value) {</span>
+                <span class="s3">return </span><span class="s1">i</span><span class="s5">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s3">return </span><span class="s1">-</span><span class="s6">1</span><span class="s5">;</span>
+    <span class="s1">}</span>
+<span class="s1">)</span><span class="s5">;</span>
+
+<span class="s3">var </span><span class="s1">array_map = uncurryThis(</span>
+    <span class="s1">Array.prototype.map || </span><span class="s3">function </span><span class="s1">(callback</span><span class="s5">, </span><span class="s1">thisp) {</span>
+        <span class="s3">var </span><span class="s1">self = </span><span class="s3">this</span><span class="s5">;</span>
+        <span class="s3">var </span><span class="s1">collect = []</span><span class="s5">;</span>
+        <span class="s1">array_reduce(self</span><span class="s5">, </span><span class="s3">function </span><span class="s1">(undefined</span><span class="s5">, </span><span class="s1">value</span><span class="s5">, </span><span class="s1">index) {</span>
+            <span class="s1">collect.push(callback.call(thisp</span><span class="s5">, </span><span class="s1">value</span><span class="s5">, </span><span class="s1">index</span><span class="s5">, </span><span class="s1">self))</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">, </span><span class="s3">void </span><span class="s6">0</span><span class="s1">)</span><span class="s5">;</span>
+        <span class="s3">return </span><span class="s1">collect</span><span class="s5">;</span>
+    <span class="s1">}</span>
+<span class="s1">)</span><span class="s5">;</span>
+
+<span class="s3">var </span><span class="s1">object_create = Object.create || </span><span class="s3">function </span><span class="s1">(prototype) {</span>
+    <span class="s3">function </span><span class="s1">Type() { }</span>
+    <span class="s1">Type.prototype = prototype</span><span class="s5">;</span>
+    <span class="s3">return new </span><span class="s1">Type()</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s3">var </span><span class="s1">object_defineProperty = Object.defineProperty || </span><span class="s3">function </span><span class="s1">(obj</span><span class="s5">, </span><span class="s1">prop</span><span class="s5">, </span><span class="s1">descriptor) {</span>
+    <span class="s1">obj[prop] = descriptor.value</span><span class="s5">;</span>
+    <span class="s3">return </span><span class="s1">obj</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s3">var </span><span class="s1">object_hasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty)</span><span class="s5">;</span>
+
+<span class="s3">var </span><span class="s1">object_keys = Object.keys || </span><span class="s3">function </span><span class="s1">(object) {</span>
+    <span class="s3">var </span><span class="s1">keys = []</span><span class="s5">;</span>
+    <span class="s3">for </span><span class="s1">(</span><span class="s3">var </span><span class="s1">key </span><span class="s3">in </span><span class="s1">object) {</span>
+        <span class="s3">if </span><span class="s1">(object_hasOwnProperty(object</span><span class="s5">, </span><span class="s1">key)) {</span>
+            <span class="s1">keys.push(key)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s3">return </span><span class="s1">keys</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s3">var </span><span class="s1">object_toString = uncurryThis(Object.prototype.toString)</span><span class="s5">;</span>
+
+<span class="s3">function </span><span class="s1">isObject(value) {</span>
+    <span class="s3">return </span><span class="s1">value === Object(value)</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s0">// generator related shims</span>
+
+<span class="s0">// FIXME: Remove this function once ES6 generators are in SpiderMonkey.</span>
+<span class="s3">function </span><span class="s1">isStopIteration(exception) {</span>
+    <span class="s3">return </span><span class="s1">(</span>
+        <span class="s1">object_toString(exception) === </span><span class="s4">&quot;[object StopIteration]&quot; </span><span class="s1">||</span>
+        <span class="s1">exception </span><span class="s3">instanceof </span><span class="s1">QReturnValue</span>
+    <span class="s1">)</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s0">// FIXME: Remove this helper and Q.return once ES6 generators are in</span>
+<span class="s0">// SpiderMonkey.</span>
+<span class="s3">var </span><span class="s1">QReturnValue</span><span class="s5">;</span>
+<span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">ReturnValue !== </span><span class="s4">&quot;undefined&quot;</span><span class="s1">) {</span>
+    <span class="s1">QReturnValue = ReturnValue</span><span class="s5">;</span>
+<span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+    <span class="s1">QReturnValue = </span><span class="s3">function </span><span class="s1">(value) {</span>
+        <span class="s3">this</span><span class="s1">.value = value</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s0">// long stack traces</span>
+
+<span class="s3">var </span><span class="s1">STACK_JUMP_SEPARATOR = </span><span class="s4">&quot;From previous event:&quot;</span><span class="s5">;</span>
+
+<span class="s3">function </span><span class="s1">makeStackTraceLong(error</span><span class="s5">, </span><span class="s1">promise) {</span>
+    <span class="s0">// If possible, transform the error stack trace by removing Node and Q</span>
+    <span class="s0">// cruft, then concatenating with the stack trace of `promise`. See #57.</span>
+    <span class="s3">if </span><span class="s1">(hasStacks &amp;&amp;</span>
+        <span class="s1">promise.stack &amp;&amp;</span>
+        <span class="s3">typeof </span><span class="s1">error === </span><span class="s4">&quot;object&quot; </span><span class="s1">&amp;&amp;</span>
+        <span class="s1">error !== </span><span class="s3">null </span><span class="s1">&amp;&amp;</span>
+        <span class="s1">error.stack</span>
+    <span class="s1">) {</span>
+        <span class="s3">var </span><span class="s1">stacks = []</span><span class="s5">;</span>
+        <span class="s3">for </span><span class="s1">(</span><span class="s3">var </span><span class="s1">p = promise</span><span class="s5">; </span><span class="s1">!!p</span><span class="s5">; </span><span class="s1">p = p.source) {</span>
+            <span class="s3">if </span><span class="s1">(p.stack &amp;&amp; (!error.__minimumStackCounter__ || error.__minimumStackCounter__ &gt; p.stackCounter)) {</span>
+                <span class="s1">object_defineProperty(error</span><span class="s5">, </span><span class="s4">&quot;__minimumStackCounter__&quot;</span><span class="s5">, </span><span class="s1">{value: p.stackCounter</span><span class="s5">, </span><span class="s1">configurable: </span><span class="s3">true</span><span class="s1">})</span><span class="s5">;</span>
+                <span class="s1">stacks.unshift(p.stack)</span><span class="s5">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s1">stacks.unshift(error.stack)</span><span class="s5">;</span>
+
+        <span class="s3">var </span><span class="s1">concatedStacks = stacks.join(</span><span class="s4">&quot;</span><span class="s5">\n</span><span class="s4">&quot; </span><span class="s1">+ STACK_JUMP_SEPARATOR + </span><span class="s4">&quot;</span><span class="s5">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s5">;</span>
+        <span class="s3">var </span><span class="s1">stack = filterStackString(concatedStacks)</span><span class="s5">;</span>
+        <span class="s1">object_defineProperty(error</span><span class="s5">, </span><span class="s4">&quot;stack&quot;</span><span class="s5">, </span><span class="s1">{value: stack</span><span class="s5">, </span><span class="s1">configurable: </span><span class="s3">true</span><span class="s1">})</span><span class="s5">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">filterStackString(stackString) {</span>
+    <span class="s3">var </span><span class="s1">lines = stackString.split(</span><span class="s4">&quot;</span><span class="s5">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">desiredLines = []</span><span class="s5">;</span>
+    <span class="s3">for </span><span class="s1">(</span><span class="s3">var </span><span class="s1">i = </span><span class="s6">0</span><span class="s5">; </span><span class="s1">i &lt; lines.length</span><span class="s5">; </span><span class="s1">++i) {</span>
+        <span class="s3">var </span><span class="s1">line = lines[i]</span><span class="s5">;</span>
+
+        <span class="s3">if </span><span class="s1">(!isInternalFrame(line) &amp;&amp; !isNodeFrame(line) &amp;&amp; line) {</span>
+            <span class="s1">desiredLines.push(line)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s3">return </span><span class="s1">desiredLines.join(</span><span class="s4">&quot;</span><span class="s5">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">isNodeFrame(stackLine) {</span>
+    <span class="s3">return </span><span class="s1">stackLine.indexOf(</span><span class="s4">&quot;(module.js:&quot;</span><span class="s1">) !== -</span><span class="s6">1 </span><span class="s1">||</span>
+           <span class="s1">stackLine.indexOf(</span><span class="s4">&quot;(node.js:&quot;</span><span class="s1">) !== -</span><span class="s6">1</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">getFileNameAndLineNumber(stackLine) {</span>
+    <span class="s0">// Named functions: &quot;at functionName (filename:lineNumber:columnNumber)&quot;</span>
+    <span class="s0">// In IE10 function name can have spaces (&quot;Anonymous function&quot;) O_o</span>
+    <span class="s3">var </span><span class="s1">attempt1 = </span><span class="s6">/at .+ \((.+):(\d+):(?:\d+)\)$/</span><span class="s1">.exec(stackLine)</span><span class="s5">;</span>
+    <span class="s3">if </span><span class="s1">(attempt1) {</span>
+        <span class="s3">return </span><span class="s1">[attempt1[</span><span class="s6">1</span><span class="s1">]</span><span class="s5">, </span><span class="s1">Number(attempt1[</span><span class="s6">2</span><span class="s1">])]</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// Anonymous functions: &quot;at filename:lineNumber:columnNumber&quot;</span>
+    <span class="s3">var </span><span class="s1">attempt2 = </span><span class="s6">/at ([^ ]+):(\d+):(?:\d+)$/</span><span class="s1">.exec(stackLine)</span><span class="s5">;</span>
+    <span class="s3">if </span><span class="s1">(attempt2) {</span>
+        <span class="s3">return </span><span class="s1">[attempt2[</span><span class="s6">1</span><span class="s1">]</span><span class="s5">, </span><span class="s1">Number(attempt2[</span><span class="s6">2</span><span class="s1">])]</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// Firefox style: &quot;function@filename:lineNumber or @filename:lineNumber&quot;</span>
+    <span class="s3">var </span><span class="s1">attempt3 = </span><span class="s6">/.*@(.+):(\d+)$/</span><span class="s1">.exec(stackLine)</span><span class="s5">;</span>
+    <span class="s3">if </span><span class="s1">(attempt3) {</span>
+        <span class="s3">return </span><span class="s1">[attempt3[</span><span class="s6">1</span><span class="s1">]</span><span class="s5">, </span><span class="s1">Number(attempt3[</span><span class="s6">2</span><span class="s1">])]</span><span class="s5">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">isInternalFrame(stackLine) {</span>
+    <span class="s3">var </span><span class="s1">fileNameAndLineNumber = getFileNameAndLineNumber(stackLine)</span><span class="s5">;</span>
+
+    <span class="s3">if </span><span class="s1">(!fileNameAndLineNumber) {</span>
+        <span class="s3">return false</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s3">var </span><span class="s1">fileName = fileNameAndLineNumber[</span><span class="s6">0</span><span class="s1">]</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">lineNumber = fileNameAndLineNumber[</span><span class="s6">1</span><span class="s1">]</span><span class="s5">;</span>
+
+    <span class="s3">return </span><span class="s1">fileName === qFileName &amp;&amp;</span>
+        <span class="s1">lineNumber &gt;= qStartingLine &amp;&amp;</span>
+        <span class="s1">lineNumber &lt;= qEndingLine</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s0">// discover own file name and line number range for filtering stack</span>
+<span class="s0">// traces</span>
+<span class="s3">function </span><span class="s1">captureLine() {</span>
+    <span class="s3">if </span><span class="s1">(!hasStacks) {</span>
+        <span class="s3">return</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s3">try </span><span class="s1">{</span>
+        <span class="s3">throw new </span><span class="s1">Error()</span><span class="s5">;</span>
+    <span class="s1">} </span><span class="s3">catch </span><span class="s1">(e) {</span>
+        <span class="s3">var </span><span class="s1">lines = e.stack.split(</span><span class="s4">&quot;</span><span class="s5">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s5">;</span>
+        <span class="s3">var </span><span class="s1">firstLine = lines[</span><span class="s6">0</span><span class="s1">].indexOf(</span><span class="s4">&quot;@&quot;</span><span class="s1">) &gt; </span><span class="s6">0 </span><span class="s1">? lines[</span><span class="s6">1</span><span class="s1">] : lines[</span><span class="s6">2</span><span class="s1">]</span><span class="s5">;</span>
+        <span class="s3">var </span><span class="s1">fileNameAndLineNumber = getFileNameAndLineNumber(firstLine)</span><span class="s5">;</span>
+        <span class="s3">if </span><span class="s1">(!fileNameAndLineNumber) {</span>
+            <span class="s3">return</span><span class="s5">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">qFileName = fileNameAndLineNumber[</span><span class="s6">0</span><span class="s1">]</span><span class="s5">;</span>
+        <span class="s3">return </span><span class="s1">fileNameAndLineNumber[</span><span class="s6">1</span><span class="s1">]</span><span class="s5">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">deprecate(callback</span><span class="s5">, </span><span class="s1">name</span><span class="s5">, </span><span class="s1">alternative) {</span>
+    <span class="s3">return function </span><span class="s1">() {</span>
+        <span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">console !== </span><span class="s4">&quot;undefined&quot; </span><span class="s1">&amp;&amp;</span>
+            <span class="s3">typeof </span><span class="s1">console.warn === </span><span class="s4">&quot;function&quot;</span><span class="s1">) {</span>
+            <span class="s1">console.warn(name + </span><span class="s4">&quot; is deprecated, use &quot; </span><span class="s1">+ alternative +</span>
+                         <span class="s4">&quot; instead.&quot;</span><span class="s5">, </span><span class="s3">new </span><span class="s1">Error(</span><span class="s4">&quot;&quot;</span><span class="s1">).stack)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+        <span class="s3">return </span><span class="s1">callback.apply(callback</span><span class="s5">, </span><span class="s1">arguments)</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s0">// end of shims</span>
+<span class="s0">// beginning of real work</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Constructs a promise for an immediate reference, passes promises through, or</span>
+ <span class="s7">* coerces promises from different systems.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">value immediate reference or promise</span>
+ <span class="s7">*/</span>
+<span class="s3">function </span><span class="s1">Q(value) {</span>
+    <span class="s0">// If the object is already a Promise, return it directly.  This enables</span>
+    <span class="s0">// the resolve function to both be used to created references from objects,</span>
+    <span class="s0">// but to tolerably coerce non-promises to promises.</span>
+    <span class="s3">if </span><span class="s1">(value </span><span class="s3">instanceof </span><span class="s1">Promise) {</span>
+        <span class="s3">return </span><span class="s1">value</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// assimilate thenables</span>
+    <span class="s3">if </span><span class="s1">(isPromiseAlike(value)) {</span>
+        <span class="s3">return </span><span class="s1">coerce(value)</span><span class="s5">;</span>
+    <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+        <span class="s3">return </span><span class="s1">fulfill(value)</span><span class="s5">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+<span class="s1">Q.resolve = Q</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Performs a task in a future turn of the event loop.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Function} task</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.nextTick = nextTick</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Controls whether or not long stack traces will be on</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.longStackSupport = </span><span class="s3">false</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* The counter is used to determine the stopping point for building</span>
+ <span class="s7">* long stack traces. In makeStackTraceLong we walk backwards through</span>
+ <span class="s7">* the linked list of promises, only stacks which were created before</span>
+ <span class="s7">* the rejection are concatenated.</span>
+ <span class="s7">*/</span>
+<span class="s3">var </span><span class="s1">longStackCounter = </span><span class="s6">1</span><span class="s5">;</span>
+
+<span class="s0">// enable long stacks if Q_DEBUG is set</span>
+<span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">process === </span><span class="s4">&quot;object&quot; </span><span class="s1">&amp;&amp; process &amp;&amp; process.env &amp;&amp; process.env.Q_DEBUG) {</span>
+    <span class="s1">Q.longStackSupport = </span><span class="s3">true</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Constructs a {promise, resolve, reject} object.</span>
+ <span class="s7">*</span>
+ <span class="s7">* `resolve` is a callback to invoke with a more resolved value for the</span>
+ <span class="s7">* promise. To fulfill the promise, invoke `resolve` with any value that is</span>
+ <span class="s7">* not a thenable. To reject the promise, invoke `resolve` with a rejected</span>
+ <span class="s7">* thenable, or invoke `reject` with the reason directly. To resolve the</span>
+ <span class="s7">* promise to another thenable, thus putting it in the same state, invoke</span>
+ <span class="s7">* `resolve` with that other thenable.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.defer = defer</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">defer() {</span>
+    <span class="s0">// if &quot;messages&quot; is an &quot;Array&quot;, that indicates that the promise has not yet</span>
+    <span class="s0">// been resolved.  If it is &quot;undefined&quot;, it has been resolved.  Each</span>
+    <span class="s0">// element of the messages array is itself an array of complete arguments to</span>
+    <span class="s0">// forward to the resolved promise.  We coerce the resolution value to a</span>
+    <span class="s0">// promise using the `resolve` function because it handles both fully</span>
+    <span class="s0">// non-thenable values and other thenables gracefully.</span>
+    <span class="s3">var </span><span class="s1">messages = []</span><span class="s5">, </span><span class="s1">progressListeners = []</span><span class="s5">, </span><span class="s1">resolvedPromise</span><span class="s5">;</span>
+
+    <span class="s3">var </span><span class="s1">deferred = object_create(defer.prototype)</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">promise = object_create(Promise.prototype)</span><span class="s5">;</span>
+
+    <span class="s1">promise.promiseDispatch = </span><span class="s3">function </span><span class="s1">(resolve</span><span class="s5">, </span><span class="s1">op</span><span class="s5">, </span><span class="s1">operands) {</span>
+        <span class="s3">var </span><span class="s1">args = array_slice(arguments)</span><span class="s5">;</span>
+        <span class="s3">if </span><span class="s1">(messages) {</span>
+            <span class="s1">messages.push(args)</span><span class="s5">;</span>
+            <span class="s3">if </span><span class="s1">(op === </span><span class="s4">&quot;when&quot; </span><span class="s1">&amp;&amp; operands[</span><span class="s6">1</span><span class="s1">]) { </span><span class="s0">// progress operand</span>
+                <span class="s1">progressListeners.push(operands[</span><span class="s6">1</span><span class="s1">])</span><span class="s5">;</span>
+            <span class="s1">}</span>
+        <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+            <span class="s1">Q.nextTick(</span><span class="s3">function </span><span class="s1">() {</span>
+                <span class="s1">resolvedPromise.promiseDispatch.apply(resolvedPromise</span><span class="s5">, </span><span class="s1">args)</span><span class="s5">;</span>
+            <span class="s1">})</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s5">;</span>
+
+    <span class="s0">// XXX deprecated</span>
+    <span class="s1">promise.valueOf = </span><span class="s3">function </span><span class="s1">() {</span>
+        <span class="s3">if </span><span class="s1">(messages) {</span>
+            <span class="s3">return </span><span class="s1">promise</span><span class="s5">;</span>
+        <span class="s1">}</span>
+        <span class="s3">var </span><span class="s1">nearerValue = nearer(resolvedPromise)</span><span class="s5">;</span>
+        <span class="s3">if </span><span class="s1">(isPromise(nearerValue)) {</span>
+            <span class="s1">resolvedPromise = nearerValue</span><span class="s5">; </span><span class="s0">// shorten chain</span>
+        <span class="s1">}</span>
+        <span class="s3">return </span><span class="s1">nearerValue</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+
+    <span class="s1">promise.inspect = </span><span class="s3">function </span><span class="s1">() {</span>
+        <span class="s3">if </span><span class="s1">(!resolvedPromise) {</span>
+            <span class="s3">return </span><span class="s1">{ state: </span><span class="s4">&quot;pending&quot; </span><span class="s1">}</span><span class="s5">;</span>
+        <span class="s1">}</span>
+        <span class="s3">return </span><span class="s1">resolvedPromise.inspect()</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+
+    <span class="s3">if </span><span class="s1">(Q.longStackSupport &amp;&amp; hasStacks) {</span>
+        <span class="s3">try </span><span class="s1">{</span>
+            <span class="s3">throw new </span><span class="s1">Error()</span><span class="s5">;</span>
+        <span class="s1">} </span><span class="s3">catch </span><span class="s1">(e) {</span>
+            <span class="s0">// NOTE: don't try to use `Error.captureStackTrace` or transfer the</span>
+            <span class="s0">// accessor around; that causes memory leaks as per GH-111. Just</span>
+            <span class="s0">// reify the stack trace as a string ASAP.</span>
+            <span class="s0">//</span>
+            <span class="s0">// At the same time, cut off the first line; it's always just</span>
+            <span class="s0">// &quot;[object Promise]\n&quot;, as per the `toString`.</span>
+            <span class="s1">promise.stack = e.stack.substring(e.stack.indexOf(</span><span class="s4">&quot;</span><span class="s5">\n</span><span class="s4">&quot;</span><span class="s1">) + </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span>
+            <span class="s1">promise.stackCounter = longStackCounter++</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// NOTE: we do the checks for `resolvedPromise` in each method, instead of</span>
+    <span class="s0">// consolidating them into `become`, since otherwise we'd create new</span>
+    <span class="s0">// promises with the lines `become(whatever(value))`. See e.g. GH-252.</span>
+
+    <span class="s3">function </span><span class="s1">become(newPromise) {</span>
+        <span class="s1">resolvedPromise = newPromise</span><span class="s5">;</span>
+
+        <span class="s3">if </span><span class="s1">(Q.longStackSupport &amp;&amp; hasStacks) {</span>
+            <span class="s0">// Only hold a reference to the new promise if long stacks</span>
+            <span class="s0">// are enabled to reduce memory usage</span>
+            <span class="s1">promise.source = newPromise</span><span class="s5">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">array_reduce(messages</span><span class="s5">, </span><span class="s3">function </span><span class="s1">(undefined</span><span class="s5">, </span><span class="s1">message) {</span>
+            <span class="s1">Q.nextTick(</span><span class="s3">function </span><span class="s1">() {</span>
+                <span class="s1">newPromise.promiseDispatch.apply(newPromise</span><span class="s5">, </span><span class="s1">message)</span><span class="s5">;</span>
+            <span class="s1">})</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">, </span><span class="s3">void </span><span class="s6">0</span><span class="s1">)</span><span class="s5">;</span>
+
+        <span class="s1">messages = </span><span class="s3">void </span><span class="s6">0</span><span class="s5">;</span>
+        <span class="s1">progressListeners = </span><span class="s3">void </span><span class="s6">0</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">deferred.promise = promise</span><span class="s5">;</span>
+    <span class="s1">deferred.resolve = </span><span class="s3">function </span><span class="s1">(value) {</span>
+        <span class="s3">if </span><span class="s1">(resolvedPromise) {</span>
+            <span class="s3">return</span><span class="s5">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">become(Q(value))</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+
+    <span class="s1">deferred.fulfill = </span><span class="s3">function </span><span class="s1">(value) {</span>
+        <span class="s3">if </span><span class="s1">(resolvedPromise) {</span>
+            <span class="s3">return</span><span class="s5">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">become(fulfill(value))</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+    <span class="s1">deferred.reject = </span><span class="s3">function </span><span class="s1">(reason) {</span>
+        <span class="s3">if </span><span class="s1">(resolvedPromise) {</span>
+            <span class="s3">return</span><span class="s5">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">become(reject(reason))</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+    <span class="s1">deferred.notify = </span><span class="s3">function </span><span class="s1">(progress) {</span>
+        <span class="s3">if </span><span class="s1">(resolvedPromise) {</span>
+            <span class="s3">return</span><span class="s5">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">array_reduce(progressListeners</span><span class="s5">, </span><span class="s3">function </span><span class="s1">(undefined</span><span class="s5">, </span><span class="s1">progressListener) {</span>
+            <span class="s1">Q.nextTick(</span><span class="s3">function </span><span class="s1">() {</span>
+                <span class="s1">progressListener(progress)</span><span class="s5">;</span>
+            <span class="s1">})</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">, </span><span class="s3">void </span><span class="s6">0</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+
+    <span class="s3">return </span><span class="s1">deferred</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Creates a Node-style callback that will resolve or reject the deferred</span>
+ <span class="s7">* promise.</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">a nodeback</span>
+ <span class="s7">*/</span>
+<span class="s1">defer.prototype.makeNodeResolver = </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s3">var </span><span class="s1">self = </span><span class="s3">this</span><span class="s5">;</span>
+    <span class="s3">return function </span><span class="s1">(error</span><span class="s5">, </span><span class="s1">value) {</span>
+        <span class="s3">if </span><span class="s1">(error) {</span>
+            <span class="s1">self.reject(error)</span><span class="s5">;</span>
+        <span class="s1">} </span><span class="s3">else if </span><span class="s1">(arguments.length &gt; </span><span class="s6">2</span><span class="s1">) {</span>
+            <span class="s1">self.resolve(array_slice(arguments</span><span class="s5">, </span><span class="s6">1</span><span class="s1">))</span><span class="s5">;</span>
+        <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+            <span class="s1">self.resolve(value)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">resolver {Function} a function that returns nothing and accepts</span>
+ <span class="s7">* the resolve, reject, and notify functions for a deferred.</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">a promise that may be resolved with the given resolve and reject</span>
+ <span class="s7">* functions, or rejected by a thrown exception in resolver</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.Promise = promise</span><span class="s5">; </span><span class="s0">// ES6</span>
+<span class="s1">Q.promise = promise</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">promise(resolver) {</span>
+    <span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">resolver !== </span><span class="s4">&quot;function&quot;</span><span class="s1">) {</span>
+        <span class="s3">throw new </span><span class="s1">TypeError(</span><span class="s4">&quot;resolver must be a function.&quot;</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s3">var </span><span class="s1">deferred = defer()</span><span class="s5">;</span>
+    <span class="s3">try </span><span class="s1">{</span>
+        <span class="s1">resolver(deferred.resolve</span><span class="s5">, </span><span class="s1">deferred.reject</span><span class="s5">, </span><span class="s1">deferred.notify)</span><span class="s5">;</span>
+    <span class="s1">} </span><span class="s3">catch </span><span class="s1">(reason) {</span>
+        <span class="s1">deferred.reject(reason)</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">promise.race = race</span><span class="s5">; </span><span class="s0">// ES6</span>
+<span class="s1">promise.all = all</span><span class="s5">; </span><span class="s0">// ES6</span>
+<span class="s1">promise.reject = reject</span><span class="s5">; </span><span class="s0">// ES6</span>
+<span class="s1">promise.resolve = Q</span><span class="s5">; </span><span class="s0">// ES6</span>
+
+<span class="s0">// XXX experimental.  This method is a way to denote that a local value is</span>
+<span class="s0">// serializable and should be immediately dispatched to a remote upon request,</span>
+<span class="s0">// instead of passing a reference.</span>
+<span class="s1">Q.passByCopy = </span><span class="s3">function </span><span class="s1">(object) {</span>
+    <span class="s0">//freeze(object);</span>
+    <span class="s0">//passByCopies.set(object, true);</span>
+    <span class="s3">return </span><span class="s1">object</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.passByCopy = </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s0">//freeze(object);</span>
+    <span class="s0">//passByCopies.set(object, true);</span>
+    <span class="s3">return this</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* If two promises eventually fulfill to the same value, promises that value,</span>
+ <span class="s7">* but otherwise rejects.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">x {Any*}</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">y {Any*}</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">{Any*} a promise for x and y if they are the same, but a rejection</span>
+ <span class="s7">* otherwise.</span>
+ <span class="s7">*</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.join = </span><span class="s3">function </span><span class="s1">(x</span><span class="s5">, </span><span class="s1">y) {</span>
+    <span class="s3">return </span><span class="s1">Q(x).join(y)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.join = </span><span class="s3">function </span><span class="s1">(that) {</span>
+    <span class="s3">return </span><span class="s1">Q([</span><span class="s3">this</span><span class="s5">, </span><span class="s1">that]).spread(</span><span class="s3">function </span><span class="s1">(x</span><span class="s5">, </span><span class="s1">y) {</span>
+        <span class="s3">if </span><span class="s1">(x === y) {</span>
+            <span class="s0">// TODO: &quot;===&quot; should be Object.is or equiv</span>
+            <span class="s3">return </span><span class="s1">x</span><span class="s5">;</span>
+        <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+            <span class="s3">throw new </span><span class="s1">Error(</span><span class="s4">&quot;Q can't join: not the same: &quot; </span><span class="s1">+ x + </span><span class="s4">&quot; &quot; </span><span class="s1">+ y)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">})</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Returns a promise for the first of an array of promises to become settled.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">answers {Array[Any*]} promises to race</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">{Any*} the first promise to be settled</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.race = race</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">race(answerPs) {</span>
+    <span class="s3">return </span><span class="s1">promise(</span><span class="s3">function </span><span class="s1">(resolve</span><span class="s5">, </span><span class="s1">reject) {</span>
+        <span class="s0">// Switch to this once we can assume at least ES5</span>
+        <span class="s0">// answerPs.forEach(function (answerP) {</span>
+        <span class="s0">//     Q(answerP).then(resolve, reject);</span>
+        <span class="s0">// });</span>
+        <span class="s0">// Use this in the meantime</span>
+        <span class="s3">for </span><span class="s1">(</span><span class="s3">var </span><span class="s1">i = </span><span class="s6">0</span><span class="s5">, </span><span class="s1">len = answerPs.length</span><span class="s5">; </span><span class="s1">i &lt; len</span><span class="s5">; </span><span class="s1">i++) {</span>
+            <span class="s1">Q(answerPs[i]).then(resolve</span><span class="s5">, </span><span class="s1">reject)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">})</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Promise.prototype.race = </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s3">return this</span><span class="s1">.then(Q.race)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Constructs a Promise with a promise descriptor object and optional fallback</span>
+ <span class="s7">* function.  The descriptor contains methods like when(rejected), get(name),</span>
+ <span class="s7">* set(name, value), post(name, args), and delete(name), which all</span>
+ <span class="s7">* return either a value, a promise for a value, or a rejection.  The fallback</span>
+ <span class="s7">* accepts the operation name, a resolver, and any further arguments that would</span>
+ <span class="s7">* have been forwarded to the appropriate method above had a method been</span>
+ <span class="s7">* provided with the proper name.  The API makes no guarantees about the nature</span>
+ <span class="s7">* of the returned object, apart from that it is usable whereever promises are</span>
+ <span class="s7">* bought and sold.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.makePromise = Promise</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">Promise(descriptor</span><span class="s5">, </span><span class="s1">fallback</span><span class="s5">, </span><span class="s1">inspect) {</span>
+    <span class="s3">if </span><span class="s1">(fallback === </span><span class="s3">void </span><span class="s6">0</span><span class="s1">) {</span>
+        <span class="s1">fallback = </span><span class="s3">function </span><span class="s1">(op) {</span>
+            <span class="s3">return </span><span class="s1">reject(</span><span class="s3">new </span><span class="s1">Error(</span>
+                <span class="s4">&quot;Promise does not support operation: &quot; </span><span class="s1">+ op</span>
+            <span class="s1">))</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s3">if </span><span class="s1">(inspect === </span><span class="s3">void </span><span class="s6">0</span><span class="s1">) {</span>
+        <span class="s1">inspect = </span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s3">return </span><span class="s1">{state: </span><span class="s4">&quot;unknown&quot;</span><span class="s1">}</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s3">var </span><span class="s1">promise = object_create(Promise.prototype)</span><span class="s5">;</span>
+
+    <span class="s1">promise.promiseDispatch = </span><span class="s3">function </span><span class="s1">(resolve</span><span class="s5">, </span><span class="s1">op</span><span class="s5">, </span><span class="s1">args) {</span>
+        <span class="s3">var </span><span class="s1">result</span><span class="s5">;</span>
+        <span class="s3">try </span><span class="s1">{</span>
+            <span class="s3">if </span><span class="s1">(descriptor[op]) {</span>
+                <span class="s1">result = descriptor[op].apply(promise</span><span class="s5">, </span><span class="s1">args)</span><span class="s5">;</span>
+            <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+                <span class="s1">result = fallback.call(promise</span><span class="s5">, </span><span class="s1">op</span><span class="s5">, </span><span class="s1">args)</span><span class="s5">;</span>
+            <span class="s1">}</span>
+        <span class="s1">} </span><span class="s3">catch </span><span class="s1">(exception) {</span>
+            <span class="s1">result = reject(exception)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+        <span class="s3">if </span><span class="s1">(resolve) {</span>
+            <span class="s1">resolve(result)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s5">;</span>
+
+    <span class="s1">promise.inspect = inspect</span><span class="s5">;</span>
+
+    <span class="s0">// XXX deprecated `valueOf` and `exception` support</span>
+    <span class="s3">if </span><span class="s1">(inspect) {</span>
+        <span class="s3">var </span><span class="s1">inspected = inspect()</span><span class="s5">;</span>
+        <span class="s3">if </span><span class="s1">(inspected.state === </span><span class="s4">&quot;rejected&quot;</span><span class="s1">) {</span>
+            <span class="s1">promise.exception = inspected.reason</span><span class="s5">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">promise.valueOf = </span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s3">var </span><span class="s1">inspected = inspect()</span><span class="s5">;</span>
+            <span class="s3">if </span><span class="s1">(inspected.state === </span><span class="s4">&quot;pending&quot; </span><span class="s1">||</span>
+                <span class="s1">inspected.state === </span><span class="s4">&quot;rejected&quot;</span><span class="s1">) {</span>
+                <span class="s3">return </span><span class="s1">promise</span><span class="s5">;</span>
+            <span class="s1">}</span>
+            <span class="s3">return </span><span class="s1">inspected.value</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s3">return </span><span class="s1">promise</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Promise.prototype.toString = </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s3">return </span><span class="s4">&quot;[object Promise]&quot;</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.then = </span><span class="s3">function </span><span class="s1">(fulfilled</span><span class="s5">, </span><span class="s1">rejected</span><span class="s5">, </span><span class="s1">progressed) {</span>
+    <span class="s3">var </span><span class="s1">self = </span><span class="s3">this</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">deferred = defer()</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">done = </span><span class="s3">false</span><span class="s5">;   </span><span class="s0">// ensure the untrusted promise makes at most a</span>
+                        <span class="s0">// single call to one of the callbacks</span>
+
+    <span class="s3">function </span><span class="s1">_fulfilled(value) {</span>
+        <span class="s3">try </span><span class="s1">{</span>
+            <span class="s3">return typeof </span><span class="s1">fulfilled === </span><span class="s4">&quot;function&quot; </span><span class="s1">? fulfilled(value) : value</span><span class="s5">;</span>
+        <span class="s1">} </span><span class="s3">catch </span><span class="s1">(exception) {</span>
+            <span class="s3">return </span><span class="s1">reject(exception)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s3">function </span><span class="s1">_rejected(exception) {</span>
+        <span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">rejected === </span><span class="s4">&quot;function&quot;</span><span class="s1">) {</span>
+            <span class="s1">makeStackTraceLong(exception</span><span class="s5">, </span><span class="s1">self)</span><span class="s5">;</span>
+            <span class="s3">try </span><span class="s1">{</span>
+                <span class="s3">return </span><span class="s1">rejected(exception)</span><span class="s5">;</span>
+            <span class="s1">} </span><span class="s3">catch </span><span class="s1">(newException) {</span>
+                <span class="s3">return </span><span class="s1">reject(newException)</span><span class="s5">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s3">return </span><span class="s1">reject(exception)</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s3">function </span><span class="s1">_progressed(value) {</span>
+        <span class="s3">return typeof </span><span class="s1">progressed === </span><span class="s4">&quot;function&quot; </span><span class="s1">? progressed(value) : value</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">Q.nextTick(</span><span class="s3">function </span><span class="s1">() {</span>
+        <span class="s1">self.promiseDispatch(</span><span class="s3">function </span><span class="s1">(value) {</span>
+            <span class="s3">if </span><span class="s1">(done) {</span>
+                <span class="s3">return</span><span class="s5">;</span>
+            <span class="s1">}</span>
+            <span class="s1">done = </span><span class="s3">true</span><span class="s5">;</span>
+
+            <span class="s1">deferred.resolve(_fulfilled(value))</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">, </span><span class="s4">&quot;when&quot;</span><span class="s5">, </span><span class="s1">[</span><span class="s3">function </span><span class="s1">(exception) {</span>
+            <span class="s3">if </span><span class="s1">(done) {</span>
+                <span class="s3">return</span><span class="s5">;</span>
+            <span class="s1">}</span>
+            <span class="s1">done = </span><span class="s3">true</span><span class="s5">;</span>
+
+            <span class="s1">deferred.resolve(_rejected(exception))</span><span class="s5">;</span>
+        <span class="s1">}])</span><span class="s5">;</span>
+    <span class="s1">})</span><span class="s5">;</span>
+
+    <span class="s0">// Progress propagator need to be attached in the current tick.</span>
+    <span class="s1">self.promiseDispatch(</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s4">&quot;when&quot;</span><span class="s5">, </span><span class="s1">[</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s3">function </span><span class="s1">(value) {</span>
+        <span class="s3">var </span><span class="s1">newValue</span><span class="s5">;</span>
+        <span class="s3">var </span><span class="s1">threw = </span><span class="s3">false</span><span class="s5">;</span>
+        <span class="s3">try </span><span class="s1">{</span>
+            <span class="s1">newValue = _progressed(value)</span><span class="s5">;</span>
+        <span class="s1">} </span><span class="s3">catch </span><span class="s1">(e) {</span>
+            <span class="s1">threw = </span><span class="s3">true</span><span class="s5">;</span>
+            <span class="s3">if </span><span class="s1">(Q.onerror) {</span>
+                <span class="s1">Q.onerror(e)</span><span class="s5">;</span>
+            <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+                <span class="s3">throw </span><span class="s1">e</span><span class="s5">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s3">if </span><span class="s1">(!threw) {</span>
+            <span class="s1">deferred.notify(newValue)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}])</span><span class="s5">;</span>
+
+    <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Q.tap = </span><span class="s3">function </span><span class="s1">(promise</span><span class="s5">, </span><span class="s1">callback) {</span>
+    <span class="s3">return </span><span class="s1">Q(promise).tap(callback)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Works almost like &quot;finally&quot;, but not called for rejections.</span>
+ <span class="s7">* Original resolution value is passed through callback unaffected.</span>
+ <span class="s7">* Callback may return a promise that will be awaited for.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Function} callback</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">{Q.Promise}</span>
+ <span class="s7">* </span><span class="s8">@example</span>
+ <span class="s7">* doSomething()</span>
+ <span class="s7">*   .then(...)</span>
+ <span class="s7">*   .tap(console.log)</span>
+ <span class="s7">*   .then(...);</span>
+ <span class="s7">*/</span>
+<span class="s1">Promise.prototype.tap = </span><span class="s3">function </span><span class="s1">(callback) {</span>
+    <span class="s1">callback = Q(callback)</span><span class="s5">;</span>
+
+    <span class="s3">return this</span><span class="s1">.then(</span><span class="s3">function </span><span class="s1">(value) {</span>
+        <span class="s3">return </span><span class="s1">callback.fcall(value).thenResolve(value)</span><span class="s5">;</span>
+    <span class="s1">})</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Registers an observer on a promise.</span>
+ <span class="s7">*</span>
+ <span class="s7">* Guarantees:</span>
+ <span class="s7">*</span>
+ <span class="s7">* 1. that fulfilled and rejected will be called only once.</span>
+ <span class="s7">* 2. that either the fulfilled callback or the rejected callback will be</span>
+ <span class="s7">*    called, but not both.</span>
+ <span class="s7">* 3. that fulfilled and rejected will not be called in this turn.</span>
+ <span class="s7">*</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">value      promise or immediate reference to observe</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">fulfilled  function to be called with the fulfilled value</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">rejected   function to be called with the rejection exception</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">progressed function to be called on any progress notifications</span>
+ <span class="s7">* </span><span class="s8">@return </span><span class="s7">promise for the return value from the invoked callback</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.when = when</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">when(value</span><span class="s5">, </span><span class="s1">fulfilled</span><span class="s5">, </span><span class="s1">rejected</span><span class="s5">, </span><span class="s1">progressed) {</span>
+    <span class="s3">return </span><span class="s1">Q(value).then(fulfilled</span><span class="s5">, </span><span class="s1">rejected</span><span class="s5">, </span><span class="s1">progressed)</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Promise.prototype.thenResolve = </span><span class="s3">function </span><span class="s1">(value) {</span>
+    <span class="s3">return this</span><span class="s1">.then(</span><span class="s3">function </span><span class="s1">() { </span><span class="s3">return </span><span class="s1">value</span><span class="s5">; </span><span class="s1">})</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Q.thenResolve = </span><span class="s3">function </span><span class="s1">(promise</span><span class="s5">, </span><span class="s1">value) {</span>
+    <span class="s3">return </span><span class="s1">Q(promise).thenResolve(value)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.thenReject = </span><span class="s3">function </span><span class="s1">(reason) {</span>
+    <span class="s3">return this</span><span class="s1">.then(</span><span class="s3">function </span><span class="s1">() { </span><span class="s3">throw </span><span class="s1">reason</span><span class="s5">; </span><span class="s1">})</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Q.thenReject = </span><span class="s3">function </span><span class="s1">(promise</span><span class="s5">, </span><span class="s1">reason) {</span>
+    <span class="s3">return </span><span class="s1">Q(promise).thenReject(reason)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* If an object is not a promise, it is as &quot;near&quot; as possible.</span>
+ <span class="s7">* If a promise is rejected, it is as &quot;near&quot; as possible too.</span>
+ <span class="s7">* If it’s a fulfilled promise, the fulfillment value is nearer.</span>
+ <span class="s7">* If it’s a deferred promise and the deferred has been resolved, the</span>
+ <span class="s7">* resolution is &quot;nearer&quot;.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">most resolved (nearest) form of the object</span>
+ <span class="s7">*/</span>
+
+<span class="s0">// XXX should we re-do this?</span>
+<span class="s1">Q.nearer = nearer</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">nearer(value) {</span>
+    <span class="s3">if </span><span class="s1">(isPromise(value)) {</span>
+        <span class="s3">var </span><span class="s1">inspected = value.inspect()</span><span class="s5">;</span>
+        <span class="s3">if </span><span class="s1">(inspected.state === </span><span class="s4">&quot;fulfilled&quot;</span><span class="s1">) {</span>
+            <span class="s3">return </span><span class="s1">inspected.value</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s3">return </span><span class="s1">value</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">whether the given object is a promise.</span>
+ <span class="s7">* Otherwise it is a fulfilled value.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.isPromise = isPromise</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">isPromise(object) {</span>
+    <span class="s3">return </span><span class="s1">object </span><span class="s3">instanceof </span><span class="s1">Promise</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Q.isPromiseAlike = isPromiseAlike</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">isPromiseAlike(object) {</span>
+    <span class="s3">return </span><span class="s1">isObject(object) &amp;&amp; </span><span class="s3">typeof </span><span class="s1">object.then === </span><span class="s4">&quot;function&quot;</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">whether the given object is a pending promise, meaning not</span>
+ <span class="s7">* fulfilled or rejected.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.isPending = isPending</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">isPending(object) {</span>
+    <span class="s3">return </span><span class="s1">isPromise(object) &amp;&amp; object.inspect().state === </span><span class="s4">&quot;pending&quot;</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Promise.prototype.isPending = </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s3">return this</span><span class="s1">.inspect().state === </span><span class="s4">&quot;pending&quot;</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">whether the given object is a value or fulfilled</span>
+ <span class="s7">* promise.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.isFulfilled = isFulfilled</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">isFulfilled(object) {</span>
+    <span class="s3">return </span><span class="s1">!isPromise(object) || object.inspect().state === </span><span class="s4">&quot;fulfilled&quot;</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Promise.prototype.isFulfilled = </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s3">return this</span><span class="s1">.inspect().state === </span><span class="s4">&quot;fulfilled&quot;</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">whether the given object is a rejected promise.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.isRejected = isRejected</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">isRejected(object) {</span>
+    <span class="s3">return </span><span class="s1">isPromise(object) &amp;&amp; object.inspect().state === </span><span class="s4">&quot;rejected&quot;</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Promise.prototype.isRejected = </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s3">return this</span><span class="s1">.inspect().state === </span><span class="s4">&quot;rejected&quot;</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s0">//// BEGIN UNHANDLED REJECTION TRACKING</span>
+
+<span class="s0">// This promise library consumes exceptions thrown in handlers so they can be</span>
+<span class="s0">// handled by a subsequent promise.  The exceptions get added to this array when</span>
+<span class="s0">// they are created, and removed when they are handled.  Note that in ES6 or</span>
+<span class="s0">// shimmed environments, this would naturally be a `Set`.</span>
+<span class="s3">var </span><span class="s1">unhandledReasons = []</span><span class="s5">;</span>
+<span class="s3">var </span><span class="s1">unhandledRejections = []</span><span class="s5">;</span>
+<span class="s3">var </span><span class="s1">reportedUnhandledRejections = []</span><span class="s5">;</span>
+<span class="s3">var </span><span class="s1">trackUnhandledRejections = </span><span class="s3">true</span><span class="s5">;</span>
+
+<span class="s3">function </span><span class="s1">resetUnhandledRejections() {</span>
+    <span class="s1">unhandledReasons.length = </span><span class="s6">0</span><span class="s5">;</span>
+    <span class="s1">unhandledRejections.length = </span><span class="s6">0</span><span class="s5">;</span>
+
+    <span class="s3">if </span><span class="s1">(!trackUnhandledRejections) {</span>
+        <span class="s1">trackUnhandledRejections = </span><span class="s3">true</span><span class="s5">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">trackRejection(promise</span><span class="s5">, </span><span class="s1">reason) {</span>
+    <span class="s3">if </span><span class="s1">(!trackUnhandledRejections) {</span>
+        <span class="s3">return</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">process === </span><span class="s4">&quot;object&quot; </span><span class="s1">&amp;&amp; </span><span class="s3">typeof </span><span class="s1">process.emit === </span><span class="s4">&quot;function&quot;</span><span class="s1">) {</span>
+        <span class="s1">Q.nextTick.runAfter(</span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s3">if </span><span class="s1">(array_indexOf(unhandledRejections</span><span class="s5">, </span><span class="s1">promise) !== -</span><span class="s6">1</span><span class="s1">) {</span>
+                <span class="s1">process.emit(</span><span class="s4">&quot;unhandledRejection&quot;</span><span class="s5">, </span><span class="s1">reason</span><span class="s5">, </span><span class="s1">promise)</span><span class="s5">;</span>
+                <span class="s1">reportedUnhandledRejections.push(promise)</span><span class="s5">;</span>
+            <span class="s1">}</span>
+        <span class="s1">})</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">unhandledRejections.push(promise)</span><span class="s5">;</span>
+    <span class="s3">if </span><span class="s1">(reason &amp;&amp; </span><span class="s3">typeof </span><span class="s1">reason.stack !== </span><span class="s4">&quot;undefined&quot;</span><span class="s1">) {</span>
+        <span class="s1">unhandledReasons.push(reason.stack)</span><span class="s5">;</span>
+    <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+        <span class="s1">unhandledReasons.push(</span><span class="s4">&quot;(no stack) &quot; </span><span class="s1">+ reason)</span><span class="s5">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">untrackRejection(promise) {</span>
+    <span class="s3">if </span><span class="s1">(!trackUnhandledRejections) {</span>
+        <span class="s3">return</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s3">var </span><span class="s1">at = array_indexOf(unhandledRejections</span><span class="s5">, </span><span class="s1">promise)</span><span class="s5">;</span>
+    <span class="s3">if </span><span class="s1">(at !== -</span><span class="s6">1</span><span class="s1">) {</span>
+        <span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">process === </span><span class="s4">&quot;object&quot; </span><span class="s1">&amp;&amp; </span><span class="s3">typeof </span><span class="s1">process.emit === </span><span class="s4">&quot;function&quot;</span><span class="s1">) {</span>
+            <span class="s1">Q.nextTick.runAfter(</span><span class="s3">function </span><span class="s1">() {</span>
+                <span class="s3">var </span><span class="s1">atReport = array_indexOf(reportedUnhandledRejections</span><span class="s5">, </span><span class="s1">promise)</span><span class="s5">;</span>
+                <span class="s3">if </span><span class="s1">(atReport !== -</span><span class="s6">1</span><span class="s1">) {</span>
+                    <span class="s1">process.emit(</span><span class="s4">&quot;rejectionHandled&quot;</span><span class="s5">, </span><span class="s1">unhandledReasons[at]</span><span class="s5">, </span><span class="s1">promise)</span><span class="s5">;</span>
+                    <span class="s1">reportedUnhandledRejections.splice(atReport</span><span class="s5">, </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span>
+                <span class="s1">}</span>
+            <span class="s1">})</span><span class="s5">;</span>
+        <span class="s1">}</span>
+        <span class="s1">unhandledRejections.splice(at</span><span class="s5">, </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span>
+        <span class="s1">unhandledReasons.splice(at</span><span class="s5">, </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">Q.resetUnhandledRejections = resetUnhandledRejections</span><span class="s5">;</span>
+
+<span class="s1">Q.getUnhandledReasons = </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s0">// Make a copy so that consumers can't interfere with our internal state.</span>
+    <span class="s3">return </span><span class="s1">unhandledReasons.slice()</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Q.stopUnhandledRejectionTracking = </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s1">resetUnhandledRejections()</span><span class="s5">;</span>
+    <span class="s1">trackUnhandledRejections = </span><span class="s3">false</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">resetUnhandledRejections()</span><span class="s5">;</span>
+
+<span class="s0">//// END UNHANDLED REJECTION TRACKING</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Constructs a rejected promise.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">reason value describing the failure</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.reject = reject</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">reject(reason) {</span>
+    <span class="s3">var </span><span class="s1">rejection = Promise({</span>
+        <span class="s4">&quot;when&quot;</span><span class="s1">: </span><span class="s3">function </span><span class="s1">(rejected) {</span>
+            <span class="s0">// note that the error has been handled</span>
+            <span class="s3">if </span><span class="s1">(rejected) {</span>
+                <span class="s1">untrackRejection(</span><span class="s3">this</span><span class="s1">)</span><span class="s5">;</span>
+            <span class="s1">}</span>
+            <span class="s3">return </span><span class="s1">rejected ? rejected(reason) : </span><span class="s3">this</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s5">, </span><span class="s3">function </span><span class="s1">fallback() {</span>
+        <span class="s3">return this</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">, </span><span class="s3">function </span><span class="s1">inspect() {</span>
+        <span class="s3">return </span><span class="s1">{ state: </span><span class="s4">&quot;rejected&quot;</span><span class="s5">, </span><span class="s1">reason: reason }</span><span class="s5">;</span>
+    <span class="s1">})</span><span class="s5">;</span>
+
+    <span class="s0">// Note that the reason has not been handled.</span>
+    <span class="s1">trackRejection(rejection</span><span class="s5">, </span><span class="s1">reason)</span><span class="s5">;</span>
+
+    <span class="s3">return </span><span class="s1">rejection</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Constructs a fulfilled promise for an immediate reference.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">value immediate reference</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.fulfill = fulfill</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">fulfill(value) {</span>
+    <span class="s3">return </span><span class="s1">Promise({</span>
+        <span class="s4">&quot;when&quot;</span><span class="s1">: </span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s3">return </span><span class="s1">value</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">,</span>
+        <span class="s4">&quot;get&quot;</span><span class="s1">: </span><span class="s3">function </span><span class="s1">(name) {</span>
+            <span class="s3">return </span><span class="s1">value[name]</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">,</span>
+        <span class="s4">&quot;set&quot;</span><span class="s1">: </span><span class="s3">function </span><span class="s1">(name</span><span class="s5">, </span><span class="s1">rhs) {</span>
+            <span class="s1">value[name] = rhs</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">,</span>
+        <span class="s4">&quot;delete&quot;</span><span class="s1">: </span><span class="s3">function </span><span class="s1">(name) {</span>
+            <span class="s3">delete </span><span class="s1">value[name]</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">,</span>
+        <span class="s4">&quot;post&quot;</span><span class="s1">: </span><span class="s3">function </span><span class="s1">(name</span><span class="s5">, </span><span class="s1">args) {</span>
+            <span class="s0">// Mark Miller proposes that post with no name should apply a</span>
+            <span class="s0">// promised function.</span>
+            <span class="s3">if </span><span class="s1">(name === </span><span class="s3">null </span><span class="s1">|| name === </span><span class="s3">void </span><span class="s6">0</span><span class="s1">) {</span>
+                <span class="s3">return </span><span class="s1">value.apply(</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s1">args)</span><span class="s5">;</span>
+            <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+                <span class="s3">return </span><span class="s1">value[name].apply(value</span><span class="s5">, </span><span class="s1">args)</span><span class="s5">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span><span class="s5">,</span>
+        <span class="s4">&quot;apply&quot;</span><span class="s1">: </span><span class="s3">function </span><span class="s1">(thisp</span><span class="s5">, </span><span class="s1">args) {</span>
+            <span class="s3">return </span><span class="s1">value.apply(thisp</span><span class="s5">, </span><span class="s1">args)</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">,</span>
+        <span class="s4">&quot;keys&quot;</span><span class="s1">: </span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s3">return </span><span class="s1">object_keys(value)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s5">, </span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s3">function </span><span class="s1">inspect() {</span>
+        <span class="s3">return </span><span class="s1">{ state: </span><span class="s4">&quot;fulfilled&quot;</span><span class="s5">, </span><span class="s1">value: value }</span><span class="s5">;</span>
+    <span class="s1">})</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Converts thenables to Q promises.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">promise thenable promise</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">a Q promise</span>
+ <span class="s7">*/</span>
+<span class="s3">function </span><span class="s1">coerce(promise) {</span>
+    <span class="s3">var </span><span class="s1">deferred = defer()</span><span class="s5">;</span>
+    <span class="s1">Q.nextTick(</span><span class="s3">function </span><span class="s1">() {</span>
+        <span class="s3">try </span><span class="s1">{</span>
+            <span class="s1">promise.then(deferred.resolve</span><span class="s5">, </span><span class="s1">deferred.reject</span><span class="s5">, </span><span class="s1">deferred.notify)</span><span class="s5">;</span>
+        <span class="s1">} </span><span class="s3">catch </span><span class="s1">(exception) {</span>
+            <span class="s1">deferred.reject(exception)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">})</span><span class="s5">;</span>
+    <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Annotates an object such that it will never be</span>
+ <span class="s7">* transferred away from this process over any promise</span>
+ <span class="s7">* communication channel.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">promise a wrapping of that object that</span>
+ <span class="s7">* additionally responds to the &quot;isDef&quot; message</span>
+ <span class="s7">* without a rejection.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.master = master</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">master(object) {</span>
+    <span class="s3">return </span><span class="s1">Promise({</span>
+        <span class="s4">&quot;isDef&quot;</span><span class="s1">: </span><span class="s3">function </span><span class="s1">() {}</span>
+    <span class="s1">}</span><span class="s5">, </span><span class="s3">function </span><span class="s1">fallback(op</span><span class="s5">, </span><span class="s1">args) {</span>
+        <span class="s3">return </span><span class="s1">dispatch(object</span><span class="s5">, </span><span class="s1">op</span><span class="s5">, </span><span class="s1">args)</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">, </span><span class="s3">function </span><span class="s1">() {</span>
+        <span class="s3">return </span><span class="s1">Q(object).inspect()</span><span class="s5">;</span>
+    <span class="s1">})</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Spreads the values of a promised array of arguments into the</span>
+ <span class="s7">* fulfillment callback.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">fulfilled callback that receives variadic arguments from the</span>
+ <span class="s7">* promised array</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">rejected callback that receives the exception if the promise</span>
+ <span class="s7">* is rejected.</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">a promise for the return value or thrown exception of</span>
+ <span class="s7">* either callback.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.spread = spread</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">spread(value</span><span class="s5">, </span><span class="s1">fulfilled</span><span class="s5">, </span><span class="s1">rejected) {</span>
+    <span class="s3">return </span><span class="s1">Q(value).spread(fulfilled</span><span class="s5">, </span><span class="s1">rejected)</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Promise.prototype.spread = </span><span class="s3">function </span><span class="s1">(fulfilled</span><span class="s5">, </span><span class="s1">rejected) {</span>
+    <span class="s3">return this</span><span class="s1">.all().then(</span><span class="s3">function </span><span class="s1">(array) {</span>
+        <span class="s3">return </span><span class="s1">fulfilled.apply(</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s1">array)</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">, </span><span class="s1">rejected)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* The async function is a decorator for generator functions, turning</span>
+ <span class="s7">* them into asynchronous generators.  Although generators are only part</span>
+ <span class="s7">* of the newest ECMAScript 6 drafts, this code does not cause syntax</span>
+ <span class="s7">* errors in older engines.  This code should continue to work and will</span>
+ <span class="s7">* in fact improve over time as the language improves.</span>
+ <span class="s7">*</span>
+ <span class="s7">* ES6 generators are currently part of V8 version 3.19 with the</span>
+ <span class="s7">* --harmony-generators runtime flag enabled.  SpiderMonkey has had them</span>
+ <span class="s7">* for longer, but under an older Python-inspired form.  This function</span>
+ <span class="s7">* works on both kinds of generators.</span>
+ <span class="s7">*</span>
+ <span class="s7">* Decorates a generator function such that:</span>
+ <span class="s7">*  - it may yield promises</span>
+ <span class="s7">*  - execution will continue when that promise is fulfilled</span>
+ <span class="s7">*  - the value of the yield expression will be the fulfilled value</span>
+ <span class="s7">*  - it returns a promise for the return value (when the generator</span>
+ <span class="s7">*    stops iterating)</span>
+ <span class="s7">*  - the decorated function returns a promise for the return value</span>
+ <span class="s7">*    of the generator or the first rejected promise among those</span>
+ <span class="s7">*    yielded.</span>
+ <span class="s7">*  - if an error is thrown in the generator, it propagates through</span>
+ <span class="s7">*    every following yield until it is caught, or until it escapes</span>
+ <span class="s7">*    the generator function altogether, and is translated into a</span>
+ <span class="s7">*    rejection for the promise returned by the decorated generator.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.async = async</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">async(makeGenerator) {</span>
+    <span class="s3">return function </span><span class="s1">() {</span>
+        <span class="s0">// when verb is &quot;send&quot;, arg is a value</span>
+        <span class="s0">// when verb is &quot;throw&quot;, arg is an exception</span>
+        <span class="s3">function </span><span class="s1">continuer(verb</span><span class="s5">, </span><span class="s1">arg) {</span>
+            <span class="s3">var </span><span class="s1">result</span><span class="s5">;</span>
+
+            <span class="s0">// Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only</span>
+            <span class="s0">// engine that has a deployed base of browsers that support generators.</span>
+            <span class="s0">// However, SM's generators use the Python-inspired semantics of</span>
+            <span class="s0">// outdated ES6 drafts.  We would like to support ES6, but we'd also</span>
+            <span class="s0">// like to make it possible to use generators in deployed browsers, so</span>
+            <span class="s0">// we also support Python-style generators.  At some point we can remove</span>
+            <span class="s0">// this block.</span>
+
+            <span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">StopIteration === </span><span class="s4">&quot;undefined&quot;</span><span class="s1">) {</span>
+                <span class="s0">// ES6 Generators</span>
+                <span class="s3">try </span><span class="s1">{</span>
+                    <span class="s1">result = generator[verb](arg)</span><span class="s5">;</span>
+                <span class="s1">} </span><span class="s3">catch </span><span class="s1">(exception) {</span>
+                    <span class="s3">return </span><span class="s1">reject(exception)</span><span class="s5">;</span>
+                <span class="s1">}</span>
+                <span class="s3">if </span><span class="s1">(result.done) {</span>
+                    <span class="s3">return </span><span class="s1">Q(result.value)</span><span class="s5">;</span>
+                <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+                    <span class="s3">return </span><span class="s1">when(result.value</span><span class="s5">, </span><span class="s1">callback</span><span class="s5">, </span><span class="s1">errback)</span><span class="s5">;</span>
+                <span class="s1">}</span>
+            <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+                <span class="s0">// SpiderMonkey Generators</span>
+                <span class="s0">// FIXME: Remove this case when SM does ES6 generators.</span>
+                <span class="s3">try </span><span class="s1">{</span>
+                    <span class="s1">result = generator[verb](arg)</span><span class="s5">;</span>
+                <span class="s1">} </span><span class="s3">catch </span><span class="s1">(exception) {</span>
+                    <span class="s3">if </span><span class="s1">(isStopIteration(exception)) {</span>
+                        <span class="s3">return </span><span class="s1">Q(exception.value)</span><span class="s5">;</span>
+                    <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+                        <span class="s3">return </span><span class="s1">reject(exception)</span><span class="s5">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+                <span class="s3">return </span><span class="s1">when(result</span><span class="s5">, </span><span class="s1">callback</span><span class="s5">, </span><span class="s1">errback)</span><span class="s5">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s3">var </span><span class="s1">generator = makeGenerator.apply(</span><span class="s3">this</span><span class="s5">, </span><span class="s1">arguments)</span><span class="s5">;</span>
+        <span class="s3">var </span><span class="s1">callback = continuer.bind(continuer</span><span class="s5">, </span><span class="s4">&quot;next&quot;</span><span class="s1">)</span><span class="s5">;</span>
+        <span class="s3">var </span><span class="s1">errback = continuer.bind(continuer</span><span class="s5">, </span><span class="s4">&quot;throw&quot;</span><span class="s1">)</span><span class="s5">;</span>
+        <span class="s3">return </span><span class="s1">callback()</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* The spawn function is a small wrapper around async that immediately</span>
+ <span class="s7">* calls the generator and also ends the promise chain, so that any</span>
+ <span class="s7">* unhandled errors are thrown instead of forwarded to the error</span>
+ <span class="s7">* handler. This is useful because it's extremely common to run</span>
+ <span class="s7">* generators at the top-level to work with libraries.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.spawn = spawn</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">spawn(makeGenerator) {</span>
+    <span class="s1">Q.done(Q.async(makeGenerator)())</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s0">// FIXME: Remove this interface once ES6 generators are in SpiderMonkey.</span>
+<span class="s7">/**</span>
+ <span class="s7">* Throws a ReturnValue exception to stop an asynchronous generator.</span>
+ <span class="s7">*</span>
+ <span class="s7">* This interface is a stop-gap measure to support generator return</span>
+ <span class="s7">* values in older Firefox/SpiderMonkey.  In browsers that support ES6</span>
+ <span class="s7">* generators like Chromium 29, just use &quot;return&quot; in your generator</span>
+ <span class="s7">* functions.</span>
+ <span class="s7">*</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">value the return value for the surrounding generator</span>
+ <span class="s7">* </span><span class="s8">@throws </span><span class="s7">ReturnValue exception with the value.</span>
+ <span class="s7">* </span><span class="s8">@example</span>
+ <span class="s7">* // ES6 style</span>
+ <span class="s7">* Q.async(function* () {</span>
+ <span class="s7">*      var foo = yield getFooPromise();</span>
+ <span class="s7">*      var bar = yield getBarPromise();</span>
+ <span class="s7">*      return foo + bar;</span>
+ <span class="s7">* })</span>
+ <span class="s7">* // Older SpiderMonkey style</span>
+ <span class="s7">* Q.async(function () {</span>
+ <span class="s7">*      var foo = yield getFooPromise();</span>
+ <span class="s7">*      var bar = yield getBarPromise();</span>
+ <span class="s7">*      Q.return(foo + bar);</span>
+ <span class="s7">* })</span>
+ <span class="s7">*/</span>
+<span class="s1">Q[</span><span class="s4">&quot;return&quot;</span><span class="s1">] = _return</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">_return(value) {</span>
+    <span class="s3">throw new </span><span class="s1">QReturnValue(value)</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* The promised function decorator ensures that any promise arguments</span>
+ <span class="s7">* are settled and passed as values (`this` is also settled and passed</span>
+ <span class="s7">* as a value).  It will also ensure that the result of a function is</span>
+ <span class="s7">* always a promise.</span>
+ <span class="s7">*</span>
+ <span class="s7">* </span><span class="s8">@example</span>
+ <span class="s7">* var add = Q.promised(function (a, b) {</span>
+ <span class="s7">*     return a + b;</span>
+ <span class="s7">* });</span>
+ <span class="s7">* add(Q(a), Q(B));</span>
+ <span class="s7">*</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{function} callback The function to decorate</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">{function} a function that has been decorated.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.promised = promised</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">promised(callback) {</span>
+    <span class="s3">return function </span><span class="s1">() {</span>
+        <span class="s3">return </span><span class="s1">spread([</span><span class="s3">this</span><span class="s5">, </span><span class="s1">all(arguments)]</span><span class="s5">, </span><span class="s3">function </span><span class="s1">(self</span><span class="s5">, </span><span class="s1">args) {</span>
+            <span class="s3">return </span><span class="s1">callback.apply(self</span><span class="s5">, </span><span class="s1">args)</span><span class="s5">;</span>
+        <span class="s1">})</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* sends a message to a value in a future turn</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object* the recipient</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">op the name of the message operation, e.g., &quot;when&quot;,</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">args further arguments to be forwarded to the operation</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">result {Promise} a promise for the result of the operation</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.dispatch = dispatch</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">dispatch(object</span><span class="s5">, </span><span class="s1">op</span><span class="s5">, </span><span class="s1">args) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).dispatch(op</span><span class="s5">, </span><span class="s1">args)</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Promise.prototype.dispatch = </span><span class="s3">function </span><span class="s1">(op</span><span class="s5">, </span><span class="s1">args) {</span>
+    <span class="s3">var </span><span class="s1">self = </span><span class="s3">this</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">deferred = defer()</span><span class="s5">;</span>
+    <span class="s1">Q.nextTick(</span><span class="s3">function </span><span class="s1">() {</span>
+        <span class="s1">self.promiseDispatch(deferred.resolve</span><span class="s5">, </span><span class="s1">op</span><span class="s5">, </span><span class="s1">args)</span><span class="s5">;</span>
+    <span class="s1">})</span><span class="s5">;</span>
+    <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Gets the value of a property in a future turn.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object    promise or immediate reference for target object</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">name      name of property to get</span>
+ <span class="s7">* </span><span class="s8">@return </span><span class="s7">promise for the property value</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.get = </span><span class="s3">function </span><span class="s1">(object</span><span class="s5">, </span><span class="s1">key) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).dispatch(</span><span class="s4">&quot;get&quot;</span><span class="s5">, </span><span class="s1">[key])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.get = </span><span class="s3">function </span><span class="s1">(key) {</span>
+    <span class="s3">return this</span><span class="s1">.dispatch(</span><span class="s4">&quot;get&quot;</span><span class="s5">, </span><span class="s1">[key])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Sets the value of a property in a future turn.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object    promise or immediate reference for object object</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">name      name of property to set</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">value     new value of property</span>
+ <span class="s7">* </span><span class="s8">@return </span><span class="s7">promise for the return value</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.set = </span><span class="s3">function </span><span class="s1">(object</span><span class="s5">, </span><span class="s1">key</span><span class="s5">, </span><span class="s1">value) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).dispatch(</span><span class="s4">&quot;set&quot;</span><span class="s5">, </span><span class="s1">[key</span><span class="s5">, </span><span class="s1">value])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.set = </span><span class="s3">function </span><span class="s1">(key</span><span class="s5">, </span><span class="s1">value) {</span>
+    <span class="s3">return this</span><span class="s1">.dispatch(</span><span class="s4">&quot;set&quot;</span><span class="s5">, </span><span class="s1">[key</span><span class="s5">, </span><span class="s1">value])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Deletes a property in a future turn.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object    promise or immediate reference for target object</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">name      name of property to delete</span>
+ <span class="s7">* </span><span class="s8">@return </span><span class="s7">promise for the return value</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.del = </span><span class="s0">// XXX legacy</span>
+<span class="s1">Q[</span><span class="s4">&quot;delete&quot;</span><span class="s1">] = </span><span class="s3">function </span><span class="s1">(object</span><span class="s5">, </span><span class="s1">key) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).dispatch(</span><span class="s4">&quot;delete&quot;</span><span class="s5">, </span><span class="s1">[key])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.del = </span><span class="s0">// XXX legacy</span>
+<span class="s1">Promise.prototype[</span><span class="s4">&quot;delete&quot;</span><span class="s1">] = </span><span class="s3">function </span><span class="s1">(key) {</span>
+    <span class="s3">return this</span><span class="s1">.dispatch(</span><span class="s4">&quot;delete&quot;</span><span class="s5">, </span><span class="s1">[key])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Invokes a method in a future turn.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object    promise or immediate reference for target object</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">name      name of method to invoke</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">value     a value to post, typically an array of</span>
+ <span class="s7">*                  invocation arguments for promises that</span>
+ <span class="s7">*                  are ultimately backed with `resolve` values,</span>
+ <span class="s7">*                  as opposed to those backed with URLs</span>
+ <span class="s7">*                  wherein the posted value can be any</span>
+ <span class="s7">*                  JSON serializable object.</span>
+ <span class="s7">* </span><span class="s8">@return </span><span class="s7">promise for the return value</span>
+ <span class="s7">*/</span>
+<span class="s0">// bound locally because it is used by other methods</span>
+<span class="s1">Q.mapply = </span><span class="s0">// XXX As proposed by &quot;Redsandro&quot;</span>
+<span class="s1">Q.post = </span><span class="s3">function </span><span class="s1">(object</span><span class="s5">, </span><span class="s1">name</span><span class="s5">, </span><span class="s1">args) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).dispatch(</span><span class="s4">&quot;post&quot;</span><span class="s5">, </span><span class="s1">[name</span><span class="s5">, </span><span class="s1">args])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.mapply = </span><span class="s0">// XXX As proposed by &quot;Redsandro&quot;</span>
+<span class="s1">Promise.prototype.post = </span><span class="s3">function </span><span class="s1">(name</span><span class="s5">, </span><span class="s1">args) {</span>
+    <span class="s3">return this</span><span class="s1">.dispatch(</span><span class="s4">&quot;post&quot;</span><span class="s5">, </span><span class="s1">[name</span><span class="s5">, </span><span class="s1">args])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Invokes a method in a future turn.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object    promise or immediate reference for target object</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">name      name of method to invoke</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">...args   array of invocation arguments</span>
+ <span class="s7">* </span><span class="s8">@return </span><span class="s7">promise for the return value</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.send = </span><span class="s0">// XXX Mark Miller's proposed parlance</span>
+<span class="s1">Q.mcall = </span><span class="s0">// XXX As proposed by &quot;Redsandro&quot;</span>
+<span class="s1">Q.invoke = </span><span class="s3">function </span><span class="s1">(object</span><span class="s5">, </span><span class="s1">name </span><span class="s2">/*...args*/</span><span class="s1">) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).dispatch(</span><span class="s4">&quot;post&quot;</span><span class="s5">, </span><span class="s1">[name</span><span class="s5">, </span><span class="s1">array_slice(arguments</span><span class="s5">, </span><span class="s6">2</span><span class="s1">)])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.send = </span><span class="s0">// XXX Mark Miller's proposed parlance</span>
+<span class="s1">Promise.prototype.mcall = </span><span class="s0">// XXX As proposed by &quot;Redsandro&quot;</span>
+<span class="s1">Promise.prototype.invoke = </span><span class="s3">function </span><span class="s1">(name </span><span class="s2">/*...args*/</span><span class="s1">) {</span>
+    <span class="s3">return this</span><span class="s1">.dispatch(</span><span class="s4">&quot;post&quot;</span><span class="s5">, </span><span class="s1">[name</span><span class="s5">, </span><span class="s1">array_slice(arguments</span><span class="s5">, </span><span class="s6">1</span><span class="s1">)])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Applies the promised function in a future turn.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object    promise or immediate reference for target function</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">args      array of application arguments</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.fapply = </span><span class="s3">function </span><span class="s1">(object</span><span class="s5">, </span><span class="s1">args) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).dispatch(</span><span class="s4">&quot;apply&quot;</span><span class="s5">, </span><span class="s1">[</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s1">args])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.fapply = </span><span class="s3">function </span><span class="s1">(args) {</span>
+    <span class="s3">return this</span><span class="s1">.dispatch(</span><span class="s4">&quot;apply&quot;</span><span class="s5">, </span><span class="s1">[</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s1">args])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Calls the promised function in a future turn.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object    promise or immediate reference for target function</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">...args   array of application arguments</span>
+ <span class="s7">*/</span>
+<span class="s1">Q[</span><span class="s4">&quot;try&quot;</span><span class="s1">] =</span>
+<span class="s1">Q.fcall = </span><span class="s3">function </span><span class="s1">(object </span><span class="s2">/* ...args*/</span><span class="s1">) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).dispatch(</span><span class="s4">&quot;apply&quot;</span><span class="s5">, </span><span class="s1">[</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s1">array_slice(arguments</span><span class="s5">, </span><span class="s6">1</span><span class="s1">)])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.fcall = </span><span class="s3">function </span><span class="s1">(</span><span class="s2">/*...args*/</span><span class="s1">) {</span>
+    <span class="s3">return this</span><span class="s1">.dispatch(</span><span class="s4">&quot;apply&quot;</span><span class="s5">, </span><span class="s1">[</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s1">array_slice(arguments)])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Binds the promised function, transforming return values into a fulfilled</span>
+ <span class="s7">* promise and thrown errors into a rejected one.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object    promise or immediate reference for target function</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">...args   array of application arguments</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.fbind = </span><span class="s3">function </span><span class="s1">(object </span><span class="s2">/*...args*/</span><span class="s1">) {</span>
+    <span class="s3">var </span><span class="s1">promise = Q(object)</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">args = array_slice(arguments</span><span class="s5">, </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s3">return function </span><span class="s1">fbound() {</span>
+        <span class="s3">return </span><span class="s1">promise.dispatch(</span><span class="s4">&quot;apply&quot;</span><span class="s5">, </span><span class="s1">[</span>
+            <span class="s3">this</span><span class="s5">,</span>
+            <span class="s1">args.concat(array_slice(arguments))</span>
+        <span class="s1">])</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+<span class="s1">Promise.prototype.fbind = </span><span class="s3">function </span><span class="s1">(</span><span class="s2">/*...args*/</span><span class="s1">) {</span>
+    <span class="s3">var </span><span class="s1">promise = </span><span class="s3">this</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">args = array_slice(arguments)</span><span class="s5">;</span>
+    <span class="s3">return function </span><span class="s1">fbound() {</span>
+        <span class="s3">return </span><span class="s1">promise.dispatch(</span><span class="s4">&quot;apply&quot;</span><span class="s5">, </span><span class="s1">[</span>
+            <span class="s3">this</span><span class="s5">,</span>
+            <span class="s1">args.concat(array_slice(arguments))</span>
+        <span class="s1">])</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Requests the names of the owned properties of a promised</span>
+ <span class="s7">* object in a future turn.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object    promise or immediate reference for target object</span>
+ <span class="s7">* </span><span class="s8">@return </span><span class="s7">promise for the keys of the eventually settled object</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.keys = </span><span class="s3">function </span><span class="s1">(object) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).dispatch(</span><span class="s4">&quot;keys&quot;</span><span class="s5">, </span><span class="s1">[])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.keys = </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s3">return this</span><span class="s1">.dispatch(</span><span class="s4">&quot;keys&quot;</span><span class="s5">, </span><span class="s1">[])</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Turns an array of promises into a promise for an array.  If any of</span>
+ <span class="s7">* the promises gets rejected, the whole array is rejected immediately.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Array*} an array (or promise for an array) of values (or</span>
+ <span class="s7">* promises for values)</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">a promise for an array of the corresponding values</span>
+ <span class="s7">*/</span>
+<span class="s0">// By Mark Miller</span>
+<span class="s0">// http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&amp;rev=1308776521#allfulfilled</span>
+<span class="s1">Q.all = all</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">all(promises) {</span>
+    <span class="s3">return </span><span class="s1">when(promises</span><span class="s5">, </span><span class="s3">function </span><span class="s1">(promises) {</span>
+        <span class="s3">var </span><span class="s1">pendingCount = </span><span class="s6">0</span><span class="s5">;</span>
+        <span class="s3">var </span><span class="s1">deferred = defer()</span><span class="s5">;</span>
+        <span class="s1">array_reduce(promises</span><span class="s5">, </span><span class="s3">function </span><span class="s1">(undefined</span><span class="s5">, </span><span class="s1">promise</span><span class="s5">, </span><span class="s1">index) {</span>
+            <span class="s3">var </span><span class="s1">snapshot</span><span class="s5">;</span>
+            <span class="s3">if </span><span class="s1">(</span>
+                <span class="s1">isPromise(promise) &amp;&amp;</span>
+                <span class="s1">(snapshot = promise.inspect()).state === </span><span class="s4">&quot;fulfilled&quot;</span>
+            <span class="s1">) {</span>
+                <span class="s1">promises[index] = snapshot.value</span><span class="s5">;</span>
+            <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+                <span class="s1">++pendingCount</span><span class="s5">;</span>
+                <span class="s1">when(</span>
+                    <span class="s1">promise</span><span class="s5">,</span>
+                    <span class="s3">function </span><span class="s1">(value) {</span>
+                        <span class="s1">promises[index] = value</span><span class="s5">;</span>
+                        <span class="s3">if </span><span class="s1">(--pendingCount === </span><span class="s6">0</span><span class="s1">) {</span>
+                            <span class="s1">deferred.resolve(promises)</span><span class="s5">;</span>
+                        <span class="s1">}</span>
+                    <span class="s1">}</span><span class="s5">,</span>
+                    <span class="s1">deferred.reject</span><span class="s5">,</span>
+                    <span class="s3">function </span><span class="s1">(progress) {</span>
+                        <span class="s1">deferred.notify({ index: index</span><span class="s5">, </span><span class="s1">value: progress })</span><span class="s5">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">)</span><span class="s5">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span><span class="s5">, </span><span class="s3">void </span><span class="s6">0</span><span class="s1">)</span><span class="s5">;</span>
+        <span class="s3">if </span><span class="s1">(pendingCount === </span><span class="s6">0</span><span class="s1">) {</span>
+            <span class="s1">deferred.resolve(promises)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+        <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+    <span class="s1">})</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Promise.prototype.all = </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s3">return </span><span class="s1">all(</span><span class="s3">this</span><span class="s1">)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Returns the first resolved promise of an array. Prior rejected promises are</span>
+ <span class="s7">* ignored.  Rejects only if all promises are rejected.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Array*} an array containing values or promises for values</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">a promise fulfilled with the value of the first resolved promise,</span>
+ <span class="s7">* or a rejected promise if all promises are rejected.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.any = any</span><span class="s5">;</span>
+
+<span class="s3">function </span><span class="s1">any(promises) {</span>
+    <span class="s3">if </span><span class="s1">(promises.length === </span><span class="s6">0</span><span class="s1">) {</span>
+        <span class="s3">return </span><span class="s1">Q.resolve()</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s3">var </span><span class="s1">deferred = Q.defer()</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">pendingCount = </span><span class="s6">0</span><span class="s5">;</span>
+    <span class="s1">array_reduce(promises</span><span class="s5">, </span><span class="s3">function </span><span class="s1">(prev</span><span class="s5">, </span><span class="s1">current</span><span class="s5">, </span><span class="s1">index) {</span>
+        <span class="s3">var </span><span class="s1">promise = promises[index]</span><span class="s5">;</span>
+
+        <span class="s1">pendingCount++</span><span class="s5">;</span>
+
+        <span class="s1">when(promise</span><span class="s5">, </span><span class="s1">onFulfilled</span><span class="s5">, </span><span class="s1">onRejected</span><span class="s5">, </span><span class="s1">onProgress)</span><span class="s5">;</span>
+        <span class="s3">function </span><span class="s1">onFulfilled(result) {</span>
+            <span class="s1">deferred.resolve(result)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+        <span class="s3">function </span><span class="s1">onRejected(err) {</span>
+            <span class="s1">pendingCount--</span><span class="s5">;</span>
+            <span class="s3">if </span><span class="s1">(pendingCount === </span><span class="s6">0</span><span class="s1">) {</span>
+                <span class="s3">var </span><span class="s1">rejection = err || </span><span class="s3">new </span><span class="s1">Error(</span><span class="s4">&quot;&quot; </span><span class="s1">+ err)</span><span class="s5">;</span>
+
+                <span class="s1">rejection.message = (</span><span class="s4">&quot;Q can't get fulfillment value from any promise, all &quot; </span><span class="s1">+</span>
+                    <span class="s4">&quot;promises were rejected. Last error message: &quot; </span><span class="s1">+ rejection.message)</span><span class="s5">;</span>
+
+                <span class="s1">deferred.reject(rejection)</span><span class="s5">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s3">function </span><span class="s1">onProgress(progress) {</span>
+            <span class="s1">deferred.notify({</span>
+                <span class="s1">index: index</span><span class="s5">,</span>
+                <span class="s1">value: progress</span>
+            <span class="s1">})</span><span class="s5">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s5">, </span><span class="s1">undefined)</span><span class="s5">;</span>
+
+    <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Promise.prototype.any = </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s3">return </span><span class="s1">any(</span><span class="s3">this</span><span class="s1">)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Waits for all promises to be settled, either fulfilled or</span>
+ <span class="s7">* rejected.  This is distinct from `all` since that would stop</span>
+ <span class="s7">* waiting at the first rejection.  The promise returned by</span>
+ <span class="s7">* `allResolved` will never be rejected.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">promises a promise for an array (or an array) of promises</span>
+ <span class="s7">* (or values)</span>
+ <span class="s7">* </span><span class="s8">@return </span><span class="s7">a promise for an array of promises</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.allResolved = deprecate(allResolved</span><span class="s5">, </span><span class="s4">&quot;allResolved&quot;</span><span class="s5">, </span><span class="s4">&quot;allSettled&quot;</span><span class="s1">)</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">allResolved(promises) {</span>
+    <span class="s3">return </span><span class="s1">when(promises</span><span class="s5">, </span><span class="s3">function </span><span class="s1">(promises) {</span>
+        <span class="s1">promises = array_map(promises</span><span class="s5">, </span><span class="s1">Q)</span><span class="s5">;</span>
+        <span class="s3">return </span><span class="s1">when(all(array_map(promises</span><span class="s5">, </span><span class="s3">function </span><span class="s1">(promise) {</span>
+            <span class="s3">return </span><span class="s1">when(promise</span><span class="s5">, </span><span class="s1">noop</span><span class="s5">, </span><span class="s1">noop)</span><span class="s5">;</span>
+        <span class="s1">}))</span><span class="s5">, </span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s3">return </span><span class="s1">promises</span><span class="s5">;</span>
+        <span class="s1">})</span><span class="s5">;</span>
+    <span class="s1">})</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Promise.prototype.allResolved = </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s3">return </span><span class="s1">allResolved(</span><span class="s3">this</span><span class="s1">)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* </span><span class="s8">@see </span><span class="s7">Promise#allSettled</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.allSettled = allSettled</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">allSettled(promises) {</span>
+    <span class="s3">return </span><span class="s1">Q(promises).allSettled()</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Turns an array of promises into a promise for an array of their states (as</span>
+ <span class="s7">* returned by `inspect`) when they have all settled.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Array[Any*]} values an array (or promise for an array) of values (or</span>
+ <span class="s7">* promises for values)</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">{Array[State]} an array of states for the respective values.</span>
+ <span class="s7">*/</span>
+<span class="s1">Promise.prototype.allSettled = </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s3">return this</span><span class="s1">.then(</span><span class="s3">function </span><span class="s1">(promises) {</span>
+        <span class="s3">return </span><span class="s1">all(array_map(promises</span><span class="s5">, </span><span class="s3">function </span><span class="s1">(promise) {</span>
+            <span class="s1">promise = Q(promise)</span><span class="s5">;</span>
+            <span class="s3">function </span><span class="s1">regardless() {</span>
+                <span class="s3">return </span><span class="s1">promise.inspect()</span><span class="s5">;</span>
+            <span class="s1">}</span>
+            <span class="s3">return </span><span class="s1">promise.then(regardless</span><span class="s5">, </span><span class="s1">regardless)</span><span class="s5">;</span>
+        <span class="s1">}))</span><span class="s5">;</span>
+    <span class="s1">})</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Captures the failure of a promise, giving an oportunity to recover</span>
+ <span class="s7">* with a callback.  If the given promise is fulfilled, the returned</span>
+ <span class="s7">* promise is fulfilled.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Any*} promise for something</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Function} callback to fulfill the returned promise if the</span>
+ <span class="s7">* given promise is rejected</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">a promise for the return value of the callback</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.fail = </span><span class="s0">// XXX legacy</span>
+<span class="s1">Q[</span><span class="s4">&quot;catch&quot;</span><span class="s1">] = </span><span class="s3">function </span><span class="s1">(object</span><span class="s5">, </span><span class="s1">rejected) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).then(</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s1">rejected)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.fail = </span><span class="s0">// XXX legacy</span>
+<span class="s1">Promise.prototype[</span><span class="s4">&quot;catch&quot;</span><span class="s1">] = </span><span class="s3">function </span><span class="s1">(rejected) {</span>
+    <span class="s3">return this</span><span class="s1">.then(</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s1">rejected)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Attaches a listener that can respond to progress notifications from a</span>
+ <span class="s7">* promise's originating deferred. This listener receives the exact arguments</span>
+ <span class="s7">* passed to ``deferred.notify``.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Any*} promise for something</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Function} callback to receive any progress notifications</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">the given promise, unchanged</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.progress = progress</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">progress(object</span><span class="s5">, </span><span class="s1">progressed) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).then(</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s1">progressed)</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Promise.prototype.progress = </span><span class="s3">function </span><span class="s1">(progressed) {</span>
+    <span class="s3">return this</span><span class="s1">.then(</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s1">progressed)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Provides an opportunity to observe the settling of a promise,</span>
+ <span class="s7">* regardless of whether the promise is fulfilled or rejected.  Forwards</span>
+ <span class="s7">* the resolution to the returned promise when the callback is done.</span>
+ <span class="s7">* The callback can return a promise to defer completion.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Any*} promise</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Function} callback to observe the resolution of the given</span>
+ <span class="s7">* promise, takes no arguments.</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">a promise for the resolution of the given promise when</span>
+ <span class="s7">* ``fin`` is done.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.fin = </span><span class="s0">// XXX legacy</span>
+<span class="s1">Q[</span><span class="s4">&quot;finally&quot;</span><span class="s1">] = </span><span class="s3">function </span><span class="s1">(object</span><span class="s5">, </span><span class="s1">callback) {</span>
+    <span class="s3">return </span><span class="s1">Q(object)[</span><span class="s4">&quot;finally&quot;</span><span class="s1">](callback)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.fin = </span><span class="s0">// XXX legacy</span>
+<span class="s1">Promise.prototype[</span><span class="s4">&quot;finally&quot;</span><span class="s1">] = </span><span class="s3">function </span><span class="s1">(callback) {</span>
+    <span class="s3">if </span><span class="s1">(!callback || </span><span class="s3">typeof </span><span class="s1">callback.apply !== </span><span class="s4">&quot;function&quot;</span><span class="s1">) {</span>
+        <span class="s3">throw new </span><span class="s1">Error(</span><span class="s4">&quot;Q can't apply finally callback&quot;</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s1">callback = Q(callback)</span><span class="s5">;</span>
+    <span class="s3">return this</span><span class="s1">.then(</span><span class="s3">function </span><span class="s1">(value) {</span>
+        <span class="s3">return </span><span class="s1">callback.fcall().then(</span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s3">return </span><span class="s1">value</span><span class="s5">;</span>
+        <span class="s1">})</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">, </span><span class="s3">function </span><span class="s1">(reason) {</span>
+        <span class="s0">// TODO attempt to recycle the rejection with &quot;this&quot;.</span>
+        <span class="s3">return </span><span class="s1">callback.fcall().then(</span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s3">throw </span><span class="s1">reason</span><span class="s5">;</span>
+        <span class="s1">})</span><span class="s5">;</span>
+    <span class="s1">})</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Terminates a chain of promises, forcing rejections to be</span>
+ <span class="s7">* thrown as exceptions.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Any*} promise at the end of a chain of promises</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">nothing</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.done = </span><span class="s3">function </span><span class="s1">(object</span><span class="s5">, </span><span class="s1">fulfilled</span><span class="s5">, </span><span class="s1">rejected</span><span class="s5">, </span><span class="s1">progress) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).done(fulfilled</span><span class="s5">, </span><span class="s1">rejected</span><span class="s5">, </span><span class="s1">progress)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.done = </span><span class="s3">function </span><span class="s1">(fulfilled</span><span class="s5">, </span><span class="s1">rejected</span><span class="s5">, </span><span class="s1">progress) {</span>
+    <span class="s3">var </span><span class="s1">onUnhandledError = </span><span class="s3">function </span><span class="s1">(error) {</span>
+        <span class="s0">// forward to a future turn so that ``when``</span>
+        <span class="s0">// does not catch it and turn it into a rejection.</span>
+        <span class="s1">Q.nextTick(</span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s1">makeStackTraceLong(error</span><span class="s5">, </span><span class="s1">promise)</span><span class="s5">;</span>
+            <span class="s3">if </span><span class="s1">(Q.onerror) {</span>
+                <span class="s1">Q.onerror(error)</span><span class="s5">;</span>
+            <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+                <span class="s3">throw </span><span class="s1">error</span><span class="s5">;</span>
+            <span class="s1">}</span>
+        <span class="s1">})</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+
+    <span class="s0">// Avoid unnecessary `nextTick`ing via an unnecessary `when`.</span>
+    <span class="s3">var </span><span class="s1">promise = fulfilled || rejected || progress ?</span>
+        <span class="s3">this</span><span class="s1">.then(fulfilled</span><span class="s5">, </span><span class="s1">rejected</span><span class="s5">, </span><span class="s1">progress) :</span>
+        <span class="s3">this</span><span class="s5">;</span>
+
+    <span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">process === </span><span class="s4">&quot;object&quot; </span><span class="s1">&amp;&amp; process &amp;&amp; process.domain) {</span>
+        <span class="s1">onUnhandledError = process.domain.bind(onUnhandledError)</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">promise.then(</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s1">onUnhandledError)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Causes a promise to be rejected if it does not get fulfilled before</span>
+ <span class="s7">* some milliseconds time out.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Any*} promise</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Number} milliseconds timeout</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Any*} custom error message or Error object (optional)</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">a promise for the resolution of the given promise if it is</span>
+ <span class="s7">* fulfilled before the timeout, otherwise rejected.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.timeout = </span><span class="s3">function </span><span class="s1">(object</span><span class="s5">, </span><span class="s1">ms</span><span class="s5">, </span><span class="s1">error) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).timeout(ms</span><span class="s5">, </span><span class="s1">error)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.timeout = </span><span class="s3">function </span><span class="s1">(ms</span><span class="s5">, </span><span class="s1">error) {</span>
+    <span class="s3">var </span><span class="s1">deferred = defer()</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">timeoutId = setTimeout(</span><span class="s3">function </span><span class="s1">() {</span>
+        <span class="s3">if </span><span class="s1">(!error || </span><span class="s4">&quot;string&quot; </span><span class="s1">=== </span><span class="s3">typeof </span><span class="s1">error) {</span>
+            <span class="s1">error = </span><span class="s3">new </span><span class="s1">Error(error || </span><span class="s4">&quot;Timed out after &quot; </span><span class="s1">+ ms + </span><span class="s4">&quot; ms&quot;</span><span class="s1">)</span><span class="s5">;</span>
+            <span class="s1">error.code = </span><span class="s4">&quot;ETIMEDOUT&quot;</span><span class="s5">;</span>
+        <span class="s1">}</span>
+        <span class="s1">deferred.reject(error)</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">, </span><span class="s1">ms)</span><span class="s5">;</span>
+
+    <span class="s3">this</span><span class="s1">.then(</span><span class="s3">function </span><span class="s1">(value) {</span>
+        <span class="s1">clearTimeout(timeoutId)</span><span class="s5">;</span>
+        <span class="s1">deferred.resolve(value)</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">, </span><span class="s3">function </span><span class="s1">(exception) {</span>
+        <span class="s1">clearTimeout(timeoutId)</span><span class="s5">;</span>
+        <span class="s1">deferred.reject(exception)</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">, </span><span class="s1">deferred.notify)</span><span class="s5">;</span>
+
+    <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Returns a promise for the given value (or promised value), some</span>
+ <span class="s7">* milliseconds after it resolved. Passes rejections immediately.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Any*} promise</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Number} milliseconds</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">a promise for the resolution of the given promise after milliseconds</span>
+ <span class="s7">* time has elapsed since the resolution of the given promise.</span>
+ <span class="s7">* If the given promise rejects, that is passed immediately.</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.delay = </span><span class="s3">function </span><span class="s1">(object</span><span class="s5">, </span><span class="s1">timeout) {</span>
+    <span class="s3">if </span><span class="s1">(timeout === </span><span class="s3">void </span><span class="s6">0</span><span class="s1">) {</span>
+        <span class="s1">timeout = object</span><span class="s5">;</span>
+        <span class="s1">object = </span><span class="s3">void </span><span class="s6">0</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s3">return </span><span class="s1">Q(object).delay(timeout)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.delay = </span><span class="s3">function </span><span class="s1">(timeout) {</span>
+    <span class="s3">return this</span><span class="s1">.then(</span><span class="s3">function </span><span class="s1">(value) {</span>
+        <span class="s3">var </span><span class="s1">deferred = defer()</span><span class="s5">;</span>
+        <span class="s1">setTimeout(</span><span class="s3">function </span><span class="s1">() {</span>
+            <span class="s1">deferred.resolve(value)</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">, </span><span class="s1">timeout)</span><span class="s5">;</span>
+        <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+    <span class="s1">})</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Passes a continuation to a Node function, which is called with the given</span>
+ <span class="s7">* arguments provided as an array, and returns a promise.</span>
+ <span class="s7">*</span>
+ <span class="s7">*      Q.nfapply(FS.readFile, [__filename])</span>
+ <span class="s7">*      .then(function (content) {</span>
+ <span class="s7">*      })</span>
+ <span class="s7">*</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.nfapply = </span><span class="s3">function </span><span class="s1">(callback</span><span class="s5">, </span><span class="s1">args) {</span>
+    <span class="s3">return </span><span class="s1">Q(callback).nfapply(args)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.nfapply = </span><span class="s3">function </span><span class="s1">(args) {</span>
+    <span class="s3">var </span><span class="s1">deferred = defer()</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">nodeArgs = array_slice(args)</span><span class="s5">;</span>
+    <span class="s1">nodeArgs.push(deferred.makeNodeResolver())</span><span class="s5">;</span>
+    <span class="s3">this</span><span class="s1">.fapply(nodeArgs).fail(deferred.reject)</span><span class="s5">;</span>
+    <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Passes a continuation to a Node function, which is called with the given</span>
+ <span class="s7">* arguments provided individually, and returns a promise.</span>
+ <span class="s7">* </span><span class="s8">@example</span>
+ <span class="s7">* Q.nfcall(FS.readFile, __filename)</span>
+ <span class="s7">* .then(function (content) {</span>
+ <span class="s7">* })</span>
+ <span class="s7">*</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.nfcall = </span><span class="s3">function </span><span class="s1">(callback </span><span class="s2">/*...args*/</span><span class="s1">) {</span>
+    <span class="s3">var </span><span class="s1">args = array_slice(arguments</span><span class="s5">, </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s3">return </span><span class="s1">Q(callback).nfapply(args)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.nfcall = </span><span class="s3">function </span><span class="s1">(</span><span class="s2">/*...args*/</span><span class="s1">) {</span>
+    <span class="s3">var </span><span class="s1">nodeArgs = array_slice(arguments)</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">deferred = defer()</span><span class="s5">;</span>
+    <span class="s1">nodeArgs.push(deferred.makeNodeResolver())</span><span class="s5">;</span>
+    <span class="s3">this</span><span class="s1">.fapply(nodeArgs).fail(deferred.reject)</span><span class="s5">;</span>
+    <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Wraps a NodeJS continuation passing function and returns an equivalent</span>
+ <span class="s7">* version that returns a promise.</span>
+ <span class="s7">* </span><span class="s8">@example</span>
+ <span class="s7">* Q.nfbind(FS.readFile, __filename)(&quot;utf-8&quot;)</span>
+ <span class="s7">* .then(console.log)</span>
+ <span class="s7">* .done()</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.nfbind =</span>
+<span class="s1">Q.denodeify = </span><span class="s3">function </span><span class="s1">(callback </span><span class="s2">/*...args*/</span><span class="s1">) {</span>
+    <span class="s3">if </span><span class="s1">(callback === undefined) {</span>
+        <span class="s3">throw new </span><span class="s1">Error(</span><span class="s4">&quot;Q can't wrap an undefined function&quot;</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s3">var </span><span class="s1">baseArgs = array_slice(arguments</span><span class="s5">, </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s3">return function </span><span class="s1">() {</span>
+        <span class="s3">var </span><span class="s1">nodeArgs = baseArgs.concat(array_slice(arguments))</span><span class="s5">;</span>
+        <span class="s3">var </span><span class="s1">deferred = defer()</span><span class="s5">;</span>
+        <span class="s1">nodeArgs.push(deferred.makeNodeResolver())</span><span class="s5">;</span>
+        <span class="s1">Q(callback).fapply(nodeArgs).fail(deferred.reject)</span><span class="s5">;</span>
+        <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.nfbind =</span>
+<span class="s1">Promise.prototype.denodeify = </span><span class="s3">function </span><span class="s1">(</span><span class="s2">/*...args*/</span><span class="s1">) {</span>
+    <span class="s3">var </span><span class="s1">args = array_slice(arguments)</span><span class="s5">;</span>
+    <span class="s1">args.unshift(</span><span class="s3">this</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s3">return </span><span class="s1">Q.denodeify.apply(</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s1">args)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Q.nbind = </span><span class="s3">function </span><span class="s1">(callback</span><span class="s5">, </span><span class="s1">thisp </span><span class="s2">/*...args*/</span><span class="s1">) {</span>
+    <span class="s3">var </span><span class="s1">baseArgs = array_slice(arguments</span><span class="s5">, </span><span class="s6">2</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s3">return function </span><span class="s1">() {</span>
+        <span class="s3">var </span><span class="s1">nodeArgs = baseArgs.concat(array_slice(arguments))</span><span class="s5">;</span>
+        <span class="s3">var </span><span class="s1">deferred = defer()</span><span class="s5">;</span>
+        <span class="s1">nodeArgs.push(deferred.makeNodeResolver())</span><span class="s5">;</span>
+        <span class="s3">function </span><span class="s1">bound() {</span>
+            <span class="s3">return </span><span class="s1">callback.apply(thisp</span><span class="s5">, </span><span class="s1">arguments)</span><span class="s5">;</span>
+        <span class="s1">}</span>
+        <span class="s1">Q(bound).fapply(nodeArgs).fail(deferred.reject)</span><span class="s5">;</span>
+        <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+    <span class="s1">}</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.nbind = </span><span class="s3">function </span><span class="s1">(</span><span class="s2">/*thisp, ...args*/</span><span class="s1">) {</span>
+    <span class="s3">var </span><span class="s1">args = array_slice(arguments</span><span class="s5">, </span><span class="s6">0</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s1">args.unshift(</span><span class="s3">this</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s3">return </span><span class="s1">Q.nbind.apply(</span><span class="s3">void </span><span class="s6">0</span><span class="s5">, </span><span class="s1">args)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Calls a method of a Node-style object that accepts a Node-style</span>
+ <span class="s7">* callback with a given array of arguments, plus a provided callback.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object an object that has the named method</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{String} name name of the method of object</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Array} args arguments to pass to the method; the callback</span>
+ <span class="s7">* will be provided by Q and appended to these arguments.</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">a promise for the value or error</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.nmapply = </span><span class="s0">// XXX As proposed by &quot;Redsandro&quot;</span>
+<span class="s1">Q.npost = </span><span class="s3">function </span><span class="s1">(object</span><span class="s5">, </span><span class="s1">name</span><span class="s5">, </span><span class="s1">args) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).npost(name</span><span class="s5">, </span><span class="s1">args)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.nmapply = </span><span class="s0">// XXX As proposed by &quot;Redsandro&quot;</span>
+<span class="s1">Promise.prototype.npost = </span><span class="s3">function </span><span class="s1">(name</span><span class="s5">, </span><span class="s1">args) {</span>
+    <span class="s3">var </span><span class="s1">nodeArgs = array_slice(args || [])</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">deferred = defer()</span><span class="s5">;</span>
+    <span class="s1">nodeArgs.push(deferred.makeNodeResolver())</span><span class="s5">;</span>
+    <span class="s3">this</span><span class="s1">.dispatch(</span><span class="s4">&quot;post&quot;</span><span class="s5">, </span><span class="s1">[name</span><span class="s5">, </span><span class="s1">nodeArgs]).fail(deferred.reject)</span><span class="s5">;</span>
+    <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Calls a method of a Node-style object that accepts a Node-style</span>
+ <span class="s7">* callback, forwarding the given variadic arguments, plus a provided</span>
+ <span class="s7">* callback argument.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object an object that has the named method</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{String} name name of the method of object</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">...args arguments to pass to the method; the callback will</span>
+ <span class="s7">* be provided by Q and appended to these arguments.</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">a promise for the value or error</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.nsend = </span><span class="s0">// XXX Based on Mark Miller's proposed &quot;send&quot;</span>
+<span class="s1">Q.nmcall = </span><span class="s0">// XXX Based on &quot;Redsandro's&quot; proposal</span>
+<span class="s1">Q.ninvoke = </span><span class="s3">function </span><span class="s1">(object</span><span class="s5">, </span><span class="s1">name </span><span class="s2">/*...args*/</span><span class="s1">) {</span>
+    <span class="s3">var </span><span class="s1">nodeArgs = array_slice(arguments</span><span class="s5">, </span><span class="s6">2</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">deferred = defer()</span><span class="s5">;</span>
+    <span class="s1">nodeArgs.push(deferred.makeNodeResolver())</span><span class="s5">;</span>
+    <span class="s1">Q(object).dispatch(</span><span class="s4">&quot;post&quot;</span><span class="s5">, </span><span class="s1">[name</span><span class="s5">, </span><span class="s1">nodeArgs]).fail(deferred.reject)</span><span class="s5">;</span>
+    <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Promise.prototype.nsend = </span><span class="s0">// XXX Based on Mark Miller's proposed &quot;send&quot;</span>
+<span class="s1">Promise.prototype.nmcall = </span><span class="s0">// XXX Based on &quot;Redsandro's&quot; proposal</span>
+<span class="s1">Promise.prototype.ninvoke = </span><span class="s3">function </span><span class="s1">(name </span><span class="s2">/*...args*/</span><span class="s1">) {</span>
+    <span class="s3">var </span><span class="s1">nodeArgs = array_slice(arguments</span><span class="s5">, </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s3">var </span><span class="s1">deferred = defer()</span><span class="s5">;</span>
+    <span class="s1">nodeArgs.push(deferred.makeNodeResolver())</span><span class="s5">;</span>
+    <span class="s3">this</span><span class="s1">.dispatch(</span><span class="s4">&quot;post&quot;</span><span class="s5">, </span><span class="s1">[name</span><span class="s5">, </span><span class="s1">nodeArgs]).fail(deferred.reject)</span><span class="s5">;</span>
+    <span class="s3">return </span><span class="s1">deferred.promise</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* If a function would like to support both Node continuation-passing-style and</span>
+ <span class="s7">* promise-returning-style, it can end its internal promise chain with</span>
+ <span class="s7">* `nodeify(nodeback)`, forwarding the optional nodeback argument.  If the user</span>
+ <span class="s7">* elects to use a nodeback, the result will be sent there.  If they do not</span>
+ <span class="s7">* pass a nodeback, they will receive the result promise.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">object a result (or a promise for a result)</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">{Function} nodeback a Node.js-style callback</span>
+ <span class="s7">* </span><span class="s8">@returns </span><span class="s7">either the promise or nothing</span>
+ <span class="s7">*/</span>
+<span class="s1">Q.nodeify = nodeify</span><span class="s5">;</span>
+<span class="s3">function </span><span class="s1">nodeify(object</span><span class="s5">, </span><span class="s1">nodeback) {</span>
+    <span class="s3">return </span><span class="s1">Q(object).nodeify(nodeback)</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Promise.prototype.nodeify = </span><span class="s3">function </span><span class="s1">(nodeback) {</span>
+    <span class="s3">if </span><span class="s1">(nodeback) {</span>
+        <span class="s3">this</span><span class="s1">.then(</span><span class="s3">function </span><span class="s1">(value) {</span>
+            <span class="s1">Q.nextTick(</span><span class="s3">function </span><span class="s1">() {</span>
+                <span class="s1">nodeback(</span><span class="s3">null</span><span class="s5">, </span><span class="s1">value)</span><span class="s5">;</span>
+            <span class="s1">})</span><span class="s5">;</span>
+        <span class="s1">}</span><span class="s5">, </span><span class="s3">function </span><span class="s1">(error) {</span>
+            <span class="s1">Q.nextTick(</span><span class="s3">function </span><span class="s1">() {</span>
+                <span class="s1">nodeback(error)</span><span class="s5">;</span>
+            <span class="s1">})</span><span class="s5">;</span>
+        <span class="s1">})</span><span class="s5">;</span>
+    <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+        <span class="s3">return this</span><span class="s5">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s1">Q.noConflict = </span><span class="s3">function</span><span class="s1">() {</span>
+    <span class="s3">throw new </span><span class="s1">Error(</span><span class="s4">&quot;Q.noConflict only works when Q is used as a global&quot;</span><span class="s1">)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s0">// All code before this point will be filtered from stack traces.</span>
+<span class="s3">var </span><span class="s1">qEndingLine = captureLine()</span><span class="s5">;</span>
+
+<span class="s3">return </span><span class="s1">Q</span><span class="s5">;</span>
+
+<span class="s1">})</span><span class="s5">;</span>
+</pre>
+</body>
+</html>

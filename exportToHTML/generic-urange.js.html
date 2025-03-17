@@ -1,0 +1,181 @@
+<html>
+<head>
+<title>generic-urange.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+generic-urange.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">isHexDigit = require(</span><span class="s2">'../tokenizer'</span><span class="s1">).isHexDigit</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">cmpChar = require(</span><span class="s2">'../tokenizer'</span><span class="s1">).cmpChar</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s2">'../tokenizer'</span><span class="s1">).TYPE</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">IDENT = TYPE.Ident</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">DELIM = TYPE.Delim</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">NUMBER = TYPE.Number</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">DIMENSION = TYPE.Dimension</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">PLUSSIGN = </span><span class="s4">0x002B</span><span class="s3">;     </span><span class="s5">// U+002B PLUS SIGN (+)</span>
+<span class="s0">var </span><span class="s1">HYPHENMINUS = </span><span class="s4">0x002D</span><span class="s3">;  </span><span class="s5">// U+002D HYPHEN-MINUS (-)</span>
+<span class="s0">var </span><span class="s1">QUESTIONMARK = </span><span class="s4">0x003F</span><span class="s3">; </span><span class="s5">// U+003F QUESTION MARK (?)</span>
+<span class="s0">var </span><span class="s1">U = </span><span class="s4">0x0075</span><span class="s3">;            </span><span class="s5">// U+0075 LATIN SMALL LETTER U (u)</span>
+
+<span class="s0">function </span><span class="s1">isDelim(token</span><span class="s3">, </span><span class="s1">code) {</span>
+    <span class="s0">return </span><span class="s1">token !== </span><span class="s0">null </span><span class="s1">&amp;&amp; token.type === DELIM &amp;&amp; token.value.charCodeAt(</span><span class="s4">0</span><span class="s1">) === code</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">startsWith(token</span><span class="s3">, </span><span class="s1">code) {</span>
+    <span class="s0">return </span><span class="s1">token.value.charCodeAt(</span><span class="s4">0</span><span class="s1">) === code</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">hexSequence(token</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">allowDash) {</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">pos = offset</span><span class="s3">, </span><span class="s1">hexlen = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">pos &lt; token.value.length</span><span class="s3">; </span><span class="s1">pos++) {</span>
+        <span class="s0">var </span><span class="s1">code = token.value.charCodeAt(pos)</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(code === HYPHENMINUS &amp;&amp; allowDash &amp;&amp; hexlen !== </span><span class="s4">0</span><span class="s1">) {</span>
+            <span class="s0">if </span><span class="s1">(hexSequence(token</span><span class="s3">, </span><span class="s1">offset + hexlen + </span><span class="s4">1</span><span class="s3">, </span><span class="s0">false</span><span class="s1">) &gt; </span><span class="s4">0</span><span class="s1">) {</span>
+                <span class="s0">return </span><span class="s4">6</span><span class="s3">; </span><span class="s5">// dissallow following question marks</span>
+            <span class="s1">}</span>
+
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">; </span><span class="s5">// dash at the ending of a hex sequence is not allowed</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(!isHexDigit(code)) {</span>
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">; </span><span class="s5">// not a hex digit</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(++hexlen &gt; </span><span class="s4">6</span><span class="s1">) {</span>
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">; </span><span class="s5">// too many hex digits</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">hexlen</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">withQuestionMarkSequence(consumed</span><span class="s3">, </span><span class="s1">length</span><span class="s3">, </span><span class="s1">getNextToken) {</span>
+    <span class="s0">if </span><span class="s1">(!consumed) {</span>
+        <span class="s0">return </span><span class="s4">0</span><span class="s3">; </span><span class="s5">// nothing consumed</span>
+    <span class="s1">}</span>
+
+    <span class="s0">while </span><span class="s1">(isDelim(getNextToken(length)</span><span class="s3">, </span><span class="s1">QUESTIONMARK)) {</span>
+        <span class="s0">if </span><span class="s1">(++consumed &gt; </span><span class="s4">6</span><span class="s1">) {</span>
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">; </span><span class="s5">// too many question marks</span>
+        <span class="s1">}</span>
+
+        <span class="s1">length++</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">length</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s5">// https://drafts.csswg.org/css-syntax/#urange</span>
+<span class="s5">// Informally, the &lt;urange&gt; production has three forms:</span>
+<span class="s5">// U+0001</span>
+<span class="s5">//      Defines a range consisting of a single code point, in this case the code point &quot;1&quot;.</span>
+<span class="s5">// U+0001-00ff</span>
+<span class="s5">//      Defines a range of codepoints between the first and the second value, in this case</span>
+<span class="s5">//      the range between &quot;1&quot; and &quot;ff&quot; (255 in decimal) inclusive.</span>
+<span class="s5">// U+00??</span>
+<span class="s5">//      Defines a range of codepoints where the &quot;?&quot; characters range over all hex digits,</span>
+<span class="s5">//      in this case defining the same as the value U+0000-00ff.</span>
+<span class="s5">// In each form, a maximum of 6 digits is allowed for each hexadecimal number (if you treat &quot;?&quot; as a hexadecimal digit).</span>
+<span class="s5">//</span>
+<span class="s5">// &lt;urange&gt; =</span>
+<span class="s5">//   u '+' &lt;ident-token&gt; '?'* |</span>
+<span class="s5">//   u &lt;dimension-token&gt; '?'* |</span>
+<span class="s5">//   u &lt;number-token&gt; '?'* |</span>
+<span class="s5">//   u &lt;number-token&gt; &lt;dimension-token&gt; |</span>
+<span class="s5">//   u &lt;number-token&gt; &lt;number-token&gt; |</span>
+<span class="s5">//   u '+' '?'+</span>
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">urange(token</span><span class="s3">, </span><span class="s1">getNextToken) {</span>
+    <span class="s0">var </span><span class="s1">length = </span><span class="s4">0</span><span class="s3">;</span>
+
+    <span class="s5">// should start with `u` or `U`</span>
+    <span class="s0">if </span><span class="s1">(token === </span><span class="s0">null </span><span class="s1">|| token.type !== IDENT || !cmpChar(token.value</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s1">U)) {</span>
+        <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">token = getNextToken(++length)</span><span class="s3">;</span>
+    <span class="s0">if </span><span class="s1">(token === </span><span class="s0">null</span><span class="s1">) {</span>
+        <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">// u '+' &lt;ident-token&gt; '?'*</span>
+    <span class="s5">// u '+' '?'+</span>
+    <span class="s0">if </span><span class="s1">(isDelim(token</span><span class="s3">, </span><span class="s1">PLUSSIGN)) {</span>
+        <span class="s1">token = getNextToken(++length)</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(token === </span><span class="s0">null</span><span class="s1">) {</span>
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(token.type === IDENT) {</span>
+            <span class="s5">// u '+' &lt;ident-token&gt; '?'*</span>
+            <span class="s0">return </span><span class="s1">withQuestionMarkSequence(hexSequence(token</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">, </span><span class="s1">++length</span><span class="s3">, </span><span class="s1">getNextToken)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(isDelim(token</span><span class="s3">, </span><span class="s1">QUESTIONMARK)) {</span>
+            <span class="s5">// u '+' '?'+</span>
+            <span class="s0">return </span><span class="s1">withQuestionMarkSequence(</span><span class="s4">1</span><span class="s3">, </span><span class="s1">++length</span><span class="s3">, </span><span class="s1">getNextToken)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s5">// Hex digit or question mark is expected</span>
+        <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">// u &lt;number-token&gt; '?'*</span>
+    <span class="s5">// u &lt;number-token&gt; &lt;dimension-token&gt;</span>
+    <span class="s5">// u &lt;number-token&gt; &lt;number-token&gt;</span>
+    <span class="s0">if </span><span class="s1">(token.type === NUMBER) {</span>
+        <span class="s0">if </span><span class="s1">(!startsWith(token</span><span class="s3">, </span><span class="s1">PLUSSIGN)) {</span>
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">var </span><span class="s1">consumedHexLength = hexSequence(token</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(consumedHexLength === </span><span class="s4">0</span><span class="s1">) {</span>
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">token = getNextToken(++length)</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(token === </span><span class="s0">null</span><span class="s1">) {</span>
+            <span class="s5">// u &lt;number-token&gt; &lt;eof&gt;</span>
+            <span class="s0">return </span><span class="s1">length</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(token.type === DIMENSION || token.type === NUMBER) {</span>
+            <span class="s5">// u &lt;number-token&gt; &lt;dimension-token&gt;</span>
+            <span class="s5">// u &lt;number-token&gt; &lt;number-token&gt;</span>
+            <span class="s0">if </span><span class="s1">(!startsWith(token</span><span class="s3">, </span><span class="s1">HYPHENMINUS) || !hexSequence(token</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s0">false</span><span class="s1">)) {</span>
+                <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">return </span><span class="s1">length + </span><span class="s4">1</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s5">// u &lt;number-token&gt; '?'*</span>
+        <span class="s0">return </span><span class="s1">withQuestionMarkSequence(consumedHexLength</span><span class="s3">, </span><span class="s1">length</span><span class="s3">, </span><span class="s1">getNextToken)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">// u &lt;dimension-token&gt; '?'*</span>
+    <span class="s0">if </span><span class="s1">(token.type === DIMENSION) {</span>
+        <span class="s0">if </span><span class="s1">(!startsWith(token</span><span class="s3">, </span><span class="s1">PLUSSIGN)) {</span>
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">withQuestionMarkSequence(hexSequence(token</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">, </span><span class="s1">++length</span><span class="s3">, </span><span class="s1">getNextToken)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

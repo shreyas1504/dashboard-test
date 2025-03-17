@@ -1,0 +1,59 @@
+<html>
+<head>
+<title>removeNonInheritableGroupAttrs.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+removeNonInheritableGroupAttrs.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">exports.type = </span><span class="s0">'perItem'</span><span class="s1">;</span>
+
+<span class="s2">exports.active = </span><span class="s3">true</span><span class="s1">;</span>
+
+<span class="s2">exports.description = </span><span class="s0">'removes non-inheritable group’s presentational attributes'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">inheritableAttrs = require(</span><span class="s0">'./_collections'</span><span class="s2">).inheritableAttrs</span><span class="s1">,</span>
+    <span class="s2">attrsGroups = require(</span><span class="s0">'./_collections'</span><span class="s2">).attrsGroups</span><span class="s1">,</span>
+    <span class="s2">applyGroups = require(</span><span class="s0">'./_collections'</span><span class="s2">).presentationNonInheritableGroupAttrs</span><span class="s1">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Remove non-inheritable group's &quot;presentation&quot; attributes.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} item current iteration item</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Boolean} if false, item will be filtered out</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@author </span><span class="s4">Kir Belevich</span>
+ <span class="s4">*/</span>
+<span class="s2">exports.fn = </span><span class="s3">function</span><span class="s2">(item) {</span>
+
+    <span class="s3">if </span><span class="s2">(item.isElem(</span><span class="s0">'g'</span><span class="s2">)) {</span>
+
+        <span class="s2">item.eachAttr(</span><span class="s3">function</span><span class="s2">(attr) {</span>
+            <span class="s3">if </span><span class="s2">(</span>
+                <span class="s2">~attrsGroups.presentation.indexOf(attr.name) &amp;&amp;</span>
+                <span class="s2">!~inheritableAttrs.indexOf(attr.name) &amp;&amp;</span>
+                <span class="s2">!~applyGroups.indexOf(attr.name)</span>
+            <span class="s2">) {</span>
+                <span class="s2">item.removeAttr(attr.name)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+        <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s2">}</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

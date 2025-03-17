@@ -1,0 +1,248 @@
+<html>
+<head>
+<title>VerboseReporter.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+VerboseReporter.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">Object.defineProperty(exports</span><span class="s1">, </span><span class="s0">'__esModule'</span><span class="s1">, </span><span class="s2">{</span>
+  <span class="s2">value: </span><span class="s3">true</span>
+<span class="s2">})</span><span class="s1">;</span>
+<span class="s2">exports.default = </span><span class="s3">void </span><span class="s4">0</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">_chalk() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'chalk'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_chalk = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestUtil() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestUtil = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">var </span><span class="s2">_DefaultReporter = _interopRequireDefault(require(</span><span class="s0">'./DefaultReporter'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireDefault(obj) {</span>
+  <span class="s3">return </span><span class="s2">obj &amp;&amp; obj.__esModule ? obj : {</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_defineProperty(obj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">value) {</span>
+  <span class="s3">if </span><span class="s2">(key </span><span class="s3">in </span><span class="s2">obj) {</span>
+    <span class="s2">Object.defineProperty(obj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">value: value</span><span class="s1">,</span>
+      <span class="s2">enumerable: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">configurable: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">writable: </span><span class="s3">true</span>
+    <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s2">obj[key] = value</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">obj</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">const </span><span class="s2">{ICONS} = _jestUtil().specialChars</span><span class="s1">;</span>
+
+<span class="s3">class </span><span class="s2">VerboseReporter </span><span class="s3">extends </span><span class="s2">_DefaultReporter.default {</span>
+  <span class="s2">constructor(globalConfig) {</span>
+    <span class="s3">super</span><span class="s2">(globalConfig)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_globalConfig'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._globalConfig = globalConfig</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s5">// Verbose mode is for debugging. Buffering of output is undesirable.</span>
+  <span class="s5">// See https://github.com/facebook/jest/issues/8208</span>
+
+  <span class="s2">__wrapStdio(stream) {</span>
+    <span class="s3">const </span><span class="s2">write = stream.write.bind(stream)</span><span class="s1">;</span>
+
+    <span class="s2">stream.write = chunk =&gt; {</span>
+      <span class="s3">this</span><span class="s2">.__clearStatus()</span><span class="s1">;</span>
+
+      <span class="s2">write(chunk)</span><span class="s1">;</span>
+
+      <span class="s3">this</span><span class="s2">.__printStatus()</span><span class="s1">;</span>
+
+      <span class="s3">return true</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">static </span><span class="s2">filterTestResults(testResults) {</span>
+    <span class="s3">return </span><span class="s2">testResults.filter(({status}) =&gt; status !== </span><span class="s0">'pending'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">static </span><span class="s2">groupTestsBySuites(testResults) {</span>
+    <span class="s3">const </span><span class="s2">root = {</span>
+      <span class="s2">suites: []</span><span class="s1">,</span>
+      <span class="s2">tests: []</span><span class="s1">,</span>
+      <span class="s2">title: </span><span class="s0">''</span>
+    <span class="s2">}</span><span class="s1">;</span>
+    <span class="s2">testResults.forEach(testResult =&gt; {</span>
+      <span class="s3">let </span><span class="s2">targetSuite = root</span><span class="s1">; </span><span class="s5">// Find the target suite for this test,</span>
+      <span class="s5">// creating nested suites as necessary.</span>
+
+      <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">title of testResult.ancestorTitles) {</span>
+        <span class="s3">let </span><span class="s2">matchingSuite = targetSuite.suites.find(s =&gt; s.title === title)</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(!matchingSuite) {</span>
+          <span class="s2">matchingSuite = {</span>
+            <span class="s2">suites: []</span><span class="s1">,</span>
+            <span class="s2">tests: []</span><span class="s1">,</span>
+            <span class="s2">title</span>
+          <span class="s2">}</span><span class="s1">;</span>
+          <span class="s2">targetSuite.suites.push(matchingSuite)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s2">targetSuite = matchingSuite</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">targetSuite.tests.push(testResult)</span><span class="s1">;</span>
+    <span class="s2">})</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">root</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">onTestResult(test</span><span class="s1">, </span><span class="s2">result</span><span class="s1">, </span><span class="s2">aggregatedResults) {</span>
+    <span class="s3">super</span><span class="s2">.testFinished(test.context.config</span><span class="s1">, </span><span class="s2">result</span><span class="s1">, </span><span class="s2">aggregatedResults)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(!result.skipped) {</span>
+      <span class="s3">this</span><span class="s2">.printTestFileHeader(</span>
+        <span class="s2">result.testFilePath</span><span class="s1">,</span>
+        <span class="s2">test.context.config</span><span class="s1">,</span>
+        <span class="s2">result</span>
+      <span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(!result.testExecError &amp;&amp; !result.skipped) {</span>
+        <span class="s3">this</span><span class="s2">._logTestResults(result.testResults)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">this</span><span class="s2">.printTestFileFailureMessage(</span>
+        <span class="s2">result.testFilePath</span><span class="s1">,</span>
+        <span class="s2">test.context.config</span><span class="s1">,</span>
+        <span class="s2">result</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">super</span><span class="s2">.forceFlushBufferedOutput()</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_logTestResults(testResults) {</span>
+    <span class="s3">this</span><span class="s2">._logSuite(VerboseReporter.groupTestsBySuites(testResults)</span><span class="s1">, </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._logLine()</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_logSuite(suite</span><span class="s1">, </span><span class="s2">indentLevel) {</span>
+    <span class="s3">if </span><span class="s2">(suite.title) {</span>
+      <span class="s3">this</span><span class="s2">._logLine(suite.title</span><span class="s1">, </span><span class="s2">indentLevel)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">this</span><span class="s2">._logTests(suite.tests</span><span class="s1">, </span><span class="s2">indentLevel + </span><span class="s4">1</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">suite.suites.forEach(suite =&gt; </span><span class="s3">this</span><span class="s2">._logSuite(suite</span><span class="s1">, </span><span class="s2">indentLevel + </span><span class="s4">1</span><span class="s2">))</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_getIcon(status) {</span>
+    <span class="s3">if </span><span class="s2">(status === </span><span class="s0">'failed'</span><span class="s2">) {</span>
+      <span class="s3">return </span><span class="s2">_chalk().default.red(ICONS.failed)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(status === </span><span class="s0">'pending'</span><span class="s2">) {</span>
+      <span class="s3">return </span><span class="s2">_chalk().default.yellow(ICONS.pending)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(status === </span><span class="s0">'todo'</span><span class="s2">) {</span>
+      <span class="s3">return </span><span class="s2">_chalk().default.magenta(ICONS.todo)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s3">return </span><span class="s2">_chalk().default.green(ICONS.success)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_logTest(test</span><span class="s1">, </span><span class="s2">indentLevel) {</span>
+    <span class="s3">const </span><span class="s2">status = </span><span class="s3">this</span><span class="s2">._getIcon(test.status)</span><span class="s1">;</span>
+
+    <span class="s3">const </span><span class="s2">time = test.duration</span>
+      <span class="s2">? </span><span class="s0">` (</span><span class="s2">${(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_jestUtil().formatTime)(Math.round(test.duration))}</span><span class="s0">)`</span>
+      <span class="s2">: </span><span class="s0">''</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._logLine(</span>
+      <span class="s2">status + </span><span class="s0">' ' </span><span class="s2">+ _chalk().default.dim(test.title + time)</span><span class="s1">,</span>
+      <span class="s2">indentLevel</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_logTests(tests</span><span class="s1">, </span><span class="s2">indentLevel) {</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._globalConfig.expand) {</span>
+      <span class="s2">tests.forEach(test =&gt; </span><span class="s3">this</span><span class="s2">._logTest(test</span><span class="s1">, </span><span class="s2">indentLevel))</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s3">const </span><span class="s2">summedTests = tests.reduce(</span>
+        <span class="s2">(result</span><span class="s1">, </span><span class="s2">test) =&gt; {</span>
+          <span class="s3">if </span><span class="s2">(test.status === </span><span class="s0">'pending'</span><span class="s2">) {</span>
+            <span class="s2">result.pending.push(test)</span><span class="s1">;</span>
+          <span class="s2">} </span><span class="s3">else if </span><span class="s2">(test.status === </span><span class="s0">'todo'</span><span class="s2">) {</span>
+            <span class="s2">result.todo.push(test)</span><span class="s1">;</span>
+          <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+            <span class="s3">this</span><span class="s2">._logTest(test</span><span class="s1">, </span><span class="s2">indentLevel)</span><span class="s1">;</span>
+          <span class="s2">}</span>
+
+          <span class="s3">return </span><span class="s2">result</span><span class="s1">;</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+          <span class="s2">pending: []</span><span class="s1">,</span>
+          <span class="s2">todo: []</span>
+        <span class="s2">}</span>
+      <span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(summedTests.pending.length &gt; </span><span class="s4">0</span><span class="s2">) {</span>
+        <span class="s2">summedTests.pending.forEach(</span><span class="s3">this</span><span class="s2">._logTodoOrPendingTest(indentLevel))</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">if </span><span class="s2">(summedTests.todo.length &gt; </span><span class="s4">0</span><span class="s2">) {</span>
+        <span class="s2">summedTests.todo.forEach(</span><span class="s3">this</span><span class="s2">._logTodoOrPendingTest(indentLevel))</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_logTodoOrPendingTest(indentLevel) {</span>
+    <span class="s3">return </span><span class="s2">test =&gt; {</span>
+      <span class="s3">const </span><span class="s2">printedTestStatus =</span>
+        <span class="s2">test.status === </span><span class="s0">'pending' </span><span class="s2">? </span><span class="s0">'skipped' </span><span class="s2">: test.status</span><span class="s1">;</span>
+
+      <span class="s3">const </span><span class="s2">icon = </span><span class="s3">this</span><span class="s2">._getIcon(test.status)</span><span class="s1">;</span>
+
+      <span class="s3">const </span><span class="s2">text = _chalk().default.dim(</span><span class="s0">`</span><span class="s2">${printedTestStatus} ${test.title}</span><span class="s0">`</span><span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">this</span><span class="s2">._logLine(</span><span class="s0">`</span><span class="s2">${icon} ${text}</span><span class="s0">`</span><span class="s1">, </span><span class="s2">indentLevel)</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_logLine(str</span><span class="s1">, </span><span class="s2">indentLevel) {</span>
+    <span class="s3">const </span><span class="s2">indentation = </span><span class="s0">'  '</span><span class="s2">.repeat(indentLevel || </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.log(indentation + (str || </span><span class="s0">''</span><span class="s2">))</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s2">exports.default = VerboseReporter</span><span class="s1">;</span>
+
+<span class="s2">_defineProperty(VerboseReporter</span><span class="s1">, </span><span class="s0">'filename'</span><span class="s1">, </span><span class="s2">__filename)</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

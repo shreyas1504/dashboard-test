@@ -1,0 +1,78 @@
+<html>
+<head>
+<title>specificity.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #cc7832; font-weight: bold;}
+.s2 { color: #6897bb;}
+.s3 { color: #cc7832;}
+.s4 { color: #8ea765;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+specificity.js</font>
+</center></td></tr></table>
+<pre><span class="s0">module.exports = </span><span class="s1">function </span><span class="s0">specificity(simpleSelector) {</span>
+    <span class="s1">var </span><span class="s0">A = </span><span class="s2">0</span><span class="s3">;</span>
+    <span class="s1">var </span><span class="s0">B = </span><span class="s2">0</span><span class="s3">;</span>
+    <span class="s1">var </span><span class="s0">C = </span><span class="s2">0</span><span class="s3">;</span>
+
+    <span class="s0">simpleSelector.children.each(</span><span class="s1">function </span><span class="s0">walk(node) {</span>
+        <span class="s1">switch </span><span class="s0">(node.type) {</span>
+            <span class="s1">case </span><span class="s4">'SelectorList'</span><span class="s0">:</span>
+            <span class="s1">case </span><span class="s4">'Selector'</span><span class="s0">:</span>
+                <span class="s0">node.children.each(walk)</span><span class="s3">;</span>
+                <span class="s1">break</span><span class="s3">;</span>
+
+            <span class="s1">case </span><span class="s4">'IdSelector'</span><span class="s0">:</span>
+                <span class="s0">A++</span><span class="s3">;</span>
+                <span class="s1">break</span><span class="s3">;</span>
+
+            <span class="s1">case </span><span class="s4">'ClassSelector'</span><span class="s0">:</span>
+            <span class="s1">case </span><span class="s4">'AttributeSelector'</span><span class="s0">:</span>
+                <span class="s0">B++</span><span class="s3">;</span>
+                <span class="s1">break</span><span class="s3">;</span>
+
+            <span class="s1">case </span><span class="s4">'PseudoClassSelector'</span><span class="s0">:</span>
+                <span class="s1">switch </span><span class="s0">(node.name.toLowerCase()) {</span>
+                    <span class="s1">case </span><span class="s4">'not'</span><span class="s0">:</span>
+                        <span class="s0">node.children.each(walk)</span><span class="s3">;</span>
+                        <span class="s1">break</span><span class="s3">;</span>
+
+                    <span class="s1">case </span><span class="s4">'before'</span><span class="s0">:</span>
+                    <span class="s1">case </span><span class="s4">'after'</span><span class="s0">:</span>
+                    <span class="s1">case </span><span class="s4">'first-line'</span><span class="s0">:</span>
+                    <span class="s1">case </span><span class="s4">'first-letter'</span><span class="s0">:</span>
+                        <span class="s0">C++</span><span class="s3">;</span>
+                        <span class="s1">break</span><span class="s3">;</span>
+
+                    <span class="s5">// TODO: support for :nth-*(.. of &lt;SelectorList&gt;), :matches(), :has()</span>
+                    <span class="s1">default</span><span class="s0">:</span>
+                        <span class="s0">B++</span><span class="s3">;</span>
+                <span class="s0">}</span>
+                <span class="s1">break</span><span class="s3">;</span>
+
+            <span class="s1">case </span><span class="s4">'PseudoElementSelector'</span><span class="s0">:</span>
+                <span class="s0">C++</span><span class="s3">;</span>
+                <span class="s1">break</span><span class="s3">;</span>
+
+            <span class="s1">case </span><span class="s4">'TypeSelector'</span><span class="s0">:</span>
+                <span class="s5">// ignore universal selector</span>
+                <span class="s1">if </span><span class="s0">(node.name.charAt(node.name.length - </span><span class="s2">1</span><span class="s0">) !== </span><span class="s4">'*'</span><span class="s0">) {</span>
+                    <span class="s0">C++</span><span class="s3">;</span>
+                <span class="s0">}</span>
+                <span class="s1">break</span><span class="s3">;</span>
+
+        <span class="s0">}</span>
+    <span class="s0">})</span><span class="s3">;</span>
+
+    <span class="s1">return </span><span class="s0">[A</span><span class="s3">, </span><span class="s0">B</span><span class="s3">, </span><span class="s0">C]</span><span class="s3">;</span>
+<span class="s0">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

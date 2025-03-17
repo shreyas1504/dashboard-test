@@ -1,0 +1,438 @@
+<html>
+<head>
+<title>source-node.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #808080;}
+.s6 { color: #6897bb;}
+.s7 { color: #8a8a8a; font-style: italic;}
+.s8 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+source-node.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* -*- Mode: js; js-indent-level: 2; -*- */</span>
+<span class="s0">/* 
+ * Copyright 2011 Mozilla Foundation and contributors 
+ * Licensed under the New BSD license. See LICENSE or: 
+ * http://opensource.org/licenses/BSD-3-Clause 
+ */</span>
+
+<span class="s2">var </span><span class="s1">SourceMapGenerator = require(</span><span class="s3">'./source-map-generator'</span><span class="s1">).SourceMapGenerator</span><span class="s4">;</span>
+<span class="s2">var </span><span class="s1">util = require(</span><span class="s3">'./util'</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s5">// Matches a Windows-style `\r\n` newline or a `\n` newline used by all other</span>
+<span class="s5">// operating systems these days (capturing the result).</span>
+<span class="s2">var </span><span class="s1">REGEX_NEWLINE = </span><span class="s6">/(\r?\n)/</span><span class="s4">;</span>
+
+<span class="s5">// Newline character code for charCodeAt() comparisons</span>
+<span class="s2">var </span><span class="s1">NEWLINE_CODE = </span><span class="s6">10</span><span class="s4">;</span>
+
+<span class="s5">// Private symbol for identifying `SourceNode`s when multiple versions of</span>
+<span class="s5">// the source-map library are loaded. This MUST NOT CHANGE across</span>
+<span class="s5">// versions!</span>
+<span class="s2">var </span><span class="s1">isSourceNode = </span><span class="s3">&quot;$$$isSourceNode$$$&quot;</span><span class="s4">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* SourceNodes provide a way to abstract over interpolating/concatenating</span>
+ <span class="s7">* snippets of generated JavaScript source code while maintaining the line and</span>
+ <span class="s7">* column information associated with the original source code.</span>
+ <span class="s7">*</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aLine The original line number.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aColumn The original column number.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aSource The original source's filename.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aChunks Optional. An array of strings which are snippets of</span>
+ <span class="s7">*        generated JS, or other SourceNodes.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aName The original identifier.</span>
+ <span class="s7">*/</span>
+<span class="s2">function </span><span class="s1">SourceNode(aLine</span><span class="s4">, </span><span class="s1">aColumn</span><span class="s4">, </span><span class="s1">aSource</span><span class="s4">, </span><span class="s1">aChunks</span><span class="s4">, </span><span class="s1">aName) {</span>
+  <span class="s2">this</span><span class="s1">.children = []</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">.sourceContents = {}</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">.line = aLine == </span><span class="s2">null </span><span class="s1">? </span><span class="s2">null </span><span class="s1">: aLine</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">.column = aColumn == </span><span class="s2">null </span><span class="s1">? </span><span class="s2">null </span><span class="s1">: aColumn</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">.source = aSource == </span><span class="s2">null </span><span class="s1">? </span><span class="s2">null </span><span class="s1">: aSource</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">.name = aName == </span><span class="s2">null </span><span class="s1">? </span><span class="s2">null </span><span class="s1">: aName</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">[isSourceNode] = </span><span class="s2">true</span><span class="s4">;</span>
+  <span class="s2">if </span><span class="s1">(aChunks != </span><span class="s2">null</span><span class="s1">) </span><span class="s2">this</span><span class="s1">.add(aChunks)</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Creates a SourceNode from generated code and a SourceMapConsumer.</span>
+ <span class="s7">*</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aGeneratedCode The generated code</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aSourceMapConsumer The SourceMap for the generated code</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aRelativePath Optional. The path that relative sources in the</span>
+ <span class="s7">*        SourceMapConsumer should be relative to.</span>
+ <span class="s7">*/</span>
+<span class="s1">SourceNode.fromStringWithSourceMap =</span>
+  <span class="s2">function </span><span class="s1">SourceNode_fromStringWithSourceMap(aGeneratedCode</span><span class="s4">, </span><span class="s1">aSourceMapConsumer</span><span class="s4">, </span><span class="s1">aRelativePath) {</span>
+    <span class="s5">// The SourceNode we want to fill with the generated code</span>
+    <span class="s5">// and the SourceMap</span>
+    <span class="s2">var </span><span class="s1">node = </span><span class="s2">new </span><span class="s1">SourceNode()</span><span class="s4">;</span>
+
+    <span class="s5">// All even indices of this array are one line of the generated code,</span>
+    <span class="s5">// while all odd indices are the newlines between two adjacent lines</span>
+    <span class="s5">// (since `REGEX_NEWLINE` captures its match).</span>
+    <span class="s5">// Processed fragments are accessed by calling `shiftNextLine`.</span>
+    <span class="s2">var </span><span class="s1">remainingLines = aGeneratedCode.split(REGEX_NEWLINE)</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">remainingLinesIndex = </span><span class="s6">0</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">shiftNextLine = </span><span class="s2">function</span><span class="s1">() {</span>
+      <span class="s2">var </span><span class="s1">lineContents = getNextLine()</span><span class="s4">;</span>
+      <span class="s5">// The last line of a file might not have a newline.</span>
+      <span class="s2">var </span><span class="s1">newLine = getNextLine() || </span><span class="s3">&quot;&quot;</span><span class="s4">;</span>
+      <span class="s2">return </span><span class="s1">lineContents + newLine</span><span class="s4">;</span>
+
+      <span class="s2">function </span><span class="s1">getNextLine() {</span>
+        <span class="s2">return </span><span class="s1">remainingLinesIndex &lt; remainingLines.length ?</span>
+            <span class="s1">remainingLines[remainingLinesIndex++] : undefined</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span><span class="s4">;</span>
+
+    <span class="s5">// We need to remember the position of &quot;remainingLines&quot;</span>
+    <span class="s2">var </span><span class="s1">lastGeneratedLine = </span><span class="s6">1</span><span class="s4">, </span><span class="s1">lastGeneratedColumn = </span><span class="s6">0</span><span class="s4">;</span>
+
+    <span class="s5">// The generate SourceNodes we need a code range.</span>
+    <span class="s5">// To extract it current and last mapping is used.</span>
+    <span class="s5">// Here we store the last mapping.</span>
+    <span class="s2">var </span><span class="s1">lastMapping = </span><span class="s2">null</span><span class="s4">;</span>
+
+    <span class="s1">aSourceMapConsumer.eachMapping(</span><span class="s2">function </span><span class="s1">(mapping) {</span>
+      <span class="s2">if </span><span class="s1">(lastMapping !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s5">// We add the code from &quot;lastMapping&quot; to &quot;mapping&quot;:</span>
+        <span class="s5">// First check if there is a new line in between.</span>
+        <span class="s2">if </span><span class="s1">(lastGeneratedLine &lt; mapping.generatedLine) {</span>
+          <span class="s5">// Associate first line with &quot;lastMapping&quot;</span>
+          <span class="s1">addMappingWithCode(lastMapping</span><span class="s4">, </span><span class="s1">shiftNextLine())</span><span class="s4">;</span>
+          <span class="s1">lastGeneratedLine++</span><span class="s4">;</span>
+          <span class="s1">lastGeneratedColumn = </span><span class="s6">0</span><span class="s4">;</span>
+          <span class="s5">// The remaining code is added without mapping</span>
+        <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+          <span class="s5">// There is no new line in between.</span>
+          <span class="s5">// Associate the code between &quot;lastGeneratedColumn&quot; and</span>
+          <span class="s5">// &quot;mapping.generatedColumn&quot; with &quot;lastMapping&quot;</span>
+          <span class="s2">var </span><span class="s1">nextLine = remainingLines[remainingLinesIndex] || </span><span class="s3">''</span><span class="s4">;</span>
+          <span class="s2">var </span><span class="s1">code = nextLine.substr(</span><span class="s6">0</span><span class="s4">, </span><span class="s1">mapping.generatedColumn -</span>
+                                        <span class="s1">lastGeneratedColumn)</span><span class="s4">;</span>
+          <span class="s1">remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn -</span>
+                                              <span class="s1">lastGeneratedColumn)</span><span class="s4">;</span>
+          <span class="s1">lastGeneratedColumn = mapping.generatedColumn</span><span class="s4">;</span>
+          <span class="s1">addMappingWithCode(lastMapping</span><span class="s4">, </span><span class="s1">code)</span><span class="s4">;</span>
+          <span class="s5">// No more remaining code, continue</span>
+          <span class="s1">lastMapping = mapping</span><span class="s4">;</span>
+          <span class="s2">return</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+      <span class="s5">// We add the generated code until the first mapping</span>
+      <span class="s5">// to the SourceNode without any mapping.</span>
+      <span class="s5">// Each line is added as separate string.</span>
+      <span class="s2">while </span><span class="s1">(lastGeneratedLine &lt; mapping.generatedLine) {</span>
+        <span class="s1">node.add(shiftNextLine())</span><span class="s4">;</span>
+        <span class="s1">lastGeneratedLine++</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s2">if </span><span class="s1">(lastGeneratedColumn &lt; mapping.generatedColumn) {</span>
+        <span class="s2">var </span><span class="s1">nextLine = remainingLines[remainingLinesIndex] || </span><span class="s3">''</span><span class="s4">;</span>
+        <span class="s1">node.add(nextLine.substr(</span><span class="s6">0</span><span class="s4">, </span><span class="s1">mapping.generatedColumn))</span><span class="s4">;</span>
+        <span class="s1">remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn)</span><span class="s4">;</span>
+        <span class="s1">lastGeneratedColumn = mapping.generatedColumn</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s1">lastMapping = mapping</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">, </span><span class="s2">this</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s5">// We have processed all mappings.</span>
+    <span class="s2">if </span><span class="s1">(remainingLinesIndex &lt; remainingLines.length) {</span>
+      <span class="s2">if </span><span class="s1">(lastMapping) {</span>
+        <span class="s5">// Associate the remaining code in the current line with &quot;lastMapping&quot;</span>
+        <span class="s1">addMappingWithCode(lastMapping</span><span class="s4">, </span><span class="s1">shiftNextLine())</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s5">// and add the remaining lines without any mapping</span>
+      <span class="s1">node.add(remainingLines.splice(remainingLinesIndex).join(</span><span class="s3">&quot;&quot;</span><span class="s1">))</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">// Copy sourcesContent into SourceNode</span>
+    <span class="s1">aSourceMapConsumer.sources.forEach(</span><span class="s2">function </span><span class="s1">(sourceFile) {</span>
+      <span class="s2">var </span><span class="s1">content = aSourceMapConsumer.sourceContentFor(sourceFile)</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(content != </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s2">if </span><span class="s1">(aRelativePath != </span><span class="s2">null</span><span class="s1">) {</span>
+          <span class="s1">sourceFile = util.join(aRelativePath</span><span class="s4">, </span><span class="s1">sourceFile)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s1">node.setSourceContent(sourceFile</span><span class="s4">, </span><span class="s1">content)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span><span class="s4">;</span>
+
+    <span class="s2">return </span><span class="s1">node</span><span class="s4">;</span>
+
+    <span class="s2">function </span><span class="s1">addMappingWithCode(mapping</span><span class="s4">, </span><span class="s1">code) {</span>
+      <span class="s2">if </span><span class="s1">(mapping === </span><span class="s2">null </span><span class="s1">|| mapping.source === undefined) {</span>
+        <span class="s1">node.add(code)</span><span class="s4">;</span>
+      <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s2">var </span><span class="s1">source = aRelativePath</span>
+          <span class="s1">? util.join(aRelativePath</span><span class="s4">, </span><span class="s1">mapping.source)</span>
+          <span class="s1">: mapping.source</span><span class="s4">;</span>
+        <span class="s1">node.add(</span><span class="s2">new </span><span class="s1">SourceNode(mapping.originalLine</span><span class="s4">,</span>
+                                <span class="s1">mapping.originalColumn</span><span class="s4">,</span>
+                                <span class="s1">source</span><span class="s4">,</span>
+                                <span class="s1">code</span><span class="s4">,</span>
+                                <span class="s1">mapping.name))</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Add a chunk of generated JS to this source node.</span>
+ <span class="s7">*</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aChunk A string snippet of generated JS code, another instance of</span>
+ <span class="s7">*        SourceNode, or an array where each member is one of those things.</span>
+ <span class="s7">*/</span>
+<span class="s1">SourceNode.prototype.add = </span><span class="s2">function </span><span class="s1">SourceNode_add(aChunk) {</span>
+  <span class="s2">if </span><span class="s1">(Array.isArray(aChunk)) {</span>
+    <span class="s1">aChunk.forEach(</span><span class="s2">function </span><span class="s1">(chunk) {</span>
+      <span class="s2">this</span><span class="s1">.add(chunk)</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">, </span><span class="s2">this</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s2">else if </span><span class="s1">(aChunk[isSourceNode] || </span><span class="s2">typeof </span><span class="s1">aChunk === </span><span class="s3">&quot;string&quot;</span><span class="s1">) {</span>
+    <span class="s2">if </span><span class="s1">(aChunk) {</span>
+      <span class="s2">this</span><span class="s1">.children.push(aChunk)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s2">else </span><span class="s1">{</span>
+    <span class="s2">throw new </span><span class="s1">TypeError(</span>
+      <span class="s3">&quot;Expected a SourceNode, string, or an array of SourceNodes and strings. Got &quot; </span><span class="s1">+ aChunk</span>
+    <span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s2">return this</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Add a chunk of generated JS to the beginning of this source node.</span>
+ <span class="s7">*</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aChunk A string snippet of generated JS code, another instance of</span>
+ <span class="s7">*        SourceNode, or an array where each member is one of those things.</span>
+ <span class="s7">*/</span>
+<span class="s1">SourceNode.prototype.prepend = </span><span class="s2">function </span><span class="s1">SourceNode_prepend(aChunk) {</span>
+  <span class="s2">if </span><span class="s1">(Array.isArray(aChunk)) {</span>
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = aChunk.length-</span><span class="s6">1</span><span class="s4">; </span><span class="s1">i &gt;= </span><span class="s6">0</span><span class="s4">; </span><span class="s1">i--) {</span>
+      <span class="s2">this</span><span class="s1">.prepend(aChunk[i])</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s2">else if </span><span class="s1">(aChunk[isSourceNode] || </span><span class="s2">typeof </span><span class="s1">aChunk === </span><span class="s3">&quot;string&quot;</span><span class="s1">) {</span>
+    <span class="s2">this</span><span class="s1">.children.unshift(aChunk)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s2">else </span><span class="s1">{</span>
+    <span class="s2">throw new </span><span class="s1">TypeError(</span>
+      <span class="s3">&quot;Expected a SourceNode, string, or an array of SourceNodes and strings. Got &quot; </span><span class="s1">+ aChunk</span>
+    <span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s2">return this</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Walk over the tree of JS snippets in this node and its children. The</span>
+ <span class="s7">* walking function is called once for each snippet of JS and is passed that</span>
+ <span class="s7">* snippet and the its original associated source's line/column location.</span>
+ <span class="s7">*</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aFn The traversal function.</span>
+ <span class="s7">*/</span>
+<span class="s1">SourceNode.prototype.walk = </span><span class="s2">function </span><span class="s1">SourceNode_walk(aFn) {</span>
+  <span class="s2">var </span><span class="s1">chunk</span><span class="s4">;</span>
+  <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s6">0</span><span class="s4">, </span><span class="s1">len = </span><span class="s2">this</span><span class="s1">.children.length</span><span class="s4">; </span><span class="s1">i &lt; len</span><span class="s4">; </span><span class="s1">i++) {</span>
+    <span class="s1">chunk = </span><span class="s2">this</span><span class="s1">.children[i]</span><span class="s4">;</span>
+    <span class="s2">if </span><span class="s1">(chunk[isSourceNode]) {</span>
+      <span class="s1">chunk.walk(aFn)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">else </span><span class="s1">{</span>
+      <span class="s2">if </span><span class="s1">(chunk !== </span><span class="s3">''</span><span class="s1">) {</span>
+        <span class="s1">aFn(chunk</span><span class="s4">, </span><span class="s1">{ source: </span><span class="s2">this</span><span class="s1">.source</span><span class="s4">,</span>
+                     <span class="s1">line: </span><span class="s2">this</span><span class="s1">.line</span><span class="s4">,</span>
+                     <span class="s1">column: </span><span class="s2">this</span><span class="s1">.column</span><span class="s4">,</span>
+                     <span class="s1">name: </span><span class="s2">this</span><span class="s1">.name })</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Like `String.prototype.join` except for SourceNodes. Inserts `aStr` between</span>
+ <span class="s7">* each of `this.children`.</span>
+ <span class="s7">*</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aSep The separator.</span>
+ <span class="s7">*/</span>
+<span class="s1">SourceNode.prototype.join = </span><span class="s2">function </span><span class="s1">SourceNode_join(aSep) {</span>
+  <span class="s2">var </span><span class="s1">newChildren</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">i</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">len = </span><span class="s2">this</span><span class="s1">.children.length</span><span class="s4">;</span>
+  <span class="s2">if </span><span class="s1">(len &gt; </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s1">newChildren = []</span><span class="s4">;</span>
+    <span class="s2">for </span><span class="s1">(i = </span><span class="s6">0</span><span class="s4">; </span><span class="s1">i &lt; len-</span><span class="s6">1</span><span class="s4">; </span><span class="s1">i++) {</span>
+      <span class="s1">newChildren.push(</span><span class="s2">this</span><span class="s1">.children[i])</span><span class="s4">;</span>
+      <span class="s1">newChildren.push(aSep)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s1">newChildren.push(</span><span class="s2">this</span><span class="s1">.children[i])</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">.children = newChildren</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s2">return this</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Call String.prototype.replace on the very right-most source snippet. Useful</span>
+ <span class="s7">* for trimming whitespace from the end of a source node, etc.</span>
+ <span class="s7">*</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aPattern The pattern to replace.</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aReplacement The thing to replace the pattern with.</span>
+ <span class="s7">*/</span>
+<span class="s1">SourceNode.prototype.replaceRight = </span><span class="s2">function </span><span class="s1">SourceNode_replaceRight(aPattern</span><span class="s4">, </span><span class="s1">aReplacement) {</span>
+  <span class="s2">var </span><span class="s1">lastChild = </span><span class="s2">this</span><span class="s1">.children[</span><span class="s2">this</span><span class="s1">.children.length - </span><span class="s6">1</span><span class="s1">]</span><span class="s4">;</span>
+  <span class="s2">if </span><span class="s1">(lastChild[isSourceNode]) {</span>
+    <span class="s1">lastChild.replaceRight(aPattern</span><span class="s4">, </span><span class="s1">aReplacement)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s2">else if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">lastChild === </span><span class="s3">'string'</span><span class="s1">) {</span>
+    <span class="s2">this</span><span class="s1">.children[</span><span class="s2">this</span><span class="s1">.children.length - </span><span class="s6">1</span><span class="s1">] = lastChild.replace(aPattern</span><span class="s4">, </span><span class="s1">aReplacement)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s2">else </span><span class="s1">{</span>
+    <span class="s2">this</span><span class="s1">.children.push(</span><span class="s3">''</span><span class="s1">.replace(aPattern</span><span class="s4">, </span><span class="s1">aReplacement))</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s2">return this</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Set the source content for a source file. This will be added to the SourceMapGenerator</span>
+ <span class="s7">* in the sourcesContent field.</span>
+ <span class="s7">*</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aSourceFile The filename of the source file</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aSourceContent The content of the source file</span>
+ <span class="s7">*/</span>
+<span class="s1">SourceNode.prototype.setSourceContent =</span>
+  <span class="s2">function </span><span class="s1">SourceNode_setSourceContent(aSourceFile</span><span class="s4">, </span><span class="s1">aSourceContent) {</span>
+    <span class="s2">this</span><span class="s1">.sourceContents[util.toSetString(aSourceFile)] = aSourceContent</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Walk over the tree of SourceNodes. The walking function is called for each</span>
+ <span class="s7">* source file content and is passed the filename and source content.</span>
+ <span class="s7">*</span>
+ <span class="s7">* </span><span class="s8">@param </span><span class="s7">aFn The traversal function.</span>
+ <span class="s7">*/</span>
+<span class="s1">SourceNode.prototype.walkSourceContents =</span>
+  <span class="s2">function </span><span class="s1">SourceNode_walkSourceContents(aFn) {</span>
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s6">0</span><span class="s4">, </span><span class="s1">len = </span><span class="s2">this</span><span class="s1">.children.length</span><span class="s4">; </span><span class="s1">i &lt; len</span><span class="s4">; </span><span class="s1">i++) {</span>
+      <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.children[i][isSourceNode]) {</span>
+        <span class="s2">this</span><span class="s1">.children[i].walkSourceContents(aFn)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s2">var </span><span class="s1">sources = Object.keys(</span><span class="s2">this</span><span class="s1">.sourceContents)</span><span class="s4">;</span>
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s6">0</span><span class="s4">, </span><span class="s1">len = sources.length</span><span class="s4">; </span><span class="s1">i &lt; len</span><span class="s4">; </span><span class="s1">i++) {</span>
+      <span class="s1">aFn(util.fromSetString(sources[i])</span><span class="s4">, </span><span class="s2">this</span><span class="s1">.sourceContents[sources[i]])</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Return the string representation of this source node. Walks over the tree</span>
+ <span class="s7">* and concatenates all the various snippets together to one string.</span>
+ <span class="s7">*/</span>
+<span class="s1">SourceNode.prototype.toString = </span><span class="s2">function </span><span class="s1">SourceNode_toString() {</span>
+  <span class="s2">var </span><span class="s1">str = </span><span class="s3">&quot;&quot;</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">.walk(</span><span class="s2">function </span><span class="s1">(chunk) {</span>
+    <span class="s1">str += chunk</span><span class="s4">;</span>
+  <span class="s1">})</span><span class="s4">;</span>
+  <span class="s2">return </span><span class="s1">str</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* Returns the string representation of this source node along with a source</span>
+ <span class="s7">* map.</span>
+ <span class="s7">*/</span>
+<span class="s1">SourceNode.prototype.toStringWithSourceMap = </span><span class="s2">function </span><span class="s1">SourceNode_toStringWithSourceMap(aArgs) {</span>
+  <span class="s2">var </span><span class="s1">generated = {</span>
+    <span class="s1">code: </span><span class="s3">&quot;&quot;</span><span class="s4">,</span>
+    <span class="s1">line: </span><span class="s6">1</span><span class="s4">,</span>
+    <span class="s1">column: </span><span class="s6">0</span>
+  <span class="s1">}</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">map = </span><span class="s2">new </span><span class="s1">SourceMapGenerator(aArgs)</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">sourceMappingActive = </span><span class="s2">false</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">lastOriginalSource = </span><span class="s2">null</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">lastOriginalLine = </span><span class="s2">null</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">lastOriginalColumn = </span><span class="s2">null</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">lastOriginalName = </span><span class="s2">null</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">.walk(</span><span class="s2">function </span><span class="s1">(chunk</span><span class="s4">, </span><span class="s1">original) {</span>
+    <span class="s1">generated.code += chunk</span><span class="s4">;</span>
+    <span class="s2">if </span><span class="s1">(original.source !== </span><span class="s2">null</span>
+        <span class="s1">&amp;&amp; original.line !== </span><span class="s2">null</span>
+        <span class="s1">&amp;&amp; original.column !== </span><span class="s2">null</span><span class="s1">) {</span>
+      <span class="s2">if</span><span class="s1">(lastOriginalSource !== original.source</span>
+         <span class="s1">|| lastOriginalLine !== original.line</span>
+         <span class="s1">|| lastOriginalColumn !== original.column</span>
+         <span class="s1">|| lastOriginalName !== original.name) {</span>
+        <span class="s1">map.addMapping({</span>
+          <span class="s1">source: original.source</span><span class="s4">,</span>
+          <span class="s1">original: {</span>
+            <span class="s1">line: original.line</span><span class="s4">,</span>
+            <span class="s1">column: original.column</span>
+          <span class="s1">}</span><span class="s4">,</span>
+          <span class="s1">generated: {</span>
+            <span class="s1">line: generated.line</span><span class="s4">,</span>
+            <span class="s1">column: generated.column</span>
+          <span class="s1">}</span><span class="s4">,</span>
+          <span class="s1">name: original.name</span>
+        <span class="s1">})</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s1">lastOriginalSource = original.source</span><span class="s4">;</span>
+      <span class="s1">lastOriginalLine = original.line</span><span class="s4">;</span>
+      <span class="s1">lastOriginalColumn = original.column</span><span class="s4">;</span>
+      <span class="s1">lastOriginalName = original.name</span><span class="s4">;</span>
+      <span class="s1">sourceMappingActive = </span><span class="s2">true</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s2">else if </span><span class="s1">(sourceMappingActive) {</span>
+      <span class="s1">map.addMapping({</span>
+        <span class="s1">generated: {</span>
+          <span class="s1">line: generated.line</span><span class="s4">,</span>
+          <span class="s1">column: generated.column</span>
+        <span class="s1">}</span>
+      <span class="s1">})</span><span class="s4">;</span>
+      <span class="s1">lastOriginalSource = </span><span class="s2">null</span><span class="s4">;</span>
+      <span class="s1">sourceMappingActive = </span><span class="s2">false</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">idx = </span><span class="s6">0</span><span class="s4">, </span><span class="s1">length = chunk.length</span><span class="s4">; </span><span class="s1">idx &lt; length</span><span class="s4">; </span><span class="s1">idx++) {</span>
+      <span class="s2">if </span><span class="s1">(chunk.charCodeAt(idx) === NEWLINE_CODE) {</span>
+        <span class="s1">generated.line++</span><span class="s4">;</span>
+        <span class="s1">generated.column = </span><span class="s6">0</span><span class="s4">;</span>
+        <span class="s5">// Mappings end at eol</span>
+        <span class="s2">if </span><span class="s1">(idx + </span><span class="s6">1 </span><span class="s1">=== length) {</span>
+          <span class="s1">lastOriginalSource = </span><span class="s2">null</span><span class="s4">;</span>
+          <span class="s1">sourceMappingActive = </span><span class="s2">false</span><span class="s4">;</span>
+        <span class="s1">} </span><span class="s2">else if </span><span class="s1">(sourceMappingActive) {</span>
+          <span class="s1">map.addMapping({</span>
+            <span class="s1">source: original.source</span><span class="s4">,</span>
+            <span class="s1">original: {</span>
+              <span class="s1">line: original.line</span><span class="s4">,</span>
+              <span class="s1">column: original.column</span>
+            <span class="s1">}</span><span class="s4">,</span>
+            <span class="s1">generated: {</span>
+              <span class="s1">line: generated.line</span><span class="s4">,</span>
+              <span class="s1">column: generated.column</span>
+            <span class="s1">}</span><span class="s4">,</span>
+            <span class="s1">name: original.name</span>
+          <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s1">generated.column++</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">.walkSourceContents(</span><span class="s2">function </span><span class="s1">(sourceFile</span><span class="s4">, </span><span class="s1">sourceContent) {</span>
+    <span class="s1">map.setSourceContent(sourceFile</span><span class="s4">, </span><span class="s1">sourceContent)</span><span class="s4">;</span>
+  <span class="s1">})</span><span class="s4">;</span>
+
+  <span class="s2">return </span><span class="s1">{ code: generated.code</span><span class="s4">, </span><span class="s1">map: map }</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">exports.SourceNode = SourceNode</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

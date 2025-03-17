@@ -1,0 +1,55 @@
+<html>
+<head>
+<title>request.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+request.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span>
+
+<span class="s2">function </span><span class="s1">attachPush (req) {</span>
+  <span class="s2">var </span><span class="s1">handle = req.socket._handle</span>
+
+  <span class="s1">handle.getStream(</span><span class="s2">function </span><span class="s1">(stream) {</span>
+    <span class="s1">stream.on(</span><span class="s0">'pushPromise'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">(push) {</span>
+      <span class="s1">req.emit(</span><span class="s0">'push'</span><span class="s3">, </span><span class="s1">push)</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s1">exports.onNewListener = </span><span class="s2">function </span><span class="s1">onNewListener (type) {</span>
+  <span class="s2">var </span><span class="s1">req = </span><span class="s2">this</span>
+
+  <span class="s2">if </span><span class="s1">(type !== </span><span class="s0">'push'</span><span class="s1">) {</span>
+    <span class="s2">return</span>
+  <span class="s1">}</span>
+
+  <span class="s4">// Not first listener</span>
+  <span class="s2">if </span><span class="s1">(req.listeners(</span><span class="s0">'push'</span><span class="s1">).length !== </span><span class="s5">0</span><span class="s1">) {</span>
+    <span class="s2">return</span>
+  <span class="s1">}</span>
+
+  <span class="s2">if </span><span class="s1">(!req.socket) {</span>
+    <span class="s1">req.on(</span><span class="s0">'socket'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s1">attachPush(req)</span>
+    <span class="s1">})</span>
+    <span class="s2">return</span>
+  <span class="s1">}</span>
+
+  <span class="s1">attachPush(req)</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

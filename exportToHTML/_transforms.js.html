@@ -1,0 +1,335 @@
+<html>
+<head>
+<title>_transforms.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s7 { color: #808080;}
+.s8 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_transforms.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">regTransformTypes = </span><span class="s4">/matrix|translate|scale|rotate|skewX|skewY/</span><span class="s1">,</span>
+    <span class="s2">regTransformSplit = </span><span class="s4">/\s*(matrix|translate|scale|rotate|skewX|skewY)\s*\(\s*(.+?)\s*\)[\s,]*/</span><span class="s1">,</span>
+    <span class="s2">regNumericValues = </span><span class="s4">/[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g</span><span class="s1">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Convert transform string to JS representation.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{String} transformString input string</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Object} params plugin params</span>
+ <span class="s5">* </span><span class="s6">@return </span><span class="s5">{Array} output array</span>
+ <span class="s5">*/</span>
+<span class="s2">exports.transform2js = </span><span class="s3">function</span><span class="s2">(transformString) {</span>
+
+        <span class="s7">// JS representation of the transform data</span>
+    <span class="s3">var </span><span class="s2">transforms = []</span><span class="s1">,</span>
+        <span class="s7">// current transform context</span>
+        <span class="s2">current</span><span class="s1">;</span>
+
+    <span class="s7">// split value into ['', 'translate', '10 50', '', 'scale', '2', '', 'rotate', '-45', '']</span>
+    <span class="s2">transformString.split(regTransformSplit).forEach(</span><span class="s3">function</span><span class="s2">(item) {</span>
+        <span class="s8">/*jshint -W084 */</span>
+        <span class="s3">var </span><span class="s2">num</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(item) {</span>
+            <span class="s7">// if item is a translate function</span>
+            <span class="s3">if </span><span class="s2">(regTransformTypes.test(item)) {</span>
+                <span class="s7">// then collect it and change current context</span>
+                <span class="s2">transforms.push(current = { name: item })</span><span class="s1">;</span>
+            <span class="s7">// else if item is data</span>
+            <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+                <span class="s7">// then split it into [10, 50] and collect as context.data</span>
+                <span class="s3">while </span><span class="s2">(num = regNumericValues.exec(item)) {</span>
+                    <span class="s2">num = Number(num)</span><span class="s1">;</span>
+                    <span class="s3">if </span><span class="s2">(current.data)</span>
+                        <span class="s2">current.data.push(num)</span><span class="s1">;</span>
+                    <span class="s3">else</span>
+                        <span class="s2">current.data = [num]</span><span class="s1">;</span>
+                <span class="s2">}</span>
+            <span class="s2">}</span>
+        <span class="s2">}</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s7">// return empty array if broken transform (no data)</span>
+    <span class="s3">return </span><span class="s2">current &amp;&amp; current.data ? transforms : []</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Multiply transforms into one.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Array} input transforms array</span>
+ <span class="s5">* </span><span class="s6">@return </span><span class="s5">{Array} output matrix array</span>
+ <span class="s5">*/</span>
+<span class="s2">exports.transformsMultiply = </span><span class="s3">function</span><span class="s2">(transforms) {</span>
+
+    <span class="s7">// convert transforms objects to the matrices</span>
+    <span class="s2">transforms = transforms.map(</span><span class="s3">function</span><span class="s2">(transform) {</span>
+        <span class="s3">if </span><span class="s2">(transform.name === </span><span class="s0">'matrix'</span><span class="s2">) {</span>
+            <span class="s3">return </span><span class="s2">transform.data</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">return </span><span class="s2">transformToMatrix(transform)</span><span class="s1">;</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s7">// multiply all matrices into one</span>
+    <span class="s2">transforms = {</span>
+        <span class="s2">name: </span><span class="s0">'matrix'</span><span class="s1">,</span>
+        <span class="s2">data: transforms.length &gt; </span><span class="s4">0 </span><span class="s2">? transforms.reduce(multiplyTransformMatrices) : []</span>
+    <span class="s2">}</span><span class="s1">;</span>
+
+    <span class="s3">return </span><span class="s2">transforms</span><span class="s1">;</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Do math like a schoolgirl.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@type </span><span class="s5">{Object}</span>
+ <span class="s5">*/</span>
+<span class="s3">var </span><span class="s2">mth = exports.mth = {</span>
+
+    <span class="s2">rad: </span><span class="s3">function</span><span class="s2">(deg) {</span>
+        <span class="s3">return </span><span class="s2">deg * Math.PI / </span><span class="s4">180</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">,</span>
+
+    <span class="s2">deg: </span><span class="s3">function</span><span class="s2">(rad) {</span>
+        <span class="s3">return </span><span class="s2">rad * </span><span class="s4">180 </span><span class="s2">/ Math.PI</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">,</span>
+
+    <span class="s2">cos: </span><span class="s3">function</span><span class="s2">(deg) {</span>
+        <span class="s3">return </span><span class="s2">Math.cos(</span><span class="s3">this</span><span class="s2">.rad(deg))</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">,</span>
+
+    <span class="s2">acos: </span><span class="s3">function</span><span class="s2">(val</span><span class="s1">, </span><span class="s2">floatPrecision) {</span>
+        <span class="s3">return </span><span class="s2">+(</span><span class="s3">this</span><span class="s2">.deg(Math.acos(val)).toFixed(floatPrecision))</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">,</span>
+
+    <span class="s2">sin: </span><span class="s3">function</span><span class="s2">(deg) {</span>
+        <span class="s3">return </span><span class="s2">Math.sin(</span><span class="s3">this</span><span class="s2">.rad(deg))</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">,</span>
+
+    <span class="s2">asin: </span><span class="s3">function</span><span class="s2">(val</span><span class="s1">, </span><span class="s2">floatPrecision) {</span>
+        <span class="s3">return </span><span class="s2">+(</span><span class="s3">this</span><span class="s2">.deg(Math.asin(val)).toFixed(floatPrecision))</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">,</span>
+
+    <span class="s2">tan: </span><span class="s3">function</span><span class="s2">(deg) {</span>
+        <span class="s3">return </span><span class="s2">Math.tan(</span><span class="s3">this</span><span class="s2">.rad(deg))</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">,</span>
+
+    <span class="s2">atan: </span><span class="s3">function</span><span class="s2">(val</span><span class="s1">, </span><span class="s2">floatPrecision) {</span>
+        <span class="s3">return </span><span class="s2">+(</span><span class="s3">this</span><span class="s2">.deg(Math.atan(val)).toFixed(floatPrecision))</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Decompose matrix into simple transforms. See</span>
+ <span class="s5">* http://frederic-wang.fr/decomposition-of-2d-transform-matrices.html</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Object} data matrix transform object</span>
+ <span class="s5">* </span><span class="s6">@return </span><span class="s5">{Object|Array} transforms array or original transform object</span>
+ <span class="s5">*/</span>
+<span class="s2">exports.matrixToTransform = </span><span class="s3">function</span><span class="s2">(transform</span><span class="s1">, </span><span class="s2">params) {</span>
+    <span class="s3">var </span><span class="s2">floatPrecision = params.floatPrecision</span><span class="s1">,</span>
+        <span class="s2">data = transform.data</span><span class="s1">,</span>
+        <span class="s2">transforms = []</span><span class="s1">,</span>
+        <span class="s2">sx = +Math.hypot(data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s2">data[</span><span class="s4">1</span><span class="s2">]).toFixed(params.transformPrecision)</span><span class="s1">,</span>
+        <span class="s2">sy = +((data[</span><span class="s4">0</span><span class="s2">] * data[</span><span class="s4">3</span><span class="s2">] - data[</span><span class="s4">1</span><span class="s2">] * data[</span><span class="s4">2</span><span class="s2">]) / sx).toFixed(params.transformPrecision)</span><span class="s1">,</span>
+        <span class="s2">colsSum = data[</span><span class="s4">0</span><span class="s2">] * data[</span><span class="s4">2</span><span class="s2">] + data[</span><span class="s4">1</span><span class="s2">] * data[</span><span class="s4">3</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">rowsSum = data[</span><span class="s4">0</span><span class="s2">] * data[</span><span class="s4">1</span><span class="s2">] + data[</span><span class="s4">2</span><span class="s2">] * data[</span><span class="s4">3</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">scaleBefore = rowsSum != </span><span class="s4">0 </span><span class="s2">|| sx == sy</span><span class="s1">;</span>
+
+    <span class="s7">// [..., ..., ..., ..., tx, ty] → translate(tx, ty)</span>
+    <span class="s3">if </span><span class="s2">(data[</span><span class="s4">4</span><span class="s2">] || data[</span><span class="s4">5</span><span class="s2">]) {</span>
+        <span class="s2">transforms.push({ name: </span><span class="s0">'translate'</span><span class="s1">, </span><span class="s2">data: data.slice(</span><span class="s4">4</span><span class="s1">, </span><span class="s2">data[</span><span class="s4">5</span><span class="s2">] ? </span><span class="s4">6 </span><span class="s2">: </span><span class="s4">5</span><span class="s2">) })</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s7">// [sx, 0, tan(a)·sy, sy, 0, 0] → skewX(a)·scale(sx, sy)</span>
+    <span class="s3">if </span><span class="s2">(!data[</span><span class="s4">1</span><span class="s2">] &amp;&amp; data[</span><span class="s4">2</span><span class="s2">]) {</span>
+        <span class="s2">transforms.push({ name: </span><span class="s0">'skewX'</span><span class="s1">, </span><span class="s2">data: [mth.atan(data[</span><span class="s4">2</span><span class="s2">] / sy</span><span class="s1">, </span><span class="s2">floatPrecision)] })</span><span class="s1">;</span>
+
+    <span class="s7">// [sx, sx·tan(a), 0, sy, 0, 0] → skewY(a)·scale(sx, sy)</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(data[</span><span class="s4">1</span><span class="s2">] &amp;&amp; !data[</span><span class="s4">2</span><span class="s2">]) {</span>
+        <span class="s2">transforms.push({ name: </span><span class="s0">'skewY'</span><span class="s1">, </span><span class="s2">data: [mth.atan(data[</span><span class="s4">1</span><span class="s2">] / data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s2">floatPrecision)] })</span><span class="s1">;</span>
+        <span class="s2">sx = data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+        <span class="s2">sy = data[</span><span class="s4">3</span><span class="s2">]</span><span class="s1">;</span>
+
+    <span class="s7">// [sx·cos(a), sx·sin(a), sy·-sin(a), sy·cos(a), x, y] → rotate(a[, cx, cy])·(scale or skewX) or</span>
+    <span class="s7">// [sx·cos(a), sy·sin(a), sx·-sin(a), sy·cos(a), x, y] → scale(sx, sy)·rotate(a[, cx, cy]) (if !scaleBefore)</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(!colsSum || (sx == </span><span class="s4">1 </span><span class="s2">&amp;&amp; sy == </span><span class="s4">1</span><span class="s2">) || !scaleBefore) {</span>
+        <span class="s3">if </span><span class="s2">(!scaleBefore) {</span>
+            <span class="s2">sx = (data[</span><span class="s4">0</span><span class="s2">] &lt; </span><span class="s4">0 </span><span class="s2">? -</span><span class="s4">1 </span><span class="s2">: </span><span class="s4">1</span><span class="s2">) * Math.hypot(data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s2">data[</span><span class="s4">2</span><span class="s2">])</span><span class="s1">;</span>
+            <span class="s2">sy = (data[</span><span class="s4">3</span><span class="s2">] &lt; </span><span class="s4">0 </span><span class="s2">? -</span><span class="s4">1 </span><span class="s2">: </span><span class="s4">1</span><span class="s2">) * Math.hypot(data[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">, </span><span class="s2">data[</span><span class="s4">3</span><span class="s2">])</span><span class="s1">;</span>
+            <span class="s2">transforms.push({ name: </span><span class="s0">'scale'</span><span class="s1">, </span><span class="s2">data: [sx</span><span class="s1">, </span><span class="s2">sy] })</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">var </span><span class="s2">angle = Math.min(Math.max(-</span><span class="s4">1</span><span class="s1">, </span><span class="s2">data[</span><span class="s4">0</span><span class="s2">] / sx)</span><span class="s1">, </span><span class="s4">1</span><span class="s2">)</span><span class="s1">,</span>
+            <span class="s2">rotate = [mth.acos(angle</span><span class="s1">, </span><span class="s2">floatPrecision) * ((scaleBefore ? </span><span class="s4">1 </span><span class="s2">: sy) * data[</span><span class="s4">1</span><span class="s2">] &lt; </span><span class="s4">0 </span><span class="s2">? -</span><span class="s4">1 </span><span class="s2">: </span><span class="s4">1</span><span class="s2">)]</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(rotate[</span><span class="s4">0</span><span class="s2">]) transforms.push({ name: </span><span class="s0">'rotate'</span><span class="s1">, </span><span class="s2">data: rotate })</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(rowsSum &amp;&amp; colsSum) transforms.push({</span>
+            <span class="s2">name: </span><span class="s0">'skewX'</span><span class="s1">,</span>
+            <span class="s2">data: [mth.atan(colsSum / (sx * sx)</span><span class="s1">, </span><span class="s2">floatPrecision)]</span>
+        <span class="s2">})</span><span class="s1">;</span>
+
+        <span class="s7">// rotate(a, cx, cy) can consume translate() within optional arguments cx, cy (rotation point)</span>
+        <span class="s3">if </span><span class="s2">(rotate[</span><span class="s4">0</span><span class="s2">] &amp;&amp; (data[</span><span class="s4">4</span><span class="s2">] || data[</span><span class="s4">5</span><span class="s2">])) {</span>
+            <span class="s2">transforms.shift()</span><span class="s1">;</span>
+            <span class="s3">var </span><span class="s2">cos = data[</span><span class="s4">0</span><span class="s2">] / sx</span><span class="s1">,</span>
+                <span class="s2">sin = data[</span><span class="s4">1</span><span class="s2">] / (scaleBefore ? sx : sy)</span><span class="s1">,</span>
+                <span class="s2">x = data[</span><span class="s4">4</span><span class="s2">] * (scaleBefore || sy)</span><span class="s1">,</span>
+                <span class="s2">y = data[</span><span class="s4">5</span><span class="s2">] * (scaleBefore || sx)</span><span class="s1">,</span>
+                <span class="s2">denom = (Math.pow(</span><span class="s4">1 </span><span class="s2">- cos</span><span class="s1">, </span><span class="s4">2</span><span class="s2">) + Math.pow(sin</span><span class="s1">, </span><span class="s4">2</span><span class="s2">)) * (scaleBefore || sx * sy)</span><span class="s1">;</span>
+            <span class="s2">rotate.push(((</span><span class="s4">1 </span><span class="s2">- cos) * x - sin * y) / denom)</span><span class="s1">;</span>
+            <span class="s2">rotate.push(((</span><span class="s4">1 </span><span class="s2">- cos) * y + sin * x) / denom)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+    <span class="s7">// Too many transformations, return original matrix if it isn't just a scale/translate</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(data[</span><span class="s4">1</span><span class="s2">] || data[</span><span class="s4">2</span><span class="s2">]) {</span>
+        <span class="s3">return </span><span class="s2">transform</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(scaleBefore &amp;&amp; (sx != </span><span class="s4">1 </span><span class="s2">|| sy != </span><span class="s4">1</span><span class="s2">) || !transforms.length) transforms.push({</span>
+        <span class="s2">name: </span><span class="s0">'scale'</span><span class="s1">,</span>
+        <span class="s2">data: sx == sy ? [sx] : [sx</span><span class="s1">, </span><span class="s2">sy]</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s3">return </span><span class="s2">transforms</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Convert transform to the matrix data.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Object} transform transform object</span>
+ <span class="s5">* </span><span class="s6">@return </span><span class="s5">{Array} matrix data</span>
+ <span class="s5">*/</span>
+<span class="s3">function </span><span class="s2">transformToMatrix(transform) {</span>
+
+    <span class="s3">if </span><span class="s2">(transform.name === </span><span class="s0">'matrix'</span><span class="s2">) </span><span class="s3">return </span><span class="s2">transform.data</span><span class="s1">;</span>
+
+    <span class="s3">var </span><span class="s2">matrix</span><span class="s1">;</span>
+
+    <span class="s3">switch </span><span class="s2">(transform.name) {</span>
+        <span class="s3">case </span><span class="s0">'translate'</span><span class="s2">:</span>
+            <span class="s7">// [1, 0, 0, 1, tx, ty]</span>
+            <span class="s2">matrix = [</span><span class="s4">1</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">1</span><span class="s1">, </span><span class="s2">transform.data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s2">transform.data[</span><span class="s4">1</span><span class="s2">] || </span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+            <span class="s3">break</span><span class="s1">;</span>
+        <span class="s3">case </span><span class="s0">'scale'</span><span class="s2">:</span>
+            <span class="s7">// [sx, 0, 0, sy, 0, 0]</span>
+            <span class="s2">matrix = [transform.data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s2">transform.data[</span><span class="s4">1</span><span class="s2">] || transform.data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+            <span class="s3">break</span><span class="s1">;</span>
+        <span class="s3">case </span><span class="s0">'rotate'</span><span class="s2">:</span>
+            <span class="s7">// [cos(a), sin(a), -sin(a), cos(a), x, y]</span>
+            <span class="s3">var </span><span class="s2">cos = mth.cos(transform.data[</span><span class="s4">0</span><span class="s2">])</span><span class="s1">,</span>
+                <span class="s2">sin = mth.sin(transform.data[</span><span class="s4">0</span><span class="s2">])</span><span class="s1">,</span>
+                <span class="s2">cx = transform.data[</span><span class="s4">1</span><span class="s2">] || </span><span class="s4">0</span><span class="s1">,</span>
+                <span class="s2">cy = transform.data[</span><span class="s4">2</span><span class="s2">] || </span><span class="s4">0</span><span class="s1">;</span>
+
+            <span class="s2">matrix = [cos</span><span class="s1">, </span><span class="s2">sin</span><span class="s1">, </span><span class="s2">-sin</span><span class="s1">, </span><span class="s2">cos</span><span class="s1">, </span><span class="s2">(</span><span class="s4">1 </span><span class="s2">- cos) * cx + sin * cy</span><span class="s1">, </span><span class="s2">(</span><span class="s4">1 </span><span class="s2">- cos) * cy - sin * cx]</span><span class="s1">;</span>
+            <span class="s3">break</span><span class="s1">;</span>
+        <span class="s3">case </span><span class="s0">'skewX'</span><span class="s2">:</span>
+            <span class="s7">// [1, 0, tan(a), 1, 0, 0]</span>
+            <span class="s2">matrix = [</span><span class="s4">1</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s2">mth.tan(transform.data[</span><span class="s4">0</span><span class="s2">])</span><span class="s1">, </span><span class="s4">1</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+            <span class="s3">break</span><span class="s1">;</span>
+        <span class="s3">case </span><span class="s0">'skewY'</span><span class="s2">:</span>
+            <span class="s7">// [1, tan(a), 0, 1, 0, 0]</span>
+            <span class="s2">matrix = [</span><span class="s4">1</span><span class="s1">, </span><span class="s2">mth.tan(transform.data[</span><span class="s4">0</span><span class="s2">])</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">1</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+            <span class="s3">break</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return </span><span class="s2">matrix</span><span class="s1">;</span>
+
+<span class="s2">}</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Applies transformation to an arc. To do so, we represent ellipse as a matrix, multiply it</span>
+ <span class="s5">* by the transformation matrix and use a singular value decomposition to represent in a form</span>
+ <span class="s5">* rotate(θ)·scale(a b)·rotate(φ). This gives us new ellipse params a, b and θ.</span>
+ <span class="s5">* SVD is being done with the formulae provided by Wolffram|Alpha (svd {{m0, m2}, {m1, m3}})</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Array} arc [a, b, rotation in deg]</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Array} transform transformation matrix</span>
+ <span class="s5">* </span><span class="s6">@return </span><span class="s5">{Array} arc transformed input arc</span>
+ <span class="s5">*/</span>
+<span class="s2">exports.transformArc = </span><span class="s3">function</span><span class="s2">(arc</span><span class="s1">, </span><span class="s2">transform) {</span>
+
+    <span class="s3">var </span><span class="s2">a = arc[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">b = arc[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">rot = arc[</span><span class="s4">2</span><span class="s2">] * Math.PI / </span><span class="s4">180</span><span class="s1">,</span>
+        <span class="s2">cos = Math.cos(rot)</span><span class="s1">,</span>
+        <span class="s2">sin = Math.sin(rot)</span><span class="s1">,</span>
+        <span class="s2">h = Math.pow(arc[</span><span class="s4">5</span><span class="s2">] * cos + arc[</span><span class="s4">6</span><span class="s2">] * sin</span><span class="s1">, </span><span class="s4">2</span><span class="s2">) / (</span><span class="s4">4 </span><span class="s2">* a * a) +</span>
+            <span class="s2">Math.pow(arc[</span><span class="s4">6</span><span class="s2">] * cos - arc[</span><span class="s4">5</span><span class="s2">] * sin</span><span class="s1">, </span><span class="s4">2</span><span class="s2">) / (</span><span class="s4">4 </span><span class="s2">* b * b)</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(h &gt; </span><span class="s4">1</span><span class="s2">) {</span>
+        <span class="s2">h = Math.sqrt(h)</span><span class="s1">;</span>
+        <span class="s2">a *= h</span><span class="s1">;</span>
+        <span class="s2">b *= h</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s3">var </span><span class="s2">ellipse = [a * cos</span><span class="s1">, </span><span class="s2">a * sin</span><span class="s1">, </span><span class="s2">-b * sin</span><span class="s1">, </span><span class="s2">b * cos</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">m = multiplyTransformMatrices(transform</span><span class="s1">, </span><span class="s2">ellipse)</span><span class="s1">,</span>
+        <span class="s7">// Decompose the new ellipse matrix</span>
+        <span class="s2">lastCol = m[</span><span class="s4">2</span><span class="s2">] * m[</span><span class="s4">2</span><span class="s2">] + m[</span><span class="s4">3</span><span class="s2">] * m[</span><span class="s4">3</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">squareSum = m[</span><span class="s4">0</span><span class="s2">] * m[</span><span class="s4">0</span><span class="s2">] + m[</span><span class="s4">1</span><span class="s2">] * m[</span><span class="s4">1</span><span class="s2">] + lastCol</span><span class="s1">,</span>
+        <span class="s2">root = Math.hypot(m[</span><span class="s4">0</span><span class="s2">] - m[</span><span class="s4">3</span><span class="s2">]</span><span class="s1">, </span><span class="s2">m[</span><span class="s4">1</span><span class="s2">] + m[</span><span class="s4">2</span><span class="s2">]) * Math.hypot(m[</span><span class="s4">0</span><span class="s2">] + m[</span><span class="s4">3</span><span class="s2">]</span><span class="s1">, </span><span class="s2">m[</span><span class="s4">1</span><span class="s2">] - m[</span><span class="s4">2</span><span class="s2">])</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(!root) { </span><span class="s7">// circle</span>
+        <span class="s2">arc[</span><span class="s4">0</span><span class="s2">] = arc[</span><span class="s4">1</span><span class="s2">] = Math.sqrt(squareSum / </span><span class="s4">2</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">arc[</span><span class="s4">2</span><span class="s2">] = </span><span class="s4">0</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s3">var </span><span class="s2">majorAxisSqr = (squareSum + root) / </span><span class="s4">2</span><span class="s1">,</span>
+            <span class="s2">minorAxisSqr = (squareSum - root) / </span><span class="s4">2</span><span class="s1">,</span>
+            <span class="s2">major = Math.abs(majorAxisSqr - lastCol) &gt; </span><span class="s4">1e-6</span><span class="s1">,</span>
+            <span class="s2">sub = (major ? majorAxisSqr : minorAxisSqr) - lastCol</span><span class="s1">,</span>
+            <span class="s2">rowsSum = m[</span><span class="s4">0</span><span class="s2">] * m[</span><span class="s4">2</span><span class="s2">] + m[</span><span class="s4">1</span><span class="s2">] * m[</span><span class="s4">3</span><span class="s2">]</span><span class="s1">,</span>
+            <span class="s2">term1 = m[</span><span class="s4">0</span><span class="s2">] * sub + m[</span><span class="s4">2</span><span class="s2">] * rowsSum</span><span class="s1">,</span>
+            <span class="s2">term2 = m[</span><span class="s4">1</span><span class="s2">] * sub + m[</span><span class="s4">3</span><span class="s2">] * rowsSum</span><span class="s1">;</span>
+        <span class="s2">arc[</span><span class="s4">0</span><span class="s2">] = Math.sqrt(majorAxisSqr)</span><span class="s1">;</span>
+        <span class="s2">arc[</span><span class="s4">1</span><span class="s2">] = Math.sqrt(minorAxisSqr)</span><span class="s1">;</span>
+        <span class="s2">arc[</span><span class="s4">2</span><span class="s2">] = ((major ? term2 &lt; </span><span class="s4">0 </span><span class="s2">: term1 &gt; </span><span class="s4">0</span><span class="s2">) ? -</span><span class="s4">1 </span><span class="s2">: </span><span class="s4">1</span><span class="s2">) *</span>
+            <span class="s2">Math.acos((major ? term1 : term2) / Math.hypot(term1</span><span class="s1">, </span><span class="s2">term2)) * </span><span class="s4">180 </span><span class="s2">/ Math.PI</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">((transform[</span><span class="s4">0</span><span class="s2">] &lt; </span><span class="s4">0</span><span class="s2">) !== (transform[</span><span class="s4">3</span><span class="s2">] &lt; </span><span class="s4">0</span><span class="s2">)) {</span>
+        <span class="s7">// Flip the sweep flag if coordinates are being flipped horizontally XOR vertically</span>
+        <span class="s2">arc[</span><span class="s4">4</span><span class="s2">] = </span><span class="s4">1 </span><span class="s2">- arc[</span><span class="s4">4</span><span class="s2">]</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return </span><span class="s2">arc</span><span class="s1">;</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Multiply transformation matrices.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Array} a matrix A data</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Array} b matrix B data</span>
+ <span class="s5">* </span><span class="s6">@return </span><span class="s5">{Array} result</span>
+ <span class="s5">*/</span>
+<span class="s3">function </span><span class="s2">multiplyTransformMatrices(a</span><span class="s1">, </span><span class="s2">b) {</span>
+
+    <span class="s3">return </span><span class="s2">[</span>
+        <span class="s2">a[</span><span class="s4">0</span><span class="s2">] * b[</span><span class="s4">0</span><span class="s2">] + a[</span><span class="s4">2</span><span class="s2">] * b[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">a[</span><span class="s4">1</span><span class="s2">] * b[</span><span class="s4">0</span><span class="s2">] + a[</span><span class="s4">3</span><span class="s2">] * b[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">a[</span><span class="s4">0</span><span class="s2">] * b[</span><span class="s4">2</span><span class="s2">] + a[</span><span class="s4">2</span><span class="s2">] * b[</span><span class="s4">3</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">a[</span><span class="s4">1</span><span class="s2">] * b[</span><span class="s4">2</span><span class="s2">] + a[</span><span class="s4">3</span><span class="s2">] * b[</span><span class="s4">3</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">a[</span><span class="s4">0</span><span class="s2">] * b[</span><span class="s4">4</span><span class="s2">] + a[</span><span class="s4">2</span><span class="s2">] * b[</span><span class="s4">5</span><span class="s2">] + a[</span><span class="s4">4</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">a[</span><span class="s4">1</span><span class="s2">] * b[</span><span class="s4">4</span><span class="s2">] + a[</span><span class="s4">3</span><span class="s2">] * b[</span><span class="s4">5</span><span class="s2">] + a[</span><span class="s4">5</span><span class="s2">]</span>
+    <span class="s2">]</span><span class="s1">;</span>
+
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

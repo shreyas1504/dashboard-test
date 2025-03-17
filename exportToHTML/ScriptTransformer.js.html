@@ -1,0 +1,1138 @@
+<html>
+<head>
+<title>ScriptTransformer.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+.s6 { color: #8a8a8a; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ScriptTransformer.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">Object.defineProperty(exports</span><span class="s1">, </span><span class="s0">'__esModule'</span><span class="s1">, </span><span class="s2">{</span>
+  <span class="s2">value: </span><span class="s3">true</span>
+<span class="s2">})</span><span class="s1">;</span>
+<span class="s2">exports.createScriptTransformer = createScriptTransformer</span><span class="s1">;</span>
+<span class="s2">exports.createTranspilingRequire = createTranspilingRequire</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">_crypto() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'crypto'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_crypto = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">path() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireWildcard(require(</span><span class="s0">'path'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">path = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_core() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'@babel/core'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_core = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_babelPluginIstanbul() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'babel-plugin-istanbul'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_babelPluginIstanbul = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_convertSourceMap() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'convert-source-map'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_convertSourceMap = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_fastJsonStableStringify() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'fast-json-stable-stringify'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_fastJsonStableStringify = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">fs() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireWildcard(require(</span><span class="s0">'graceful-fs'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">fs = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_pirates() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'pirates'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_pirates = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_slash() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'slash'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_slash = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_writeFileAtomic() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'write-file-atomic'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_writeFileAtomic = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestHasteMap() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'jest-haste-map'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_jestHasteMap = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestUtil() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestUtil = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">var </span><span class="s2">_enhanceUnexpectedTokenMessage = _interopRequireDefault(</span>
+  <span class="s2">require(</span><span class="s0">'./enhanceUnexpectedTokenMessage'</span><span class="s2">)</span>
+<span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_runtimeErrorsAndWarnings = require(</span><span class="s0">'./runtimeErrorsAndWarnings'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_shouldInstrument = _interopRequireDefault(require(</span><span class="s0">'./shouldInstrument'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireDefault(obj) {</span>
+  <span class="s3">return </span><span class="s2">obj &amp;&amp; obj.__esModule ? obj : {</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_getRequireWildcardCache(nodeInterop) {</span>
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">WeakMap !== </span><span class="s0">'function'</span><span class="s2">) </span><span class="s3">return null</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">cacheBabelInterop = </span><span class="s3">new </span><span class="s2">WeakMap()</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">cacheNodeInterop = </span><span class="s3">new </span><span class="s2">WeakMap()</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">(_getRequireWildcardCache = </span><span class="s3">function </span><span class="s2">(nodeInterop) {</span>
+    <span class="s3">return </span><span class="s2">nodeInterop ? cacheNodeInterop : cacheBabelInterop</span><span class="s1">;</span>
+  <span class="s2">})(nodeInterop)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireWildcard(obj</span><span class="s1">, </span><span class="s2">nodeInterop) {</span>
+  <span class="s3">if </span><span class="s2">(!nodeInterop &amp;&amp; obj &amp;&amp; obj.__esModule) {</span>
+    <span class="s3">return </span><span class="s2">obj</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">if </span><span class="s2">(obj === </span><span class="s3">null </span><span class="s2">|| (</span><span class="s3">typeof </span><span class="s2">obj !== </span><span class="s0">'object' </span><span class="s2">&amp;&amp; </span><span class="s3">typeof </span><span class="s2">obj !== </span><span class="s0">'function'</span><span class="s2">)) {</span>
+    <span class="s3">return </span><span class="s2">{</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">cache = _getRequireWildcardCache(nodeInterop)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(cache &amp;&amp; cache.has(obj)) {</span>
+    <span class="s3">return </span><span class="s2">cache.get(obj)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">newObj = {}</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">hasPropertyDescriptor =</span>
+    <span class="s2">Object.defineProperty &amp;&amp; Object.getOwnPropertyDescriptor</span><span class="s1">;</span>
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">key </span><span class="s3">in </span><span class="s2">obj) {</span>
+    <span class="s3">if </span><span class="s2">(key !== </span><span class="s0">'default' </span><span class="s2">&amp;&amp; Object.prototype.hasOwnProperty.call(obj</span><span class="s1">, </span><span class="s2">key)) {</span>
+      <span class="s3">var </span><span class="s2">desc = hasPropertyDescriptor</span>
+        <span class="s2">? Object.getOwnPropertyDescriptor(obj</span><span class="s1">, </span><span class="s2">key)</span>
+        <span class="s2">: </span><span class="s3">null</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(desc &amp;&amp; (desc.get || desc.set)) {</span>
+        <span class="s2">Object.defineProperty(newObj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">desc)</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s2">newObj[key] = obj[key]</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s2">newObj.default = obj</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(cache) {</span>
+    <span class="s2">cache.set(obj</span><span class="s1">, </span><span class="s2">newObj)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">newObj</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_defineProperty(obj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">value) {</span>
+  <span class="s3">if </span><span class="s2">(key </span><span class="s3">in </span><span class="s2">obj) {</span>
+    <span class="s2">Object.defineProperty(obj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">value: value</span><span class="s1">,</span>
+      <span class="s2">enumerable: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">configurable: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">writable: </span><span class="s3">true</span>
+    <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s2">obj[key] = value</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">obj</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s4">// Use `require` to avoid TS rootDir</span>
+<span class="s3">const </span><span class="s2">{version: VERSION} = require(</span><span class="s0">'../package.json'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s4">// This data structure is used to avoid recalculating some data every time that</span>
+<span class="s4">// we need to transform a file. Since ScriptTransformer is instantiated for each</span>
+<span class="s4">// file we need to keep this object in the local scope of this module.</span>
+<span class="s3">const </span><span class="s2">projectCaches = </span><span class="s3">new </span><span class="s2">Map()</span><span class="s1">; </span><span class="s4">// To reset the cache for specific changesets (rather than package version).</span>
+
+<span class="s3">const </span><span class="s2">CACHE_VERSION = </span><span class="s0">'1'</span><span class="s1">;</span>
+
+<span class="s2">async </span><span class="s3">function </span><span class="s2">waitForPromiseWithCleanup(promise</span><span class="s1">, </span><span class="s2">cleanup) {</span>
+  <span class="s3">try </span><span class="s2">{</span>
+    <span class="s3">await </span><span class="s2">promise</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">finally </span><span class="s2">{</span>
+    <span class="s2">cleanup()</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s3">class </span><span class="s2">ScriptTransformer {</span>
+  <span class="s2">constructor(_config</span><span class="s1">, </span><span class="s2">_cacheFS) {</span>
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_cache'</span><span class="s1">, </span><span class="s3">void </span><span class="s5">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_transformCache'</span><span class="s1">, </span><span class="s3">new </span><span class="s2">Map())</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_transformsAreLoaded'</span><span class="s1">, </span><span class="s3">false</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._config = _config</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._cacheFS = _cacheFS</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">configString = (</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_fastJsonStableStringify().default)(</span><span class="s3">this</span><span class="s2">._config)</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">projectCache = projectCaches.get(configString)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(!projectCache) {</span>
+      <span class="s2">projectCache = {</span>
+        <span class="s2">configString</span><span class="s1">,</span>
+        <span class="s2">ignorePatternsRegExp: calcIgnorePatternRegExp(</span><span class="s3">this</span><span class="s2">._config)</span><span class="s1">,</span>
+        <span class="s2">transformRegExp: calcTransformRegExp(</span><span class="s3">this</span><span class="s2">._config)</span><span class="s1">,</span>
+        <span class="s2">transformedFiles: </span><span class="s3">new </span><span class="s2">Map()</span>
+      <span class="s2">}</span><span class="s1">;</span>
+      <span class="s2">projectCaches.set(configString</span><span class="s1">, </span><span class="s2">projectCache)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">this</span><span class="s2">._cache = projectCache</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_buildCacheKeyFromFileInfo(</span>
+    <span class="s2">fileData</span><span class="s1">,</span>
+    <span class="s2">filename</span><span class="s1">,</span>
+    <span class="s2">transformOptions</span><span class="s1">,</span>
+    <span class="s2">transformerCacheKey</span>
+  <span class="s2">) {</span>
+    <span class="s3">if </span><span class="s2">(transformerCacheKey) {</span>
+      <span class="s3">return </span><span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_crypto().createHash)(</span><span class="s0">'md5'</span><span class="s2">)</span>
+        <span class="s2">.update(transformerCacheKey)</span>
+        <span class="s2">.update(CACHE_VERSION)</span>
+        <span class="s2">.digest(</span><span class="s0">'hex'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return </span><span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_crypto().createHash)(</span><span class="s0">'md5'</span><span class="s2">)</span>
+      <span class="s2">.update(fileData)</span>
+      <span class="s2">.update(transformOptions.configString)</span>
+      <span class="s2">.update(transformOptions.instrument ? </span><span class="s0">'instrument' </span><span class="s2">: </span><span class="s0">''</span><span class="s2">)</span>
+      <span class="s2">.update(filename)</span>
+      <span class="s2">.update(CACHE_VERSION)</span>
+      <span class="s2">.digest(</span><span class="s0">'hex'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_getCacheKey(fileData</span><span class="s1">, </span><span class="s2">filename</span><span class="s1">, </span><span class="s2">options) {</span>
+    <span class="s3">const </span><span class="s2">configString = </span><span class="s3">this</span><span class="s2">._cache.configString</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">{transformer</span><span class="s1">, </span><span class="s2">transformerConfig = {}} =</span>
+      <span class="s3">this</span><span class="s2">._getTransformer(filename) || {}</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">transformerCacheKey = undefined</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">transformOptions = {</span>
+      <span class="s2">...options</span><span class="s1">,</span>
+      <span class="s2">cacheFS: </span><span class="s3">this</span><span class="s2">._cacheFS</span><span class="s1">,</span>
+      <span class="s2">config: </span><span class="s3">this</span><span class="s2">._config</span><span class="s1">,</span>
+      <span class="s2">configString</span><span class="s1">,</span>
+      <span class="s2">transformerConfig</span>
+    <span class="s2">}</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span>
+      <span class="s3">typeof </span><span class="s2">(transformer === </span><span class="s3">null </span><span class="s2">|| transformer === </span><span class="s3">void </span><span class="s5">0</span>
+        <span class="s2">? </span><span class="s3">void </span><span class="s5">0</span>
+        <span class="s2">: transformer.getCacheKey) === </span><span class="s0">'function'</span>
+    <span class="s2">) {</span>
+      <span class="s2">transformerCacheKey = transformer.getCacheKey(</span>
+        <span class="s2">fileData</span><span class="s1">,</span>
+        <span class="s2">filename</span><span class="s1">,</span>
+        <span class="s2">transformOptions</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return this</span><span class="s2">._buildCacheKeyFromFileInfo(</span>
+      <span class="s2">fileData</span><span class="s1">,</span>
+      <span class="s2">filename</span><span class="s1">,</span>
+      <span class="s2">transformOptions</span><span class="s1">,</span>
+      <span class="s2">transformerCacheKey</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">async _getCacheKeyAsync(fileData</span><span class="s1">, </span><span class="s2">filename</span><span class="s1">, </span><span class="s2">options) {</span>
+    <span class="s3">const </span><span class="s2">configString = </span><span class="s3">this</span><span class="s2">._cache.configString</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">{transformer</span><span class="s1">, </span><span class="s2">transformerConfig = {}} =</span>
+      <span class="s3">this</span><span class="s2">._getTransformer(filename) || {}</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">transformerCacheKey = undefined</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">transformOptions = {</span>
+      <span class="s2">...options</span><span class="s1">,</span>
+      <span class="s2">cacheFS: </span><span class="s3">this</span><span class="s2">._cacheFS</span><span class="s1">,</span>
+      <span class="s2">config: </span><span class="s3">this</span><span class="s2">._config</span><span class="s1">,</span>
+      <span class="s2">configString</span><span class="s1">,</span>
+      <span class="s2">transformerConfig</span>
+    <span class="s2">}</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(transformer) {</span>
+      <span class="s3">const </span><span class="s2">getCacheKey =</span>
+        <span class="s2">transformer.getCacheKeyAsync || transformer.getCacheKey</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">getCacheKey === </span><span class="s0">'function'</span><span class="s2">) {</span>
+        <span class="s2">transformerCacheKey = </span><span class="s3">await </span><span class="s2">getCacheKey(</span>
+          <span class="s2">fileData</span><span class="s1">,</span>
+          <span class="s2">filename</span><span class="s1">,</span>
+          <span class="s2">transformOptions</span>
+        <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return this</span><span class="s2">._buildCacheKeyFromFileInfo(</span>
+      <span class="s2">fileData</span><span class="s1">,</span>
+      <span class="s2">filename</span><span class="s1">,</span>
+      <span class="s2">transformOptions</span><span class="s1">,</span>
+      <span class="s2">transformerCacheKey</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_createFolderFromCacheKey(filename</span><span class="s1">, </span><span class="s2">cacheKey) {</span>
+    <span class="s3">const </span><span class="s2">HasteMapClass = _jestHasteMap().default.getStatic(</span><span class="s3">this</span><span class="s2">._config)</span><span class="s1">;</span>
+
+    <span class="s3">const </span><span class="s2">baseCacheDir = HasteMapClass.getCacheFilePath(</span>
+      <span class="s3">this</span><span class="s2">._config.cacheDirectory</span><span class="s1">,</span>
+      <span class="s0">'jest-transform-cache-' </span><span class="s2">+ </span><span class="s3">this</span><span class="s2">._config.name</span><span class="s1">,</span>
+      <span class="s2">VERSION</span>
+    <span class="s2">)</span><span class="s1">; </span><span class="s4">// Create sub folders based on the cacheKey to avoid creating one</span>
+    <span class="s4">// directory with many files.</span>
+
+    <span class="s3">const </span><span class="s2">cacheDir = path().join(baseCacheDir</span><span class="s1">, </span><span class="s2">cacheKey[</span><span class="s5">0</span><span class="s2">] + cacheKey[</span><span class="s5">1</span><span class="s2">])</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">cacheFilenamePrefix = path()</span>
+      <span class="s2">.basename(filename</span><span class="s1">, </span><span class="s2">path().extname(filename))</span>
+      <span class="s2">.replace(</span><span class="s5">/\W/g</span><span class="s1">, </span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">cachePath = (</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_slash().default)(</span>
+      <span class="s2">path().join(cacheDir</span><span class="s1">, </span><span class="s2">cacheFilenamePrefix + </span><span class="s0">'_' </span><span class="s2">+ cacheKey)</span>
+    <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_jestUtil().createDirectory)(cacheDir)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">cachePath</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_getFileCachePath(filename</span><span class="s1">, </span><span class="s2">content</span><span class="s1">, </span><span class="s2">options) {</span>
+    <span class="s3">const </span><span class="s2">cacheKey = </span><span class="s3">this</span><span class="s2">._getCacheKey(content</span><span class="s1">, </span><span class="s2">filename</span><span class="s1">, </span><span class="s2">options)</span><span class="s1">;</span>
+
+    <span class="s3">return this</span><span class="s2">._createFolderFromCacheKey(filename</span><span class="s1">, </span><span class="s2">cacheKey)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">async _getFileCachePathAsync(filename</span><span class="s1">, </span><span class="s2">content</span><span class="s1">, </span><span class="s2">options) {</span>
+    <span class="s3">const </span><span class="s2">cacheKey = </span><span class="s3">await this</span><span class="s2">._getCacheKeyAsync(content</span><span class="s1">, </span><span class="s2">filename</span><span class="s1">, </span><span class="s2">options)</span><span class="s1">;</span>
+    <span class="s3">return this</span><span class="s2">._createFolderFromCacheKey(filename</span><span class="s1">, </span><span class="s2">cacheKey)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_getTransformPath(filename) {</span>
+    <span class="s3">const </span><span class="s2">transformRegExp = </span><span class="s3">this</span><span class="s2">._cache.transformRegExp</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(!transformRegExp) {</span>
+      <span class="s3">return </span><span class="s2">undefined</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">let </span><span class="s2">i = </span><span class="s5">0</span><span class="s1">; </span><span class="s2">i &lt; transformRegExp.length</span><span class="s1">; </span><span class="s2">i++) {</span>
+      <span class="s3">if </span><span class="s2">(transformRegExp[i][</span><span class="s5">0</span><span class="s2">].test(filename)) {</span>
+        <span class="s3">return </span><span class="s2">transformRegExp[i][</span><span class="s5">1</span><span class="s2">]</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return </span><span class="s2">undefined</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">async loadTransformers() {</span>
+    <span class="s3">await </span><span class="s2">Promise.all(</span>
+      <span class="s3">this</span><span class="s2">._config.transform.map(</span>
+        <span class="s2">async ([</span><span class="s1">, </span><span class="s2">transformPath</span><span class="s1">, </span><span class="s2">transformerConfig]) =&gt; {</span>
+          <span class="s3">let </span><span class="s2">transformer = </span><span class="s3">await </span><span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_jestUtil().requireOrImportModule)(</span>
+            <span class="s2">transformPath</span>
+          <span class="s2">)</span><span class="s1">;</span>
+
+          <span class="s3">if </span><span class="s2">(!transformer) {</span>
+            <span class="s3">throw new </span><span class="s2">Error(</span>
+              <span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_runtimeErrorsAndWarnings.makeInvalidTransformerError)(</span>
+                <span class="s2">transformPath</span>
+              <span class="s2">)</span>
+            <span class="s2">)</span><span class="s1">;</span>
+          <span class="s2">}</span>
+
+          <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">transformer.createTransformer === </span><span class="s0">'function'</span><span class="s2">) {</span>
+            <span class="s2">transformer = transformer.createTransformer(transformerConfig)</span><span class="s1">;</span>
+          <span class="s2">}</span>
+
+          <span class="s3">if </span><span class="s2">(</span>
+            <span class="s3">typeof </span><span class="s2">transformer.process !== </span><span class="s0">'function' </span><span class="s2">&amp;&amp;</span>
+            <span class="s3">typeof </span><span class="s2">transformer.processAsync !== </span><span class="s0">'function'</span>
+          <span class="s2">) {</span>
+            <span class="s3">throw new </span><span class="s2">Error(</span>
+              <span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_runtimeErrorsAndWarnings.makeInvalidTransformerError)(</span>
+                <span class="s2">transformPath</span>
+              <span class="s2">)</span>
+            <span class="s2">)</span><span class="s1">;</span>
+          <span class="s2">}</span>
+
+          <span class="s3">const </span><span class="s2">res = {</span>
+            <span class="s2">transformer</span><span class="s1">,</span>
+            <span class="s2">transformerConfig</span>
+          <span class="s2">}</span><span class="s1">;</span>
+
+          <span class="s3">this</span><span class="s2">._transformCache.set(transformPath</span><span class="s1">, </span><span class="s2">res)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+      <span class="s2">)</span>
+    <span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._transformsAreLoaded = </span><span class="s3">true</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_getTransformer(filename) {</span>
+    <span class="s3">if </span><span class="s2">(!</span><span class="s3">this</span><span class="s2">._transformsAreLoaded) {</span>
+      <span class="s3">throw new </span><span class="s2">Error(</span>
+        <span class="s0">'Jest: Transformers have not been loaded yet - make sure to run `loadTransformers` and wait for it to complete before starting to transform files'</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._config.transform.length === </span><span class="s5">0</span><span class="s2">) {</span>
+      <span class="s3">return null</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">const </span><span class="s2">transformPath = </span><span class="s3">this</span><span class="s2">._getTransformPath(filename)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(!transformPath) {</span>
+      <span class="s3">return null</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">const </span><span class="s2">cached = </span><span class="s3">this</span><span class="s2">._transformCache.get(transformPath)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(cached) {</span>
+      <span class="s3">return </span><span class="s2">cached</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">throw new </span><span class="s2">Error(</span>
+      <span class="s0">`Jest was unable to load the transformer defined for </span><span class="s2">${filename}</span><span class="s0">. This is a bug in Jest, please open up an issue`</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_instrumentFile(filename</span><span class="s1">, </span><span class="s2">input</span><span class="s1">, </span><span class="s2">canMapToInput</span><span class="s1">, </span><span class="s2">options) {</span>
+    <span class="s3">const </span><span class="s2">inputCode = </span><span class="s3">typeof </span><span class="s2">input === </span><span class="s0">'string' </span><span class="s2">? input : input.code</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">inputMap = </span><span class="s3">typeof </span><span class="s2">input === </span><span class="s0">'string' </span><span class="s2">? </span><span class="s3">null </span><span class="s2">: input.map</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">result = (</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_core().transformSync)(inputCode</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">auxiliaryCommentBefore: </span><span class="s0">' istanbul ignore next '</span><span class="s1">,</span>
+      <span class="s2">babelrc: </span><span class="s3">false</span><span class="s1">,</span>
+      <span class="s2">caller: {</span>
+        <span class="s2">name: </span><span class="s0">'@jest/transform'</span><span class="s1">,</span>
+        <span class="s2">supportsDynamicImport: options.supportsDynamicImport</span><span class="s1">,</span>
+        <span class="s2">supportsExportNamespaceFrom: options.supportsExportNamespaceFrom</span><span class="s1">,</span>
+        <span class="s2">supportsStaticESM: options.supportsStaticESM</span><span class="s1">,</span>
+        <span class="s2">supportsTopLevelAwait: options.supportsTopLevelAwait</span>
+      <span class="s2">}</span><span class="s1">,</span>
+      <span class="s2">configFile: </span><span class="s3">false</span><span class="s1">,</span>
+      <span class="s2">filename</span><span class="s1">,</span>
+      <span class="s2">plugins: [</span>
+        <span class="s2">[</span>
+          <span class="s2">_babelPluginIstanbul().default</span><span class="s1">,</span>
+          <span class="s2">{</span>
+            <span class="s2">compact: </span><span class="s3">false</span><span class="s1">,</span>
+            <span class="s4">// files outside `cwd` will not be instrumented</span>
+            <span class="s2">cwd: </span><span class="s3">this</span><span class="s2">._config.rootDir</span><span class="s1">,</span>
+            <span class="s2">exclude: []</span><span class="s1">,</span>
+            <span class="s2">extension: </span><span class="s3">false</span><span class="s1">,</span>
+            <span class="s2">inputSourceMap: inputMap</span><span class="s1">,</span>
+            <span class="s2">useInlineSourceMaps: </span><span class="s3">false</span>
+          <span class="s2">}</span>
+        <span class="s2">]</span>
+      <span class="s2">]</span><span class="s1">,</span>
+      <span class="s2">sourceMaps: canMapToInput ? </span><span class="s0">'both' </span><span class="s2">: </span><span class="s3">false</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(result &amp;&amp; result.code) {</span>
+      <span class="s3">return </span><span class="s2">result</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return </span><span class="s2">input</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_buildTransformResult(</span>
+    <span class="s2">filename</span><span class="s1">,</span>
+    <span class="s2">cacheFilePath</span><span class="s1">,</span>
+    <span class="s2">content</span><span class="s1">,</span>
+    <span class="s2">transformer</span><span class="s1">,</span>
+    <span class="s2">shouldCallTransform</span><span class="s1">,</span>
+    <span class="s2">options</span><span class="s1">,</span>
+    <span class="s2">processed</span><span class="s1">,</span>
+    <span class="s2">sourceMapPath</span>
+  <span class="s2">) {</span>
+    <span class="s3">let </span><span class="s2">transformed = {</span>
+      <span class="s2">code: content</span><span class="s1">,</span>
+      <span class="s2">map: </span><span class="s3">null</span>
+    <span class="s2">}</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(transformer &amp;&amp; shouldCallTransform) {</span>
+      <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">processed === </span><span class="s0">'string'</span><span class="s2">) {</span>
+        <span class="s2">transformed.code = processed</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else if </span><span class="s2">(processed != </span><span class="s3">null </span><span class="s2">&amp;&amp; </span><span class="s3">typeof </span><span class="s2">processed.code === </span><span class="s0">'string'</span><span class="s2">) {</span>
+        <span class="s2">transformed = processed</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s3">throw new </span><span class="s2">Error(</span>
+          <span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_runtimeErrorsAndWarnings.makeInvalidReturnValueError)()</span>
+        <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(!transformed.map) {</span>
+      <span class="s3">try </span><span class="s2">{</span>
+        <span class="s4">//Could be a potential freeze here.</span>
+        <span class="s4">//See: https://github.com/facebook/jest/pull/5177#discussion_r158883570</span>
+        <span class="s3">const </span><span class="s2">inlineSourceMap = (</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_convertSourceMap().fromSource)(</span>
+          <span class="s2">transformed.code</span>
+        <span class="s2">)</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(inlineSourceMap) {</span>
+          <span class="s2">transformed.map = inlineSourceMap.toObject()</span><span class="s1">;</span>
+        <span class="s2">}</span>
+      <span class="s2">} </span><span class="s3">catch </span><span class="s2">{</span>
+        <span class="s3">const </span><span class="s2">transformPath = </span><span class="s3">this</span><span class="s2">._getTransformPath(filename)</span><span class="s1">;</span>
+
+        <span class="s2">invariant(transformPath)</span><span class="s1">;</span>
+        <span class="s2">console.warn(</span>
+          <span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_runtimeErrorsAndWarnings.makeInvalidSourceMapWarning)(</span>
+            <span class="s2">filename</span><span class="s1">,</span>
+            <span class="s2">transformPath</span>
+          <span class="s2">)</span>
+        <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">} </span><span class="s4">// That means that the transform has a custom instrumentation</span>
+    <span class="s4">// logic and will handle it based on `config.collectCoverage` option</span>
+
+    <span class="s3">const </span><span class="s2">transformWillInstrument =</span>
+      <span class="s2">shouldCallTransform &amp;&amp; transformer &amp;&amp; transformer.canInstrument</span><span class="s1">; </span><span class="s4">// Apply instrumentation to the code if necessary, keeping the instrumented code and new map</span>
+
+    <span class="s3">let </span><span class="s2">map = transformed.map</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">code</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(!transformWillInstrument &amp;&amp; options.instrument) {</span>
+      <span class="s6">/**</span>
+       <span class="s6">* We can map the original source code to the instrumented code ONLY if</span>
+       <span class="s6">* - the process of transforming the code produced a source map e.g. ts-jest</span>
+       <span class="s6">* - we did not transform the source code</span>
+       <span class="s6">*</span>
+       <span class="s6">* Otherwise we cannot make any statements about how the instrumented code corresponds to the original code,</span>
+       <span class="s6">* and we should NOT emit any source maps</span>
+       <span class="s6">*</span>
+       <span class="s6">*/</span>
+      <span class="s3">const </span><span class="s2">shouldEmitSourceMaps =</span>
+        <span class="s2">(transformer != </span><span class="s3">null </span><span class="s2">&amp;&amp; map != </span><span class="s3">null</span><span class="s2">) || transformer == </span><span class="s3">null</span><span class="s1">;</span>
+
+      <span class="s3">const </span><span class="s2">instrumented = </span><span class="s3">this</span><span class="s2">._instrumentFile(</span>
+        <span class="s2">filename</span><span class="s1">,</span>
+        <span class="s2">transformed</span><span class="s1">,</span>
+        <span class="s2">shouldEmitSourceMaps</span><span class="s1">,</span>
+        <span class="s2">options</span>
+      <span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s2">code =</span>
+        <span class="s3">typeof </span><span class="s2">instrumented === </span><span class="s0">'string' </span><span class="s2">? instrumented : instrumented.code</span><span class="s1">;</span>
+      <span class="s2">map = </span><span class="s3">typeof </span><span class="s2">instrumented === </span><span class="s0">'string' </span><span class="s2">? </span><span class="s3">null </span><span class="s2">: instrumented.map</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">code = transformed.code</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(map) {</span>
+      <span class="s3">const </span><span class="s2">sourceMapContent =</span>
+        <span class="s3">typeof </span><span class="s2">map === </span><span class="s0">'string' </span><span class="s2">? map : JSON.stringify(map)</span><span class="s1">;</span>
+      <span class="s2">invariant(sourceMapPath</span><span class="s1">, </span><span class="s0">'We should always have default sourceMapPath'</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">writeCacheFile(sourceMapPath</span><span class="s1">, </span><span class="s2">sourceMapContent)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">sourceMapPath = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s2">writeCodeCacheFile(cacheFilePath</span><span class="s1">, </span><span class="s2">code)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">{</span>
+      <span class="s2">code</span><span class="s1">,</span>
+      <span class="s2">originalCode: content</span><span class="s1">,</span>
+      <span class="s2">sourceMapPath</span>
+    <span class="s2">}</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">transformSource(filepath</span><span class="s1">, </span><span class="s2">content</span><span class="s1">, </span><span class="s2">options) {</span>
+    <span class="s3">const </span><span class="s2">filename = (</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_jestUtil().tryRealpath)(filepath)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">{transformer</span><span class="s1">, </span><span class="s2">transformerConfig = {}} =</span>
+      <span class="s3">this</span><span class="s2">._getTransformer(filename) || {}</span><span class="s1">;</span>
+
+    <span class="s3">const </span><span class="s2">cacheFilePath = </span><span class="s3">this</span><span class="s2">._getFileCachePath(filename</span><span class="s1">, </span><span class="s2">content</span><span class="s1">, </span><span class="s2">options)</span><span class="s1">;</span>
+
+    <span class="s3">const </span><span class="s2">sourceMapPath = cacheFilePath + </span><span class="s0">'.map'</span><span class="s1">; </span><span class="s4">// Ignore cache if `config.cache` is set (--no-cache)</span>
+
+    <span class="s3">const </span><span class="s2">code = </span><span class="s3">this</span><span class="s2">._config.cache ? readCodeCacheFile(cacheFilePath) : </span><span class="s3">null</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(code) {</span>
+      <span class="s4">// This is broken: we return the code, and a path for the source map</span>
+      <span class="s4">// directly from the cache. But, nothing ensures the source map actually</span>
+      <span class="s4">// matches that source code. They could have gotten out-of-sync in case</span>
+      <span class="s4">// two separate processes write concurrently to the same cache files.</span>
+      <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">code</span><span class="s1">,</span>
+        <span class="s2">originalCode: content</span><span class="s1">,</span>
+        <span class="s2">sourceMapPath</span>
+      <span class="s2">}</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">let </span><span class="s2">processed = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">shouldCallTransform = </span><span class="s3">false</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(transformer &amp;&amp; </span><span class="s3">this</span><span class="s2">.shouldTransform(filename)) {</span>
+      <span class="s2">shouldCallTransform = </span><span class="s3">true</span><span class="s1">;</span>
+      <span class="s2">assertSyncTransformer(transformer</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._getTransformPath(filename))</span><span class="s1">;</span>
+      <span class="s2">processed = transformer.process(content</span><span class="s1">, </span><span class="s2">filename</span><span class="s1">, </span><span class="s2">{</span>
+        <span class="s2">...options</span><span class="s1">,</span>
+        <span class="s2">cacheFS: </span><span class="s3">this</span><span class="s2">._cacheFS</span><span class="s1">,</span>
+        <span class="s2">config: </span><span class="s3">this</span><span class="s2">._config</span><span class="s1">,</span>
+        <span class="s2">configString: </span><span class="s3">this</span><span class="s2">._cache.configString</span><span class="s1">,</span>
+        <span class="s2">transformerConfig</span>
+      <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return this</span><span class="s2">._buildTransformResult(</span>
+      <span class="s2">filename</span><span class="s1">,</span>
+      <span class="s2">cacheFilePath</span><span class="s1">,</span>
+      <span class="s2">content</span><span class="s1">,</span>
+      <span class="s2">transformer</span><span class="s1">,</span>
+      <span class="s2">shouldCallTransform</span><span class="s1">,</span>
+      <span class="s2">options</span><span class="s1">,</span>
+      <span class="s2">processed</span><span class="s1">,</span>
+      <span class="s2">sourceMapPath</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">async transformSourceAsync(filepath</span><span class="s1">, </span><span class="s2">content</span><span class="s1">, </span><span class="s2">options) {</span>
+    <span class="s3">const </span><span class="s2">filename = (</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_jestUtil().tryRealpath)(filepath)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">{transformer</span><span class="s1">, </span><span class="s2">transformerConfig = {}} =</span>
+      <span class="s3">this</span><span class="s2">._getTransformer(filename) || {}</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">cacheFilePath = </span><span class="s3">await this</span><span class="s2">._getFileCachePathAsync(</span>
+      <span class="s2">filename</span><span class="s1">,</span>
+      <span class="s2">content</span><span class="s1">,</span>
+      <span class="s2">options</span>
+    <span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">sourceMapPath = cacheFilePath + </span><span class="s0">'.map'</span><span class="s1">; </span><span class="s4">// Ignore cache if `config.cache` is set (--no-cache)</span>
+
+    <span class="s3">const </span><span class="s2">code = </span><span class="s3">this</span><span class="s2">._config.cache ? readCodeCacheFile(cacheFilePath) : </span><span class="s3">null</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(code) {</span>
+      <span class="s4">// This is broken: we return the code, and a path for the source map</span>
+      <span class="s4">// directly from the cache. But, nothing ensures the source map actually</span>
+      <span class="s4">// matches that source code. They could have gotten out-of-sync in case</span>
+      <span class="s4">// two separate processes write concurrently to the same cache files.</span>
+      <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">code</span><span class="s1">,</span>
+        <span class="s2">originalCode: content</span><span class="s1">,</span>
+        <span class="s2">sourceMapPath</span>
+      <span class="s2">}</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">let </span><span class="s2">processed = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">shouldCallTransform = </span><span class="s3">false</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(transformer &amp;&amp; </span><span class="s3">this</span><span class="s2">.shouldTransform(filename)) {</span>
+      <span class="s2">shouldCallTransform = </span><span class="s3">true</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">process = transformer.processAsync || transformer.process</span><span class="s1">; </span><span class="s4">// This is probably dead code since `_getTransformerAsync` already asserts this</span>
+
+      <span class="s2">invariant(</span>
+        <span class="s3">typeof </span><span class="s2">process === </span><span class="s0">'function'</span><span class="s1">,</span>
+        <span class="s0">'A transformer must always export either a `process` or `processAsync`'</span>
+      <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">processed = </span><span class="s3">await </span><span class="s2">process(content</span><span class="s1">, </span><span class="s2">filename</span><span class="s1">, </span><span class="s2">{</span>
+        <span class="s2">...options</span><span class="s1">,</span>
+        <span class="s2">cacheFS: </span><span class="s3">this</span><span class="s2">._cacheFS</span><span class="s1">,</span>
+        <span class="s2">config: </span><span class="s3">this</span><span class="s2">._config</span><span class="s1">,</span>
+        <span class="s2">configString: </span><span class="s3">this</span><span class="s2">._cache.configString</span><span class="s1">,</span>
+        <span class="s2">transformerConfig</span>
+      <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return this</span><span class="s2">._buildTransformResult(</span>
+      <span class="s2">filename</span><span class="s1">,</span>
+      <span class="s2">cacheFilePath</span><span class="s1">,</span>
+      <span class="s2">content</span><span class="s1">,</span>
+      <span class="s2">transformer</span><span class="s1">,</span>
+      <span class="s2">shouldCallTransform</span><span class="s1">,</span>
+      <span class="s2">options</span><span class="s1">,</span>
+      <span class="s2">processed</span><span class="s1">,</span>
+      <span class="s2">sourceMapPath</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">async _transformAndBuildScriptAsync(</span>
+    <span class="s2">filename</span><span class="s1">,</span>
+    <span class="s2">options</span><span class="s1">,</span>
+    <span class="s2">transformOptions</span><span class="s1">,</span>
+    <span class="s2">fileSource</span>
+  <span class="s2">) {</span>
+    <span class="s3">const </span><span class="s2">{isInternalModule} = options</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">fileContent =</span>
+      <span class="s2">fileSource !== </span><span class="s3">null </span><span class="s2">&amp;&amp; fileSource !== </span><span class="s3">void </span><span class="s5">0</span>
+        <span class="s2">? fileSource</span>
+        <span class="s2">: </span><span class="s3">this</span><span class="s2">._cacheFS.get(filename)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(!fileContent) {</span>
+      <span class="s2">fileContent = fs().readFileSync(filename</span><span class="s1">, </span><span class="s0">'utf8'</span><span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">this</span><span class="s2">._cacheFS.set(filename</span><span class="s1">, </span><span class="s2">fileContent)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">const </span><span class="s2">content = stripShebang(fileContent)</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">code = content</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">sourceMapPath = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">willTransform =</span>
+      <span class="s2">!isInternalModule &amp;&amp;</span>
+      <span class="s2">(transformOptions.instrument || </span><span class="s3">this</span><span class="s2">.shouldTransform(filename))</span><span class="s1">;</span>
+
+    <span class="s3">try </span><span class="s2">{</span>
+      <span class="s3">if </span><span class="s2">(willTransform) {</span>
+        <span class="s3">const </span><span class="s2">transformedSource = </span><span class="s3">await this</span><span class="s2">.transformSourceAsync(</span>
+          <span class="s2">filename</span><span class="s1">,</span>
+          <span class="s2">content</span><span class="s1">,</span>
+          <span class="s2">transformOptions</span>
+        <span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">code = transformedSource.code</span><span class="s1">;</span>
+        <span class="s2">sourceMapPath = transformedSource.sourceMapPath</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">code</span><span class="s1">,</span>
+        <span class="s2">originalCode: content</span><span class="s1">,</span>
+        <span class="s2">sourceMapPath</span>
+      <span class="s2">}</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">catch </span><span class="s2">(e) {</span>
+      <span class="s3">throw </span><span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_enhanceUnexpectedTokenMessage.default)(e)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_transformAndBuildScript(filename</span><span class="s1">, </span><span class="s2">options</span><span class="s1">, </span><span class="s2">transformOptions</span><span class="s1">, </span><span class="s2">fileSource) {</span>
+    <span class="s3">const </span><span class="s2">{isInternalModule} = options</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">fileContent =</span>
+      <span class="s2">fileSource !== </span><span class="s3">null </span><span class="s2">&amp;&amp; fileSource !== </span><span class="s3">void </span><span class="s5">0</span>
+        <span class="s2">? fileSource</span>
+        <span class="s2">: </span><span class="s3">this</span><span class="s2">._cacheFS.get(filename)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(!fileContent) {</span>
+      <span class="s2">fileContent = fs().readFileSync(filename</span><span class="s1">, </span><span class="s0">'utf8'</span><span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">this</span><span class="s2">._cacheFS.set(filename</span><span class="s1">, </span><span class="s2">fileContent)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">const </span><span class="s2">content = stripShebang(fileContent)</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">code = content</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">sourceMapPath = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">willTransform =</span>
+      <span class="s2">!isInternalModule &amp;&amp;</span>
+      <span class="s2">(transformOptions.instrument || </span><span class="s3">this</span><span class="s2">.shouldTransform(filename))</span><span class="s1">;</span>
+
+    <span class="s3">try </span><span class="s2">{</span>
+      <span class="s3">if </span><span class="s2">(willTransform) {</span>
+        <span class="s3">const </span><span class="s2">transformedSource = </span><span class="s3">this</span><span class="s2">.transformSource(</span>
+          <span class="s2">filename</span><span class="s1">,</span>
+          <span class="s2">content</span><span class="s1">,</span>
+          <span class="s2">transformOptions</span>
+        <span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">code = transformedSource.code</span><span class="s1">;</span>
+        <span class="s2">sourceMapPath = transformedSource.sourceMapPath</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">code</span><span class="s1">,</span>
+        <span class="s2">originalCode: content</span><span class="s1">,</span>
+        <span class="s2">sourceMapPath</span>
+      <span class="s2">}</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">catch </span><span class="s2">(e) {</span>
+      <span class="s3">throw </span><span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_enhanceUnexpectedTokenMessage.default)(e)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">async transformAsync(filename</span><span class="s1">, </span><span class="s2">options</span><span class="s1">, </span><span class="s2">fileSource) {</span>
+    <span class="s3">const </span><span class="s2">instrument =</span>
+      <span class="s2">options.coverageProvider === </span><span class="s0">'babel' </span><span class="s2">&amp;&amp;</span>
+      <span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_shouldInstrument.default)(filename</span><span class="s1">, </span><span class="s2">options</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._config)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">scriptCacheKey = getScriptCacheKey(filename</span><span class="s1">, </span><span class="s2">instrument)</span><span class="s1">;</span>
+
+    <span class="s3">let </span><span class="s2">result = </span><span class="s3">this</span><span class="s2">._cache.transformedFiles.get(scriptCacheKey)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(result) {</span>
+      <span class="s3">return </span><span class="s2">result</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s2">result = </span><span class="s3">await this</span><span class="s2">._transformAndBuildScriptAsync(</span>
+      <span class="s2">filename</span><span class="s1">,</span>
+      <span class="s2">options</span><span class="s1">,</span>
+      <span class="s2">{...options</span><span class="s1">, </span><span class="s2">instrument}</span><span class="s1">,</span>
+      <span class="s2">fileSource</span>
+    <span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(scriptCacheKey) {</span>
+      <span class="s3">this</span><span class="s2">._cache.transformedFiles.set(scriptCacheKey</span><span class="s1">, </span><span class="s2">result)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return </span><span class="s2">result</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">transform(filename</span><span class="s1">, </span><span class="s2">options</span><span class="s1">, </span><span class="s2">fileSource) {</span>
+    <span class="s3">const </span><span class="s2">instrument =</span>
+      <span class="s2">options.coverageProvider === </span><span class="s0">'babel' </span><span class="s2">&amp;&amp;</span>
+      <span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_shouldInstrument.default)(filename</span><span class="s1">, </span><span class="s2">options</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._config)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">scriptCacheKey = getScriptCacheKey(filename</span><span class="s1">, </span><span class="s2">instrument)</span><span class="s1">;</span>
+
+    <span class="s3">let </span><span class="s2">result = </span><span class="s3">this</span><span class="s2">._cache.transformedFiles.get(scriptCacheKey)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(result) {</span>
+      <span class="s3">return </span><span class="s2">result</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s2">result = </span><span class="s3">this</span><span class="s2">._transformAndBuildScript(</span>
+      <span class="s2">filename</span><span class="s1">,</span>
+      <span class="s2">options</span><span class="s1">,</span>
+      <span class="s2">{...options</span><span class="s1">, </span><span class="s2">instrument}</span><span class="s1">,</span>
+      <span class="s2">fileSource</span>
+    <span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(scriptCacheKey) {</span>
+      <span class="s3">this</span><span class="s2">._cache.transformedFiles.set(scriptCacheKey</span><span class="s1">, </span><span class="s2">result)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return </span><span class="s2">result</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">transformJson(filename</span><span class="s1">, </span><span class="s2">options</span><span class="s1">, </span><span class="s2">fileSource) {</span>
+    <span class="s3">const </span><span class="s2">{isInternalModule} = options</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">willTransform = !isInternalModule &amp;&amp; </span><span class="s3">this</span><span class="s2">.shouldTransform(filename)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(willTransform) {</span>
+      <span class="s3">const </span><span class="s2">{code: transformedJsonSource} = </span><span class="s3">this</span><span class="s2">.transformSource(</span>
+        <span class="s2">filename</span><span class="s1">,</span>
+        <span class="s2">fileSource</span><span class="s1">,</span>
+        <span class="s2">{...options</span><span class="s1">, </span><span class="s2">instrument: </span><span class="s3">false</span><span class="s2">}</span>
+      <span class="s2">)</span><span class="s1">;</span>
+      <span class="s3">return </span><span class="s2">transformedJsonSource</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return </span><span class="s2">fileSource</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">async requireAndTranspileModule(</span>
+    <span class="s2">moduleName</span><span class="s1">,</span>
+    <span class="s2">callback</span><span class="s1">,</span>
+    <span class="s2">options = {</span>
+      <span class="s2">applyInteropRequireDefault: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">instrument: </span><span class="s3">false</span><span class="s1">,</span>
+      <span class="s2">supportsDynamicImport: </span><span class="s3">false</span><span class="s1">,</span>
+      <span class="s2">supportsExportNamespaceFrom: </span><span class="s3">false</span><span class="s1">,</span>
+      <span class="s2">supportsStaticESM: </span><span class="s3">false</span><span class="s1">,</span>
+      <span class="s2">supportsTopLevelAwait: </span><span class="s3">false</span>
+    <span class="s2">}</span>
+  <span class="s2">) {</span>
+    <span class="s3">let </span><span class="s2">transforming = </span><span class="s3">false</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">{applyInteropRequireDefault</span><span class="s1">, </span><span class="s2">...transformOptions} = options</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">revertHook = (</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_pirates().addHook)(</span>
+      <span class="s2">(code</span><span class="s1">, </span><span class="s2">filename) =&gt; {</span>
+        <span class="s3">try </span><span class="s2">{</span>
+          <span class="s2">transforming = </span><span class="s3">true</span><span class="s1">;</span>
+          <span class="s3">return </span><span class="s2">(</span>
+            <span class="s3">this</span><span class="s2">.transformSource(filename</span><span class="s1">, </span><span class="s2">code</span><span class="s1">, </span><span class="s2">transformOptions).code || code</span>
+          <span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s3">finally </span><span class="s2">{</span>
+          <span class="s2">transforming = </span><span class="s3">false</span><span class="s1">;</span>
+        <span class="s2">}</span>
+      <span class="s2">}</span><span class="s1">,</span>
+      <span class="s2">{</span>
+        <span class="s2">exts: </span><span class="s3">this</span><span class="s2">._config.moduleFileExtensions.map(ext =&gt; </span><span class="s0">`.</span><span class="s2">${ext}</span><span class="s0">`</span><span class="s2">)</span><span class="s1">,</span>
+        <span class="s2">ignoreNodeModules: </span><span class="s3">false</span><span class="s1">,</span>
+        <span class="s2">matcher: filename =&gt; {</span>
+          <span class="s3">if </span><span class="s2">(transforming) {</span>
+            <span class="s4">// Don't transform any dependency required by the transformer itself</span>
+            <span class="s3">return false</span><span class="s1">;</span>
+          <span class="s2">}</span>
+
+          <span class="s3">return this</span><span class="s2">.shouldTransform(filename)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+      <span class="s2">}</span>
+    <span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">try </span><span class="s2">{</span>
+      <span class="s3">const </span><span class="s2">module = </span><span class="s3">await </span><span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_jestUtil().requireOrImportModule)(</span>
+        <span class="s2">moduleName</span><span class="s1">,</span>
+        <span class="s2">applyInteropRequireDefault</span>
+      <span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(!callback) {</span>
+        <span class="s2">revertHook()</span><span class="s1">;</span>
+        <span class="s3">return </span><span class="s2">module</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">const </span><span class="s2">cbResult = callback(module)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">((</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_jestUtil().isPromise)(cbResult)) {</span>
+        <span class="s3">return </span><span class="s2">waitForPromiseWithCleanup(cbResult</span><span class="s1">, </span><span class="s2">revertHook).then(</span>
+          <span class="s2">() =&gt; module</span>
+        <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">return </span><span class="s2">module</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">finally </span><span class="s2">{</span>
+      <span class="s2">revertHook()</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">shouldTransform(filename) {</span>
+    <span class="s3">const </span><span class="s2">ignoreRegexp = </span><span class="s3">this</span><span class="s2">._cache.ignorePatternsRegExp</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">isIgnored = ignoreRegexp ? ignoreRegexp.test(filename) : </span><span class="s3">false</span><span class="s1">;</span>
+    <span class="s3">return this</span><span class="s2">._config.transform.length !== </span><span class="s5">0 </span><span class="s2">&amp;&amp; !isIgnored</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">} </span><span class="s4">// TODO: do we need to define the generics twice?</span>
+
+<span class="s2">async </span><span class="s3">function </span><span class="s2">createTranspilingRequire(config) {</span>
+  <span class="s3">const </span><span class="s2">transformer = </span><span class="s3">await </span><span class="s2">createScriptTransformer(config)</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">async </span><span class="s3">function </span><span class="s2">requireAndTranspileModule(</span>
+    <span class="s2">resolverPath</span><span class="s1">,</span>
+    <span class="s2">applyInteropRequireDefault = </span><span class="s3">false</span>
+  <span class="s2">) {</span>
+    <span class="s3">const </span><span class="s2">transpiledModule = </span><span class="s3">await </span><span class="s2">transformer.requireAndTranspileModule(</span>
+      <span class="s2">resolverPath</span><span class="s1">,</span>
+      <span class="s2">() =&gt; {}</span><span class="s1">,</span>
+      <span class="s2">{</span>
+        <span class="s2">applyInteropRequireDefault</span><span class="s1">,</span>
+        <span class="s2">instrument: </span><span class="s3">false</span><span class="s1">,</span>
+        <span class="s2">supportsDynamicImport: </span><span class="s3">false</span><span class="s1">,</span>
+        <span class="s4">// this might be true, depending on node version.</span>
+        <span class="s2">supportsExportNamespaceFrom: </span><span class="s3">false</span><span class="s1">,</span>
+        <span class="s2">supportsStaticESM: </span><span class="s3">false</span><span class="s1">,</span>
+        <span class="s2">supportsTopLevelAwait: </span><span class="s3">false</span>
+      <span class="s2">}</span>
+    <span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">transpiledModule</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">const </span><span class="s2">removeFile = path =&gt; {</span>
+  <span class="s3">try </span><span class="s2">{</span>
+    <span class="s2">fs().unlinkSync(path)</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">catch </span><span class="s2">{}</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">stripShebang = content =&gt; {</span>
+  <span class="s4">// If the file data starts with a shebang remove it. Leaves the empty line</span>
+  <span class="s4">// to keep stack trace line numbers correct.</span>
+  <span class="s3">if </span><span class="s2">(content.startsWith(</span><span class="s0">'#!'</span><span class="s2">)) {</span>
+    <span class="s3">return </span><span class="s2">content.replace(</span><span class="s5">/^#!.*/</span><span class="s1">, </span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s3">return </span><span class="s2">content</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span><span class="s1">;</span>
+<span class="s6">/**</span>
+ <span class="s6">* This is like `writeCacheFile` but with an additional sanity checksum. We</span>
+ <span class="s6">* cannot use the same technique for source maps because we expose source map</span>
+ <span class="s6">* cache file paths directly to callsites, with the expectation they can read</span>
+ <span class="s6">* it right away. This is not a great system, because source map cache file</span>
+ <span class="s6">* could get corrupted, out-of-sync, etc.</span>
+ <span class="s6">*/</span>
+
+<span class="s3">function </span><span class="s2">writeCodeCacheFile(cachePath</span><span class="s1">, </span><span class="s2">code) {</span>
+  <span class="s3">const </span><span class="s2">checksum = (</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_crypto().createHash)(</span><span class="s0">'md5'</span><span class="s2">).update(code).digest(</span><span class="s0">'hex'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">writeCacheFile(cachePath</span><span class="s1">, </span><span class="s2">checksum + </span><span class="s0">'</span><span class="s1">\n</span><span class="s0">' </span><span class="s2">+ code)</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s6">/**</span>
+ <span class="s6">* Read counterpart of `writeCodeCacheFile`. We verify that the content of the</span>
+ <span class="s6">* file matches the checksum, in case some kind of corruption happened. This</span>
+ <span class="s6">* could happen if an older version of `jest-runtime` writes non-atomically to</span>
+ <span class="s6">* the same cache, for example.</span>
+ <span class="s6">*/</span>
+
+<span class="s3">function </span><span class="s2">readCodeCacheFile(cachePath) {</span>
+  <span class="s3">const </span><span class="s2">content = readCacheFile(cachePath)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(content == </span><span class="s3">null</span><span class="s2">) {</span>
+    <span class="s3">return null</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">const </span><span class="s2">code = content.substring(</span><span class="s5">33</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">checksum = (</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_crypto().createHash)(</span><span class="s0">'md5'</span><span class="s2">).update(code).digest(</span><span class="s0">'hex'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(checksum === content.substring(</span><span class="s5">0</span><span class="s1">, </span><span class="s5">32</span><span class="s2">)) {</span>
+    <span class="s3">return </span><span class="s2">code</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return null</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s6">/**</span>
+ <span class="s6">* Writing to the cache atomically relies on 'rename' being atomic on most</span>
+ <span class="s6">* file systems. Doing atomic write reduces the risk of corruption by avoiding</span>
+ <span class="s6">* two processes to write to the same file at the same time. It also reduces</span>
+ <span class="s6">* the risk of reading a file that's being overwritten at the same time.</span>
+ <span class="s6">*/</span>
+
+<span class="s3">const </span><span class="s2">writeCacheFile = (cachePath</span><span class="s1">, </span><span class="s2">fileData) =&gt; {</span>
+  <span class="s3">try </span><span class="s2">{</span>
+    <span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_writeFileAtomic().sync)(cachePath</span><span class="s1">, </span><span class="s2">fileData</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">encoding: </span><span class="s0">'utf8'</span><span class="s1">,</span>
+      <span class="s2">fsync: </span><span class="s3">false</span>
+    <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">catch </span><span class="s2">(e) {</span>
+    <span class="s3">if </span><span class="s2">(cacheWriteErrorSafeToIgnore(e</span><span class="s1">, </span><span class="s2">cachePath)) {</span>
+      <span class="s3">return</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s2">e.message =</span>
+      <span class="s0">'jest: failed to cache transform results in: ' </span><span class="s2">+</span>
+      <span class="s2">cachePath +</span>
+      <span class="s0">'</span><span class="s1">\n</span><span class="s0">Failure message: ' </span><span class="s2">+</span>
+      <span class="s2">e.message</span><span class="s1">;</span>
+    <span class="s2">removeFile(cachePath)</span><span class="s1">;</span>
+    <span class="s3">throw </span><span class="s2">e</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span><span class="s1">;</span>
+<span class="s6">/**</span>
+ <span class="s6">* On Windows, renames are not atomic, leading to EPERM exceptions when two</span>
+ <span class="s6">* processes attempt to rename to the same target file at the same time.</span>
+ <span class="s6">* If the target file exists we can be reasonably sure another process has</span>
+ <span class="s6">* legitimately won a cache write race and ignore the error.</span>
+ <span class="s6">*/</span>
+
+<span class="s3">const </span><span class="s2">cacheWriteErrorSafeToIgnore = (e</span><span class="s1">, </span><span class="s2">cachePath) =&gt;</span>
+  <span class="s2">process.platform === </span><span class="s0">'win32' </span><span class="s2">&amp;&amp;</span>
+  <span class="s2">e.code === </span><span class="s0">'EPERM' </span><span class="s2">&amp;&amp;</span>
+  <span class="s2">fs().existsSync(cachePath)</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">readCacheFile = cachePath =&gt; {</span>
+  <span class="s3">if </span><span class="s2">(!fs().existsSync(cachePath)) {</span>
+    <span class="s3">return null</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">let </span><span class="s2">fileData</span><span class="s1">;</span>
+
+  <span class="s3">try </span><span class="s2">{</span>
+    <span class="s2">fileData = fs().readFileSync(cachePath</span><span class="s1">, </span><span class="s0">'utf8'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">catch </span><span class="s2">(e) {</span>
+    <span class="s2">e.message =</span>
+      <span class="s0">'jest: failed to read cache file: ' </span><span class="s2">+</span>
+      <span class="s2">cachePath +</span>
+      <span class="s0">'</span><span class="s1">\n</span><span class="s0">Failure message: ' </span><span class="s2">+</span>
+      <span class="s2">e.message</span><span class="s1">;</span>
+    <span class="s2">removeFile(cachePath)</span><span class="s1">;</span>
+    <span class="s3">throw </span><span class="s2">e</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(fileData == </span><span class="s3">null</span><span class="s2">) {</span>
+    <span class="s4">// We must have somehow created the file but failed to write to it,</span>
+    <span class="s4">// let's delete it and retry.</span>
+    <span class="s2">removeFile(cachePath)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">fileData</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">getScriptCacheKey = (filename</span><span class="s1">, </span><span class="s2">instrument) =&gt; {</span>
+  <span class="s3">const </span><span class="s2">mtime = fs().statSync(filename).mtime</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">filename + </span><span class="s0">'_' </span><span class="s2">+ mtime.getTime() + (instrument ? </span><span class="s0">'_instrumented' </span><span class="s2">: </span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">calcIgnorePatternRegExp = config =&gt; {</span>
+  <span class="s3">if </span><span class="s2">(</span>
+    <span class="s2">!config.transformIgnorePatterns ||</span>
+    <span class="s2">config.transformIgnorePatterns.length === </span><span class="s5">0</span>
+  <span class="s2">) {</span>
+    <span class="s3">return </span><span class="s2">undefined</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return new </span><span class="s2">RegExp(config.transformIgnorePatterns.join(</span><span class="s0">'|'</span><span class="s2">))</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">calcTransformRegExp = config =&gt; {</span>
+  <span class="s3">if </span><span class="s2">(!config.transform.length) {</span>
+    <span class="s3">return </span><span class="s2">undefined</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">const </span><span class="s2">transformRegexp = []</span><span class="s1">;</span>
+
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">let </span><span class="s2">i = </span><span class="s5">0</span><span class="s1">; </span><span class="s2">i &lt; config.transform.length</span><span class="s1">; </span><span class="s2">i++) {</span>
+    <span class="s2">transformRegexp.push([</span>
+      <span class="s3">new </span><span class="s2">RegExp(config.transform[i][</span><span class="s5">0</span><span class="s2">])</span><span class="s1">,</span>
+      <span class="s2">config.transform[i][</span><span class="s5">1</span><span class="s2">]</span><span class="s1">,</span>
+      <span class="s2">config.transform[i][</span><span class="s5">2</span><span class="s2">]</span>
+    <span class="s2">])</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">transformRegexp</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">invariant(condition</span><span class="s1">, </span><span class="s2">message) {</span>
+  <span class="s3">if </span><span class="s2">(!condition) {</span>
+    <span class="s3">throw new </span><span class="s2">Error(message)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">assertSyncTransformer(transformer</span><span class="s1">, </span><span class="s2">name) {</span>
+  <span class="s2">invariant(name)</span><span class="s1">;</span>
+  <span class="s2">invariant(</span>
+    <span class="s3">typeof </span><span class="s2">transformer.process === </span><span class="s0">'function'</span><span class="s1">,</span>
+    <span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_runtimeErrorsAndWarnings.makeInvalidSyncTransformerError)(name)</span>
+  <span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s2">async </span><span class="s3">function </span><span class="s2">createScriptTransformer(config</span><span class="s1">, </span><span class="s2">cacheFS = </span><span class="s3">new </span><span class="s2">Map()) {</span>
+  <span class="s3">const </span><span class="s2">transformer = </span><span class="s3">new </span><span class="s2">ScriptTransformer(config</span><span class="s1">, </span><span class="s2">cacheFS)</span><span class="s1">;</span>
+  <span class="s3">await </span><span class="s2">transformer.loadTransformers()</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">transformer</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

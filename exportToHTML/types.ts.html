@@ -1,0 +1,45 @@
+<html>
+<head>
+<title>types.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+types.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">export interface </span><span class="s1">ProcessCov {</span>
+  <span class="s1">result: ScriptCov[]</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export interface </span><span class="s1">ScriptCov {</span>
+  <span class="s1">scriptId: string</span><span class="s2">;</span>
+  <span class="s1">url: string</span><span class="s2">;</span>
+  <span class="s1">functions: FunctionCov[]</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export interface </span><span class="s1">FunctionCov {</span>
+  <span class="s1">functionName: string</span><span class="s2">;</span>
+  <span class="s1">ranges: RangeCov[]</span><span class="s2">;</span>
+  <span class="s1">isBlockCoverage: boolean</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export interface </span><span class="s1">Range {</span>
+  <span class="s1">readonly start: number</span><span class="s2">;</span>
+  <span class="s1">readonly end: number</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export interface </span><span class="s1">RangeCov {</span>
+  <span class="s1">startOffset: number</span><span class="s2">;</span>
+  <span class="s1">endOffset: number</span><span class="s2">;</span>
+  <span class="s1">count: number</span><span class="s2">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

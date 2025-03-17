@@ -1,0 +1,216 @@
+<html>
+<head>
+<title>Circus.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a; font-style: italic;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #808080;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8ea765;}
+.s5 { color: #cc7832;}
+.s6 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Circus.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">/**</span>
+ <span class="s0">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s0">*</span>
+ <span class="s0">* This source code is licensed under the MIT license found in the</span>
+ <span class="s0">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s0">*/</span>
+<span class="s2">/// &lt;reference types=&quot;node&quot; /&gt;</span>
+<span class="s3">import </span><span class="s1">type * as Global from </span><span class="s4">'./Global'</span><span class="s5">;</span>
+<span class="s1">declare type Process = NodeJS.Process</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type DoneFn = Global.DoneFn</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type BlockFn = Global.BlockFn</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type BlockName = Global.BlockName</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type BlockMode = </span><span class="s3">void </span><span class="s1">| </span><span class="s4">'skip' </span><span class="s1">| </span><span class="s4">'only' </span><span class="s1">| </span><span class="s4">'todo'</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type TestMode = BlockMode</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type TestName = Global.TestName</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type TestFn = Global.TestFn</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type HookFn = Global.HookFn</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type AsyncFn = TestFn | HookFn</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type SharedHookType = </span><span class="s4">'afterAll' </span><span class="s1">| </span><span class="s4">'beforeAll'</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type HookType = SharedHookType | </span><span class="s4">'afterEach' </span><span class="s1">| </span><span class="s4">'beforeEach'</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type TestContext = Global.TestContext</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type Exception = any</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type FormattedError = string</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type Hook = {</span>
+    <span class="s1">asyncError: Error</span><span class="s5">;</span>
+    <span class="s1">fn: HookFn</span><span class="s5">;</span>
+    <span class="s1">type: HookType</span><span class="s5">;</span>
+    <span class="s1">parent: DescribeBlock</span><span class="s5">;</span>
+    <span class="s1">seenDone: boolean</span><span class="s5">;</span>
+    <span class="s1">timeout: number | undefined | </span><span class="s3">null</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+<span class="s3">export interface </span><span class="s1">EventHandler {</span>
+    <span class="s1">(event: AsyncEvent</span><span class="s5">, </span><span class="s1">state: State): </span><span class="s3">void </span><span class="s1">| Promise&lt;</span><span class="s3">void</span><span class="s1">&gt;</span><span class="s5">;</span>
+    <span class="s1">(event: SyncEvent</span><span class="s5">, </span><span class="s1">state: State): </span><span class="s3">void</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s3">export </span><span class="s1">declare type Event = SyncEvent | AsyncEvent</span><span class="s5">;</span>
+<span class="s3">interface </span><span class="s1">JestGlobals </span><span class="s3">extends </span><span class="s1">Global.TestFrameworkGlobals {</span>
+    <span class="s1">expect: unknown</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s3">export </span><span class="s1">declare type SyncEvent = {</span>
+    <span class="s1">asyncError: Error</span><span class="s5">;</span>
+    <span class="s1">mode: BlockMode</span><span class="s5">;</span>
+    <span class="s1">name: </span><span class="s4">'start_describe_definition'</span><span class="s5">;</span>
+    <span class="s1">blockName: BlockName</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">mode: BlockMode</span><span class="s5">;</span>
+    <span class="s1">name: </span><span class="s4">'finish_describe_definition'</span><span class="s5">;</span>
+    <span class="s1">blockName: BlockName</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">asyncError: Error</span><span class="s5">;</span>
+    <span class="s1">name: </span><span class="s4">'add_hook'</span><span class="s5">;</span>
+    <span class="s1">hookType: HookType</span><span class="s5">;</span>
+    <span class="s1">fn: HookFn</span><span class="s5">;</span>
+    <span class="s1">timeout: number | undefined</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">asyncError: Error</span><span class="s5">;</span>
+    <span class="s1">name: </span><span class="s4">'add_test'</span><span class="s5">;</span>
+    <span class="s1">testName: TestName</span><span class="s5">;</span>
+    <span class="s1">fn: TestFn</span><span class="s5">;</span>
+    <span class="s1">mode?: TestMode</span><span class="s5">;</span>
+    <span class="s1">timeout: number | undefined</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'error'</span><span class="s5">;</span>
+    <span class="s1">error: Exception</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type AsyncEvent = {</span>
+    <span class="s1">name: </span><span class="s4">'setup'</span><span class="s5">;</span>
+    <span class="s1">testNamePattern?: string</span><span class="s5">;</span>
+    <span class="s1">runtimeGlobals: JestGlobals</span><span class="s5">;</span>
+    <span class="s1">parentProcess: Process</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'include_test_location_in_result'</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'hook_start'</span><span class="s5">;</span>
+    <span class="s1">hook: Hook</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'hook_success'</span><span class="s5">;</span>
+    <span class="s1">describeBlock?: DescribeBlock</span><span class="s5">;</span>
+    <span class="s1">test?: TestEntry</span><span class="s5">;</span>
+    <span class="s1">hook: Hook</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'hook_failure'</span><span class="s5">;</span>
+    <span class="s1">error: string | Exception</span><span class="s5">;</span>
+    <span class="s1">describeBlock?: DescribeBlock</span><span class="s5">;</span>
+    <span class="s1">test?: TestEntry</span><span class="s5">;</span>
+    <span class="s1">hook: Hook</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'test_fn_start'</span><span class="s5">;</span>
+    <span class="s1">test: TestEntry</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'test_fn_success'</span><span class="s5">;</span>
+    <span class="s1">test: TestEntry</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'test_fn_failure'</span><span class="s5">;</span>
+    <span class="s1">error: Exception</span><span class="s5">;</span>
+    <span class="s1">test: TestEntry</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'test_retry'</span><span class="s5">;</span>
+    <span class="s1">test: TestEntry</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'test_start'</span><span class="s5">;</span>
+    <span class="s1">test: TestEntry</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'test_skip'</span><span class="s5">;</span>
+    <span class="s1">test: TestEntry</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'test_todo'</span><span class="s5">;</span>
+    <span class="s1">test: TestEntry</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'test_done'</span><span class="s5">;</span>
+    <span class="s1">test: TestEntry</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'run_describe_start'</span><span class="s5">;</span>
+    <span class="s1">describeBlock: DescribeBlock</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'run_describe_finish'</span><span class="s5">;</span>
+    <span class="s1">describeBlock: DescribeBlock</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'run_start'</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'run_finish'</span><span class="s5">;</span>
+<span class="s1">} | {</span>
+    <span class="s1">name: </span><span class="s4">'teardown'</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type MatcherResults = {</span>
+    <span class="s1">actual: unknown</span><span class="s5">;</span>
+    <span class="s1">expected: unknown</span><span class="s5">;</span>
+    <span class="s1">name: string</span><span class="s5">;</span>
+    <span class="s1">pass: boolean</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type TestStatus = </span><span class="s4">'skip' </span><span class="s1">| </span><span class="s4">'done' </span><span class="s1">| </span><span class="s4">'todo'</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type TestResult = {</span>
+    <span class="s1">duration?: number | </span><span class="s3">null</span><span class="s5">;</span>
+    <span class="s1">errors: Array&lt;FormattedError&gt;</span><span class="s5">;</span>
+    <span class="s1">errorsDetailed: Array&lt;MatcherResults | unknown&gt;</span><span class="s5">;</span>
+    <span class="s1">invocations: number</span><span class="s5">;</span>
+    <span class="s1">status: TestStatus</span><span class="s5">;</span>
+    <span class="s1">location?: {</span>
+        <span class="s1">column: number</span><span class="s5">;</span>
+        <span class="s1">line: number</span><span class="s5">;</span>
+    <span class="s1">} | </span><span class="s3">null</span><span class="s5">;</span>
+    <span class="s1">testPath: Array&lt;TestName | BlockName&gt;</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type RunResult = {</span>
+    <span class="s1">unhandledErrors: Array&lt;FormattedError&gt;</span><span class="s5">;</span>
+    <span class="s1">testResults: TestResults</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type TestResults = Array&lt;TestResult&gt;</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type GlobalErrorHandlers = {</span>
+    <span class="s1">uncaughtException: Array&lt;(exception: Exception) =&gt; </span><span class="s3">void</span><span class="s1">&gt;</span><span class="s5">;</span>
+    <span class="s1">unhandledRejection: Array&lt;(exception: Exception</span><span class="s5">, </span><span class="s1">promise: Promise&lt;unknown&gt;) =&gt; </span><span class="s3">void</span><span class="s1">&gt;</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type State = {</span>
+    <span class="s1">currentDescribeBlock: DescribeBlock</span><span class="s5">;</span>
+    <span class="s1">currentlyRunningTest?: TestEntry | </span><span class="s3">null</span><span class="s5">;</span>
+    <span class="s1">expand?: boolean</span><span class="s5">;</span>
+    <span class="s1">hasFocusedTests: boolean</span><span class="s5">;</span>
+    <span class="s1">hasStarted: boolean</span><span class="s5">;</span>
+    <span class="s1">originalGlobalErrorHandlers?: GlobalErrorHandlers</span><span class="s5">;</span>
+    <span class="s1">parentProcess: Process | </span><span class="s3">null</span><span class="s5">;</span>
+    <span class="s1">rootDescribeBlock: DescribeBlock</span><span class="s5">;</span>
+    <span class="s1">testNamePattern?: RegExp | </span><span class="s3">null</span><span class="s5">;</span>
+    <span class="s1">testTimeout: number</span><span class="s5">;</span>
+    <span class="s1">unhandledErrors: Array&lt;Exception&gt;</span><span class="s5">;</span>
+    <span class="s1">includeTestLocationInResult: boolean</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type DescribeBlock = {</span>
+    <span class="s1">type: </span><span class="s4">'describeBlock'</span><span class="s5">;</span>
+    <span class="s1">children: Array&lt;DescribeBlock | TestEntry&gt;</span><span class="s5">;</span>
+    <span class="s1">hooks: Array&lt;Hook&gt;</span><span class="s5">;</span>
+    <span class="s1">mode: BlockMode</span><span class="s5">;</span>
+    <span class="s1">name: BlockName</span><span class="s5">;</span>
+    <span class="s1">parent?: DescribeBlock</span><span class="s5">;</span>
+    <span class="s0">/** </span><span class="s6">@deprecated </span><span class="s0">Please get from `children` array instead */</span>
+    <span class="s1">tests: Array&lt;TestEntry&gt;</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type TestError = Exception | [Exception | undefined</span><span class="s5">, </span><span class="s1">Exception]</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">declare type TestEntry = {</span>
+    <span class="s1">type: </span><span class="s4">'test'</span><span class="s5">;</span>
+    <span class="s1">asyncError: Exception</span><span class="s5">;</span>
+    <span class="s1">errors: Array&lt;TestError&gt;</span><span class="s5">;</span>
+    <span class="s1">fn: TestFn</span><span class="s5">;</span>
+    <span class="s1">invocations: number</span><span class="s5">;</span>
+    <span class="s1">mode: TestMode</span><span class="s5">;</span>
+    <span class="s1">name: TestName</span><span class="s5">;</span>
+    <span class="s1">parent: DescribeBlock</span><span class="s5">;</span>
+    <span class="s1">startedAt?: number | </span><span class="s3">null</span><span class="s5">;</span>
+    <span class="s1">duration?: number | </span><span class="s3">null</span><span class="s5">;</span>
+    <span class="s1">seenDone: boolean</span><span class="s5">;</span>
+    <span class="s1">status?: TestStatus | </span><span class="s3">null</span><span class="s5">;</span>
+    <span class="s1">timeout?: number</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+<span class="s3">export </span><span class="s1">{}</span><span class="s5">;</span>
+</pre>
+</body>
+</html>

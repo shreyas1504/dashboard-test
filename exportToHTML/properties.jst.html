@@ -1,0 +1,262 @@
+<html>
+<head>
+<title>properties.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+properties.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+<span class="s0">{{# def.setupNextLevel }}</span>
+
+
+<span class="s0">{{## def.validateAdditional:</span>
+  <span class="s0">{{ /* additionalProperties is schema */</span>
+    <span class="s0">$it.schema = $aProperties;</span>
+    <span class="s0">$it.schemaPath = it.schemaPath + '.additionalProperties';</span>
+    <span class="s0">$it.errSchemaPath = it.errSchemaPath + '/additionalProperties';</span>
+    <span class="s0">$it.errorPath = it.opts._errorDataPathProperty</span>
+                    <span class="s0">? it.errorPath</span>
+                    <span class="s0">: it.util.getPathExpr(it.errorPath, $key, it.opts.jsonPointers);</span>
+    <span class="s0">var $passData = $data + '[' + $key + ']';</span>
+    <span class="s0">$it.dataPathArr[$dataNxt] = $key;</span>
+  <span class="s0">}}</span>
+
+  <span class="s0">{{# def.generateSubschemaCode }}</span>
+  <span class="s0">{{# def.optimizeValidate }}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{</span>
+  <span class="s0">var $key = 'key' + $lvl</span>
+    <span class="s0">, $idx = 'idx' + $lvl</span>
+    <span class="s0">, $dataNxt = $it.dataLevel = it.dataLevel + 1</span>
+    <span class="s0">, $nextData = 'data' + $dataNxt</span>
+    <span class="s0">, $dataProperties = 'dataProperties' + $lvl;</span>
+
+  <span class="s0">var $schemaKeys = Object.keys($schema || {}).filter(notProto)</span>
+    <span class="s0">, $pProperties = it.schema.patternProperties || {}</span>
+    <span class="s0">, $pPropertyKeys = Object.keys($pProperties).filter(notProto)</span>
+    <span class="s0">, $aProperties = it.schema.additionalProperties</span>
+    <span class="s0">, $someProperties = $schemaKeys.length || $pPropertyKeys.length</span>
+    <span class="s0">, $noAdditional = $aProperties === false</span>
+    <span class="s0">, $additionalIsSchema = typeof $aProperties == 'object'</span>
+                              <span class="s0">&amp;&amp; Object.keys($aProperties).length</span>
+    <span class="s0">, $removeAdditional = it.opts.removeAdditional</span>
+    <span class="s0">, $checkAdditional = $noAdditional || $additionalIsSchema || $removeAdditional</span>
+    <span class="s0">, $ownProperties = it.opts.ownProperties</span>
+    <span class="s0">, $currentBaseId = it.baseId;</span>
+
+  <span class="s0">var $required = it.schema.required;</span>
+  <span class="s0">if ($required &amp;&amp; !(it.opts.$data &amp;&amp; $required.$data) &amp;&amp; $required.length &lt; it.opts.loopRequired) {</span>
+    <span class="s0">var $requiredHash = it.util.toHash($required);</span>
+  <span class="s0">}</span>
+
+  <span class="s0">function notProto(p) { return p !== '__proto__'; }</span>
+<span class="s0">}}</span>
+
+
+<span class="s0">var {{=$errs}} = errors;</span>
+<span class="s0">var {{=$nextValid}} = true;</span>
+<span class="s0">{{? $ownProperties }}</span>
+  <span class="s0">var {{=$dataProperties}} = undefined;</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{? $checkAdditional }}</span>
+  <span class="s0">{{# def.iterateProperties }}</span>
+    <span class="s0">{{? $someProperties }}</span>
+      <span class="s0">var isAdditional{{=$lvl}} = !(false</span>
+        <span class="s0">{{? $schemaKeys.length }}</span>
+          <span class="s0">{{? $schemaKeys.length &gt; 8 }}</span>
+            <span class="s0">|| validate.schema{{=$schemaPath}}.hasOwnProperty({{=$key}})</span>
+          <span class="s0">{{??}}</span>
+            <span class="s0">{{~ $schemaKeys:$propertyKey }}</span>
+              <span class="s0">|| {{=$key}} == {{= it.util.toQuotedString($propertyKey) }}</span>
+            <span class="s0">{{~}}</span>
+          <span class="s0">{{?}}</span>
+        <span class="s0">{{?}}</span>
+        <span class="s0">{{? $pPropertyKeys.length }}</span>
+          <span class="s0">{{~ $pPropertyKeys:$pProperty:$i }}</span>
+            <span class="s0">|| {{= it.usePattern($pProperty) }}.test({{=$key}})</span>
+          <span class="s0">{{~}}</span>
+        <span class="s0">{{?}}</span>
+      <span class="s0">);</span>
+
+      <span class="s0">if (isAdditional{{=$lvl}}) {</span>
+    <span class="s0">{{?}}</span>
+    <span class="s0">{{? $removeAdditional == 'all' }}</span>
+      <span class="s0">delete {{=$data}}[{{=$key}}];</span>
+    <span class="s0">{{??}}</span>
+      <span class="s0">{{</span>
+        <span class="s0">var $currentErrorPath = it.errorPath;</span>
+        <span class="s0">var $additionalProperty = '\' + ' + $key + ' + \'';</span>
+        <span class="s0">if (it.opts._errorDataPathProperty) {</span>
+          <span class="s0">it.errorPath = it.util.getPathExpr(it.errorPath, $key, it.opts.jsonPointers);</span>
+        <span class="s0">}</span>
+      <span class="s0">}}</span>
+      <span class="s0">{{? $noAdditional }}</span>
+        <span class="s0">{{? $removeAdditional }}</span>
+          <span class="s0">delete {{=$data}}[{{=$key}}];</span>
+        <span class="s0">{{??}}</span>
+          <span class="s0">{{=$nextValid}} = false;</span>
+          <span class="s0">{{</span>
+            <span class="s0">var $currErrSchemaPath = $errSchemaPath;</span>
+            <span class="s0">$errSchemaPath = it.errSchemaPath + '/additionalProperties';</span>
+          <span class="s0">}}</span>
+          <span class="s0">{{# def.error:'additionalProperties' }}</span>
+          <span class="s0">{{ $errSchemaPath = $currErrSchemaPath; }}</span>
+          <span class="s0">{{? $breakOnError }} break; {{?}}</span>
+        <span class="s0">{{?}}</span>
+      <span class="s0">{{?? $additionalIsSchema }}</span>
+        <span class="s0">{{? $removeAdditional == 'failing' }}</span>
+          <span class="s0">var {{=$errs}} = errors;</span>
+          <span class="s0">{{# def.setCompositeRule }}</span>
+
+          <span class="s0">{{# def.validateAdditional }}</span>
+
+          <span class="s0">if (!{{=$nextValid}}) {</span>
+            <span class="s0">errors = {{=$errs}};</span>
+            <span class="s0">if (validate.errors !== null) {</span>
+              <span class="s0">if (errors) validate.errors.length = errors;</span>
+              <span class="s0">else validate.errors = null;</span>
+            <span class="s0">}</span>
+            <span class="s0">delete {{=$data}}[{{=$key}}];</span>
+          <span class="s0">}</span>
+
+          <span class="s0">{{# def.resetCompositeRule }}</span>
+        <span class="s0">{{??}}</span>
+          <span class="s0">{{# def.validateAdditional }}</span>
+          <span class="s0">{{? $breakOnError }} if (!{{=$nextValid}}) break; {{?}}</span>
+        <span class="s0">{{?}}</span>
+      <span class="s0">{{?}}</span>
+      <span class="s0">{{ it.errorPath = $currentErrorPath; }}</span>
+    <span class="s0">{{?}}</span>
+    <span class="s0">{{? $someProperties }}</span>
+      <span class="s0">}</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">}</span>
+
+  <span class="s0">{{# def.ifResultValid }}</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{ var $useDefaults = it.opts.useDefaults &amp;&amp; !it.compositeRule; }}</span>
+
+<span class="s0">{{? $schemaKeys.length }}</span>
+  <span class="s0">{{~ $schemaKeys:$propertyKey }}</span>
+    <span class="s0">{{ var $sch = $schema[$propertyKey]; }}</span>
+
+    <span class="s0">{{? {{# def.nonEmptySchema:$sch}} }}</span>
+      <span class="s0">{{</span>
+        <span class="s0">var $prop = it.util.getProperty($propertyKey)</span>
+          <span class="s0">, $passData = $data + $prop</span>
+          <span class="s0">, $hasDefault = $useDefaults &amp;&amp; $sch.default !== undefined;</span>
+        <span class="s0">$it.schema = $sch;</span>
+        <span class="s0">$it.schemaPath = $schemaPath + $prop;</span>
+        <span class="s0">$it.errSchemaPath = $errSchemaPath + '/' + it.util.escapeFragment($propertyKey);</span>
+        <span class="s0">$it.errorPath = it.util.getPath(it.errorPath, $propertyKey, it.opts.jsonPointers);</span>
+        <span class="s0">$it.dataPathArr[$dataNxt] = it.util.toQuotedString($propertyKey);</span>
+      <span class="s0">}}</span>
+
+      <span class="s0">{{# def.generateSubschemaCode }}</span>
+
+      <span class="s0">{{? {{# def.willOptimize }} }}</span>
+        <span class="s0">{{</span>
+          <span class="s0">$code = {{# def._optimizeValidate }};</span>
+          <span class="s0">var $useData = $passData;</span>
+        <span class="s0">}}</span>
+      <span class="s0">{{??}}</span>
+        <span class="s0">{{ var $useData = $nextData; }}</span>
+        <span class="s0">var {{=$nextData}} = {{=$passData}};</span>
+      <span class="s0">{{?}}</span>
+
+      <span class="s0">{{? $hasDefault }}</span>
+        <span class="s0">{{= $code }}</span>
+      <span class="s0">{{??}}</span>
+        <span class="s0">{{? $requiredHash &amp;&amp; $requiredHash[$propertyKey] }}</span>
+          <span class="s0">if ({{# def.noPropertyInData }}) {</span>
+            <span class="s0">{{=$nextValid}} = false;</span>
+            <span class="s0">{{</span>
+              <span class="s0">var $currentErrorPath = it.errorPath</span>
+                <span class="s0">, $currErrSchemaPath = $errSchemaPath</span>
+                <span class="s0">, $missingProperty = it.util.escapeQuotes($propertyKey);</span>
+              <span class="s0">if (it.opts._errorDataPathProperty) {</span>
+                <span class="s0">it.errorPath = it.util.getPath($currentErrorPath, $propertyKey, it.opts.jsonPointers);</span>
+              <span class="s0">}</span>
+              <span class="s0">$errSchemaPath = it.errSchemaPath + '/required';</span>
+            <span class="s0">}}</span>
+            <span class="s0">{{# def.error:'required' }}</span>
+            <span class="s0">{{ $errSchemaPath = $currErrSchemaPath; }}</span>
+            <span class="s0">{{ it.errorPath = $currentErrorPath; }}</span>
+          <span class="s0">} else {</span>
+        <span class="s0">{{??}}</span>
+          <span class="s0">{{? $breakOnError }}</span>
+            <span class="s0">if ({{# def.noPropertyInData }}) {</span>
+              <span class="s0">{{=$nextValid}} = true;</span>
+            <span class="s0">} else {</span>
+          <span class="s0">{{??}}</span>
+            <span class="s0">if ({{=$useData}} !== undefined</span>
+              <span class="s0">{{? $ownProperties }}</span>
+                <span class="s0">&amp;&amp; {{# def.isOwnProperty }}</span>
+              <span class="s0">{{?}}</span>
+            <span class="s0">) {</span>
+          <span class="s0">{{?}}</span>
+        <span class="s0">{{?}}</span>
+
+          <span class="s0">{{= $code }}</span>
+        <span class="s0">}</span>
+      <span class="s0">{{?}}  {{ /* $hasDefault */ }}</span>
+    <span class="s0">{{?}} {{ /* def.nonEmptySchema */ }}</span>
+
+    <span class="s0">{{# def.ifResultValid }}</span>
+  <span class="s0">{{~}}</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{? $pPropertyKeys.length }}</span>
+  <span class="s0">{{~ $pPropertyKeys:$pProperty }}</span>
+    <span class="s0">{{ var $sch = $pProperties[$pProperty]; }}</span>
+
+    <span class="s0">{{? {{# def.nonEmptySchema:$sch}} }}</span>
+      <span class="s0">{{</span>
+        <span class="s0">$it.schema = $sch;</span>
+        <span class="s0">$it.schemaPath = it.schemaPath + '.patternProperties' + it.util.getProperty($pProperty);</span>
+        <span class="s0">$it.errSchemaPath = it.errSchemaPath + '/patternProperties/'</span>
+                                             <span class="s0">+ it.util.escapeFragment($pProperty);</span>
+      <span class="s0">}}</span>
+
+      <span class="s0">{{# def.iterateProperties }}</span>
+        <span class="s0">if ({{= it.usePattern($pProperty) }}.test({{=$key}})) {</span>
+          <span class="s0">{{</span>
+            <span class="s0">$it.errorPath = it.util.getPathExpr(it.errorPath, $key, it.opts.jsonPointers);</span>
+            <span class="s0">var $passData = $data + '[' + $key + ']';</span>
+            <span class="s0">$it.dataPathArr[$dataNxt] = $key;</span>
+          <span class="s0">}}</span>
+
+          <span class="s0">{{# def.generateSubschemaCode }}</span>
+          <span class="s0">{{# def.optimizeValidate }}</span>
+
+          <span class="s0">{{? $breakOnError }} if (!{{=$nextValid}}) break; {{?}}</span>
+        <span class="s0">}</span>
+        <span class="s0">{{? $breakOnError }} else {{=$nextValid}} = true; {{?}}</span>
+      <span class="s0">}</span>
+
+      <span class="s0">{{# def.ifResultValid }}</span>
+    <span class="s0">{{?}} {{ /* def.nonEmptySchema */ }}</span>
+  <span class="s0">{{~}}</span>
+<span class="s0">{{?}}</span>
+
+
+<span class="s0">{{? $breakOnError }}</span>
+  <span class="s0">{{= $closingBraces }}</span>
+  <span class="s0">if ({{=$errs}} == errors) {</span>
+<span class="s0">{{?}}</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<html>
+<head>
+<title>file_task.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #8ea765;}
+.s5 { color: #6897bb;}
+.s6 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+file_task.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * Jake JavaScript build tool 
+ * Copyright 2112 Matthew Eernisse (mde@fleegix.org) 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *         http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+*/</span>
+
+<span class="s2">const </span><span class="s1">PROJECT_DIR = process.env.PROJECT_DIR</span><span class="s3">;</span>
+<span class="s2">const </span><span class="s1">JAKE_CMD = </span><span class="s4">`</span><span class="s1">${PROJECT_DIR}</span><span class="s4">/bin/cli.js`</span><span class="s3">;</span>
+
+<span class="s2">let </span><span class="s1">assert = require(</span><span class="s4">'assert'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">fs = require(</span><span class="s4">'fs'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">exec = require(</span><span class="s4">'child_process'</span><span class="s1">).execSync</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">{ rmRf } = require(</span><span class="s4">`</span><span class="s1">${PROJECT_DIR}</span><span class="s4">/lib/jake`</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s2">let </span><span class="s1">cleanUpAndNext = </span><span class="s2">function </span><span class="s1">(callback) {</span>
+  <span class="s1">rmRf(</span><span class="s4">'./foo'</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">silent: </span><span class="s2">true</span>
+  <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">callback &amp;&amp; callback()</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">suite(</span><span class="s4">'fileTask'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s2">this</span><span class="s1">.timeout(</span><span class="s5">7000</span><span class="s1">)</span><span class="s3">;</span>
+
+  <span class="s1">setup(</span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">cleanUpAndNext()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'where a file-task prereq does not change with --always-make'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">out</span><span class="s3">;</span>
+    <span class="s1">out = exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q fileTest:foo/from-src1.txt`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'fileTest:foo/src1.txt task</span><span class="s3">\n</span><span class="s4">fileTest:foo/from-src1.txt task'</span><span class="s3">,</span>
+      <span class="s1">out)</span><span class="s3">;</span>
+    <span class="s1">out = exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q -B fileTest:foo/from-src1.txt`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'fileTest:foo/src1.txt task</span><span class="s3">\n</span><span class="s4">fileTest:foo/from-src1.txt task'</span><span class="s3">,</span>
+      <span class="s1">out)</span><span class="s3">;</span>
+    <span class="s1">cleanUpAndNext()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'concating two files'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">out</span><span class="s3">;</span>
+    <span class="s1">out = exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q fileTest:foo/concat.txt`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'fileTest:foo/src1.txt task</span><span class="s3">\n</span><span class="s4">default task</span><span class="s3">\n</span><span class="s4">fileTest:foo/src2.txt task</span><span class="s3">\n</span><span class="s4">' </span><span class="s1">+</span>
+          <span class="s4">'fileTest:foo/concat.txt task'</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+    <span class="s6">// Check to see the two files got concat'd</span>
+    <span class="s2">let </span><span class="s1">data = fs.readFileSync(process.cwd() + </span><span class="s4">'/foo/concat.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'src1src2'</span><span class="s3">, </span><span class="s1">data.toString())</span><span class="s3">;</span>
+    <span class="s1">cleanUpAndNext()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'where a file-task prereq does not change'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">out</span><span class="s3">;</span>
+    <span class="s1">out = exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q fileTest:foo/from-src1.txt`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'fileTest:foo/src1.txt task</span><span class="s3">\n</span><span class="s4">fileTest:foo/from-src1.txt task'</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+    <span class="s1">out = exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q fileTest:foo/from-src1.txt`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s6">// Second time should be a no-op</span>
+    <span class="s1">assert.equal(</span><span class="s4">''</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+    <span class="s1">cleanUpAndNext()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'where a file-task prereq does change, then does not'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">(next) {</span>
+    <span class="s1">exec(</span><span class="s4">'mkdir -p ./foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">exec(</span><span class="s4">'touch ./foo/from-src1.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">setTimeout(() =&gt; {</span>
+      <span class="s1">fs.writeFileSync(</span><span class="s4">'./foo/src1.txt'</span><span class="s3">, </span><span class="s4">'-SRC'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s6">// Task should run the first time</span>
+      <span class="s2">let </span><span class="s1">out</span><span class="s3">;</span>
+      <span class="s1">out = exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q fileTest:foo/from-src1.txt`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+      <span class="s1">assert.equal(</span><span class="s4">'fileTest:foo/from-src1.txt task'</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+      <span class="s6">// Task should not run on subsequent invocation</span>
+      <span class="s1">out = exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q fileTest:foo/from-src1.txt`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+      <span class="s1">assert.equal(</span><span class="s4">''</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+      <span class="s1">cleanUpAndNext(next)</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">, </span><span class="s5">1000</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'a preexisting file'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">prereqData = </span><span class="s4">'howdy'</span><span class="s3">;</span>
+    <span class="s1">exec(</span><span class="s4">'mkdir -p ./foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'foo/prereq.txt'</span><span class="s3">, </span><span class="s1">prereqData)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">out</span><span class="s3">;</span>
+    <span class="s1">out = exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q fileTest:foo/from-prereq.txt`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'fileTest:foo/from-prereq.txt task'</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">data = fs.readFileSync(process.cwd() + </span><span class="s4">'/foo/from-prereq.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(prereqData</span><span class="s3">, </span><span class="s1">data.toString())</span><span class="s3">;</span>
+    <span class="s1">out = exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q fileTest:foo/from-prereq.txt`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s6">// Second time should be a no-op</span>
+    <span class="s1">assert.equal(</span><span class="s4">''</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+    <span class="s1">cleanUpAndNext()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'a preexisting file with --always-make flag'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">prereqData = </span><span class="s4">'howdy'</span><span class="s3">;</span>
+    <span class="s1">exec(</span><span class="s4">'mkdir -p ./foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'foo/prereq.txt'</span><span class="s3">, </span><span class="s1">prereqData)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">out</span><span class="s3">;</span>
+    <span class="s1">out = exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q fileTest:foo/from-prereq.txt`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'fileTest:foo/from-prereq.txt task'</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">data = fs.readFileSync(process.cwd() + </span><span class="s4">'/foo/from-prereq.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(prereqData</span><span class="s3">, </span><span class="s1">data.toString())</span><span class="s3">;</span>
+    <span class="s1">out = exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q -B fileTest:foo/from-prereq.txt`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'fileTest:foo/from-prereq.txt task'</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+    <span class="s1">cleanUpAndNext()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'nested directory-task'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q fileTest:foo/bar/baz/bamf.txt`</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">data = fs.readFileSync(process.cwd() + </span><span class="s4">'/foo/bar/baz/bamf.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'w00t'</span><span class="s3">, </span><span class="s1">data)</span><span class="s3">;</span>
+    <span class="s1">cleanUpAndNext()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'partially existing prereqs'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s0">/* 
+     dependency graph: 
+                               /-- foo/output2a.txt --\ 
+     foo -- foo/output1.txt --+                        +-- output3.txt 
+                               \-- foo/output2b.txt --/ 
+    */</span>
+    <span class="s6">// build part of the prereqs</span>
+    <span class="s1">exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q fileTest:foo/output2a.txt`</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s6">// verify the final target gets built</span>
+    <span class="s1">exec(</span><span class="s4">`</span><span class="s1">${JAKE_CMD} </span><span class="s4">-q fileTest:foo/output3.txt`</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">data = fs.readFileSync(process.cwd() + </span><span class="s4">'/foo/output3.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'w00t'</span><span class="s3">, </span><span class="s1">data)</span><span class="s3">;</span>
+    <span class="s1">cleanUpAndNext()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+</pre>
+</body>
+</html>

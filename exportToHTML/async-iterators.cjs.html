@@ -1,0 +1,78 @@
+<html>
+<head>
+<title>async-iterators.cjs</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+async-iterators.cjs</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">wrapIdbValue = require(</span><span class="s0">'./wrap-idb-value.cjs'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">advanceMethodProps = [</span><span class="s0">'continue'</span><span class="s1">, </span><span class="s0">'continuePrimaryKey'</span><span class="s1">, </span><span class="s0">'advance'</span><span class="s2">]</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">methodMap = {}</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">advanceResults = </span><span class="s3">new </span><span class="s2">WeakMap()</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">ittrProxiedCursorToOriginalProxy = </span><span class="s3">new </span><span class="s2">WeakMap()</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">cursorIteratorTraps = {</span>
+    <span class="s2">get(target</span><span class="s1">, </span><span class="s2">prop) {</span>
+        <span class="s3">if </span><span class="s2">(!advanceMethodProps.includes(prop))</span>
+            <span class="s3">return </span><span class="s2">target[prop]</span><span class="s1">;</span>
+        <span class="s3">let </span><span class="s2">cachedFunc = methodMap[prop]</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(!cachedFunc) {</span>
+            <span class="s2">cachedFunc = methodMap[prop] = </span><span class="s3">function </span><span class="s2">(...args) {</span>
+                <span class="s2">advanceResults.set(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">ittrProxiedCursorToOriginalProxy.get(</span><span class="s3">this</span><span class="s2">)[prop](...args))</span><span class="s1">;</span>
+            <span class="s2">}</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">return </span><span class="s2">cachedFunc</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">,</span>
+<span class="s2">}</span><span class="s1">;</span>
+<span class="s2">async </span><span class="s3">function</span><span class="s2">* iterate(...args) {</span>
+    <span class="s4">// tslint:disable-next-line:no-this-assignment</span>
+    <span class="s3">let </span><span class="s2">cursor = </span><span class="s3">this</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(!(cursor </span><span class="s3">instanceof </span><span class="s2">IDBCursor)) {</span>
+        <span class="s2">cursor = </span><span class="s3">await </span><span class="s2">cursor.openCursor(...args)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s3">if </span><span class="s2">(!cursor)</span>
+        <span class="s3">return</span><span class="s1">;</span>
+    <span class="s2">cursor = cursor</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">proxiedCursor = </span><span class="s3">new </span><span class="s2">Proxy(cursor</span><span class="s1">, </span><span class="s2">cursorIteratorTraps)</span><span class="s1">;</span>
+    <span class="s2">ittrProxiedCursorToOriginalProxy.set(proxiedCursor</span><span class="s1">, </span><span class="s2">cursor)</span><span class="s1">;</span>
+    <span class="s4">// Map this double-proxy back to the original, so other cursor methods work.</span>
+    <span class="s2">wrapIdbValue.reverseTransformCache.set(proxiedCursor</span><span class="s1">, </span><span class="s2">wrapIdbValue.unwrap(cursor))</span><span class="s1">;</span>
+    <span class="s3">while </span><span class="s2">(cursor) {</span>
+        <span class="s3">yield </span><span class="s2">proxiedCursor</span><span class="s1">;</span>
+        <span class="s4">// If one of the advancing methods was not called, call continue().</span>
+        <span class="s2">cursor = </span><span class="s3">await </span><span class="s2">(advanceResults.get(proxiedCursor) || cursor.continue())</span><span class="s1">;</span>
+        <span class="s2">advanceResults.delete(proxiedCursor)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+<span class="s2">}</span>
+<span class="s3">function </span><span class="s2">isIteratorProp(target</span><span class="s1">, </span><span class="s2">prop) {</span>
+    <span class="s3">return </span><span class="s2">((prop === Symbol.asyncIterator &amp;&amp;</span>
+        <span class="s2">wrapIdbValue.instanceOfAny(target</span><span class="s1">, </span><span class="s2">[IDBIndex</span><span class="s1">, </span><span class="s2">IDBObjectStore</span><span class="s1">, </span><span class="s2">IDBCursor])) ||</span>
+        <span class="s2">(prop === </span><span class="s0">'iterate' </span><span class="s2">&amp;&amp; wrapIdbValue.instanceOfAny(target</span><span class="s1">, </span><span class="s2">[IDBIndex</span><span class="s1">, </span><span class="s2">IDBObjectStore])))</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s2">wrapIdbValue.replaceTraps((oldTraps) =&gt; ({</span>
+    <span class="s2">...oldTraps</span><span class="s1">,</span>
+    <span class="s2">get(target</span><span class="s1">, </span><span class="s2">prop</span><span class="s1">, </span><span class="s2">receiver) {</span>
+        <span class="s3">if </span><span class="s2">(isIteratorProp(target</span><span class="s1">, </span><span class="s2">prop))</span>
+            <span class="s3">return </span><span class="s2">iterate</span><span class="s1">;</span>
+        <span class="s3">return </span><span class="s2">oldTraps.get(target</span><span class="s1">, </span><span class="s2">prop</span><span class="s1">, </span><span class="s2">receiver)</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">has(target</span><span class="s1">, </span><span class="s2">prop) {</span>
+        <span class="s3">return </span><span class="s2">isIteratorProp(target</span><span class="s1">, </span><span class="s2">prop) || oldTraps.has(target</span><span class="s1">, </span><span class="s2">prop)</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">,</span>
+<span class="s2">}))</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

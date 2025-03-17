@@ -1,0 +1,100 @@
+<html>
+<head>
+<title>namespace.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+.s5 { color: #8ea765;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+namespace.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * Jake JavaScript build tool 
+ * Copyright 2112 Matthew Eernisse (mde@fleegix.org) 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *         http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+*/</span>
+
+<span class="s2">const </span><span class="s1">PROJECT_DIR = process.env.PROJECT_DIR</span><span class="s3">;</span>
+
+<span class="s4">// Load the jake global</span>
+<span class="s1">require(</span><span class="s5">`</span><span class="s1">${PROJECT_DIR}</span><span class="s5">/lib/jake`</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">{ Namespace } = require(</span><span class="s5">`</span><span class="s1">${PROJECT_DIR}</span><span class="s5">/lib/namespace`</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s1">require(</span><span class="s5">'./jakefile'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s2">let </span><span class="s1">assert = require(</span><span class="s5">'assert'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s1">suite(</span><span class="s5">'namespace'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+
+  <span class="s2">this</span><span class="s1">.timeout(</span><span class="s6">7000</span><span class="s1">)</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s5">'resolve namespace by relative name'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">aaa</span><span class="s3">, </span><span class="s1">bbb</span><span class="s3">, </span><span class="s1">ccc</span><span class="s3">;</span>
+    <span class="s1">aaa = namespace(</span><span class="s5">'aaa'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s1">bbb = namespace(</span><span class="s5">'bbb'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+        <span class="s1">ccc = namespace(</span><span class="s5">'ccc'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+        <span class="s1">})</span><span class="s3">;</span>
+      <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">assert.ok(aaa</span><span class="s3">, </span><span class="s1">Namespace.ROOT_NAMESPACE.resolveNamespace(</span><span class="s5">'aaa'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.ok(bbb === aaa.resolveNamespace(</span><span class="s5">'bbb'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.ok(ccc === aaa.resolveNamespace(</span><span class="s5">'bbb:ccc'</span><span class="s1">))</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s5">'resolve task in sub-namespace by relative path'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">curr = Namespace.ROOT_NAMESPACE.resolveNamespace(</span><span class="s5">'zooby'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">task = curr.resolveTask(</span><span class="s5">'frang:w00t:bar'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.ok(task.action.toString().indexOf(</span><span class="s5">'zooby:frang:w00t:bar'</span><span class="s1">) &gt; -</span><span class="s6">1</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s5">'prefer local to top-level'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">curr = Namespace.ROOT_NAMESPACE.resolveNamespace(</span><span class="s5">'zooby:frang:w00t'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">task = curr.resolveTask(</span><span class="s5">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.ok(task.action.toString().indexOf(</span><span class="s5">'zooby:frang:w00t:bar'</span><span class="s1">) &gt; -</span><span class="s6">1</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s5">'does resolve top-level'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">curr = Namespace.ROOT_NAMESPACE.resolveNamespace(</span><span class="s5">'zooby:frang:w00t'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">task = curr.resolveTask(</span><span class="s5">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.ok(task.action.toString().indexOf(</span><span class="s5">'top-level foo'</span><span class="s1">) &gt; -</span><span class="s6">1</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s5">'absolute lookup works from sub-namespaces'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">curr = Namespace.ROOT_NAMESPACE.resolveNamespace(</span><span class="s5">'hurr:durr'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">task = curr.resolveTask(</span><span class="s5">'zooby:frang:w00t:bar'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.ok(task.action.toString().indexOf(</span><span class="s5">'zooby:frang:w00t:bar'</span><span class="s1">) &gt; -</span><span class="s6">1</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s5">'resolution miss with throw error'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">curr = Namespace.ROOT_NAMESPACE</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">task = curr.resolveTask(</span><span class="s5">'asdf:qwer'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.ok(!task)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">})</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

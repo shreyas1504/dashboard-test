@@ -1,0 +1,91 @@
+<html>
+<head>
+<title>base64.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #6897bb;}
+.s7 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+base64.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* -*- Mode: js; js-indent-level: 2; -*- */</span>
+<span class="s0">/* 
+ * Copyright 2011 Mozilla Foundation and contributors 
+ * Licensed under the New BSD license. See LICENSE or: 
+ * http://opensource.org/licenses/BSD-3-Clause 
+ */</span>
+
+<span class="s2">var </span><span class="s1">intToCharMap = </span><span class="s3">'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'</span><span class="s1">.split(</span><span class="s3">''</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Encode an integer in the range of 0 to 63 to a single base 64 digit.</span>
+ <span class="s5">*/</span>
+<span class="s1">exports.encode = </span><span class="s2">function </span><span class="s1">(number) {</span>
+  <span class="s2">if </span><span class="s1">(</span><span class="s6">0 </span><span class="s1">&lt;= number &amp;&amp; number &lt; intToCharMap.length) {</span>
+    <span class="s2">return </span><span class="s1">intToCharMap[number]</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s2">throw new </span><span class="s1">TypeError(</span><span class="s3">&quot;Must be between 0 and 63: &quot; </span><span class="s1">+ number)</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Decode a single base 64 character code digit to an integer. Returns -1 on</span>
+ <span class="s5">* failure.</span>
+ <span class="s5">*/</span>
+<span class="s1">exports.decode = </span><span class="s2">function </span><span class="s1">(charCode) {</span>
+  <span class="s2">var </span><span class="s1">bigA = </span><span class="s6">65</span><span class="s4">;     </span><span class="s7">// 'A'</span>
+  <span class="s2">var </span><span class="s1">bigZ = </span><span class="s6">90</span><span class="s4">;     </span><span class="s7">// 'Z'</span>
+
+  <span class="s2">var </span><span class="s1">littleA = </span><span class="s6">97</span><span class="s4">;  </span><span class="s7">// 'a'</span>
+  <span class="s2">var </span><span class="s1">littleZ = </span><span class="s6">122</span><span class="s4">; </span><span class="s7">// 'z'</span>
+
+  <span class="s2">var </span><span class="s1">zero = </span><span class="s6">48</span><span class="s4">;     </span><span class="s7">// '0'</span>
+  <span class="s2">var </span><span class="s1">nine = </span><span class="s6">57</span><span class="s4">;     </span><span class="s7">// '9'</span>
+
+  <span class="s2">var </span><span class="s1">plus = </span><span class="s6">43</span><span class="s4">;     </span><span class="s7">// '+'</span>
+  <span class="s2">var </span><span class="s1">slash = </span><span class="s6">47</span><span class="s4">;    </span><span class="s7">// '/'</span>
+
+  <span class="s2">var </span><span class="s1">littleOffset = </span><span class="s6">26</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">numberOffset = </span><span class="s6">52</span><span class="s4">;</span>
+
+  <span class="s7">// 0 - 25: ABCDEFGHIJKLMNOPQRSTUVWXYZ</span>
+  <span class="s2">if </span><span class="s1">(bigA &lt;= charCode &amp;&amp; charCode &lt;= bigZ) {</span>
+    <span class="s2">return </span><span class="s1">(charCode - bigA)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+
+  <span class="s7">// 26 - 51: abcdefghijklmnopqrstuvwxyz</span>
+  <span class="s2">if </span><span class="s1">(littleA &lt;= charCode &amp;&amp; charCode &lt;= littleZ) {</span>
+    <span class="s2">return </span><span class="s1">(charCode - littleA + littleOffset)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+
+  <span class="s7">// 52 - 61: 0123456789</span>
+  <span class="s2">if </span><span class="s1">(zero &lt;= charCode &amp;&amp; charCode &lt;= nine) {</span>
+    <span class="s2">return </span><span class="s1">(charCode - zero + numberOffset)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+
+  <span class="s7">// 62: +</span>
+  <span class="s2">if </span><span class="s1">(charCode == plus) {</span>
+    <span class="s2">return </span><span class="s6">62</span><span class="s4">;</span>
+  <span class="s1">}</span>
+
+  <span class="s7">// 63: /</span>
+  <span class="s2">if </span><span class="s1">(charCode == slash) {</span>
+    <span class="s2">return </span><span class="s6">63</span><span class="s4">;</span>
+  <span class="s1">}</span>
+
+  <span class="s7">// Invalid base64 digit.</span>
+  <span class="s2">return </span><span class="s1">-</span><span class="s6">1</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

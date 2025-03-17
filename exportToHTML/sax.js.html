@@ -1,0 +1,1588 @@
+<html>
+<head>
+<title>sax.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #808080;}
+.s4 { color: #6897bb;}
+.s5 { color: #8ea765;}
+.s6 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+sax.js</font>
+</center></td></tr></table>
+<pre><span class="s0">;</span><span class="s1">(</span><span class="s2">function </span><span class="s1">(sax) { </span><span class="s3">// wrapper for non-node envs</span>
+  <span class="s1">sax.parser = </span><span class="s2">function </span><span class="s1">(strict</span><span class="s0">, </span><span class="s1">opt) { </span><span class="s2">return new </span><span class="s1">SAXParser(strict</span><span class="s0">, </span><span class="s1">opt) }</span>
+  <span class="s1">sax.SAXParser = SAXParser</span>
+  <span class="s1">sax.SAXStream = SAXStream</span>
+  <span class="s1">sax.createStream = createStream</span>
+
+  <span class="s3">// When we pass the MAX_BUFFER_LENGTH position, start checking for buffer overruns.</span>
+  <span class="s3">// When we check, schedule the next check for MAX_BUFFER_LENGTH - (max(buffer lengths)),</span>
+  <span class="s3">// since that's the earliest that a buffer overrun could occur.  This way, checks are</span>
+  <span class="s3">// as rare as required, but as often as necessary to ensure never crossing this bound.</span>
+  <span class="s3">// Furthermore, buffers are only tested at most once per write(), so passing a very</span>
+  <span class="s3">// large string into write() might have undesirable effects, but this is manageable by</span>
+  <span class="s3">// the caller, so it is assumed to be safe.  Thus, a call to write() may, in the extreme</span>
+  <span class="s3">// edge case, result in creating at most one complete copy of the string passed in.</span>
+  <span class="s3">// Set to Infinity to have unlimited buffers.</span>
+  <span class="s1">sax.MAX_BUFFER_LENGTH = </span><span class="s4">64 </span><span class="s1">* </span><span class="s4">1024</span>
+
+  <span class="s2">var </span><span class="s1">buffers = [</span>
+    <span class="s5">'comment'</span><span class="s0">, </span><span class="s5">'sgmlDecl'</span><span class="s0">, </span><span class="s5">'textNode'</span><span class="s0">, </span><span class="s5">'tagName'</span><span class="s0">, </span><span class="s5">'doctype'</span><span class="s0">,</span>
+    <span class="s5">'procInstName'</span><span class="s0">, </span><span class="s5">'procInstBody'</span><span class="s0">, </span><span class="s5">'entity'</span><span class="s0">, </span><span class="s5">'attribName'</span><span class="s0">,</span>
+    <span class="s5">'attribValue'</span><span class="s0">, </span><span class="s5">'cdata'</span><span class="s0">, </span><span class="s5">'script'</span>
+  <span class="s1">]</span>
+
+  <span class="s1">sax.EVENTS = [</span>
+    <span class="s5">'text'</span><span class="s0">,</span>
+    <span class="s5">'processinginstruction'</span><span class="s0">,</span>
+    <span class="s5">'sgmldeclaration'</span><span class="s0">,</span>
+    <span class="s5">'doctype'</span><span class="s0">,</span>
+    <span class="s5">'comment'</span><span class="s0">,</span>
+    <span class="s5">'opentagstart'</span><span class="s0">,</span>
+    <span class="s5">'attribute'</span><span class="s0">,</span>
+    <span class="s5">'opentag'</span><span class="s0">,</span>
+    <span class="s5">'closetag'</span><span class="s0">,</span>
+    <span class="s5">'opencdata'</span><span class="s0">,</span>
+    <span class="s5">'cdata'</span><span class="s0">,</span>
+    <span class="s5">'closecdata'</span><span class="s0">,</span>
+    <span class="s5">'error'</span><span class="s0">,</span>
+    <span class="s5">'end'</span><span class="s0">,</span>
+    <span class="s5">'ready'</span><span class="s0">,</span>
+    <span class="s5">'script'</span><span class="s0">,</span>
+    <span class="s5">'opennamespace'</span><span class="s0">,</span>
+    <span class="s5">'closenamespace'</span>
+  <span class="s1">]</span>
+
+  <span class="s2">function </span><span class="s1">SAXParser (strict</span><span class="s0">, </span><span class="s1">opt) {</span>
+    <span class="s2">if </span><span class="s1">(!(</span><span class="s2">this instanceof </span><span class="s1">SAXParser)) {</span>
+      <span class="s2">return new </span><span class="s1">SAXParser(strict</span><span class="s0">, </span><span class="s1">opt)</span>
+    <span class="s1">}</span>
+
+    <span class="s2">var </span><span class="s1">parser = </span><span class="s2">this</span>
+    <span class="s1">clearBuffers(parser)</span>
+    <span class="s1">parser.q = parser.c = </span><span class="s5">''</span>
+    <span class="s1">parser.bufferCheckPosition = sax.MAX_BUFFER_LENGTH</span>
+    <span class="s1">parser.opt = opt || {}</span>
+    <span class="s1">parser.opt.lowercase = parser.opt.lowercase || parser.opt.lowercasetags</span>
+    <span class="s1">parser.looseCase = parser.opt.lowercase ? </span><span class="s5">'toLowerCase' </span><span class="s1">: </span><span class="s5">'toUpperCase'</span>
+    <span class="s1">parser.tags = []</span>
+    <span class="s1">parser.closed = parser.closedRoot = parser.sawRoot = </span><span class="s2">false</span>
+    <span class="s1">parser.tag = parser.error = </span><span class="s2">null</span>
+    <span class="s1">parser.strict = !!strict</span>
+    <span class="s1">parser.noscript = !!(strict || parser.opt.noscript)</span>
+    <span class="s1">parser.state = S.BEGIN</span>
+    <span class="s1">parser.strictEntities = parser.opt.strictEntities</span>
+    <span class="s1">parser.ENTITIES = parser.strictEntities ? Object.create(sax.XML_ENTITIES) : Object.create(sax.ENTITIES)</span>
+    <span class="s1">parser.attribList = []</span>
+
+    <span class="s3">// namespaces form a prototype chain.</span>
+    <span class="s3">// it always points at the current tag,</span>
+    <span class="s3">// which protos to its parent tag.</span>
+    <span class="s2">if </span><span class="s1">(parser.opt.xmlns) {</span>
+      <span class="s1">parser.ns = Object.create(rootNS)</span>
+    <span class="s1">}</span>
+
+    <span class="s3">// mostly just for error reporting</span>
+    <span class="s1">parser.trackPosition = parser.opt.position !== </span><span class="s2">false</span>
+    <span class="s2">if </span><span class="s1">(parser.trackPosition) {</span>
+      <span class="s1">parser.position = parser.line = parser.column = </span><span class="s4">0</span>
+    <span class="s1">}</span>
+    <span class="s1">emit(parser</span><span class="s0">, </span><span class="s5">'onready'</span><span class="s1">)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">if </span><span class="s1">(!Object.create) {</span>
+    <span class="s1">Object.create = </span><span class="s2">function </span><span class="s1">(o) {</span>
+      <span class="s2">function </span><span class="s1">F () {}</span>
+      <span class="s1">F.prototype = o</span>
+      <span class="s2">var </span><span class="s1">newf = </span><span class="s2">new </span><span class="s1">F()</span>
+      <span class="s2">return </span><span class="s1">newf</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s2">if </span><span class="s1">(!Object.keys) {</span>
+    <span class="s1">Object.keys = </span><span class="s2">function </span><span class="s1">(o) {</span>
+      <span class="s2">var </span><span class="s1">a = []</span>
+      <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i </span><span class="s2">in </span><span class="s1">o) </span><span class="s2">if </span><span class="s1">(o.hasOwnProperty(i)) a.push(i)</span>
+      <span class="s2">return </span><span class="s1">a</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">checkBufferLength (parser) {</span>
+    <span class="s2">var </span><span class="s1">maxAllowed = Math.max(sax.MAX_BUFFER_LENGTH</span><span class="s0">, </span><span class="s4">10</span><span class="s1">)</span>
+    <span class="s2">var </span><span class="s1">maxActual = </span><span class="s4">0</span>
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s0">, </span><span class="s1">l = buffers.length</span><span class="s0">; </span><span class="s1">i &lt; l</span><span class="s0">; </span><span class="s1">i++) {</span>
+      <span class="s2">var </span><span class="s1">len = parser[buffers[i]].length</span>
+      <span class="s2">if </span><span class="s1">(len &gt; maxAllowed) {</span>
+        <span class="s3">// Text/cdata nodes can get big, and since they're buffered,</span>
+        <span class="s3">// we can get here under normal conditions.</span>
+        <span class="s3">// Avoid issues by emitting the text node now,</span>
+        <span class="s3">// so at least it won't get any bigger.</span>
+        <span class="s2">switch </span><span class="s1">(buffers[i]) {</span>
+          <span class="s2">case </span><span class="s5">'textNode'</span><span class="s1">:</span>
+            <span class="s1">closeText(parser)</span>
+            <span class="s2">break</span>
+
+          <span class="s2">case </span><span class="s5">'cdata'</span><span class="s1">:</span>
+            <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'oncdata'</span><span class="s0">, </span><span class="s1">parser.cdata)</span>
+            <span class="s1">parser.cdata = </span><span class="s5">''</span>
+            <span class="s2">break</span>
+
+          <span class="s2">case </span><span class="s5">'script'</span><span class="s1">:</span>
+            <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onscript'</span><span class="s0">, </span><span class="s1">parser.script)</span>
+            <span class="s1">parser.script = </span><span class="s5">''</span>
+            <span class="s2">break</span>
+
+          <span class="s2">default</span><span class="s1">:</span>
+            <span class="s1">error(parser</span><span class="s0">, </span><span class="s5">'Max buffer length exceeded: ' </span><span class="s1">+ buffers[i])</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+      <span class="s1">maxActual = Math.max(maxActual</span><span class="s0">, </span><span class="s1">len)</span>
+    <span class="s1">}</span>
+    <span class="s3">// schedule the next check for the earliest possible buffer overrun.</span>
+    <span class="s2">var </span><span class="s1">m = sax.MAX_BUFFER_LENGTH - maxActual</span>
+    <span class="s1">parser.bufferCheckPosition = m + parser.position</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">clearBuffers (parser) {</span>
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s0">, </span><span class="s1">l = buffers.length</span><span class="s0">; </span><span class="s1">i &lt; l</span><span class="s0">; </span><span class="s1">i++) {</span>
+      <span class="s1">parser[buffers[i]] = </span><span class="s5">''</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">flushBuffers (parser) {</span>
+    <span class="s1">closeText(parser)</span>
+    <span class="s2">if </span><span class="s1">(parser.cdata !== </span><span class="s5">''</span><span class="s1">) {</span>
+      <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'oncdata'</span><span class="s0">, </span><span class="s1">parser.cdata)</span>
+      <span class="s1">parser.cdata = </span><span class="s5">''</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(parser.script !== </span><span class="s5">''</span><span class="s1">) {</span>
+      <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onscript'</span><span class="s0">, </span><span class="s1">parser.script)</span>
+      <span class="s1">parser.script = </span><span class="s5">''</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s1">SAXParser.prototype = {</span>
+    <span class="s1">end: </span><span class="s2">function </span><span class="s1">() { end(</span><span class="s2">this</span><span class="s1">) }</span><span class="s0">,</span>
+    <span class="s1">write: write</span><span class="s0">,</span>
+    <span class="s1">resume: </span><span class="s2">function </span><span class="s1">() { </span><span class="s2">this</span><span class="s1">.error = </span><span class="s2">null</span><span class="s0">; </span><span class="s2">return this </span><span class="s1">}</span><span class="s0">,</span>
+    <span class="s1">close: </span><span class="s2">function </span><span class="s1">() { </span><span class="s2">return this</span><span class="s1">.write(</span><span class="s2">null</span><span class="s1">) }</span><span class="s0">,</span>
+    <span class="s1">flush: </span><span class="s2">function </span><span class="s1">() { flushBuffers(</span><span class="s2">this</span><span class="s1">) }</span>
+  <span class="s1">}</span>
+
+  <span class="s2">var </span><span class="s1">Stream</span>
+  <span class="s2">try </span><span class="s1">{</span>
+    <span class="s1">Stream = require(</span><span class="s5">'stream'</span><span class="s1">).Stream</span>
+  <span class="s1">} </span><span class="s2">catch </span><span class="s1">(ex) {</span>
+    <span class="s1">Stream = </span><span class="s2">function </span><span class="s1">() {}</span>
+  <span class="s1">}</span>
+
+  <span class="s2">var </span><span class="s1">streamWraps = sax.EVENTS.filter(</span><span class="s2">function </span><span class="s1">(ev) {</span>
+    <span class="s2">return </span><span class="s1">ev !== </span><span class="s5">'error' </span><span class="s1">&amp;&amp; ev !== </span><span class="s5">'end'</span>
+  <span class="s1">})</span>
+
+  <span class="s2">function </span><span class="s1">createStream (strict</span><span class="s0">, </span><span class="s1">opt) {</span>
+    <span class="s2">return new </span><span class="s1">SAXStream(strict</span><span class="s0">, </span><span class="s1">opt)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">SAXStream (strict</span><span class="s0">, </span><span class="s1">opt) {</span>
+    <span class="s2">if </span><span class="s1">(!(</span><span class="s2">this instanceof </span><span class="s1">SAXStream)) {</span>
+      <span class="s2">return new </span><span class="s1">SAXStream(strict</span><span class="s0">, </span><span class="s1">opt)</span>
+    <span class="s1">}</span>
+
+    <span class="s1">Stream.apply(</span><span class="s2">this</span><span class="s1">)</span>
+
+    <span class="s2">this</span><span class="s1">._parser = </span><span class="s2">new </span><span class="s1">SAXParser(strict</span><span class="s0">, </span><span class="s1">opt)</span>
+    <span class="s2">this</span><span class="s1">.writable = </span><span class="s2">true</span>
+    <span class="s2">this</span><span class="s1">.readable = </span><span class="s2">true</span>
+
+    <span class="s2">var </span><span class="s1">me = </span><span class="s2">this</span>
+
+    <span class="s2">this</span><span class="s1">._parser.onend = </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s1">me.emit(</span><span class="s5">'end'</span><span class="s1">)</span>
+    <span class="s1">}</span>
+
+    <span class="s2">this</span><span class="s1">._parser.onerror = </span><span class="s2">function </span><span class="s1">(er) {</span>
+      <span class="s1">me.emit(</span><span class="s5">'error'</span><span class="s0">, </span><span class="s1">er)</span>
+
+      <span class="s3">// if didn't throw, then means error was handled.</span>
+      <span class="s3">// go ahead and clear error, so we can write again.</span>
+      <span class="s1">me._parser.error = </span><span class="s2">null</span>
+    <span class="s1">}</span>
+
+    <span class="s2">this</span><span class="s1">._decoder = </span><span class="s2">null</span>
+
+    <span class="s1">streamWraps.forEach(</span><span class="s2">function </span><span class="s1">(ev) {</span>
+      <span class="s1">Object.defineProperty(me</span><span class="s0">, </span><span class="s5">'on' </span><span class="s1">+ ev</span><span class="s0">, </span><span class="s1">{</span>
+        <span class="s1">get: </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s2">return </span><span class="s1">me._parser[</span><span class="s5">'on' </span><span class="s1">+ ev]</span>
+        <span class="s1">}</span><span class="s0">,</span>
+        <span class="s1">set: </span><span class="s2">function </span><span class="s1">(h) {</span>
+          <span class="s2">if </span><span class="s1">(!h) {</span>
+            <span class="s1">me.removeAllListeners(ev)</span>
+            <span class="s1">me._parser[</span><span class="s5">'on' </span><span class="s1">+ ev] = h</span>
+            <span class="s2">return </span><span class="s1">h</span>
+          <span class="s1">}</span>
+          <span class="s1">me.on(ev</span><span class="s0">, </span><span class="s1">h)</span>
+        <span class="s1">}</span><span class="s0">,</span>
+        <span class="s1">enumerable: </span><span class="s2">true</span><span class="s0">,</span>
+        <span class="s1">configurable: </span><span class="s2">false</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+  <span class="s1">}</span>
+
+  <span class="s1">SAXStream.prototype = Object.create(Stream.prototype</span><span class="s0">, </span><span class="s1">{</span>
+    <span class="s1">constructor: {</span>
+      <span class="s1">value: SAXStream</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span>
+
+  <span class="s1">SAXStream.prototype.write = </span><span class="s2">function </span><span class="s1">(data) {</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">Buffer === </span><span class="s5">'function' </span><span class="s1">&amp;&amp;</span>
+      <span class="s2">typeof </span><span class="s1">Buffer.isBuffer === </span><span class="s5">'function' </span><span class="s1">&amp;&amp;</span>
+      <span class="s1">Buffer.isBuffer(data)) {</span>
+      <span class="s2">if </span><span class="s1">(!</span><span class="s2">this</span><span class="s1">._decoder) {</span>
+        <span class="s2">var </span><span class="s1">SD = require(</span><span class="s5">'string_decoder'</span><span class="s1">).StringDecoder</span>
+        <span class="s2">this</span><span class="s1">._decoder = </span><span class="s2">new </span><span class="s1">SD(</span><span class="s5">'utf8'</span><span class="s1">)</span>
+      <span class="s1">}</span>
+      <span class="s1">data = </span><span class="s2">this</span><span class="s1">._decoder.write(data)</span>
+    <span class="s1">}</span>
+
+    <span class="s2">this</span><span class="s1">._parser.write(data.toString())</span>
+    <span class="s2">this</span><span class="s1">.emit(</span><span class="s5">'data'</span><span class="s0">, </span><span class="s1">data)</span>
+    <span class="s2">return true</span>
+  <span class="s1">}</span>
+
+  <span class="s1">SAXStream.prototype.end = </span><span class="s2">function </span><span class="s1">(chunk) {</span>
+    <span class="s2">if </span><span class="s1">(chunk &amp;&amp; chunk.length) {</span>
+      <span class="s2">this</span><span class="s1">.write(chunk)</span>
+    <span class="s1">}</span>
+    <span class="s2">this</span><span class="s1">._parser.end()</span>
+    <span class="s2">return true</span>
+  <span class="s1">}</span>
+
+  <span class="s1">SAXStream.prototype.on = </span><span class="s2">function </span><span class="s1">(ev</span><span class="s0">, </span><span class="s1">handler) {</span>
+    <span class="s2">var </span><span class="s1">me = </span><span class="s2">this</span>
+    <span class="s2">if </span><span class="s1">(!me._parser[</span><span class="s5">'on' </span><span class="s1">+ ev] &amp;&amp; streamWraps.indexOf(ev) !== -</span><span class="s4">1</span><span class="s1">) {</span>
+      <span class="s1">me._parser[</span><span class="s5">'on' </span><span class="s1">+ ev] = </span><span class="s2">function </span><span class="s1">() {</span>
+        <span class="s2">var </span><span class="s1">args = arguments.length === </span><span class="s4">1 </span><span class="s1">? [arguments[</span><span class="s4">0</span><span class="s1">]] : Array.apply(</span><span class="s2">null</span><span class="s0">, </span><span class="s1">arguments)</span>
+        <span class="s1">args.splice(</span><span class="s4">0</span><span class="s0">, </span><span class="s4">0</span><span class="s0">, </span><span class="s1">ev)</span>
+        <span class="s1">me.emit.apply(me</span><span class="s0">, </span><span class="s1">args)</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return </span><span class="s1">Stream.prototype.on.call(me</span><span class="s0">, </span><span class="s1">ev</span><span class="s0">, </span><span class="s1">handler)</span>
+  <span class="s1">}</span>
+
+  <span class="s3">// this really needs to be replaced with character classes.</span>
+  <span class="s3">// XML allows all manner of ridiculous numbers and digits.</span>
+  <span class="s2">var </span><span class="s1">CDATA = </span><span class="s5">'[CDATA['</span>
+  <span class="s2">var </span><span class="s1">DOCTYPE = </span><span class="s5">'DOCTYPE'</span>
+  <span class="s2">var </span><span class="s1">XML_NAMESPACE = </span><span class="s5">'http://www.w3.org/XML/1998/namespace'</span>
+  <span class="s2">var </span><span class="s1">XMLNS_NAMESPACE = </span><span class="s5">'http://www.w3.org/2000/xmlns/'</span>
+  <span class="s2">var </span><span class="s1">rootNS = { xml: XML_NAMESPACE</span><span class="s0">, </span><span class="s1">xmlns: XMLNS_NAMESPACE }</span>
+
+  <span class="s3">// http://www.w3.org/TR/REC-xml/#NT-NameStartChar</span>
+  <span class="s3">// This implementation works on strings, a single character at a time</span>
+  <span class="s3">// as such, it cannot ever support astral-plane characters (10000-EFFFF)</span>
+  <span class="s3">// without a significant breaking change to either this  parser, or the</span>
+  <span class="s3">// JavaScript language.  Implementation of an emoji-capable xml parser</span>
+  <span class="s3">// is left as an exercise for the reader.</span>
+  <span class="s2">var </span><span class="s1">nameStart = </span><span class="s4">/[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/</span>
+
+  <span class="s2">var </span><span class="s1">nameBody = </span><span class="s4">/[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/</span>
+
+  <span class="s2">var </span><span class="s1">entityStart = </span><span class="s4">/[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/</span>
+  <span class="s2">var </span><span class="s1">entityBody = </span><span class="s4">/[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/</span>
+
+  <span class="s2">function </span><span class="s1">isWhitespace (c) {</span>
+    <span class="s2">return </span><span class="s1">c === </span><span class="s5">' ' </span><span class="s1">|| c === </span><span class="s5">'</span><span class="s0">\n</span><span class="s5">' </span><span class="s1">|| c === </span><span class="s5">'</span><span class="s0">\r</span><span class="s5">' </span><span class="s1">|| c === </span><span class="s5">'</span><span class="s0">\t</span><span class="s5">'</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">isQuote (c) {</span>
+    <span class="s2">return </span><span class="s1">c === </span><span class="s5">'&quot;' </span><span class="s1">|| c === </span><span class="s5">'</span><span class="s0">\'</span><span class="s5">'</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">isAttribEnd (c) {</span>
+    <span class="s2">return </span><span class="s1">c === </span><span class="s5">'&gt;' </span><span class="s1">|| isWhitespace(c)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">isMatch (regex</span><span class="s0">, </span><span class="s1">c) {</span>
+    <span class="s2">return </span><span class="s1">regex.test(c)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">notMatch (regex</span><span class="s0">, </span><span class="s1">c) {</span>
+    <span class="s2">return </span><span class="s1">!isMatch(regex</span><span class="s0">, </span><span class="s1">c)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">var </span><span class="s1">S = </span><span class="s4">0</span>
+  <span class="s1">sax.STATE = {</span>
+    <span class="s1">BEGIN: S++</span><span class="s0">, </span><span class="s3">// leading byte order mark or whitespace</span>
+    <span class="s1">BEGIN_WHITESPACE: S++</span><span class="s0">, </span><span class="s3">// leading whitespace</span>
+    <span class="s1">TEXT: S++</span><span class="s0">, </span><span class="s3">// general stuff</span>
+    <span class="s1">TEXT_ENTITY: S++</span><span class="s0">, </span><span class="s3">// &amp;amp and such.</span>
+    <span class="s1">OPEN_WAKA: S++</span><span class="s0">, </span><span class="s3">// &lt;</span>
+    <span class="s1">SGML_DECL: S++</span><span class="s0">, </span><span class="s3">// &lt;!BLARG</span>
+    <span class="s1">SGML_DECL_QUOTED: S++</span><span class="s0">, </span><span class="s3">// &lt;!BLARG foo &quot;bar</span>
+    <span class="s1">DOCTYPE: S++</span><span class="s0">, </span><span class="s3">// &lt;!DOCTYPE</span>
+    <span class="s1">DOCTYPE_QUOTED: S++</span><span class="s0">, </span><span class="s3">// &lt;!DOCTYPE &quot;//blah</span>
+    <span class="s1">DOCTYPE_DTD: S++</span><span class="s0">, </span><span class="s3">// &lt;!DOCTYPE &quot;//blah&quot; [ ...</span>
+    <span class="s1">DOCTYPE_DTD_QUOTED: S++</span><span class="s0">, </span><span class="s3">// &lt;!DOCTYPE &quot;//blah&quot; [ &quot;foo</span>
+    <span class="s1">COMMENT_STARTING: S++</span><span class="s0">, </span><span class="s3">// &lt;!-</span>
+    <span class="s1">COMMENT: S++</span><span class="s0">, </span><span class="s3">// &lt;!--</span>
+    <span class="s1">COMMENT_ENDING: S++</span><span class="s0">, </span><span class="s3">// &lt;!-- blah -</span>
+    <span class="s1">COMMENT_ENDED: S++</span><span class="s0">, </span><span class="s3">// &lt;!-- blah --</span>
+    <span class="s1">CDATA: S++</span><span class="s0">, </span><span class="s3">// &lt;![CDATA[ something</span>
+    <span class="s1">CDATA_ENDING: S++</span><span class="s0">, </span><span class="s3">// ]</span>
+    <span class="s1">CDATA_ENDING_2: S++</span><span class="s0">, </span><span class="s3">// ]]</span>
+    <span class="s1">PROC_INST: S++</span><span class="s0">, </span><span class="s3">// &lt;?hi</span>
+    <span class="s1">PROC_INST_BODY: S++</span><span class="s0">, </span><span class="s3">// &lt;?hi there</span>
+    <span class="s1">PROC_INST_ENDING: S++</span><span class="s0">, </span><span class="s3">// &lt;?hi &quot;there&quot; ?</span>
+    <span class="s1">OPEN_TAG: S++</span><span class="s0">, </span><span class="s3">// &lt;strong</span>
+    <span class="s1">OPEN_TAG_SLASH: S++</span><span class="s0">, </span><span class="s3">// &lt;strong /</span>
+    <span class="s1">ATTRIB: S++</span><span class="s0">, </span><span class="s3">// &lt;a</span>
+    <span class="s1">ATTRIB_NAME: S++</span><span class="s0">, </span><span class="s3">// &lt;a foo</span>
+    <span class="s1">ATTRIB_NAME_SAW_WHITE: S++</span><span class="s0">, </span><span class="s3">// &lt;a foo _</span>
+    <span class="s1">ATTRIB_VALUE: S++</span><span class="s0">, </span><span class="s3">// &lt;a foo=</span>
+    <span class="s1">ATTRIB_VALUE_QUOTED: S++</span><span class="s0">, </span><span class="s3">// &lt;a foo=&quot;bar</span>
+    <span class="s1">ATTRIB_VALUE_CLOSED: S++</span><span class="s0">, </span><span class="s3">// &lt;a foo=&quot;bar&quot;</span>
+    <span class="s1">ATTRIB_VALUE_UNQUOTED: S++</span><span class="s0">, </span><span class="s3">// &lt;a foo=bar</span>
+    <span class="s1">ATTRIB_VALUE_ENTITY_Q: S++</span><span class="s0">, </span><span class="s3">// &lt;foo bar=&quot;&amp;quot;&quot;</span>
+    <span class="s1">ATTRIB_VALUE_ENTITY_U: S++</span><span class="s0">, </span><span class="s3">// &lt;foo bar=&amp;quot</span>
+    <span class="s1">CLOSE_TAG: S++</span><span class="s0">, </span><span class="s3">// &lt;/a</span>
+    <span class="s1">CLOSE_TAG_SAW_WHITE: S++</span><span class="s0">, </span><span class="s3">// &lt;/a   &gt;</span>
+    <span class="s1">SCRIPT: S++</span><span class="s0">, </span><span class="s3">// &lt;script&gt; ...</span>
+    <span class="s1">SCRIPT_ENDING: S++ </span><span class="s3">// &lt;script&gt; ... &lt;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">sax.XML_ENTITIES = {</span>
+    <span class="s5">'amp'</span><span class="s1">: </span><span class="s5">'&amp;'</span><span class="s0">,</span>
+    <span class="s5">'gt'</span><span class="s1">: </span><span class="s5">'&gt;'</span><span class="s0">,</span>
+    <span class="s5">'lt'</span><span class="s1">: </span><span class="s5">'&lt;'</span><span class="s0">,</span>
+    <span class="s5">'quot'</span><span class="s1">: </span><span class="s5">'&quot;'</span><span class="s0">,</span>
+    <span class="s5">'apos'</span><span class="s1">: </span><span class="s5">&quot;'&quot;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">sax.ENTITIES = {</span>
+    <span class="s5">'amp'</span><span class="s1">: </span><span class="s5">'&amp;'</span><span class="s0">,</span>
+    <span class="s5">'gt'</span><span class="s1">: </span><span class="s5">'&gt;'</span><span class="s0">,</span>
+    <span class="s5">'lt'</span><span class="s1">: </span><span class="s5">'&lt;'</span><span class="s0">,</span>
+    <span class="s5">'quot'</span><span class="s1">: </span><span class="s5">'&quot;'</span><span class="s0">,</span>
+    <span class="s5">'apos'</span><span class="s1">: </span><span class="s5">&quot;'&quot;</span><span class="s0">,</span>
+    <span class="s5">'AElig'</span><span class="s1">: </span><span class="s4">198</span><span class="s0">,</span>
+    <span class="s5">'Aacute'</span><span class="s1">: </span><span class="s4">193</span><span class="s0">,</span>
+    <span class="s5">'Acirc'</span><span class="s1">: </span><span class="s4">194</span><span class="s0">,</span>
+    <span class="s5">'Agrave'</span><span class="s1">: </span><span class="s4">192</span><span class="s0">,</span>
+    <span class="s5">'Aring'</span><span class="s1">: </span><span class="s4">197</span><span class="s0">,</span>
+    <span class="s5">'Atilde'</span><span class="s1">: </span><span class="s4">195</span><span class="s0">,</span>
+    <span class="s5">'Auml'</span><span class="s1">: </span><span class="s4">196</span><span class="s0">,</span>
+    <span class="s5">'Ccedil'</span><span class="s1">: </span><span class="s4">199</span><span class="s0">,</span>
+    <span class="s5">'ETH'</span><span class="s1">: </span><span class="s4">208</span><span class="s0">,</span>
+    <span class="s5">'Eacute'</span><span class="s1">: </span><span class="s4">201</span><span class="s0">,</span>
+    <span class="s5">'Ecirc'</span><span class="s1">: </span><span class="s4">202</span><span class="s0">,</span>
+    <span class="s5">'Egrave'</span><span class="s1">: </span><span class="s4">200</span><span class="s0">,</span>
+    <span class="s5">'Euml'</span><span class="s1">: </span><span class="s4">203</span><span class="s0">,</span>
+    <span class="s5">'Iacute'</span><span class="s1">: </span><span class="s4">205</span><span class="s0">,</span>
+    <span class="s5">'Icirc'</span><span class="s1">: </span><span class="s4">206</span><span class="s0">,</span>
+    <span class="s5">'Igrave'</span><span class="s1">: </span><span class="s4">204</span><span class="s0">,</span>
+    <span class="s5">'Iuml'</span><span class="s1">: </span><span class="s4">207</span><span class="s0">,</span>
+    <span class="s5">'Ntilde'</span><span class="s1">: </span><span class="s4">209</span><span class="s0">,</span>
+    <span class="s5">'Oacute'</span><span class="s1">: </span><span class="s4">211</span><span class="s0">,</span>
+    <span class="s5">'Ocirc'</span><span class="s1">: </span><span class="s4">212</span><span class="s0">,</span>
+    <span class="s5">'Ograve'</span><span class="s1">: </span><span class="s4">210</span><span class="s0">,</span>
+    <span class="s5">'Oslash'</span><span class="s1">: </span><span class="s4">216</span><span class="s0">,</span>
+    <span class="s5">'Otilde'</span><span class="s1">: </span><span class="s4">213</span><span class="s0">,</span>
+    <span class="s5">'Ouml'</span><span class="s1">: </span><span class="s4">214</span><span class="s0">,</span>
+    <span class="s5">'THORN'</span><span class="s1">: </span><span class="s4">222</span><span class="s0">,</span>
+    <span class="s5">'Uacute'</span><span class="s1">: </span><span class="s4">218</span><span class="s0">,</span>
+    <span class="s5">'Ucirc'</span><span class="s1">: </span><span class="s4">219</span><span class="s0">,</span>
+    <span class="s5">'Ugrave'</span><span class="s1">: </span><span class="s4">217</span><span class="s0">,</span>
+    <span class="s5">'Uuml'</span><span class="s1">: </span><span class="s4">220</span><span class="s0">,</span>
+    <span class="s5">'Yacute'</span><span class="s1">: </span><span class="s4">221</span><span class="s0">,</span>
+    <span class="s5">'aacute'</span><span class="s1">: </span><span class="s4">225</span><span class="s0">,</span>
+    <span class="s5">'acirc'</span><span class="s1">: </span><span class="s4">226</span><span class="s0">,</span>
+    <span class="s5">'aelig'</span><span class="s1">: </span><span class="s4">230</span><span class="s0">,</span>
+    <span class="s5">'agrave'</span><span class="s1">: </span><span class="s4">224</span><span class="s0">,</span>
+    <span class="s5">'aring'</span><span class="s1">: </span><span class="s4">229</span><span class="s0">,</span>
+    <span class="s5">'atilde'</span><span class="s1">: </span><span class="s4">227</span><span class="s0">,</span>
+    <span class="s5">'auml'</span><span class="s1">: </span><span class="s4">228</span><span class="s0">,</span>
+    <span class="s5">'ccedil'</span><span class="s1">: </span><span class="s4">231</span><span class="s0">,</span>
+    <span class="s5">'eacute'</span><span class="s1">: </span><span class="s4">233</span><span class="s0">,</span>
+    <span class="s5">'ecirc'</span><span class="s1">: </span><span class="s4">234</span><span class="s0">,</span>
+    <span class="s5">'egrave'</span><span class="s1">: </span><span class="s4">232</span><span class="s0">,</span>
+    <span class="s5">'eth'</span><span class="s1">: </span><span class="s4">240</span><span class="s0">,</span>
+    <span class="s5">'euml'</span><span class="s1">: </span><span class="s4">235</span><span class="s0">,</span>
+    <span class="s5">'iacute'</span><span class="s1">: </span><span class="s4">237</span><span class="s0">,</span>
+    <span class="s5">'icirc'</span><span class="s1">: </span><span class="s4">238</span><span class="s0">,</span>
+    <span class="s5">'igrave'</span><span class="s1">: </span><span class="s4">236</span><span class="s0">,</span>
+    <span class="s5">'iuml'</span><span class="s1">: </span><span class="s4">239</span><span class="s0">,</span>
+    <span class="s5">'ntilde'</span><span class="s1">: </span><span class="s4">241</span><span class="s0">,</span>
+    <span class="s5">'oacute'</span><span class="s1">: </span><span class="s4">243</span><span class="s0">,</span>
+    <span class="s5">'ocirc'</span><span class="s1">: </span><span class="s4">244</span><span class="s0">,</span>
+    <span class="s5">'ograve'</span><span class="s1">: </span><span class="s4">242</span><span class="s0">,</span>
+    <span class="s5">'oslash'</span><span class="s1">: </span><span class="s4">248</span><span class="s0">,</span>
+    <span class="s5">'otilde'</span><span class="s1">: </span><span class="s4">245</span><span class="s0">,</span>
+    <span class="s5">'ouml'</span><span class="s1">: </span><span class="s4">246</span><span class="s0">,</span>
+    <span class="s5">'szlig'</span><span class="s1">: </span><span class="s4">223</span><span class="s0">,</span>
+    <span class="s5">'thorn'</span><span class="s1">: </span><span class="s4">254</span><span class="s0">,</span>
+    <span class="s5">'uacute'</span><span class="s1">: </span><span class="s4">250</span><span class="s0">,</span>
+    <span class="s5">'ucirc'</span><span class="s1">: </span><span class="s4">251</span><span class="s0">,</span>
+    <span class="s5">'ugrave'</span><span class="s1">: </span><span class="s4">249</span><span class="s0">,</span>
+    <span class="s5">'uuml'</span><span class="s1">: </span><span class="s4">252</span><span class="s0">,</span>
+    <span class="s5">'yacute'</span><span class="s1">: </span><span class="s4">253</span><span class="s0">,</span>
+    <span class="s5">'yuml'</span><span class="s1">: </span><span class="s4">255</span><span class="s0">,</span>
+    <span class="s5">'copy'</span><span class="s1">: </span><span class="s4">169</span><span class="s0">,</span>
+    <span class="s5">'reg'</span><span class="s1">: </span><span class="s4">174</span><span class="s0">,</span>
+    <span class="s5">'nbsp'</span><span class="s1">: </span><span class="s4">160</span><span class="s0">,</span>
+    <span class="s5">'iexcl'</span><span class="s1">: </span><span class="s4">161</span><span class="s0">,</span>
+    <span class="s5">'cent'</span><span class="s1">: </span><span class="s4">162</span><span class="s0">,</span>
+    <span class="s5">'pound'</span><span class="s1">: </span><span class="s4">163</span><span class="s0">,</span>
+    <span class="s5">'curren'</span><span class="s1">: </span><span class="s4">164</span><span class="s0">,</span>
+    <span class="s5">'yen'</span><span class="s1">: </span><span class="s4">165</span><span class="s0">,</span>
+    <span class="s5">'brvbar'</span><span class="s1">: </span><span class="s4">166</span><span class="s0">,</span>
+    <span class="s5">'sect'</span><span class="s1">: </span><span class="s4">167</span><span class="s0">,</span>
+    <span class="s5">'uml'</span><span class="s1">: </span><span class="s4">168</span><span class="s0">,</span>
+    <span class="s5">'ordf'</span><span class="s1">: </span><span class="s4">170</span><span class="s0">,</span>
+    <span class="s5">'laquo'</span><span class="s1">: </span><span class="s4">171</span><span class="s0">,</span>
+    <span class="s5">'not'</span><span class="s1">: </span><span class="s4">172</span><span class="s0">,</span>
+    <span class="s5">'shy'</span><span class="s1">: </span><span class="s4">173</span><span class="s0">,</span>
+    <span class="s5">'macr'</span><span class="s1">: </span><span class="s4">175</span><span class="s0">,</span>
+    <span class="s5">'deg'</span><span class="s1">: </span><span class="s4">176</span><span class="s0">,</span>
+    <span class="s5">'plusmn'</span><span class="s1">: </span><span class="s4">177</span><span class="s0">,</span>
+    <span class="s5">'sup1'</span><span class="s1">: </span><span class="s4">185</span><span class="s0">,</span>
+    <span class="s5">'sup2'</span><span class="s1">: </span><span class="s4">178</span><span class="s0">,</span>
+    <span class="s5">'sup3'</span><span class="s1">: </span><span class="s4">179</span><span class="s0">,</span>
+    <span class="s5">'acute'</span><span class="s1">: </span><span class="s4">180</span><span class="s0">,</span>
+    <span class="s5">'micro'</span><span class="s1">: </span><span class="s4">181</span><span class="s0">,</span>
+    <span class="s5">'para'</span><span class="s1">: </span><span class="s4">182</span><span class="s0">,</span>
+    <span class="s5">'middot'</span><span class="s1">: </span><span class="s4">183</span><span class="s0">,</span>
+    <span class="s5">'cedil'</span><span class="s1">: </span><span class="s4">184</span><span class="s0">,</span>
+    <span class="s5">'ordm'</span><span class="s1">: </span><span class="s4">186</span><span class="s0">,</span>
+    <span class="s5">'raquo'</span><span class="s1">: </span><span class="s4">187</span><span class="s0">,</span>
+    <span class="s5">'frac14'</span><span class="s1">: </span><span class="s4">188</span><span class="s0">,</span>
+    <span class="s5">'frac12'</span><span class="s1">: </span><span class="s4">189</span><span class="s0">,</span>
+    <span class="s5">'frac34'</span><span class="s1">: </span><span class="s4">190</span><span class="s0">,</span>
+    <span class="s5">'iquest'</span><span class="s1">: </span><span class="s4">191</span><span class="s0">,</span>
+    <span class="s5">'times'</span><span class="s1">: </span><span class="s4">215</span><span class="s0">,</span>
+    <span class="s5">'divide'</span><span class="s1">: </span><span class="s4">247</span><span class="s0">,</span>
+    <span class="s5">'OElig'</span><span class="s1">: </span><span class="s4">338</span><span class="s0">,</span>
+    <span class="s5">'oelig'</span><span class="s1">: </span><span class="s4">339</span><span class="s0">,</span>
+    <span class="s5">'Scaron'</span><span class="s1">: </span><span class="s4">352</span><span class="s0">,</span>
+    <span class="s5">'scaron'</span><span class="s1">: </span><span class="s4">353</span><span class="s0">,</span>
+    <span class="s5">'Yuml'</span><span class="s1">: </span><span class="s4">376</span><span class="s0">,</span>
+    <span class="s5">'fnof'</span><span class="s1">: </span><span class="s4">402</span><span class="s0">,</span>
+    <span class="s5">'circ'</span><span class="s1">: </span><span class="s4">710</span><span class="s0">,</span>
+    <span class="s5">'tilde'</span><span class="s1">: </span><span class="s4">732</span><span class="s0">,</span>
+    <span class="s5">'Alpha'</span><span class="s1">: </span><span class="s4">913</span><span class="s0">,</span>
+    <span class="s5">'Beta'</span><span class="s1">: </span><span class="s4">914</span><span class="s0">,</span>
+    <span class="s5">'Gamma'</span><span class="s1">: </span><span class="s4">915</span><span class="s0">,</span>
+    <span class="s5">'Delta'</span><span class="s1">: </span><span class="s4">916</span><span class="s0">,</span>
+    <span class="s5">'Epsilon'</span><span class="s1">: </span><span class="s4">917</span><span class="s0">,</span>
+    <span class="s5">'Zeta'</span><span class="s1">: </span><span class="s4">918</span><span class="s0">,</span>
+    <span class="s5">'Eta'</span><span class="s1">: </span><span class="s4">919</span><span class="s0">,</span>
+    <span class="s5">'Theta'</span><span class="s1">: </span><span class="s4">920</span><span class="s0">,</span>
+    <span class="s5">'Iota'</span><span class="s1">: </span><span class="s4">921</span><span class="s0">,</span>
+    <span class="s5">'Kappa'</span><span class="s1">: </span><span class="s4">922</span><span class="s0">,</span>
+    <span class="s5">'Lambda'</span><span class="s1">: </span><span class="s4">923</span><span class="s0">,</span>
+    <span class="s5">'Mu'</span><span class="s1">: </span><span class="s4">924</span><span class="s0">,</span>
+    <span class="s5">'Nu'</span><span class="s1">: </span><span class="s4">925</span><span class="s0">,</span>
+    <span class="s5">'Xi'</span><span class="s1">: </span><span class="s4">926</span><span class="s0">,</span>
+    <span class="s5">'Omicron'</span><span class="s1">: </span><span class="s4">927</span><span class="s0">,</span>
+    <span class="s5">'Pi'</span><span class="s1">: </span><span class="s4">928</span><span class="s0">,</span>
+    <span class="s5">'Rho'</span><span class="s1">: </span><span class="s4">929</span><span class="s0">,</span>
+    <span class="s5">'Sigma'</span><span class="s1">: </span><span class="s4">931</span><span class="s0">,</span>
+    <span class="s5">'Tau'</span><span class="s1">: </span><span class="s4">932</span><span class="s0">,</span>
+    <span class="s5">'Upsilon'</span><span class="s1">: </span><span class="s4">933</span><span class="s0">,</span>
+    <span class="s5">'Phi'</span><span class="s1">: </span><span class="s4">934</span><span class="s0">,</span>
+    <span class="s5">'Chi'</span><span class="s1">: </span><span class="s4">935</span><span class="s0">,</span>
+    <span class="s5">'Psi'</span><span class="s1">: </span><span class="s4">936</span><span class="s0">,</span>
+    <span class="s5">'Omega'</span><span class="s1">: </span><span class="s4">937</span><span class="s0">,</span>
+    <span class="s5">'alpha'</span><span class="s1">: </span><span class="s4">945</span><span class="s0">,</span>
+    <span class="s5">'beta'</span><span class="s1">: </span><span class="s4">946</span><span class="s0">,</span>
+    <span class="s5">'gamma'</span><span class="s1">: </span><span class="s4">947</span><span class="s0">,</span>
+    <span class="s5">'delta'</span><span class="s1">: </span><span class="s4">948</span><span class="s0">,</span>
+    <span class="s5">'epsilon'</span><span class="s1">: </span><span class="s4">949</span><span class="s0">,</span>
+    <span class="s5">'zeta'</span><span class="s1">: </span><span class="s4">950</span><span class="s0">,</span>
+    <span class="s5">'eta'</span><span class="s1">: </span><span class="s4">951</span><span class="s0">,</span>
+    <span class="s5">'theta'</span><span class="s1">: </span><span class="s4">952</span><span class="s0">,</span>
+    <span class="s5">'iota'</span><span class="s1">: </span><span class="s4">953</span><span class="s0">,</span>
+    <span class="s5">'kappa'</span><span class="s1">: </span><span class="s4">954</span><span class="s0">,</span>
+    <span class="s5">'lambda'</span><span class="s1">: </span><span class="s4">955</span><span class="s0">,</span>
+    <span class="s5">'mu'</span><span class="s1">: </span><span class="s4">956</span><span class="s0">,</span>
+    <span class="s5">'nu'</span><span class="s1">: </span><span class="s4">957</span><span class="s0">,</span>
+    <span class="s5">'xi'</span><span class="s1">: </span><span class="s4">958</span><span class="s0">,</span>
+    <span class="s5">'omicron'</span><span class="s1">: </span><span class="s4">959</span><span class="s0">,</span>
+    <span class="s5">'pi'</span><span class="s1">: </span><span class="s4">960</span><span class="s0">,</span>
+    <span class="s5">'rho'</span><span class="s1">: </span><span class="s4">961</span><span class="s0">,</span>
+    <span class="s5">'sigmaf'</span><span class="s1">: </span><span class="s4">962</span><span class="s0">,</span>
+    <span class="s5">'sigma'</span><span class="s1">: </span><span class="s4">963</span><span class="s0">,</span>
+    <span class="s5">'tau'</span><span class="s1">: </span><span class="s4">964</span><span class="s0">,</span>
+    <span class="s5">'upsilon'</span><span class="s1">: </span><span class="s4">965</span><span class="s0">,</span>
+    <span class="s5">'phi'</span><span class="s1">: </span><span class="s4">966</span><span class="s0">,</span>
+    <span class="s5">'chi'</span><span class="s1">: </span><span class="s4">967</span><span class="s0">,</span>
+    <span class="s5">'psi'</span><span class="s1">: </span><span class="s4">968</span><span class="s0">,</span>
+    <span class="s5">'omega'</span><span class="s1">: </span><span class="s4">969</span><span class="s0">,</span>
+    <span class="s5">'thetasym'</span><span class="s1">: </span><span class="s4">977</span><span class="s0">,</span>
+    <span class="s5">'upsih'</span><span class="s1">: </span><span class="s4">978</span><span class="s0">,</span>
+    <span class="s5">'piv'</span><span class="s1">: </span><span class="s4">982</span><span class="s0">,</span>
+    <span class="s5">'ensp'</span><span class="s1">: </span><span class="s4">8194</span><span class="s0">,</span>
+    <span class="s5">'emsp'</span><span class="s1">: </span><span class="s4">8195</span><span class="s0">,</span>
+    <span class="s5">'thinsp'</span><span class="s1">: </span><span class="s4">8201</span><span class="s0">,</span>
+    <span class="s5">'zwnj'</span><span class="s1">: </span><span class="s4">8204</span><span class="s0">,</span>
+    <span class="s5">'zwj'</span><span class="s1">: </span><span class="s4">8205</span><span class="s0">,</span>
+    <span class="s5">'lrm'</span><span class="s1">: </span><span class="s4">8206</span><span class="s0">,</span>
+    <span class="s5">'rlm'</span><span class="s1">: </span><span class="s4">8207</span><span class="s0">,</span>
+    <span class="s5">'ndash'</span><span class="s1">: </span><span class="s4">8211</span><span class="s0">,</span>
+    <span class="s5">'mdash'</span><span class="s1">: </span><span class="s4">8212</span><span class="s0">,</span>
+    <span class="s5">'lsquo'</span><span class="s1">: </span><span class="s4">8216</span><span class="s0">,</span>
+    <span class="s5">'rsquo'</span><span class="s1">: </span><span class="s4">8217</span><span class="s0">,</span>
+    <span class="s5">'sbquo'</span><span class="s1">: </span><span class="s4">8218</span><span class="s0">,</span>
+    <span class="s5">'ldquo'</span><span class="s1">: </span><span class="s4">8220</span><span class="s0">,</span>
+    <span class="s5">'rdquo'</span><span class="s1">: </span><span class="s4">8221</span><span class="s0">,</span>
+    <span class="s5">'bdquo'</span><span class="s1">: </span><span class="s4">8222</span><span class="s0">,</span>
+    <span class="s5">'dagger'</span><span class="s1">: </span><span class="s4">8224</span><span class="s0">,</span>
+    <span class="s5">'Dagger'</span><span class="s1">: </span><span class="s4">8225</span><span class="s0">,</span>
+    <span class="s5">'bull'</span><span class="s1">: </span><span class="s4">8226</span><span class="s0">,</span>
+    <span class="s5">'hellip'</span><span class="s1">: </span><span class="s4">8230</span><span class="s0">,</span>
+    <span class="s5">'permil'</span><span class="s1">: </span><span class="s4">8240</span><span class="s0">,</span>
+    <span class="s5">'prime'</span><span class="s1">: </span><span class="s4">8242</span><span class="s0">,</span>
+    <span class="s5">'Prime'</span><span class="s1">: </span><span class="s4">8243</span><span class="s0">,</span>
+    <span class="s5">'lsaquo'</span><span class="s1">: </span><span class="s4">8249</span><span class="s0">,</span>
+    <span class="s5">'rsaquo'</span><span class="s1">: </span><span class="s4">8250</span><span class="s0">,</span>
+    <span class="s5">'oline'</span><span class="s1">: </span><span class="s4">8254</span><span class="s0">,</span>
+    <span class="s5">'frasl'</span><span class="s1">: </span><span class="s4">8260</span><span class="s0">,</span>
+    <span class="s5">'euro'</span><span class="s1">: </span><span class="s4">8364</span><span class="s0">,</span>
+    <span class="s5">'image'</span><span class="s1">: </span><span class="s4">8465</span><span class="s0">,</span>
+    <span class="s5">'weierp'</span><span class="s1">: </span><span class="s4">8472</span><span class="s0">,</span>
+    <span class="s5">'real'</span><span class="s1">: </span><span class="s4">8476</span><span class="s0">,</span>
+    <span class="s5">'trade'</span><span class="s1">: </span><span class="s4">8482</span><span class="s0">,</span>
+    <span class="s5">'alefsym'</span><span class="s1">: </span><span class="s4">8501</span><span class="s0">,</span>
+    <span class="s5">'larr'</span><span class="s1">: </span><span class="s4">8592</span><span class="s0">,</span>
+    <span class="s5">'uarr'</span><span class="s1">: </span><span class="s4">8593</span><span class="s0">,</span>
+    <span class="s5">'rarr'</span><span class="s1">: </span><span class="s4">8594</span><span class="s0">,</span>
+    <span class="s5">'darr'</span><span class="s1">: </span><span class="s4">8595</span><span class="s0">,</span>
+    <span class="s5">'harr'</span><span class="s1">: </span><span class="s4">8596</span><span class="s0">,</span>
+    <span class="s5">'crarr'</span><span class="s1">: </span><span class="s4">8629</span><span class="s0">,</span>
+    <span class="s5">'lArr'</span><span class="s1">: </span><span class="s4">8656</span><span class="s0">,</span>
+    <span class="s5">'uArr'</span><span class="s1">: </span><span class="s4">8657</span><span class="s0">,</span>
+    <span class="s5">'rArr'</span><span class="s1">: </span><span class="s4">8658</span><span class="s0">,</span>
+    <span class="s5">'dArr'</span><span class="s1">: </span><span class="s4">8659</span><span class="s0">,</span>
+    <span class="s5">'hArr'</span><span class="s1">: </span><span class="s4">8660</span><span class="s0">,</span>
+    <span class="s5">'forall'</span><span class="s1">: </span><span class="s4">8704</span><span class="s0">,</span>
+    <span class="s5">'part'</span><span class="s1">: </span><span class="s4">8706</span><span class="s0">,</span>
+    <span class="s5">'exist'</span><span class="s1">: </span><span class="s4">8707</span><span class="s0">,</span>
+    <span class="s5">'empty'</span><span class="s1">: </span><span class="s4">8709</span><span class="s0">,</span>
+    <span class="s5">'nabla'</span><span class="s1">: </span><span class="s4">8711</span><span class="s0">,</span>
+    <span class="s5">'isin'</span><span class="s1">: </span><span class="s4">8712</span><span class="s0">,</span>
+    <span class="s5">'notin'</span><span class="s1">: </span><span class="s4">8713</span><span class="s0">,</span>
+    <span class="s5">'ni'</span><span class="s1">: </span><span class="s4">8715</span><span class="s0">,</span>
+    <span class="s5">'prod'</span><span class="s1">: </span><span class="s4">8719</span><span class="s0">,</span>
+    <span class="s5">'sum'</span><span class="s1">: </span><span class="s4">8721</span><span class="s0">,</span>
+    <span class="s5">'minus'</span><span class="s1">: </span><span class="s4">8722</span><span class="s0">,</span>
+    <span class="s5">'lowast'</span><span class="s1">: </span><span class="s4">8727</span><span class="s0">,</span>
+    <span class="s5">'radic'</span><span class="s1">: </span><span class="s4">8730</span><span class="s0">,</span>
+    <span class="s5">'prop'</span><span class="s1">: </span><span class="s4">8733</span><span class="s0">,</span>
+    <span class="s5">'infin'</span><span class="s1">: </span><span class="s4">8734</span><span class="s0">,</span>
+    <span class="s5">'ang'</span><span class="s1">: </span><span class="s4">8736</span><span class="s0">,</span>
+    <span class="s5">'and'</span><span class="s1">: </span><span class="s4">8743</span><span class="s0">,</span>
+    <span class="s5">'or'</span><span class="s1">: </span><span class="s4">8744</span><span class="s0">,</span>
+    <span class="s5">'cap'</span><span class="s1">: </span><span class="s4">8745</span><span class="s0">,</span>
+    <span class="s5">'cup'</span><span class="s1">: </span><span class="s4">8746</span><span class="s0">,</span>
+    <span class="s5">'int'</span><span class="s1">: </span><span class="s4">8747</span><span class="s0">,</span>
+    <span class="s5">'there4'</span><span class="s1">: </span><span class="s4">8756</span><span class="s0">,</span>
+    <span class="s5">'sim'</span><span class="s1">: </span><span class="s4">8764</span><span class="s0">,</span>
+    <span class="s5">'cong'</span><span class="s1">: </span><span class="s4">8773</span><span class="s0">,</span>
+    <span class="s5">'asymp'</span><span class="s1">: </span><span class="s4">8776</span><span class="s0">,</span>
+    <span class="s5">'ne'</span><span class="s1">: </span><span class="s4">8800</span><span class="s0">,</span>
+    <span class="s5">'equiv'</span><span class="s1">: </span><span class="s4">8801</span><span class="s0">,</span>
+    <span class="s5">'le'</span><span class="s1">: </span><span class="s4">8804</span><span class="s0">,</span>
+    <span class="s5">'ge'</span><span class="s1">: </span><span class="s4">8805</span><span class="s0">,</span>
+    <span class="s5">'sub'</span><span class="s1">: </span><span class="s4">8834</span><span class="s0">,</span>
+    <span class="s5">'sup'</span><span class="s1">: </span><span class="s4">8835</span><span class="s0">,</span>
+    <span class="s5">'nsub'</span><span class="s1">: </span><span class="s4">8836</span><span class="s0">,</span>
+    <span class="s5">'sube'</span><span class="s1">: </span><span class="s4">8838</span><span class="s0">,</span>
+    <span class="s5">'supe'</span><span class="s1">: </span><span class="s4">8839</span><span class="s0">,</span>
+    <span class="s5">'oplus'</span><span class="s1">: </span><span class="s4">8853</span><span class="s0">,</span>
+    <span class="s5">'otimes'</span><span class="s1">: </span><span class="s4">8855</span><span class="s0">,</span>
+    <span class="s5">'perp'</span><span class="s1">: </span><span class="s4">8869</span><span class="s0">,</span>
+    <span class="s5">'sdot'</span><span class="s1">: </span><span class="s4">8901</span><span class="s0">,</span>
+    <span class="s5">'lceil'</span><span class="s1">: </span><span class="s4">8968</span><span class="s0">,</span>
+    <span class="s5">'rceil'</span><span class="s1">: </span><span class="s4">8969</span><span class="s0">,</span>
+    <span class="s5">'lfloor'</span><span class="s1">: </span><span class="s4">8970</span><span class="s0">,</span>
+    <span class="s5">'rfloor'</span><span class="s1">: </span><span class="s4">8971</span><span class="s0">,</span>
+    <span class="s5">'lang'</span><span class="s1">: </span><span class="s4">9001</span><span class="s0">,</span>
+    <span class="s5">'rang'</span><span class="s1">: </span><span class="s4">9002</span><span class="s0">,</span>
+    <span class="s5">'loz'</span><span class="s1">: </span><span class="s4">9674</span><span class="s0">,</span>
+    <span class="s5">'spades'</span><span class="s1">: </span><span class="s4">9824</span><span class="s0">,</span>
+    <span class="s5">'clubs'</span><span class="s1">: </span><span class="s4">9827</span><span class="s0">,</span>
+    <span class="s5">'hearts'</span><span class="s1">: </span><span class="s4">9829</span><span class="s0">,</span>
+    <span class="s5">'diams'</span><span class="s1">: </span><span class="s4">9830</span>
+  <span class="s1">}</span>
+
+  <span class="s1">Object.keys(sax.ENTITIES).forEach(</span><span class="s2">function </span><span class="s1">(key) {</span>
+    <span class="s2">var </span><span class="s1">e = sax.ENTITIES[key]</span>
+    <span class="s2">var </span><span class="s1">s = </span><span class="s2">typeof </span><span class="s1">e === </span><span class="s5">'number' </span><span class="s1">? String.fromCharCode(e) : e</span>
+    <span class="s1">sax.ENTITIES[key] = s</span>
+  <span class="s1">})</span>
+
+  <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">s </span><span class="s2">in </span><span class="s1">sax.STATE) {</span>
+    <span class="s1">sax.STATE[sax.STATE[s]] = s</span>
+  <span class="s1">}</span>
+
+  <span class="s3">// shorthand</span>
+  <span class="s1">S = sax.STATE</span>
+
+  <span class="s2">function </span><span class="s1">emit (parser</span><span class="s0">, </span><span class="s1">event</span><span class="s0">, </span><span class="s1">data) {</span>
+    <span class="s1">parser[event] &amp;&amp; parser[event](data)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">emitNode (parser</span><span class="s0">, </span><span class="s1">nodeType</span><span class="s0">, </span><span class="s1">data) {</span>
+    <span class="s2">if </span><span class="s1">(parser.textNode) closeText(parser)</span>
+    <span class="s1">emit(parser</span><span class="s0">, </span><span class="s1">nodeType</span><span class="s0">, </span><span class="s1">data)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">closeText (parser) {</span>
+    <span class="s1">parser.textNode = textopts(parser.opt</span><span class="s0">, </span><span class="s1">parser.textNode)</span>
+    <span class="s2">if </span><span class="s1">(parser.textNode) emit(parser</span><span class="s0">, </span><span class="s5">'ontext'</span><span class="s0">, </span><span class="s1">parser.textNode)</span>
+    <span class="s1">parser.textNode = </span><span class="s5">''</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">textopts (opt</span><span class="s0">, </span><span class="s1">text) {</span>
+    <span class="s2">if </span><span class="s1">(opt.trim) text = text.trim()</span>
+    <span class="s2">if </span><span class="s1">(opt.normalize) text = text.replace(</span><span class="s4">/\s+/g</span><span class="s0">, </span><span class="s5">' '</span><span class="s1">)</span>
+    <span class="s2">return </span><span class="s1">text</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">error (parser</span><span class="s0">, </span><span class="s1">er) {</span>
+    <span class="s1">closeText(parser)</span>
+    <span class="s2">if </span><span class="s1">(parser.trackPosition) {</span>
+      <span class="s1">er += </span><span class="s5">'</span><span class="s0">\n</span><span class="s5">Line: ' </span><span class="s1">+ parser.line +</span>
+        <span class="s5">'</span><span class="s0">\n</span><span class="s5">Column: ' </span><span class="s1">+ parser.column +</span>
+        <span class="s5">'</span><span class="s0">\n</span><span class="s5">Char: ' </span><span class="s1">+ parser.c</span>
+    <span class="s1">}</span>
+    <span class="s1">er = </span><span class="s2">new </span><span class="s1">Error(er)</span>
+    <span class="s1">parser.error = er</span>
+    <span class="s1">emit(parser</span><span class="s0">, </span><span class="s5">'onerror'</span><span class="s0">, </span><span class="s1">er)</span>
+    <span class="s2">return </span><span class="s1">parser</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">end (parser) {</span>
+    <span class="s2">if </span><span class="s1">(parser.sawRoot &amp;&amp; !parser.closedRoot) strictFail(parser</span><span class="s0">, </span><span class="s5">'Unclosed root tag'</span><span class="s1">)</span>
+    <span class="s2">if </span><span class="s1">((parser.state !== S.BEGIN) &amp;&amp;</span>
+      <span class="s1">(parser.state !== S.BEGIN_WHITESPACE) &amp;&amp;</span>
+      <span class="s1">(parser.state !== S.TEXT)) {</span>
+      <span class="s1">error(parser</span><span class="s0">, </span><span class="s5">'Unexpected end'</span><span class="s1">)</span>
+    <span class="s1">}</span>
+    <span class="s1">closeText(parser)</span>
+    <span class="s1">parser.c = </span><span class="s5">''</span>
+    <span class="s1">parser.closed = </span><span class="s2">true</span>
+    <span class="s1">emit(parser</span><span class="s0">, </span><span class="s5">'onend'</span><span class="s1">)</span>
+    <span class="s1">SAXParser.call(parser</span><span class="s0">, </span><span class="s1">parser.strict</span><span class="s0">, </span><span class="s1">parser.opt)</span>
+    <span class="s2">return </span><span class="s1">parser</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">strictFail (parser</span><span class="s0">, </span><span class="s1">message) {</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">parser !== </span><span class="s5">'object' </span><span class="s1">|| !(parser </span><span class="s2">instanceof </span><span class="s1">SAXParser)) {</span>
+      <span class="s2">throw new </span><span class="s1">Error(</span><span class="s5">'bad call to strictFail'</span><span class="s1">)</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(parser.strict) {</span>
+      <span class="s1">error(parser</span><span class="s0">, </span><span class="s1">message)</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">newTag (parser) {</span>
+    <span class="s2">if </span><span class="s1">(!parser.strict) parser.tagName = parser.tagName[parser.looseCase]()</span>
+    <span class="s2">var </span><span class="s1">parent = parser.tags[parser.tags.length - </span><span class="s4">1</span><span class="s1">] || parser</span>
+    <span class="s2">var </span><span class="s1">tag = parser.tag = { name: parser.tagName</span><span class="s0">, </span><span class="s1">attributes: {} }</span>
+
+    <span class="s3">// will be overridden if tag contails an xmlns=&quot;foo&quot; or xmlns:foo=&quot;bar&quot;</span>
+    <span class="s2">if </span><span class="s1">(parser.opt.xmlns) {</span>
+      <span class="s1">tag.ns = parent.ns</span>
+    <span class="s1">}</span>
+    <span class="s1">parser.attribList.length = </span><span class="s4">0</span>
+    <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onopentagstart'</span><span class="s0">, </span><span class="s1">tag)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">qname (name</span><span class="s0">, </span><span class="s1">attribute) {</span>
+    <span class="s2">var </span><span class="s1">i = name.indexOf(</span><span class="s5">':'</span><span class="s1">)</span>
+    <span class="s2">var </span><span class="s1">qualName = i &lt; </span><span class="s4">0 </span><span class="s1">? [ </span><span class="s5">''</span><span class="s0">, </span><span class="s1">name ] : name.split(</span><span class="s5">':'</span><span class="s1">)</span>
+    <span class="s2">var </span><span class="s1">prefix = qualName[</span><span class="s4">0</span><span class="s1">]</span>
+    <span class="s2">var </span><span class="s1">local = qualName[</span><span class="s4">1</span><span class="s1">]</span>
+
+    <span class="s3">// &lt;x &quot;xmlns&quot;=&quot;http://foo&quot;&gt;</span>
+    <span class="s2">if </span><span class="s1">(attribute &amp;&amp; name === </span><span class="s5">'xmlns'</span><span class="s1">) {</span>
+      <span class="s1">prefix = </span><span class="s5">'xmlns'</span>
+      <span class="s1">local = </span><span class="s5">''</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return </span><span class="s1">{ prefix: prefix</span><span class="s0">, </span><span class="s1">local: local }</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">attrib (parser) {</span>
+    <span class="s2">if </span><span class="s1">(!parser.strict) {</span>
+      <span class="s1">parser.attribName = parser.attribName[parser.looseCase]()</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(parser.attribList.indexOf(parser.attribName) !== -</span><span class="s4">1 </span><span class="s1">||</span>
+      <span class="s1">parser.tag.attributes.hasOwnProperty(parser.attribName)) {</span>
+      <span class="s1">parser.attribName = parser.attribValue = </span><span class="s5">''</span>
+      <span class="s2">return</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(parser.opt.xmlns) {</span>
+      <span class="s2">var </span><span class="s1">qn = qname(parser.attribName</span><span class="s0">, </span><span class="s2">true</span><span class="s1">)</span>
+      <span class="s2">var </span><span class="s1">prefix = qn.prefix</span>
+      <span class="s2">var </span><span class="s1">local = qn.local</span>
+
+      <span class="s2">if </span><span class="s1">(prefix === </span><span class="s5">'xmlns'</span><span class="s1">) {</span>
+        <span class="s3">// namespace binding attribute. push the binding into scope</span>
+        <span class="s2">if </span><span class="s1">(local === </span><span class="s5">'xml' </span><span class="s1">&amp;&amp; parser.attribValue !== XML_NAMESPACE) {</span>
+          <span class="s1">strictFail(parser</span><span class="s0">,</span>
+            <span class="s5">'xml: prefix must be bound to ' </span><span class="s1">+ XML_NAMESPACE + </span><span class="s5">'</span><span class="s0">\n</span><span class="s5">' </span><span class="s1">+</span>
+            <span class="s5">'Actual: ' </span><span class="s1">+ parser.attribValue)</span>
+        <span class="s1">} </span><span class="s2">else if </span><span class="s1">(local === </span><span class="s5">'xmlns' </span><span class="s1">&amp;&amp; parser.attribValue !== XMLNS_NAMESPACE) {</span>
+          <span class="s1">strictFail(parser</span><span class="s0">,</span>
+            <span class="s5">'xmlns: prefix must be bound to ' </span><span class="s1">+ XMLNS_NAMESPACE + </span><span class="s5">'</span><span class="s0">\n</span><span class="s5">' </span><span class="s1">+</span>
+            <span class="s5">'Actual: ' </span><span class="s1">+ parser.attribValue)</span>
+        <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+          <span class="s2">var </span><span class="s1">tag = parser.tag</span>
+          <span class="s2">var </span><span class="s1">parent = parser.tags[parser.tags.length - </span><span class="s4">1</span><span class="s1">] || parser</span>
+          <span class="s2">if </span><span class="s1">(tag.ns === parent.ns) {</span>
+            <span class="s1">tag.ns = Object.create(parent.ns)</span>
+          <span class="s1">}</span>
+          <span class="s1">tag.ns[local] = parser.attribValue</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s3">// defer onattribute events until all attributes have been seen</span>
+      <span class="s3">// so any new bindings can take effect. preserve attribute order</span>
+      <span class="s3">// so deferred events can be emitted in document order</span>
+      <span class="s1">parser.attribList.push([parser.attribName</span><span class="s0">, </span><span class="s1">parser.attribValue])</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+      <span class="s3">// in non-xmlns mode, we can emit the event right away</span>
+      <span class="s1">parser.tag.attributes[parser.attribName] = parser.attribValue</span>
+      <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onattribute'</span><span class="s0">, </span><span class="s1">{</span>
+        <span class="s1">name: parser.attribName</span><span class="s0">,</span>
+        <span class="s1">value: parser.attribValue</span>
+      <span class="s1">})</span>
+    <span class="s1">}</span>
+
+    <span class="s1">parser.attribName = parser.attribValue = </span><span class="s5">''</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">openTag (parser</span><span class="s0">, </span><span class="s1">selfClosing) {</span>
+    <span class="s2">if </span><span class="s1">(parser.opt.xmlns) {</span>
+      <span class="s3">// emit namespace binding events</span>
+      <span class="s2">var </span><span class="s1">tag = parser.tag</span>
+
+      <span class="s3">// add namespace info to tag</span>
+      <span class="s2">var </span><span class="s1">qn = qname(parser.tagName)</span>
+      <span class="s1">tag.prefix = qn.prefix</span>
+      <span class="s1">tag.local = qn.local</span>
+      <span class="s1">tag.uri = tag.ns[qn.prefix] || </span><span class="s5">''</span>
+
+      <span class="s2">if </span><span class="s1">(tag.prefix &amp;&amp; !tag.uri) {</span>
+        <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Unbound namespace prefix: ' </span><span class="s1">+</span>
+          <span class="s1">JSON.stringify(parser.tagName))</span>
+        <span class="s1">tag.uri = qn.prefix</span>
+      <span class="s1">}</span>
+
+      <span class="s2">var </span><span class="s1">parent = parser.tags[parser.tags.length - </span><span class="s4">1</span><span class="s1">] || parser</span>
+      <span class="s2">if </span><span class="s1">(tag.ns &amp;&amp; parent.ns !== tag.ns) {</span>
+        <span class="s1">Object.keys(tag.ns).forEach(</span><span class="s2">function </span><span class="s1">(p) {</span>
+          <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onopennamespace'</span><span class="s0">, </span><span class="s1">{</span>
+            <span class="s1">prefix: p</span><span class="s0">,</span>
+            <span class="s1">uri: tag.ns[p]</span>
+          <span class="s1">})</span>
+        <span class="s1">})</span>
+      <span class="s1">}</span>
+
+      <span class="s3">// handle deferred onattribute events</span>
+      <span class="s3">// Note: do not apply default ns to attributes:</span>
+      <span class="s3">//   http://www.w3.org/TR/REC-xml-names/#defaulting</span>
+      <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s0">, </span><span class="s1">l = parser.attribList.length</span><span class="s0">; </span><span class="s1">i &lt; l</span><span class="s0">; </span><span class="s1">i++) {</span>
+        <span class="s2">var </span><span class="s1">nv = parser.attribList[i]</span>
+        <span class="s2">var </span><span class="s1">name = nv[</span><span class="s4">0</span><span class="s1">]</span>
+        <span class="s2">var </span><span class="s1">value = nv[</span><span class="s4">1</span><span class="s1">]</span>
+        <span class="s2">var </span><span class="s1">qualName = qname(name</span><span class="s0">, </span><span class="s2">true</span><span class="s1">)</span>
+        <span class="s2">var </span><span class="s1">prefix = qualName.prefix</span>
+        <span class="s2">var </span><span class="s1">local = qualName.local</span>
+        <span class="s2">var </span><span class="s1">uri = prefix === </span><span class="s5">'' </span><span class="s1">? </span><span class="s5">'' </span><span class="s1">: (tag.ns[prefix] || </span><span class="s5">''</span><span class="s1">)</span>
+        <span class="s2">var </span><span class="s1">a = {</span>
+          <span class="s1">name: name</span><span class="s0">,</span>
+          <span class="s1">value: value</span><span class="s0">,</span>
+          <span class="s1">prefix: prefix</span><span class="s0">,</span>
+          <span class="s1">local: local</span><span class="s0">,</span>
+          <span class="s1">uri: uri</span>
+        <span class="s1">}</span>
+
+        <span class="s3">// if there's any attributes with an undefined namespace,</span>
+        <span class="s3">// then fail on them now.</span>
+        <span class="s2">if </span><span class="s1">(prefix &amp;&amp; prefix !== </span><span class="s5">'xmlns' </span><span class="s1">&amp;&amp; !uri) {</span>
+          <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Unbound namespace prefix: ' </span><span class="s1">+</span>
+            <span class="s1">JSON.stringify(prefix))</span>
+          <span class="s1">a.uri = prefix</span>
+        <span class="s1">}</span>
+        <span class="s1">parser.tag.attributes[name] = a</span>
+        <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onattribute'</span><span class="s0">, </span><span class="s1">a)</span>
+      <span class="s1">}</span>
+      <span class="s1">parser.attribList.length = </span><span class="s4">0</span>
+    <span class="s1">}</span>
+
+    <span class="s1">parser.tag.isSelfClosing = !!selfClosing</span>
+
+    <span class="s3">// process the tag</span>
+    <span class="s1">parser.sawRoot = </span><span class="s2">true</span>
+    <span class="s1">parser.tags.push(parser.tag)</span>
+    <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onopentag'</span><span class="s0">, </span><span class="s1">parser.tag)</span>
+    <span class="s2">if </span><span class="s1">(!selfClosing) {</span>
+      <span class="s3">// special case for &lt;script&gt; in non-strict mode.</span>
+      <span class="s2">if </span><span class="s1">(!parser.noscript &amp;&amp; parser.tagName.toLowerCase() === </span><span class="s5">'script'</span><span class="s1">) {</span>
+        <span class="s1">parser.state = S.SCRIPT</span>
+      <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s1">parser.state = S.TEXT</span>
+      <span class="s1">}</span>
+      <span class="s1">parser.tag = </span><span class="s2">null</span>
+      <span class="s1">parser.tagName = </span><span class="s5">''</span>
+    <span class="s1">}</span>
+    <span class="s1">parser.attribName = parser.attribValue = </span><span class="s5">''</span>
+    <span class="s1">parser.attribList.length = </span><span class="s4">0</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">closeTag (parser) {</span>
+    <span class="s2">if </span><span class="s1">(!parser.tagName) {</span>
+      <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Weird empty close tag.'</span><span class="s1">)</span>
+      <span class="s1">parser.textNode += </span><span class="s5">'&lt;/&gt;'</span>
+      <span class="s1">parser.state = S.TEXT</span>
+      <span class="s2">return</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(parser.script) {</span>
+      <span class="s2">if </span><span class="s1">(parser.tagName !== </span><span class="s5">'script'</span><span class="s1">) {</span>
+        <span class="s1">parser.script += </span><span class="s5">'&lt;/' </span><span class="s1">+ parser.tagName + </span><span class="s5">'&gt;'</span>
+        <span class="s1">parser.tagName = </span><span class="s5">''</span>
+        <span class="s1">parser.state = S.SCRIPT</span>
+        <span class="s2">return</span>
+      <span class="s1">}</span>
+      <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onscript'</span><span class="s0">, </span><span class="s1">parser.script)</span>
+      <span class="s1">parser.script = </span><span class="s5">''</span>
+    <span class="s1">}</span>
+
+    <span class="s3">// first make sure that the closing tag actually exists.</span>
+    <span class="s3">// &lt;a&gt;&lt;b&gt;&lt;/c&gt;&lt;/b&gt;&lt;/a&gt; will close everything, otherwise.</span>
+    <span class="s2">var </span><span class="s1">t = parser.tags.length</span>
+    <span class="s2">var </span><span class="s1">tagName = parser.tagName</span>
+    <span class="s2">if </span><span class="s1">(!parser.strict) {</span>
+      <span class="s1">tagName = tagName[parser.looseCase]()</span>
+    <span class="s1">}</span>
+    <span class="s2">var </span><span class="s1">closeTo = tagName</span>
+    <span class="s2">while </span><span class="s1">(t--) {</span>
+      <span class="s2">var </span><span class="s1">close = parser.tags[t]</span>
+      <span class="s2">if </span><span class="s1">(close.name !== closeTo) {</span>
+        <span class="s3">// fail the first time in strict mode</span>
+        <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Unexpected close tag'</span><span class="s1">)</span>
+      <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s2">break</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s3">// didn't find it.  we already failed for strict, so just abort.</span>
+    <span class="s2">if </span><span class="s1">(t &lt; </span><span class="s4">0</span><span class="s1">) {</span>
+      <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Unmatched closing tag: ' </span><span class="s1">+ parser.tagName)</span>
+      <span class="s1">parser.textNode += </span><span class="s5">'&lt;/' </span><span class="s1">+ parser.tagName + </span><span class="s5">'&gt;'</span>
+      <span class="s1">parser.state = S.TEXT</span>
+      <span class="s2">return</span>
+    <span class="s1">}</span>
+    <span class="s1">parser.tagName = tagName</span>
+    <span class="s2">var </span><span class="s1">s = parser.tags.length</span>
+    <span class="s2">while </span><span class="s1">(s-- &gt; t) {</span>
+      <span class="s2">var </span><span class="s1">tag = parser.tag = parser.tags.pop()</span>
+      <span class="s1">parser.tagName = parser.tag.name</span>
+      <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onclosetag'</span><span class="s0">, </span><span class="s1">parser.tagName)</span>
+
+      <span class="s2">var </span><span class="s1">x = {}</span>
+      <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i </span><span class="s2">in </span><span class="s1">tag.ns) {</span>
+        <span class="s1">x[i] = tag.ns[i]</span>
+      <span class="s1">}</span>
+
+      <span class="s2">var </span><span class="s1">parent = parser.tags[parser.tags.length - </span><span class="s4">1</span><span class="s1">] || parser</span>
+      <span class="s2">if </span><span class="s1">(parser.opt.xmlns &amp;&amp; tag.ns !== parent.ns) {</span>
+        <span class="s3">// remove namespace bindings introduced by tag</span>
+        <span class="s1">Object.keys(tag.ns).forEach(</span><span class="s2">function </span><span class="s1">(p) {</span>
+          <span class="s2">var </span><span class="s1">n = tag.ns[p]</span>
+          <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onclosenamespace'</span><span class="s0">, </span><span class="s1">{ prefix: p</span><span class="s0">, </span><span class="s1">uri: n })</span>
+        <span class="s1">})</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(t === </span><span class="s4">0</span><span class="s1">) parser.closedRoot = </span><span class="s2">true</span>
+    <span class="s1">parser.tagName = parser.attribValue = parser.attribName = </span><span class="s5">''</span>
+    <span class="s1">parser.attribList.length = </span><span class="s4">0</span>
+    <span class="s1">parser.state = S.TEXT</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">parseEntity (parser) {</span>
+    <span class="s2">var </span><span class="s1">entity = parser.entity</span>
+    <span class="s2">var </span><span class="s1">entityLC = entity.toLowerCase()</span>
+    <span class="s2">var </span><span class="s1">num</span>
+    <span class="s2">var </span><span class="s1">numStr = </span><span class="s5">''</span>
+
+    <span class="s2">if </span><span class="s1">(parser.ENTITIES[entity]) {</span>
+      <span class="s2">return </span><span class="s1">parser.ENTITIES[entity]</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(parser.ENTITIES[entityLC]) {</span>
+      <span class="s2">return </span><span class="s1">parser.ENTITIES[entityLC]</span>
+    <span class="s1">}</span>
+    <span class="s1">entity = entityLC</span>
+    <span class="s2">if </span><span class="s1">(entity.charAt(</span><span class="s4">0</span><span class="s1">) === </span><span class="s5">'#'</span><span class="s1">) {</span>
+      <span class="s2">if </span><span class="s1">(entity.charAt(</span><span class="s4">1</span><span class="s1">) === </span><span class="s5">'x'</span><span class="s1">) {</span>
+        <span class="s1">entity = entity.slice(</span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">num = parseInt(entity</span><span class="s0">, </span><span class="s4">16</span><span class="s1">)</span>
+        <span class="s1">numStr = num.toString(</span><span class="s4">16</span><span class="s1">)</span>
+      <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s1">entity = entity.slice(</span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">num = parseInt(entity</span><span class="s0">, </span><span class="s4">10</span><span class="s1">)</span>
+        <span class="s1">numStr = num.toString(</span><span class="s4">10</span><span class="s1">)</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s1">entity = entity.replace(</span><span class="s4">/^0+/</span><span class="s0">, </span><span class="s5">''</span><span class="s1">)</span>
+    <span class="s2">if </span><span class="s1">(isNaN(num) || numStr.toLowerCase() !== entity) {</span>
+      <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Invalid character entity'</span><span class="s1">)</span>
+      <span class="s2">return </span><span class="s5">'&amp;' </span><span class="s1">+ parser.entity + </span><span class="s5">';'</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return </span><span class="s1">String.fromCodePoint(num)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">beginWhiteSpace (parser</span><span class="s0">, </span><span class="s1">c) {</span>
+    <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'&lt;'</span><span class="s1">) {</span>
+      <span class="s1">parser.state = S.OPEN_WAKA</span>
+      <span class="s1">parser.startTagPosition = parser.position</span>
+    <span class="s1">} </span><span class="s2">else if </span><span class="s1">(!isWhitespace(c)) {</span>
+      <span class="s3">// have to process this as a text node.</span>
+      <span class="s3">// weird, but happens.</span>
+      <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Non-whitespace before first tag.'</span><span class="s1">)</span>
+      <span class="s1">parser.textNode = c</span>
+      <span class="s1">parser.state = S.TEXT</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">charAt (chunk</span><span class="s0">, </span><span class="s1">i) {</span>
+    <span class="s2">var </span><span class="s1">result = </span><span class="s5">''</span>
+    <span class="s2">if </span><span class="s1">(i &lt; chunk.length) {</span>
+      <span class="s1">result = chunk.charAt(i)</span>
+    <span class="s1">}</span>
+    <span class="s2">return </span><span class="s1">result</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">write (chunk) {</span>
+    <span class="s2">var </span><span class="s1">parser = </span><span class="s2">this</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.error) {</span>
+      <span class="s2">throw this</span><span class="s1">.error</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(parser.closed) {</span>
+      <span class="s2">return </span><span class="s1">error(parser</span><span class="s0">,</span>
+        <span class="s5">'Cannot write after close. Assign an onready handler.'</span><span class="s1">)</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(chunk === </span><span class="s2">null</span><span class="s1">) {</span>
+      <span class="s2">return </span><span class="s1">end(parser)</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">chunk === </span><span class="s5">'object'</span><span class="s1">) {</span>
+      <span class="s1">chunk = chunk.toString()</span>
+    <span class="s1">}</span>
+    <span class="s2">var </span><span class="s1">i = </span><span class="s4">0</span>
+    <span class="s2">var </span><span class="s1">c = </span><span class="s5">''</span>
+    <span class="s2">while </span><span class="s1">(</span><span class="s2">true</span><span class="s1">) {</span>
+      <span class="s1">c = charAt(chunk</span><span class="s0">, </span><span class="s1">i++)</span>
+      <span class="s1">parser.c = c</span>
+
+      <span class="s2">if </span><span class="s1">(!c) {</span>
+        <span class="s2">break</span>
+      <span class="s1">}</span>
+
+      <span class="s2">if </span><span class="s1">(parser.trackPosition) {</span>
+        <span class="s1">parser.position++</span>
+        <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'</span><span class="s0">\n</span><span class="s5">'</span><span class="s1">) {</span>
+          <span class="s1">parser.line++</span>
+          <span class="s1">parser.column = </span><span class="s4">0</span>
+        <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+          <span class="s1">parser.column++</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s2">switch </span><span class="s1">(parser.state) {</span>
+        <span class="s2">case </span><span class="s1">S.BEGIN:</span>
+          <span class="s1">parser.state = S.BEGIN_WHITESPACE</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'</span><span class="s0">\uFEFF</span><span class="s5">'</span><span class="s1">) {</span>
+            <span class="s2">continue</span>
+          <span class="s1">}</span>
+          <span class="s1">beginWhiteSpace(parser</span><span class="s0">, </span><span class="s1">c)</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.BEGIN_WHITESPACE:</span>
+          <span class="s1">beginWhiteSpace(parser</span><span class="s0">, </span><span class="s1">c)</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.TEXT:</span>
+          <span class="s2">if </span><span class="s1">(parser.sawRoot &amp;&amp; !parser.closedRoot) {</span>
+            <span class="s2">var </span><span class="s1">starti = i - </span><span class="s4">1</span>
+            <span class="s2">while </span><span class="s1">(c &amp;&amp; c !== </span><span class="s5">'&lt;' </span><span class="s1">&amp;&amp; c !== </span><span class="s5">'&amp;'</span><span class="s1">) {</span>
+              <span class="s1">c = charAt(chunk</span><span class="s0">, </span><span class="s1">i++)</span>
+              <span class="s2">if </span><span class="s1">(c &amp;&amp; parser.trackPosition) {</span>
+                <span class="s1">parser.position++</span>
+                <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'</span><span class="s0">\n</span><span class="s5">'</span><span class="s1">) {</span>
+                  <span class="s1">parser.line++</span>
+                  <span class="s1">parser.column = </span><span class="s4">0</span>
+                <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+                  <span class="s1">parser.column++</span>
+                <span class="s1">}</span>
+              <span class="s1">}</span>
+            <span class="s1">}</span>
+            <span class="s1">parser.textNode += chunk.substring(starti</span><span class="s0">, </span><span class="s1">i - </span><span class="s4">1</span><span class="s1">)</span>
+          <span class="s1">}</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'&lt;' </span><span class="s1">&amp;&amp; !(parser.sawRoot &amp;&amp; parser.closedRoot &amp;&amp; !parser.strict)) {</span>
+            <span class="s1">parser.state = S.OPEN_WAKA</span>
+            <span class="s1">parser.startTagPosition = parser.position</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s2">if </span><span class="s1">(!isWhitespace(c) &amp;&amp; (!parser.sawRoot || parser.closedRoot)) {</span>
+              <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Text data outside of root node.'</span><span class="s1">)</span>
+            <span class="s1">}</span>
+            <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'&amp;'</span><span class="s1">) {</span>
+              <span class="s1">parser.state = S.TEXT_ENTITY</span>
+            <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+              <span class="s1">parser.textNode += c</span>
+            <span class="s1">}</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.SCRIPT:</span>
+          <span class="s3">// only non-strict</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'&lt;'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.SCRIPT_ENDING</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">parser.script += c</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.SCRIPT_ENDING:</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'/'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.CLOSE_TAG</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">parser.script += </span><span class="s5">'&lt;' </span><span class="s1">+ c</span>
+            <span class="s1">parser.state = S.SCRIPT</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.OPEN_WAKA:</span>
+          <span class="s3">// either a /, ?, !, or text is coming next.</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'!'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.SGML_DECL</span>
+            <span class="s1">parser.sgmlDecl = </span><span class="s5">''</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isWhitespace(c)) {</span>
+            <span class="s3">// wait for it...</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isMatch(nameStart</span><span class="s0">, </span><span class="s1">c)) {</span>
+            <span class="s1">parser.state = S.OPEN_TAG</span>
+            <span class="s1">parser.tagName = c</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(c === </span><span class="s5">'/'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.CLOSE_TAG</span>
+            <span class="s1">parser.tagName = </span><span class="s5">''</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(c === </span><span class="s5">'?'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.PROC_INST</span>
+            <span class="s1">parser.procInstName = parser.procInstBody = </span><span class="s5">''</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Unencoded &lt;'</span><span class="s1">)</span>
+            <span class="s3">// if there was some whitespace, then add that in.</span>
+            <span class="s2">if </span><span class="s1">(parser.startTagPosition + </span><span class="s4">1 </span><span class="s1">&lt; parser.position) {</span>
+              <span class="s2">var </span><span class="s1">pad = parser.position - parser.startTagPosition</span>
+              <span class="s1">c = </span><span class="s2">new </span><span class="s1">Array(pad).join(</span><span class="s5">' '</span><span class="s1">) + c</span>
+            <span class="s1">}</span>
+            <span class="s1">parser.textNode += </span><span class="s5">'&lt;' </span><span class="s1">+ c</span>
+            <span class="s1">parser.state = S.TEXT</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.SGML_DECL:</span>
+          <span class="s2">if </span><span class="s1">((parser.sgmlDecl + c).toUpperCase() === CDATA) {</span>
+            <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onopencdata'</span><span class="s1">)</span>
+            <span class="s1">parser.state = S.CDATA</span>
+            <span class="s1">parser.sgmlDecl = </span><span class="s5">''</span>
+            <span class="s1">parser.cdata = </span><span class="s5">''</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(parser.sgmlDecl + c === </span><span class="s5">'--'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.COMMENT</span>
+            <span class="s1">parser.comment = </span><span class="s5">''</span>
+            <span class="s1">parser.sgmlDecl = </span><span class="s5">''</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">((parser.sgmlDecl + c).toUpperCase() === DOCTYPE) {</span>
+            <span class="s1">parser.state = S.DOCTYPE</span>
+            <span class="s2">if </span><span class="s1">(parser.doctype || parser.sawRoot) {</span>
+              <span class="s1">strictFail(parser</span><span class="s0">,</span>
+                <span class="s5">'Inappropriately located doctype declaration'</span><span class="s1">)</span>
+            <span class="s1">}</span>
+            <span class="s1">parser.doctype = </span><span class="s5">''</span>
+            <span class="s1">parser.sgmlDecl = </span><span class="s5">''</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(c === </span><span class="s5">'&gt;'</span><span class="s1">) {</span>
+            <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onsgmldeclaration'</span><span class="s0">, </span><span class="s1">parser.sgmlDecl)</span>
+            <span class="s1">parser.sgmlDecl = </span><span class="s5">''</span>
+            <span class="s1">parser.state = S.TEXT</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isQuote(c)) {</span>
+            <span class="s1">parser.state = S.SGML_DECL_QUOTED</span>
+            <span class="s1">parser.sgmlDecl += c</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">parser.sgmlDecl += c</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.SGML_DECL_QUOTED:</span>
+          <span class="s2">if </span><span class="s1">(c === parser.q) {</span>
+            <span class="s1">parser.state = S.SGML_DECL</span>
+            <span class="s1">parser.q = </span><span class="s5">''</span>
+          <span class="s1">}</span>
+          <span class="s1">parser.sgmlDecl += c</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.DOCTYPE:</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'&gt;'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.TEXT</span>
+            <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'ondoctype'</span><span class="s0">, </span><span class="s1">parser.doctype)</span>
+            <span class="s1">parser.doctype = </span><span class="s2">true </span><span class="s3">// just remember that we saw it.</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">parser.doctype += c</span>
+            <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'['</span><span class="s1">) {</span>
+              <span class="s1">parser.state = S.DOCTYPE_DTD</span>
+            <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isQuote(c)) {</span>
+              <span class="s1">parser.state = S.DOCTYPE_QUOTED</span>
+              <span class="s1">parser.q = c</span>
+            <span class="s1">}</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.DOCTYPE_QUOTED:</span>
+          <span class="s1">parser.doctype += c</span>
+          <span class="s2">if </span><span class="s1">(c === parser.q) {</span>
+            <span class="s1">parser.q = </span><span class="s5">''</span>
+            <span class="s1">parser.state = S.DOCTYPE</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.DOCTYPE_DTD:</span>
+          <span class="s1">parser.doctype += c</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">']'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.DOCTYPE</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isQuote(c)) {</span>
+            <span class="s1">parser.state = S.DOCTYPE_DTD_QUOTED</span>
+            <span class="s1">parser.q = c</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.DOCTYPE_DTD_QUOTED:</span>
+          <span class="s1">parser.doctype += c</span>
+          <span class="s2">if </span><span class="s1">(c === parser.q) {</span>
+            <span class="s1">parser.state = S.DOCTYPE_DTD</span>
+            <span class="s1">parser.q = </span><span class="s5">''</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.COMMENT:</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'-'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.COMMENT_ENDING</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">parser.comment += c</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.COMMENT_ENDING:</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'-'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.COMMENT_ENDED</span>
+            <span class="s1">parser.comment = textopts(parser.opt</span><span class="s0">, </span><span class="s1">parser.comment)</span>
+            <span class="s2">if </span><span class="s1">(parser.comment) {</span>
+              <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'oncomment'</span><span class="s0">, </span><span class="s1">parser.comment)</span>
+            <span class="s1">}</span>
+            <span class="s1">parser.comment = </span><span class="s5">''</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">parser.comment += </span><span class="s5">'-' </span><span class="s1">+ c</span>
+            <span class="s1">parser.state = S.COMMENT</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.COMMENT_ENDED:</span>
+          <span class="s2">if </span><span class="s1">(c !== </span><span class="s5">'&gt;'</span><span class="s1">) {</span>
+            <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Malformed comment'</span><span class="s1">)</span>
+            <span class="s3">// allow &lt;!-- blah -- bloo --&gt; in non-strict mode,</span>
+            <span class="s3">// which is a comment of &quot; blah -- bloo &quot;</span>
+            <span class="s1">parser.comment += </span><span class="s5">'--' </span><span class="s1">+ c</span>
+            <span class="s1">parser.state = S.COMMENT</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">parser.state = S.TEXT</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.CDATA:</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">']'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.CDATA_ENDING</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">parser.cdata += c</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.CDATA_ENDING:</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">']'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.CDATA_ENDING_2</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">parser.cdata += </span><span class="s5">']' </span><span class="s1">+ c</span>
+            <span class="s1">parser.state = S.CDATA</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.CDATA_ENDING_2:</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'&gt;'</span><span class="s1">) {</span>
+            <span class="s2">if </span><span class="s1">(parser.cdata) {</span>
+              <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'oncdata'</span><span class="s0">, </span><span class="s1">parser.cdata)</span>
+            <span class="s1">}</span>
+            <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onclosecdata'</span><span class="s1">)</span>
+            <span class="s1">parser.cdata = </span><span class="s5">''</span>
+            <span class="s1">parser.state = S.TEXT</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(c === </span><span class="s5">']'</span><span class="s1">) {</span>
+            <span class="s1">parser.cdata += </span><span class="s5">']'</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">parser.cdata += </span><span class="s5">']]' </span><span class="s1">+ c</span>
+            <span class="s1">parser.state = S.CDATA</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.PROC_INST:</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'?'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.PROC_INST_ENDING</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isWhitespace(c)) {</span>
+            <span class="s1">parser.state = S.PROC_INST_BODY</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">parser.procInstName += c</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.PROC_INST_BODY:</span>
+          <span class="s2">if </span><span class="s1">(!parser.procInstBody &amp;&amp; isWhitespace(c)) {</span>
+            <span class="s2">continue</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(c === </span><span class="s5">'?'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.PROC_INST_ENDING</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">parser.procInstBody += c</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.PROC_INST_ENDING:</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'&gt;'</span><span class="s1">) {</span>
+            <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onprocessinginstruction'</span><span class="s0">, </span><span class="s1">{</span>
+              <span class="s1">name: parser.procInstName</span><span class="s0">,</span>
+              <span class="s1">body: parser.procInstBody</span>
+            <span class="s1">})</span>
+            <span class="s1">parser.procInstName = parser.procInstBody = </span><span class="s5">''</span>
+            <span class="s1">parser.state = S.TEXT</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">parser.procInstBody += </span><span class="s5">'?' </span><span class="s1">+ c</span>
+            <span class="s1">parser.state = S.PROC_INST_BODY</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.OPEN_TAG:</span>
+          <span class="s2">if </span><span class="s1">(isMatch(nameBody</span><span class="s0">, </span><span class="s1">c)) {</span>
+            <span class="s1">parser.tagName += c</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">newTag(parser)</span>
+            <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'&gt;'</span><span class="s1">) {</span>
+              <span class="s1">openTag(parser)</span>
+            <span class="s1">} </span><span class="s2">else if </span><span class="s1">(c === </span><span class="s5">'/'</span><span class="s1">) {</span>
+              <span class="s1">parser.state = S.OPEN_TAG_SLASH</span>
+            <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+              <span class="s2">if </span><span class="s1">(!isWhitespace(c)) {</span>
+                <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Invalid character in tag name'</span><span class="s1">)</span>
+              <span class="s1">}</span>
+              <span class="s1">parser.state = S.ATTRIB</span>
+            <span class="s1">}</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.OPEN_TAG_SLASH:</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'&gt;'</span><span class="s1">) {</span>
+            <span class="s1">openTag(parser</span><span class="s0">, </span><span class="s2">true</span><span class="s1">)</span>
+            <span class="s1">closeTag(parser)</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Forward-slash in opening tag not followed by &gt;'</span><span class="s1">)</span>
+            <span class="s1">parser.state = S.ATTRIB</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.ATTRIB:</span>
+          <span class="s3">// haven't read the attribute name yet.</span>
+          <span class="s2">if </span><span class="s1">(isWhitespace(c)) {</span>
+            <span class="s2">continue</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(c === </span><span class="s5">'&gt;'</span><span class="s1">) {</span>
+            <span class="s1">openTag(parser)</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(c === </span><span class="s5">'/'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.OPEN_TAG_SLASH</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isMatch(nameStart</span><span class="s0">, </span><span class="s1">c)) {</span>
+            <span class="s1">parser.attribName = c</span>
+            <span class="s1">parser.attribValue = </span><span class="s5">''</span>
+            <span class="s1">parser.state = S.ATTRIB_NAME</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Invalid attribute name'</span><span class="s1">)</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.ATTRIB_NAME:</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'='</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.ATTRIB_VALUE</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(c === </span><span class="s5">'&gt;'</span><span class="s1">) {</span>
+            <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Attribute without value'</span><span class="s1">)</span>
+            <span class="s1">parser.attribValue = parser.attribName</span>
+            <span class="s1">attrib(parser)</span>
+            <span class="s1">openTag(parser)</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isWhitespace(c)) {</span>
+            <span class="s1">parser.state = S.ATTRIB_NAME_SAW_WHITE</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isMatch(nameBody</span><span class="s0">, </span><span class="s1">c)) {</span>
+            <span class="s1">parser.attribName += c</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Invalid attribute name'</span><span class="s1">)</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.ATTRIB_NAME_SAW_WHITE:</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'='</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.ATTRIB_VALUE</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isWhitespace(c)) {</span>
+            <span class="s2">continue</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Attribute without value'</span><span class="s1">)</span>
+            <span class="s1">parser.tag.attributes[parser.attribName] = </span><span class="s5">''</span>
+            <span class="s1">parser.attribValue = </span><span class="s5">''</span>
+            <span class="s1">emitNode(parser</span><span class="s0">, </span><span class="s5">'onattribute'</span><span class="s0">, </span><span class="s1">{</span>
+              <span class="s1">name: parser.attribName</span><span class="s0">,</span>
+              <span class="s1">value: </span><span class="s5">''</span>
+            <span class="s1">})</span>
+            <span class="s1">parser.attribName = </span><span class="s5">''</span>
+            <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'&gt;'</span><span class="s1">) {</span>
+              <span class="s1">openTag(parser)</span>
+            <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isMatch(nameStart</span><span class="s0">, </span><span class="s1">c)) {</span>
+              <span class="s1">parser.attribName = c</span>
+              <span class="s1">parser.state = S.ATTRIB_NAME</span>
+            <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+              <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Invalid attribute name'</span><span class="s1">)</span>
+              <span class="s1">parser.state = S.ATTRIB</span>
+            <span class="s1">}</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.ATTRIB_VALUE:</span>
+          <span class="s2">if </span><span class="s1">(isWhitespace(c)) {</span>
+            <span class="s2">continue</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isQuote(c)) {</span>
+            <span class="s1">parser.q = c</span>
+            <span class="s1">parser.state = S.ATTRIB_VALUE_QUOTED</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Unquoted attribute value'</span><span class="s1">)</span>
+            <span class="s1">parser.state = S.ATTRIB_VALUE_UNQUOTED</span>
+            <span class="s1">parser.attribValue = c</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.ATTRIB_VALUE_QUOTED:</span>
+          <span class="s2">if </span><span class="s1">(c !== parser.q) {</span>
+            <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'&amp;'</span><span class="s1">) {</span>
+              <span class="s1">parser.state = S.ATTRIB_VALUE_ENTITY_Q</span>
+            <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+              <span class="s1">parser.attribValue += c</span>
+            <span class="s1">}</span>
+            <span class="s2">continue</span>
+          <span class="s1">}</span>
+          <span class="s1">attrib(parser)</span>
+          <span class="s1">parser.q = </span><span class="s5">''</span>
+          <span class="s1">parser.state = S.ATTRIB_VALUE_CLOSED</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.ATTRIB_VALUE_CLOSED:</span>
+          <span class="s2">if </span><span class="s1">(isWhitespace(c)) {</span>
+            <span class="s1">parser.state = S.ATTRIB</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(c === </span><span class="s5">'&gt;'</span><span class="s1">) {</span>
+            <span class="s1">openTag(parser)</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(c === </span><span class="s5">'/'</span><span class="s1">) {</span>
+            <span class="s1">parser.state = S.OPEN_TAG_SLASH</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isMatch(nameStart</span><span class="s0">, </span><span class="s1">c)) {</span>
+            <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'No whitespace between attributes'</span><span class="s1">)</span>
+            <span class="s1">parser.attribName = c</span>
+            <span class="s1">parser.attribValue = </span><span class="s5">''</span>
+            <span class="s1">parser.state = S.ATTRIB_NAME</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Invalid attribute name'</span><span class="s1">)</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.ATTRIB_VALUE_UNQUOTED:</span>
+          <span class="s2">if </span><span class="s1">(!isAttribEnd(c)) {</span>
+            <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'&amp;'</span><span class="s1">) {</span>
+              <span class="s1">parser.state = S.ATTRIB_VALUE_ENTITY_U</span>
+            <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+              <span class="s1">parser.attribValue += c</span>
+            <span class="s1">}</span>
+            <span class="s2">continue</span>
+          <span class="s1">}</span>
+          <span class="s1">attrib(parser)</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'&gt;'</span><span class="s1">) {</span>
+            <span class="s1">openTag(parser)</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">parser.state = S.ATTRIB</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.CLOSE_TAG:</span>
+          <span class="s2">if </span><span class="s1">(!parser.tagName) {</span>
+            <span class="s2">if </span><span class="s1">(isWhitespace(c)) {</span>
+              <span class="s2">continue</span>
+            <span class="s1">} </span><span class="s2">else if </span><span class="s1">(notMatch(nameStart</span><span class="s0">, </span><span class="s1">c)) {</span>
+              <span class="s2">if </span><span class="s1">(parser.script) {</span>
+                <span class="s1">parser.script += </span><span class="s5">'&lt;/' </span><span class="s1">+ c</span>
+                <span class="s1">parser.state = S.SCRIPT</span>
+              <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+                <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Invalid tagname in closing tag.'</span><span class="s1">)</span>
+              <span class="s1">}</span>
+            <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+              <span class="s1">parser.tagName = c</span>
+            <span class="s1">}</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(c === </span><span class="s5">'&gt;'</span><span class="s1">) {</span>
+            <span class="s1">closeTag(parser)</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isMatch(nameBody</span><span class="s0">, </span><span class="s1">c)) {</span>
+            <span class="s1">parser.tagName += c</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(parser.script) {</span>
+            <span class="s1">parser.script += </span><span class="s5">'&lt;/' </span><span class="s1">+ parser.tagName</span>
+            <span class="s1">parser.tagName = </span><span class="s5">''</span>
+            <span class="s1">parser.state = S.SCRIPT</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s2">if </span><span class="s1">(!isWhitespace(c)) {</span>
+              <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Invalid tagname in closing tag'</span><span class="s1">)</span>
+            <span class="s1">}</span>
+            <span class="s1">parser.state = S.CLOSE_TAG_SAW_WHITE</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.CLOSE_TAG_SAW_WHITE:</span>
+          <span class="s2">if </span><span class="s1">(isWhitespace(c)) {</span>
+            <span class="s2">continue</span>
+          <span class="s1">}</span>
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">'&gt;'</span><span class="s1">) {</span>
+            <span class="s1">closeTag(parser)</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Invalid characters in closing tag'</span><span class="s1">)</span>
+          <span class="s1">}</span>
+          <span class="s2">continue</span>
+
+        <span class="s2">case </span><span class="s1">S.TEXT_ENTITY:</span>
+        <span class="s2">case </span><span class="s1">S.ATTRIB_VALUE_ENTITY_Q:</span>
+        <span class="s2">case </span><span class="s1">S.ATTRIB_VALUE_ENTITY_U:</span>
+          <span class="s2">var </span><span class="s1">returnState</span>
+          <span class="s2">var </span><span class="s1">buffer</span>
+          <span class="s2">switch </span><span class="s1">(parser.state) {</span>
+            <span class="s2">case </span><span class="s1">S.TEXT_ENTITY:</span>
+              <span class="s1">returnState = S.TEXT</span>
+              <span class="s1">buffer = </span><span class="s5">'textNode'</span>
+              <span class="s2">break</span>
+
+            <span class="s2">case </span><span class="s1">S.ATTRIB_VALUE_ENTITY_Q:</span>
+              <span class="s1">returnState = S.ATTRIB_VALUE_QUOTED</span>
+              <span class="s1">buffer = </span><span class="s5">'attribValue'</span>
+              <span class="s2">break</span>
+
+            <span class="s2">case </span><span class="s1">S.ATTRIB_VALUE_ENTITY_U:</span>
+              <span class="s1">returnState = S.ATTRIB_VALUE_UNQUOTED</span>
+              <span class="s1">buffer = </span><span class="s5">'attribValue'</span>
+              <span class="s2">break</span>
+          <span class="s1">}</span>
+
+          <span class="s2">if </span><span class="s1">(c === </span><span class="s5">';'</span><span class="s1">) {</span>
+            <span class="s1">parser[buffer] += parseEntity(parser)</span>
+            <span class="s1">parser.entity = </span><span class="s5">''</span>
+            <span class="s1">parser.state = returnState</span>
+          <span class="s1">} </span><span class="s2">else if </span><span class="s1">(isMatch(parser.entity.length ? entityBody : entityStart</span><span class="s0">, </span><span class="s1">c)) {</span>
+            <span class="s1">parser.entity += c</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">strictFail(parser</span><span class="s0">, </span><span class="s5">'Invalid character in entity name'</span><span class="s1">)</span>
+            <span class="s1">parser[buffer] += </span><span class="s5">'&amp;' </span><span class="s1">+ parser.entity + c</span>
+            <span class="s1">parser.entity = </span><span class="s5">''</span>
+            <span class="s1">parser.state = returnState</span>
+          <span class="s1">}</span>
+
+          <span class="s2">continue</span>
+
+        <span class="s2">default</span><span class="s1">:</span>
+          <span class="s2">throw new </span><span class="s1">Error(parser</span><span class="s0">, </span><span class="s5">'Unknown state: ' </span><span class="s1">+ parser.state)</span>
+      <span class="s1">}</span>
+    <span class="s1">} </span><span class="s3">// while</span>
+
+    <span class="s2">if </span><span class="s1">(parser.position &gt;= parser.bufferCheckPosition) {</span>
+      <span class="s1">checkBufferLength(parser)</span>
+    <span class="s1">}</span>
+    <span class="s2">return </span><span class="s1">parser</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/*! http://mths.be/fromcodepoint v0.1.0 by @mathias */</span>
+  <span class="s6">/* istanbul ignore next */</span>
+  <span class="s2">if </span><span class="s1">(!String.fromCodePoint) {</span>
+    <span class="s1">(</span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s2">var </span><span class="s1">stringFromCharCode = String.fromCharCode</span>
+      <span class="s2">var </span><span class="s1">floor = Math.floor</span>
+      <span class="s2">var </span><span class="s1">fromCodePoint = </span><span class="s2">function </span><span class="s1">() {</span>
+        <span class="s2">var </span><span class="s1">MAX_SIZE = </span><span class="s4">0x4000</span>
+        <span class="s2">var </span><span class="s1">codeUnits = []</span>
+        <span class="s2">var </span><span class="s1">highSurrogate</span>
+        <span class="s2">var </span><span class="s1">lowSurrogate</span>
+        <span class="s2">var </span><span class="s1">index = -</span><span class="s4">1</span>
+        <span class="s2">var </span><span class="s1">length = arguments.length</span>
+        <span class="s2">if </span><span class="s1">(!length) {</span>
+          <span class="s2">return </span><span class="s5">''</span>
+        <span class="s1">}</span>
+        <span class="s2">var </span><span class="s1">result = </span><span class="s5">''</span>
+        <span class="s2">while </span><span class="s1">(++index &lt; length) {</span>
+          <span class="s2">var </span><span class="s1">codePoint = Number(arguments[index])</span>
+          <span class="s2">if </span><span class="s1">(</span>
+            <span class="s1">!isFinite(codePoint) || </span><span class="s3">// `NaN`, `+Infinity`, or `-Infinity`</span>
+            <span class="s1">codePoint &lt; </span><span class="s4">0 </span><span class="s1">|| </span><span class="s3">// not a valid Unicode code point</span>
+            <span class="s1">codePoint &gt; </span><span class="s4">0x10FFFF </span><span class="s1">|| </span><span class="s3">// not a valid Unicode code point</span>
+            <span class="s1">floor(codePoint) !== codePoint </span><span class="s3">// not an integer</span>
+          <span class="s1">) {</span>
+            <span class="s2">throw </span><span class="s1">RangeError(</span><span class="s5">'Invalid code point: ' </span><span class="s1">+ codePoint)</span>
+          <span class="s1">}</span>
+          <span class="s2">if </span><span class="s1">(codePoint &lt;= </span><span class="s4">0xFFFF</span><span class="s1">) { </span><span class="s3">// BMP code point</span>
+            <span class="s1">codeUnits.push(codePoint)</span>
+          <span class="s1">} </span><span class="s2">else </span><span class="s1">{ </span><span class="s3">// Astral code point; split in surrogate halves</span>
+            <span class="s3">// http://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae</span>
+            <span class="s1">codePoint -= </span><span class="s4">0x10000</span>
+            <span class="s1">highSurrogate = (codePoint &gt;&gt; </span><span class="s4">10</span><span class="s1">) + </span><span class="s4">0xD800</span>
+            <span class="s1">lowSurrogate = (codePoint % </span><span class="s4">0x400</span><span class="s1">) + </span><span class="s4">0xDC00</span>
+            <span class="s1">codeUnits.push(highSurrogate</span><span class="s0">, </span><span class="s1">lowSurrogate)</span>
+          <span class="s1">}</span>
+          <span class="s2">if </span><span class="s1">(index + </span><span class="s4">1 </span><span class="s1">=== length || codeUnits.length &gt; MAX_SIZE) {</span>
+            <span class="s1">result += stringFromCharCode.apply(</span><span class="s2">null</span><span class="s0">, </span><span class="s1">codeUnits)</span>
+            <span class="s1">codeUnits.length = </span><span class="s4">0</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s2">return </span><span class="s1">result</span>
+      <span class="s1">}</span>
+      <span class="s6">/* istanbul ignore next */</span>
+      <span class="s2">if </span><span class="s1">(Object.defineProperty) {</span>
+        <span class="s1">Object.defineProperty(String</span><span class="s0">, </span><span class="s5">'fromCodePoint'</span><span class="s0">, </span><span class="s1">{</span>
+          <span class="s1">value: fromCodePoint</span><span class="s0">,</span>
+          <span class="s1">configurable: </span><span class="s2">true</span><span class="s0">,</span>
+          <span class="s1">writable: </span><span class="s2">true</span>
+        <span class="s1">})</span>
+      <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s1">String.fromCodePoint = fromCodePoint</span>
+      <span class="s1">}</span>
+    <span class="s1">}())</span>
+  <span class="s1">}</span>
+<span class="s1">})(</span><span class="s2">typeof </span><span class="s1">exports === </span><span class="s5">'undefined' </span><span class="s1">? </span><span class="s2">this</span><span class="s1">.sax = {} : exports)</span>
+</pre>
+</body>
+</html>

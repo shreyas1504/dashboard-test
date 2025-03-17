@@ -1,0 +1,60 @@
+<html>
+<head>
+<title>not.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+not.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+<span class="s0">{{# def.setupNextLevel }}</span>
+
+<span class="s0">{{? {{# def.nonEmptySchema:$schema }} }}</span>
+  <span class="s0">{{</span>
+    <span class="s0">$it.schema = $schema;</span>
+    <span class="s0">$it.schemaPath = $schemaPath;</span>
+    <span class="s0">$it.errSchemaPath = $errSchemaPath;</span>
+  <span class="s0">}}</span>
+
+  <span class="s0">var {{=$errs}} = errors;</span>
+
+  <span class="s0">{{# def.setCompositeRule }}</span>
+
+  <span class="s0">{{</span>
+    <span class="s0">$it.createErrors = false;</span>
+    <span class="s0">var $allErrorsOption;</span>
+    <span class="s0">if ($it.opts.allErrors) {</span>
+      <span class="s0">$allErrorsOption = $it.opts.allErrors;</span>
+      <span class="s0">$it.opts.allErrors = false;</span>
+    <span class="s0">}</span>
+  <span class="s0">}}</span>
+  <span class="s0">{{= it.validate($it) }}</span>
+  <span class="s0">{{</span>
+    <span class="s0">$it.createErrors = true;</span>
+    <span class="s0">if ($allErrorsOption) $it.opts.allErrors = $allErrorsOption;</span>
+  <span class="s0">}}</span>
+
+  <span class="s0">{{# def.resetCompositeRule }}</span>
+
+  <span class="s0">if ({{=$nextValid}}) {</span>
+    <span class="s0">{{# def.error:'not' }}</span>
+  <span class="s0">} else {</span>
+    <span class="s0">{{# def.resetErrors }}</span>
+  <span class="s0">{{? it.opts.allErrors }} } {{?}}</span>
+<span class="s0">{{??}}</span>
+  <span class="s0">{{# def.addError:'not' }}</span>
+  <span class="s0">{{? $breakOnError}}</span>
+    <span class="s0">if (false) {</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{?}}</span>
+</pre>
+</body>
+</html>

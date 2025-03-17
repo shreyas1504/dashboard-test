@@ -1,0 +1,49 @@
+<html>
+<head>
+<title>VerboseReporter.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a; font-style: italic;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #808080;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #cc7832;}
+.s5 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+VerboseReporter.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">/**</span>
+ <span class="s0">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s0">*</span>
+ <span class="s0">* This source code is licensed under the MIT license found in the</span>
+ <span class="s0">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s0">*/</span>
+<span class="s2">/// &lt;reference types=&quot;node&quot; /&gt;</span>
+<span class="s3">import </span><span class="s1">type { AggregatedResult</span><span class="s4">, </span><span class="s1">AssertionResult</span><span class="s4">, </span><span class="s1">Suite</span><span class="s4">, </span><span class="s1">TestResult } from </span><span class="s5">'@jest/test-result'</span><span class="s4">;</span>
+<span class="s3">import </span><span class="s1">type { Config } from </span><span class="s5">'@jest/types'</span><span class="s4">;</span>
+<span class="s3">import </span><span class="s1">DefaultReporter from </span><span class="s5">'./DefaultReporter'</span><span class="s4">;</span>
+<span class="s3">import </span><span class="s1">type { Test } from </span><span class="s5">'./types'</span><span class="s4">;</span>
+<span class="s3">export default class </span><span class="s1">VerboseReporter </span><span class="s3">extends </span><span class="s1">DefaultReporter {</span>
+    <span class="s3">protected </span><span class="s1">_globalConfig: Config.GlobalConfig</span><span class="s4">;</span>
+    <span class="s3">static </span><span class="s1">readonly filename: string</span><span class="s4">;</span>
+    <span class="s1">constructor(globalConfig: Config.GlobalConfig)</span><span class="s4">;</span>
+    <span class="s3">protected </span><span class="s1">__wrapStdio(stream: NodeJS.WritableStream | NodeJS.WriteStream): </span><span class="s3">void</span><span class="s4">;</span>
+    <span class="s3">static </span><span class="s1">filterTestResults(testResults: Array&lt;AssertionResult&gt;): Array&lt;AssertionResult&gt;</span><span class="s4">;</span>
+    <span class="s3">static </span><span class="s1">groupTestsBySuites(testResults: Array&lt;AssertionResult&gt;): Suite</span><span class="s4">;</span>
+    <span class="s1">onTestResult(test: Test</span><span class="s4">, </span><span class="s1">result: TestResult</span><span class="s4">, </span><span class="s1">aggregatedResults: AggregatedResult): </span><span class="s3">void</span><span class="s4">;</span>
+    <span class="s3">private </span><span class="s1">_logTestResults</span><span class="s4">;</span>
+    <span class="s3">private </span><span class="s1">_logSuite</span><span class="s4">;</span>
+    <span class="s3">private </span><span class="s1">_getIcon</span><span class="s4">;</span>
+    <span class="s3">private </span><span class="s1">_logTest</span><span class="s4">;</span>
+    <span class="s3">private </span><span class="s1">_logTests</span><span class="s4">;</span>
+    <span class="s3">private </span><span class="s1">_logTodoOrPendingTest</span><span class="s4">;</span>
+    <span class="s3">private </span><span class="s1">_logLine</span><span class="s4">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

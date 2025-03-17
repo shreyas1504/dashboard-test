@@ -1,0 +1,56 @@
+<html>
+<head>
+<title>wrap-idb-value.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+wrap-idb-value.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">{ IDBPCursor</span><span class="s2">, </span><span class="s1">IDBPCursorWithValue</span><span class="s2">, </span><span class="s1">IDBPDatabase</span><span class="s2">, </span><span class="s1">IDBPIndex</span><span class="s2">, </span><span class="s1">IDBPObjectStore</span><span class="s2">, </span><span class="s1">IDBPTransaction } from </span><span class="s3">'./entry.js'</span><span class="s2">;</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">const </span><span class="s1">reverseTransformCache: WeakMap&lt;object</span><span class="s2">, </span><span class="s1">any&gt;</span><span class="s2">;</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">replaceTraps(callback: (currentTraps: ProxyHandler&lt;any&gt;) =&gt; ProxyHandler&lt;any&gt;): </span><span class="s0">void</span><span class="s2">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* Enhance an IDB object with helpers.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">value The thing to enhance.</span>
+ <span class="s4">*/</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">wrap(value: IDBDatabase): IDBPDatabase</span><span class="s2">;</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">wrap(value: IDBIndex): IDBPIndex</span><span class="s2">;</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">wrap(value: IDBObjectStore): IDBPObjectStore</span><span class="s2">;</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">wrap(value: IDBTransaction): IDBPTransaction</span><span class="s2">;</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">wrap(value: IDBOpenDBRequest): Promise&lt;IDBPDatabase | undefined&gt;</span><span class="s2">;</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">wrap&lt;T&gt;(value: IDBRequest&lt;T&gt;): Promise&lt;T&gt;</span><span class="s2">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* Revert an enhanced IDB object to a plain old miserable IDB one.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Will also revert a promise back to an IDBRequest.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">value The enhanced object to revert.</span>
+ <span class="s4">*/</span>
+<span class="s0">interface </span><span class="s1">Unwrap {</span>
+    <span class="s1">(value: IDBPCursorWithValue&lt;any</span><span class="s2">, </span><span class="s1">any</span><span class="s2">, </span><span class="s1">any</span><span class="s2">, </span><span class="s1">any</span><span class="s2">, </span><span class="s1">any&gt;): IDBCursorWithValue</span><span class="s2">;</span>
+    <span class="s1">(value: IDBPCursor&lt;any</span><span class="s2">, </span><span class="s1">any</span><span class="s2">, </span><span class="s1">any</span><span class="s2">, </span><span class="s1">any</span><span class="s2">, </span><span class="s1">any&gt;): IDBCursor</span><span class="s2">;</span>
+    <span class="s1">(value: IDBPDatabase): IDBDatabase</span><span class="s2">;</span>
+    <span class="s1">(value: IDBPIndex&lt;any</span><span class="s2">, </span><span class="s1">any</span><span class="s2">, </span><span class="s1">any</span><span class="s2">, </span><span class="s1">any</span><span class="s2">, </span><span class="s1">any&gt;): IDBIndex</span><span class="s2">;</span>
+    <span class="s1">(value: IDBPObjectStore&lt;any</span><span class="s2">, </span><span class="s1">any</span><span class="s2">, </span><span class="s1">any</span><span class="s2">, </span><span class="s1">any&gt;): IDBObjectStore</span><span class="s2">;</span>
+    <span class="s1">(value: IDBPTransaction&lt;any</span><span class="s2">, </span><span class="s1">any</span><span class="s2">, </span><span class="s1">any&gt;): IDBTransaction</span><span class="s2">;</span>
+    <span class="s1">&lt;T </span><span class="s0">extends </span><span class="s1">any&gt;(value: Promise&lt;IDBPDatabase&lt;T&gt;&gt;): IDBOpenDBRequest</span><span class="s2">;</span>
+    <span class="s1">(value: Promise&lt;IDBPDatabase&gt;): IDBOpenDBRequest</span><span class="s2">;</span>
+    <span class="s1">&lt;T&gt;(value: Promise&lt;T&gt;): IDBRequest&lt;T&gt;</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">const </span><span class="s1">unwrap: Unwrap</span><span class="s2">;</span>
+<span class="s0">export </span><span class="s1">{}</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<html>
+<head>
+<title>generate.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #6897bb;}
+.s4 { color: #8ea765;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+generate.js</font>
+</center></td></tr></table>
+<pre><span class="s0">function </span><span class="s1">noop(value) {</span>
+    <span class="s0">return </span><span class="s1">value</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">generateMultiplier(multiplier) {</span>
+    <span class="s0">if </span><span class="s1">(multiplier.min === </span><span class="s3">0 </span><span class="s1">&amp;&amp; multiplier.max === </span><span class="s3">0</span><span class="s1">) {</span>
+        <span class="s0">return </span><span class="s4">'*'</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(multiplier.min === </span><span class="s3">0 </span><span class="s1">&amp;&amp; multiplier.max === </span><span class="s3">1</span><span class="s1">) {</span>
+        <span class="s0">return </span><span class="s4">'?'</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(multiplier.min === </span><span class="s3">1 </span><span class="s1">&amp;&amp; multiplier.max === </span><span class="s3">0</span><span class="s1">) {</span>
+        <span class="s0">return </span><span class="s1">multiplier.comma ? </span><span class="s4">'#' </span><span class="s1">: </span><span class="s4">'+'</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(multiplier.min === </span><span class="s3">1 </span><span class="s1">&amp;&amp; multiplier.max === </span><span class="s3">1</span><span class="s1">) {</span>
+        <span class="s0">return </span><span class="s4">''</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">(</span>
+        <span class="s1">(multiplier.comma ? </span><span class="s4">'#' </span><span class="s1">: </span><span class="s4">''</span><span class="s1">) +</span>
+        <span class="s1">(multiplier.min === multiplier.max</span>
+            <span class="s1">? </span><span class="s4">'{' </span><span class="s1">+ multiplier.min + </span><span class="s4">'}'</span>
+            <span class="s1">: </span><span class="s4">'{' </span><span class="s1">+ multiplier.min + </span><span class="s4">',' </span><span class="s1">+ (multiplier.max !== </span><span class="s3">0 </span><span class="s1">? multiplier.max : </span><span class="s4">''</span><span class="s1">) + </span><span class="s4">'}'</span>
+        <span class="s1">)</span>
+    <span class="s1">)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">generateTypeOpts(node) {</span>
+    <span class="s0">switch </span><span class="s1">(node.type) {</span>
+        <span class="s0">case </span><span class="s4">'Range'</span><span class="s1">:</span>
+            <span class="s0">return </span><span class="s1">(</span>
+                <span class="s4">' [' </span><span class="s1">+</span>
+                <span class="s1">(node.min === </span><span class="s0">null </span><span class="s1">? </span><span class="s4">'-∞' </span><span class="s1">: node.min) +</span>
+                <span class="s4">',' </span><span class="s1">+</span>
+                <span class="s1">(node.max === </span><span class="s0">null </span><span class="s1">? </span><span class="s4">'∞' </span><span class="s1">: node.max) +</span>
+                <span class="s4">']'</span>
+            <span class="s1">)</span><span class="s2">;</span>
+
+        <span class="s0">default</span><span class="s1">:</span>
+            <span class="s0">throw new </span><span class="s1">Error(</span><span class="s4">'Unknown node type `' </span><span class="s1">+ node.type + </span><span class="s4">'`'</span><span class="s1">)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">generateSequence(node</span><span class="s2">, </span><span class="s1">decorate</span><span class="s2">, </span><span class="s1">forceBraces</span><span class="s2">, </span><span class="s1">compact) {</span>
+    <span class="s0">var </span><span class="s1">combinator = node.combinator === </span><span class="s4">' ' </span><span class="s1">|| compact ? node.combinator : </span><span class="s4">' ' </span><span class="s1">+ node.combinator + </span><span class="s4">' '</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">result = node.terms.map(</span><span class="s0">function</span><span class="s1">(term) {</span>
+        <span class="s0">return </span><span class="s1">generate(term</span><span class="s2">, </span><span class="s1">decorate</span><span class="s2">, </span><span class="s1">forceBraces</span><span class="s2">, </span><span class="s1">compact)</span><span class="s2">;</span>
+    <span class="s1">}).join(combinator)</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(node.explicit || forceBraces) {</span>
+        <span class="s1">result = (compact || result[</span><span class="s3">0</span><span class="s1">] === </span><span class="s4">',' </span><span class="s1">? </span><span class="s4">'[' </span><span class="s1">: </span><span class="s4">'[ '</span><span class="s1">) + result + (compact ? </span><span class="s4">']' </span><span class="s1">: </span><span class="s4">' ]'</span><span class="s1">)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">result</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">generate(node</span><span class="s2">, </span><span class="s1">decorate</span><span class="s2">, </span><span class="s1">forceBraces</span><span class="s2">, </span><span class="s1">compact) {</span>
+    <span class="s0">var </span><span class="s1">result</span><span class="s2">;</span>
+
+    <span class="s0">switch </span><span class="s1">(node.type) {</span>
+        <span class="s0">case </span><span class="s4">'Group'</span><span class="s1">:</span>
+            <span class="s1">result =</span>
+                <span class="s1">generateSequence(node</span><span class="s2">, </span><span class="s1">decorate</span><span class="s2">, </span><span class="s1">forceBraces</span><span class="s2">, </span><span class="s1">compact) +</span>
+                <span class="s1">(node.disallowEmpty ? </span><span class="s4">'!' </span><span class="s1">: </span><span class="s4">''</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s4">'Multiplier'</span><span class="s1">:</span>
+            <span class="s5">// return since node is a composition</span>
+            <span class="s0">return </span><span class="s1">(</span>
+                <span class="s1">generate(node.term</span><span class="s2">, </span><span class="s1">decorate</span><span class="s2">, </span><span class="s1">forceBraces</span><span class="s2">, </span><span class="s1">compact) +</span>
+                <span class="s1">decorate(generateMultiplier(node)</span><span class="s2">, </span><span class="s1">node)</span>
+            <span class="s1">)</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s4">'Type'</span><span class="s1">:</span>
+            <span class="s1">result = </span><span class="s4">'&lt;' </span><span class="s1">+ node.name + (node.opts ? decorate(generateTypeOpts(node.opts)</span><span class="s2">, </span><span class="s1">node.opts) : </span><span class="s4">''</span><span class="s1">) + </span><span class="s4">'&gt;'</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s4">'Property'</span><span class="s1">:</span>
+            <span class="s1">result = </span><span class="s4">'&lt;</span><span class="s2">\'</span><span class="s4">' </span><span class="s1">+ node.name + </span><span class="s4">'</span><span class="s2">\'</span><span class="s4">&gt;'</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s4">'Keyword'</span><span class="s1">:</span>
+            <span class="s1">result = node.name</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s4">'AtKeyword'</span><span class="s1">:</span>
+            <span class="s1">result = </span><span class="s4">'@' </span><span class="s1">+ node.name</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s4">'Function'</span><span class="s1">:</span>
+            <span class="s1">result = node.name + </span><span class="s4">'('</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s4">'String'</span><span class="s1">:</span>
+        <span class="s0">case </span><span class="s4">'Token'</span><span class="s1">:</span>
+            <span class="s1">result = node.value</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s4">'Comma'</span><span class="s1">:</span>
+            <span class="s1">result = </span><span class="s4">','</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+        <span class="s0">default</span><span class="s1">:</span>
+            <span class="s0">throw new </span><span class="s1">Error(</span><span class="s4">'Unknown node type `' </span><span class="s1">+ node.type + </span><span class="s4">'`'</span><span class="s1">)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">decorate(result</span><span class="s2">, </span><span class="s1">node)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = </span><span class="s0">function</span><span class="s1">(node</span><span class="s2">, </span><span class="s1">options) {</span>
+    <span class="s0">var </span><span class="s1">decorate = noop</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">forceBraces = </span><span class="s0">false</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">compact = </span><span class="s0">false</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">options === </span><span class="s4">'function'</span><span class="s1">) {</span>
+        <span class="s1">decorate = options</span><span class="s2">;</span>
+    <span class="s1">} </span><span class="s0">else if </span><span class="s1">(options) {</span>
+        <span class="s1">forceBraces = Boolean(options.forceBraces)</span><span class="s2">;</span>
+        <span class="s1">compact = Boolean(options.compact)</span><span class="s2">;</span>
+        <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">options.decorate === </span><span class="s4">'function'</span><span class="s1">) {</span>
+            <span class="s1">decorate = options.decorate</span><span class="s2">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">generate(node</span><span class="s2">, </span><span class="s1">decorate</span><span class="s2">, </span><span class="s1">forceBraces</span><span class="s2">, </span><span class="s1">compact)</span><span class="s2">;</span>
+<span class="s1">}</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

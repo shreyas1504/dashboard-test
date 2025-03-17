@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>concurrent.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+concurrent.js</font>
+</center></td></tr></table>
+<pre><span class="s0">let </span><span class="s1">assert = require(</span><span class="s2">'assert'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">let </span><span class="s1">exec = require(</span><span class="s2">'child_process'</span><span class="s1">).execSync</span><span class="s3">;</span>
+
+<span class="s0">const </span><span class="s1">PROJECT_DIR = process.env.PROJECT_DIR</span><span class="s3">;</span>
+<span class="s0">const </span><span class="s1">JAKE_CMD = </span><span class="s2">`</span><span class="s1">${PROJECT_DIR}</span><span class="s2">/bin/cli.js`</span><span class="s3">;</span>
+
+<span class="s1">suite(</span><span class="s2">'concurrent'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+
+  <span class="s0">this</span><span class="s1">.timeout(</span><span class="s4">7000</span><span class="s1">)</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">' simple concurrent prerequisites 1'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q concurrent:simple1`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">'Started A</span><span class="s3">\n</span><span class="s2">Started B</span><span class="s3">\n</span><span class="s2">Finished B</span><span class="s3">\n</span><span class="s2">Finished A'</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">' simple concurrent prerequisites 2'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q concurrent:simple2`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">'Started C</span><span class="s3">\n</span><span class="s2">Started D</span><span class="s3">\n</span><span class="s2">Finished C</span><span class="s3">\n</span><span class="s2">Finished D'</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">' sequential concurrent prerequisites'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q concurrent:seqconcurrent`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">'Started A</span><span class="s3">\n</span><span class="s2">Started B</span><span class="s3">\n</span><span class="s2">Finished B</span><span class="s3">\n</span><span class="s2">Finished A</span><span class="s3">\n</span><span class="s2">Started C</span><span class="s3">\n</span><span class="s2">Started D</span><span class="s3">\n</span><span class="s2">Finished C</span><span class="s3">\n</span><span class="s2">Finished D'</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">' concurrent concurrent prerequisites'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q concurrent:concurrentconcurrent`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">'Started A</span><span class="s3">\n</span><span class="s2">Started B</span><span class="s3">\n</span><span class="s2">Started C</span><span class="s3">\n</span><span class="s2">Started D</span><span class="s3">\n</span><span class="s2">Finished B</span><span class="s3">\n</span><span class="s2">Finished C</span><span class="s3">\n</span><span class="s2">Finished A</span><span class="s3">\n</span><span class="s2">Finished D'</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">' concurrent prerequisites with subdependency'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q concurrent:subdep`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">'Started A</span><span class="s3">\n</span><span class="s2">Finished A</span><span class="s3">\n</span><span class="s2">Started Ba</span><span class="s3">\n</span><span class="s2">Finished Ba'</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">' failing in concurrent prerequisites'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">try </span><span class="s1">{</span>
+      <span class="s1">exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q concurrent:Cfail`</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s0">catch</span><span class="s1">(err) {</span>
+      <span class="s1">assert(err.message.indexOf(</span><span class="s2">'Command failed'</span><span class="s1">) &gt; -</span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">})</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

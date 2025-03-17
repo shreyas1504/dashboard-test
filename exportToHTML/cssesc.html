@@ -1,0 +1,138 @@
+<html>
+<head>
+<title>cssesc</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+cssesc</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+<span class="s2">const </span><span class="s1">fs = require(</span><span class="s3">'fs'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">const </span><span class="s1">cssesc = require(</span><span class="s3">'../cssesc.js'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">const </span><span class="s1">strings = process.argv.splice(</span><span class="s5">2</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">const </span><span class="s1">stdin = process.stdin</span><span class="s4">;</span>
+<span class="s2">const </span><span class="s1">options = {}</span><span class="s4">;</span>
+<span class="s2">const </span><span class="s1">log = console.log</span><span class="s4">;</span>
+
+<span class="s2">const </span><span class="s1">main = </span><span class="s2">function</span><span class="s1">() {</span>
+	<span class="s2">const </span><span class="s1">option = strings[</span><span class="s5">0</span><span class="s1">]</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(</span><span class="s5">/^(?:-h|--help|undefined)$/</span><span class="s1">.test(option)) {</span>
+		<span class="s1">log(</span>
+			<span class="s3">'cssesc v%s - https://mths.be/cssesc'</span><span class="s4">,</span>
+			<span class="s1">cssesc.version</span>
+		<span class="s1">)</span><span class="s4">;</span>
+		<span class="s1">log([</span>
+			<span class="s3">'</span><span class="s4">\n</span><span class="s3">Usage:</span><span class="s4">\n</span><span class="s3">'</span><span class="s4">,</span>
+			<span class="s3">'</span><span class="s4">\t</span><span class="s3">cssesc [string]'</span><span class="s4">,</span>
+			<span class="s3">'</span><span class="s4">\t</span><span class="s3">cssesc [-i | --identifier] [string]'</span><span class="s4">,</span>
+			<span class="s3">'</span><span class="s4">\t</span><span class="s3">cssesc [-s | --single-quotes] [string]'</span><span class="s4">,</span>
+			<span class="s3">'</span><span class="s4">\t</span><span class="s3">cssesc [-d | --double-quotes] [string]'</span><span class="s4">,</span>
+			<span class="s3">'</span><span class="s4">\t</span><span class="s3">cssesc [-w | --wrap] [string]'</span><span class="s4">,</span>
+			<span class="s3">'</span><span class="s4">\t</span><span class="s3">cssesc [-e | --escape-everything] [string]'</span><span class="s4">,</span>
+			<span class="s3">'</span><span class="s4">\t</span><span class="s3">cssesc [-v | --version]'</span><span class="s4">,</span>
+			<span class="s3">'</span><span class="s4">\t</span><span class="s3">cssesc [-h | --help]'</span><span class="s4">,</span>
+			<span class="s3">'</span><span class="s4">\n</span><span class="s3">Examples:</span><span class="s4">\n</span><span class="s3">'</span><span class="s4">,</span>
+			<span class="s3">'</span><span class="s4">\t</span><span class="s3">cssesc </span><span class="s4">\'</span><span class="s3">f</span><span class="s4">\xF6</span><span class="s3">o </span><span class="s4">\u2665 </span><span class="s3">b</span><span class="s4">\xE5</span><span class="s3">r </span><span class="s4">\uD834\uDF06 </span><span class="s3">baz</span><span class="s4">\'</span><span class="s3">'</span><span class="s4">,</span>
+			<span class="s3">'</span><span class="s4">\t</span><span class="s3">cssesc --identifier </span><span class="s4">\'</span><span class="s3">f</span><span class="s4">\xF6</span><span class="s3">o </span><span class="s4">\u2665 </span><span class="s3">b</span><span class="s4">\xE5</span><span class="s3">r </span><span class="s4">\uD834\uDF06 </span><span class="s3">baz</span><span class="s4">\'</span><span class="s3">'</span><span class="s4">,</span>
+			<span class="s3">'</span><span class="s4">\t</span><span class="s3">cssesc --escape-everything </span><span class="s4">\'</span><span class="s3">f</span><span class="s4">\xF6</span><span class="s3">o </span><span class="s4">\u2665 </span><span class="s3">b</span><span class="s4">\xE5</span><span class="s3">r </span><span class="s4">\uD834\uDF06 </span><span class="s3">baz</span><span class="s4">\'</span><span class="s3">'</span><span class="s4">,</span>
+			<span class="s3">'</span><span class="s4">\t</span><span class="s3">cssesc --double-quotes --wrap </span><span class="s4">\'</span><span class="s3">f</span><span class="s4">\xF6</span><span class="s3">o </span><span class="s4">\u2665 </span><span class="s3">b</span><span class="s4">\xE5</span><span class="s3">r </span><span class="s4">\uD834\uDF06 </span><span class="s3">baz</span><span class="s4">\'</span><span class="s3">'</span><span class="s4">,</span>
+			<span class="s3">'</span><span class="s4">\t</span><span class="s3">echo </span><span class="s4">\'</span><span class="s3">f</span><span class="s4">\xF6</span><span class="s3">o </span><span class="s4">\u2665 </span><span class="s3">b</span><span class="s4">\xE5</span><span class="s3">r </span><span class="s4">\uD834\uDF06 </span><span class="s3">baz</span><span class="s4">\' </span><span class="s3">| cssesc'</span>
+		<span class="s1">].join(</span><span class="s3">'</span><span class="s4">\n</span><span class="s3">'</span><span class="s1">))</span><span class="s4">;</span>
+		<span class="s2">return </span><span class="s1">process.exit(</span><span class="s5">1</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">if </span><span class="s1">(</span><span class="s5">/^(?:-v|--version)$/</span><span class="s1">.test(option)) {</span>
+		<span class="s1">log(</span><span class="s3">'v%s'</span><span class="s4">, </span><span class="s1">cssesc.version)</span><span class="s4">;</span>
+		<span class="s2">return </span><span class="s1">process.exit(</span><span class="s5">1</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s1">strings.forEach(</span><span class="s2">function</span><span class="s1">(string) {</span>
+		<span class="s0">// Process options</span>
+		<span class="s2">if </span><span class="s1">(</span><span class="s5">/^(?:-i|--identifier)$/</span><span class="s1">.test(string)) {</span>
+			<span class="s1">options.isIdentifier = </span><span class="s2">true</span><span class="s4">;</span>
+			<span class="s2">return</span><span class="s4">;</span>
+		<span class="s1">}</span>
+		<span class="s2">if </span><span class="s1">(</span><span class="s5">/^(?:-s|--single-quotes)$/</span><span class="s1">.test(string)) {</span>
+			<span class="s1">options.quotes = </span><span class="s3">'single'</span><span class="s4">;</span>
+			<span class="s2">return</span><span class="s4">;</span>
+		<span class="s1">}</span>
+		<span class="s2">if </span><span class="s1">(</span><span class="s5">/^(?:-d|--double-quotes)$/</span><span class="s1">.test(string)) {</span>
+			<span class="s1">options.quotes = </span><span class="s3">'double'</span><span class="s4">;</span>
+			<span class="s2">return</span><span class="s4">;</span>
+		<span class="s1">}</span>
+		<span class="s2">if </span><span class="s1">(</span><span class="s5">/^(?:-w|--wrap)$/</span><span class="s1">.test(string)) {</span>
+			<span class="s1">options.wrap = </span><span class="s2">true</span><span class="s4">;</span>
+			<span class="s2">return</span><span class="s4">;</span>
+		<span class="s1">}</span>
+		<span class="s2">if </span><span class="s1">(</span><span class="s5">/^(?:-e|--escape-everything)$/</span><span class="s1">.test(string)) {</span>
+			<span class="s1">options.escapeEverything = </span><span class="s2">true</span><span class="s4">;</span>
+			<span class="s2">return</span><span class="s4">;</span>
+		<span class="s1">}</span>
+
+		<span class="s0">// Process string(s)</span>
+		<span class="s2">let </span><span class="s1">result</span><span class="s4">;</span>
+		<span class="s2">try </span><span class="s1">{</span>
+			<span class="s1">result = cssesc(string</span><span class="s4">, </span><span class="s1">options)</span><span class="s4">;</span>
+			<span class="s1">log(result)</span><span class="s4">;</span>
+		<span class="s1">} </span><span class="s2">catch </span><span class="s1">(exception) {</span>
+			<span class="s1">log(exception.message + </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">'</span><span class="s1">)</span><span class="s4">;</span>
+			<span class="s1">log(</span><span class="s3">'Error: failed to escape.'</span><span class="s1">)</span><span class="s4">;</span>
+			<span class="s1">log(</span><span class="s3">'If you think this is a bug in cssesc, please report it:'</span><span class="s1">)</span><span class="s4">;</span>
+			<span class="s1">log(</span><span class="s3">'https://github.com/mathiasbynens/cssesc/issues/new'</span><span class="s1">)</span><span class="s4">;</span>
+			<span class="s1">log(</span>
+				<span class="s3">'</span><span class="s4">\n</span><span class="s3">Stack trace using cssesc@%s:</span><span class="s4">\n</span><span class="s3">'</span><span class="s4">,</span>
+				<span class="s1">cssesc.version</span>
+			<span class="s1">)</span><span class="s4">;</span>
+			<span class="s1">log(exception.stack)</span><span class="s4">;</span>
+			<span class="s2">return </span><span class="s1">process.exit(</span><span class="s5">1</span><span class="s1">)</span><span class="s4">;</span>
+		<span class="s1">}</span>
+	<span class="s1">})</span><span class="s4">;</span>
+	<span class="s0">// Return with exit status 0 outside of the `forEach` loop, in case</span>
+	<span class="s0">// multiple strings were passed in.</span>
+	<span class="s2">return </span><span class="s1">process.exit(</span><span class="s5">0</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s2">if </span><span class="s1">(stdin.isTTY) {</span>
+	<span class="s0">// handle shell arguments</span>
+	<span class="s1">main()</span><span class="s4">;</span>
+<span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+	<span class="s2">let </span><span class="s1">timeout</span><span class="s4">;</span>
+	<span class="s0">// Either the script is called from within a non-TTY context, or `stdin`</span>
+	<span class="s0">// content is being piped in.</span>
+	<span class="s2">if </span><span class="s1">(!process.stdout.isTTY) {</span>
+		<span class="s0">// The script was called from a non-TTY context. This is a rather uncommon</span>
+		<span class="s0">// use case we don’t actively support. However, we don’t want the script</span>
+		<span class="s0">// to wait forever in such cases, so…</span>
+		<span class="s1">timeout = setTimeout(</span><span class="s2">function</span><span class="s1">() {</span>
+			<span class="s0">// …if no piped data arrived after a whole minute, handle shell</span>
+			<span class="s0">// arguments instead.</span>
+			<span class="s1">main()</span><span class="s4">;</span>
+		<span class="s1">}</span><span class="s4">, </span><span class="s5">60000</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+	<span class="s2">let </span><span class="s1">data = </span><span class="s3">''</span><span class="s4">;</span>
+	<span class="s1">stdin.on(</span><span class="s3">'data'</span><span class="s4">, </span><span class="s2">function</span><span class="s1">(chunk) {</span>
+		<span class="s1">clearTimeout(timeout)</span><span class="s4">;</span>
+		<span class="s1">data += chunk</span><span class="s4">;</span>
+	<span class="s1">})</span><span class="s4">;</span>
+	<span class="s1">stdin.on(</span><span class="s3">'end'</span><span class="s4">, </span><span class="s2">function</span><span class="s1">() {</span>
+		<span class="s1">strings.push(data.trim())</span><span class="s4">;</span>
+		<span class="s1">main()</span><span class="s4">;</span>
+	<span class="s1">})</span><span class="s4">;</span>
+	<span class="s1">stdin.resume()</span><span class="s4">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

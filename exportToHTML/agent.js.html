@@ -1,0 +1,317 @@
+<html>
+<head>
+<title>agent.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #808080;}
+.s4 { color: #6897bb;}
+.s5 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+agent.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span>
+
+<span class="s2">var </span><span class="s1">assert = require(</span><span class="s0">'assert'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">http = require(</span><span class="s0">'http'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">https = require(</span><span class="s0">'https'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">net = require(</span><span class="s0">'net'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">util = require(</span><span class="s0">'util'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">transport = require(</span><span class="s0">'spdy-transport'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">debug = require(</span><span class="s0">'debug'</span><span class="s1">)(</span><span class="s0">'spdy:client'</span><span class="s1">)</span>
+
+<span class="s3">// Node.js 0.10 and 0.12 support</span>
+<span class="s1">Object.assign = process.versions.modules &gt;= </span><span class="s4">46</span>
+  <span class="s1">? Object.assign </span><span class="s3">// eslint-disable-next-line</span>
+  <span class="s1">: util._extend</span>
+
+<span class="s2">var </span><span class="s1">EventEmitter = require(</span><span class="s0">'events'</span><span class="s1">).EventEmitter</span>
+
+<span class="s2">var </span><span class="s1">spdy = require(</span><span class="s0">'../spdy'</span><span class="s1">)</span>
+
+<span class="s2">var </span><span class="s1">mode = </span><span class="s4">/^v0\.8\./</span><span class="s1">.test(process.version)</span>
+  <span class="s1">? </span><span class="s0">'rusty'</span>
+  <span class="s1">: </span><span class="s4">/^v0\.(9|10)\./</span><span class="s1">.test(process.version)</span>
+    <span class="s1">? </span><span class="s0">'old'</span>
+    <span class="s1">: </span><span class="s4">/^v0\.12\./</span><span class="s1">.test(process.version)</span>
+      <span class="s1">? </span><span class="s0">'normal'</span>
+      <span class="s1">: </span><span class="s0">'modern'</span>
+
+<span class="s2">var </span><span class="s1">proto = {}</span>
+
+<span class="s2">function </span><span class="s1">instantiate (base) {</span>
+  <span class="s2">function </span><span class="s1">Agent (options) {</span>
+    <span class="s2">this</span><span class="s1">._init(base</span><span class="s5">, </span><span class="s1">options)</span>
+  <span class="s1">}</span>
+  <span class="s1">util.inherits(Agent</span><span class="s5">, </span><span class="s1">base)</span>
+
+  <span class="s1">Agent.create = </span><span class="s2">function </span><span class="s1">create (options) {</span>
+    <span class="s2">return new </span><span class="s1">Agent(options)</span>
+  <span class="s1">}</span>
+
+  <span class="s1">Object.keys(proto).forEach(</span><span class="s2">function </span><span class="s1">(key) {</span>
+    <span class="s1">Agent.prototype[key] = proto[key]</span>
+  <span class="s1">})</span>
+
+  <span class="s2">return </span><span class="s1">Agent</span>
+<span class="s1">}</span>
+
+<span class="s1">proto._init = </span><span class="s2">function </span><span class="s1">_init (base</span><span class="s5">, </span><span class="s1">options) {</span>
+  <span class="s1">base.call(</span><span class="s2">this</span><span class="s5">, </span><span class="s1">options)</span>
+
+  <span class="s2">var </span><span class="s1">state = {}</span>
+  <span class="s2">this</span><span class="s1">._spdyState = state</span>
+
+  <span class="s1">state.host = options.host</span>
+  <span class="s1">state.options = options.spdy || {}</span>
+  <span class="s1">state.secure = </span><span class="s2">this instanceof </span><span class="s1">https.Agent</span>
+  <span class="s1">state.fallback = </span><span class="s2">false</span>
+  <span class="s1">state.createSocket = </span><span class="s2">this</span><span class="s1">._getCreateSocket()</span>
+  <span class="s1">state.socket = </span><span class="s2">null</span>
+  <span class="s1">state.connection = </span><span class="s2">null</span>
+
+  <span class="s3">// No chunked encoding</span>
+  <span class="s2">this</span><span class="s1">.keepAlive = </span><span class="s2">false</span>
+
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+  <span class="s2">this</span><span class="s1">._connect(options</span><span class="s5">, </span><span class="s2">function </span><span class="s1">(err</span><span class="s5">, </span><span class="s1">connection) {</span>
+    <span class="s2">if </span><span class="s1">(err) {</span>
+      <span class="s2">return </span><span class="s1">self.emit(</span><span class="s0">'error'</span><span class="s5">, </span><span class="s1">err)</span>
+    <span class="s1">}</span>
+
+    <span class="s1">state.connection = connection</span>
+    <span class="s1">self.emit(</span><span class="s0">'_connect'</span><span class="s1">)</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s1">proto._getCreateSocket = </span><span class="s2">function </span><span class="s1">_getCreateSocket () {</span>
+  <span class="s3">// Find super's `createSocket` method</span>
+  <span class="s2">var </span><span class="s1">createSocket</span>
+  <span class="s2">var </span><span class="s1">cons = </span><span class="s2">this</span><span class="s1">.constructor.super_</span>
+  <span class="s2">do </span><span class="s1">{</span>
+    <span class="s1">createSocket = cons.prototype.createSocket</span>
+
+    <span class="s2">if </span><span class="s1">(cons.super_ === EventEmitter || !cons.super_) {</span>
+      <span class="s2">break</span>
+    <span class="s1">}</span>
+    <span class="s1">cons = cons.super_</span>
+  <span class="s1">} </span><span class="s2">while </span><span class="s1">(!createSocket)</span>
+  <span class="s2">if </span><span class="s1">(!createSocket) {</span>
+    <span class="s1">createSocket = http.Agent.prototype.createSocket</span>
+  <span class="s1">}</span>
+
+  <span class="s1">assert(createSocket</span><span class="s5">, </span><span class="s0">'.createSocket() method not found'</span><span class="s1">)</span>
+
+  <span class="s2">return </span><span class="s1">createSocket</span>
+<span class="s1">}</span>
+
+<span class="s1">proto._connect = </span><span class="s2">function </span><span class="s1">_connect (options</span><span class="s5">, </span><span class="s1">callback) {</span>
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+  <span class="s2">var </span><span class="s1">state = </span><span class="s2">this</span><span class="s1">._spdyState</span>
+
+  <span class="s2">var </span><span class="s1">protocols = state.options.protocols || [</span>
+    <span class="s0">'h2'</span><span class="s5">,</span>
+    <span class="s0">'spdy/3.1'</span><span class="s5">, </span><span class="s0">'spdy/3'</span><span class="s5">, </span><span class="s0">'spdy/2'</span><span class="s5">,</span>
+    <span class="s0">'http/1.1'</span><span class="s5">, </span><span class="s0">'http/1.0'</span>
+  <span class="s1">]</span>
+
+  <span class="s3">// TODO(indutny): reconnect automatically?</span>
+  <span class="s2">var </span><span class="s1">socket = </span><span class="s2">this</span><span class="s1">.createConnection(Object.assign({</span>
+    <span class="s1">NPNProtocols: protocols</span><span class="s5">,</span>
+    <span class="s1">ALPNProtocols: protocols</span><span class="s5">,</span>
+    <span class="s1">servername: options.servername || options.host</span>
+  <span class="s1">}</span><span class="s5">, </span><span class="s1">options))</span>
+  <span class="s1">state.socket = socket</span>
+
+  <span class="s1">socket.setNoDelay(</span><span class="s2">true</span><span class="s1">)</span>
+
+  <span class="s2">function </span><span class="s1">onError (err) {</span>
+    <span class="s2">return </span><span class="s1">callback(err)</span>
+  <span class="s1">}</span>
+  <span class="s1">socket.on(</span><span class="s0">'error'</span><span class="s5">, </span><span class="s1">onError)</span>
+
+  <span class="s1">socket.on(state.secure ? </span><span class="s0">'secureConnect' </span><span class="s1">: </span><span class="s0">'connect'</span><span class="s5">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">socket.removeListener(</span><span class="s0">'error'</span><span class="s5">, </span><span class="s1">onError)</span>
+
+    <span class="s2">var </span><span class="s1">protocol</span>
+    <span class="s2">if </span><span class="s1">(state.secure) {</span>
+      <span class="s1">protocol = socket.npnProtocol ||</span>
+                 <span class="s1">socket.alpnProtocol ||</span>
+                 <span class="s1">state.options.protocol</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+      <span class="s1">protocol = state.options.protocol</span>
+    <span class="s1">}</span>
+
+    <span class="s3">// HTTP server - kill socket and switch to the fallback mode</span>
+    <span class="s2">if </span><span class="s1">(!protocol || protocol === </span><span class="s0">'http/1.1' </span><span class="s1">|| protocol === </span><span class="s0">'http/1.0'</span><span class="s1">) {</span>
+      <span class="s1">debug(</span><span class="s0">'activating fallback'</span><span class="s1">)</span>
+      <span class="s1">socket.destroy()</span>
+      <span class="s1">state.fallback = </span><span class="s2">true</span>
+      <span class="s2">return</span>
+    <span class="s1">}</span>
+
+    <span class="s1">debug(</span><span class="s0">'connected protocol=%j'</span><span class="s5">, </span><span class="s1">protocol)</span>
+    <span class="s2">var </span><span class="s1">connection = transport.connection.create(socket</span><span class="s5">, </span><span class="s1">Object.assign({</span>
+      <span class="s1">protocol: </span><span class="s4">/spdy/</span><span class="s1">.test(protocol) ? </span><span class="s0">'spdy' </span><span class="s1">: </span><span class="s0">'http2'</span><span class="s5">,</span>
+      <span class="s1">isServer: </span><span class="s2">false</span>
+    <span class="s1">}</span><span class="s5">, </span><span class="s1">state.options.connection || {}))</span>
+
+    <span class="s3">// Pass connection level errors are passed to the agent.</span>
+    <span class="s1">connection.on(</span><span class="s0">'error'</span><span class="s5">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+      <span class="s1">self.emit(</span><span class="s0">'error'</span><span class="s5">, </span><span class="s1">err)</span>
+    <span class="s1">})</span>
+
+    <span class="s3">// Set version when we are certain</span>
+    <span class="s2">if </span><span class="s1">(protocol === </span><span class="s0">'h2'</span><span class="s1">) {</span>
+      <span class="s1">connection.start(</span><span class="s4">4</span><span class="s1">)</span>
+    <span class="s1">} </span><span class="s2">else if </span><span class="s1">(protocol === </span><span class="s0">'spdy/3.1'</span><span class="s1">) {</span>
+      <span class="s1">connection.start(</span><span class="s4">3.1</span><span class="s1">)</span>
+    <span class="s1">} </span><span class="s2">else if </span><span class="s1">(protocol === </span><span class="s0">'spdy/3'</span><span class="s1">) {</span>
+      <span class="s1">connection.start(</span><span class="s4">3</span><span class="s1">)</span>
+    <span class="s1">} </span><span class="s2">else if </span><span class="s1">(protocol === </span><span class="s0">'spdy/2'</span><span class="s1">) {</span>
+      <span class="s1">connection.start(</span><span class="s4">2</span><span class="s1">)</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+      <span class="s1">socket.destroy()</span>
+      <span class="s1">callback(</span><span class="s2">new </span><span class="s1">Error(</span><span class="s0">'Unexpected protocol: ' </span><span class="s1">+ protocol))</span>
+      <span class="s2">return</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(state.options[</span><span class="s0">'x-forwarded-for'</span><span class="s1">] !== undefined) {</span>
+      <span class="s1">connection.sendXForwardedFor(state.options[</span><span class="s0">'x-forwarded-for'</span><span class="s1">])</span>
+    <span class="s1">}</span>
+
+    <span class="s1">callback(</span><span class="s2">null</span><span class="s5">, </span><span class="s1">connection)</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s1">proto._createSocket = </span><span class="s2">function </span><span class="s1">_createSocket (req</span><span class="s5">, </span><span class="s1">options</span><span class="s5">, </span><span class="s1">callback) {</span>
+  <span class="s2">var </span><span class="s1">state = </span><span class="s2">this</span><span class="s1">._spdyState</span>
+  <span class="s2">if </span><span class="s1">(state.fallback) { </span><span class="s2">return </span><span class="s1">state.createSocket(req</span><span class="s5">, </span><span class="s1">options) }</span>
+
+  <span class="s2">var </span><span class="s1">handle = spdy.handle.create(</span><span class="s2">null</span><span class="s5">, </span><span class="s2">null</span><span class="s5">, </span><span class="s1">state.socket)</span>
+
+  <span class="s2">var </span><span class="s1">socketOptions = {</span>
+    <span class="s1">handle: handle</span><span class="s5">,</span>
+    <span class="s1">allowHalfOpen: </span><span class="s2">true</span>
+  <span class="s1">}</span>
+
+  <span class="s2">var </span><span class="s1">socket</span>
+  <span class="s2">if </span><span class="s1">(state.secure) {</span>
+    <span class="s1">socket = </span><span class="s2">new </span><span class="s1">spdy.Socket(state.socket</span><span class="s5">, </span><span class="s1">socketOptions)</span>
+  <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+    <span class="s1">socket = </span><span class="s2">new </span><span class="s1">net.Socket(socketOptions)</span>
+  <span class="s1">}</span>
+
+  <span class="s1">handle.assignSocket(socket)</span>
+  <span class="s1">handle.assignClientRequest(req)</span>
+
+  <span class="s3">// Create stream only once `req.end()` is called</span>
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+  <span class="s1">handle.once(</span><span class="s0">'needStream'</span><span class="s5">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">if </span><span class="s1">(state.connection === </span><span class="s2">null</span><span class="s1">) {</span>
+      <span class="s1">self.once(</span><span class="s0">'_connect'</span><span class="s5">, </span><span class="s2">function </span><span class="s1">() {</span>
+        <span class="s1">handle.setStream(self._createStream(req</span><span class="s5">, </span><span class="s1">handle))</span>
+      <span class="s1">})</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+      <span class="s1">handle.setStream(self._createStream(req</span><span class="s5">, </span><span class="s1">handle))</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span>
+
+  <span class="s3">// Yes, it is in reverse</span>
+  <span class="s1">req.on(</span><span class="s0">'response'</span><span class="s5">, </span><span class="s2">function </span><span class="s1">(res) {</span>
+    <span class="s1">handle.assignRequest(res)</span>
+  <span class="s1">})</span>
+  <span class="s1">handle.assignResponse(req)</span>
+
+  <span class="s3">// Handle PUSH</span>
+  <span class="s1">req.addListener(</span><span class="s0">'newListener'</span><span class="s5">, </span><span class="s1">spdy.request.onNewListener)</span>
+
+  <span class="s3">// For v0.8</span>
+  <span class="s1">socket.readable = </span><span class="s2">true</span>
+  <span class="s1">socket.writable = </span><span class="s2">true</span>
+
+  <span class="s2">if </span><span class="s1">(callback) {</span>
+    <span class="s2">return </span><span class="s1">callback(</span><span class="s2">null</span><span class="s5">, </span><span class="s1">socket)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">return </span><span class="s1">socket</span>
+<span class="s1">}</span>
+
+<span class="s2">if </span><span class="s1">(mode === </span><span class="s0">'modern' </span><span class="s1">|| mode === </span><span class="s0">'normal'</span><span class="s1">) {</span>
+  <span class="s1">proto.createSocket = proto._createSocket</span>
+<span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+  <span class="s1">proto.createSocket = </span><span class="s2">function </span><span class="s1">createSocket (name</span><span class="s5">, </span><span class="s1">host</span><span class="s5">, </span><span class="s1">port</span><span class="s5">, </span><span class="s1">addr</span><span class="s5">, </span><span class="s1">req) {</span>
+    <span class="s2">var </span><span class="s1">state = </span><span class="s2">this</span><span class="s1">._spdyState</span>
+    <span class="s2">if </span><span class="s1">(state.fallback) {</span>
+      <span class="s2">return </span><span class="s1">state.createSocket(name</span><span class="s5">, </span><span class="s1">host</span><span class="s5">, </span><span class="s1">port</span><span class="s5">, </span><span class="s1">addr</span><span class="s5">, </span><span class="s1">req)</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return this</span><span class="s1">._createSocket(req</span><span class="s5">, </span><span class="s1">{</span>
+      <span class="s1">host: host</span><span class="s5">,</span>
+      <span class="s1">port: port</span>
+    <span class="s1">})</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">proto._createStream = </span><span class="s2">function </span><span class="s1">_createStream (req</span><span class="s5">, </span><span class="s1">handle) {</span>
+  <span class="s2">var </span><span class="s1">state = </span><span class="s2">this</span><span class="s1">._spdyState</span>
+
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+  <span class="s2">return </span><span class="s1">state.connection.reserveStream({</span>
+    <span class="s1">method: req.method</span><span class="s5">,</span>
+    <span class="s1">path: req.path</span><span class="s5">,</span>
+    <span class="s1">headers: req._headers</span><span class="s5">,</span>
+    <span class="s1">host: state.host</span>
+  <span class="s1">}</span><span class="s5">, </span><span class="s2">function </span><span class="s1">(err</span><span class="s5">, </span><span class="s1">stream) {</span>
+    <span class="s2">if </span><span class="s1">(err) {</span>
+      <span class="s2">return </span><span class="s1">self.emit(</span><span class="s0">'error'</span><span class="s5">, </span><span class="s1">err)</span>
+    <span class="s1">}</span>
+
+    <span class="s1">stream.on(</span><span class="s0">'response'</span><span class="s5">, </span><span class="s2">function </span><span class="s1">(status</span><span class="s5">, </span><span class="s1">headers) {</span>
+      <span class="s1">handle.emitResponse(status</span><span class="s5">, </span><span class="s1">headers)</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s3">// Public APIs</span>
+
+<span class="s1">proto.close = </span><span class="s2">function </span><span class="s1">close (callback) {</span>
+  <span class="s2">var </span><span class="s1">state = </span><span class="s2">this</span><span class="s1">._spdyState</span>
+
+  <span class="s2">if </span><span class="s1">(state.connection === </span><span class="s2">null</span><span class="s1">) {</span>
+    <span class="s2">this</span><span class="s1">.once(</span><span class="s0">'_connect'</span><span class="s5">, </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s2">this</span><span class="s1">.close(callback)</span>
+    <span class="s1">})</span>
+    <span class="s2">return</span>
+  <span class="s1">}</span>
+
+  <span class="s1">state.connection.end(callback)</span>
+<span class="s1">}</span>
+
+<span class="s1">exports.Agent = instantiate(https.Agent)</span>
+<span class="s1">exports.PlainAgent = instantiate(http.Agent)</span>
+
+<span class="s1">exports.create = </span><span class="s2">function </span><span class="s1">create (base</span><span class="s5">, </span><span class="s1">options) {</span>
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">base === </span><span class="s0">'object'</span><span class="s1">) {</span>
+    <span class="s1">options = base</span>
+    <span class="s1">base = </span><span class="s2">null</span>
+  <span class="s1">}</span>
+
+  <span class="s2">if </span><span class="s1">(base) {</span>
+    <span class="s2">return </span><span class="s1">instantiate(base).create(options)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">if </span><span class="s1">(options.spdy &amp;&amp; options.spdy.plain) {</span>
+    <span class="s2">return </span><span class="s1">exports.PlainAgent.create(options)</span>
+  <span class="s1">} </span><span class="s2">else </span><span class="s1">{ </span><span class="s2">return </span><span class="s1">exports.Agent.create(options) }</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

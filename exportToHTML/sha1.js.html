@@ -1,0 +1,117 @@
+<html>
+<head>
+<title>sha1.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+sha1.js</font>
+</center></td></tr></table>
+<pre><span class="s0">// Adapted from Chris Veness' SHA1 code at</span>
+<span class="s0">// http://www.movable-type.co.uk/scripts/sha1.html</span>
+<span class="s2">function </span><span class="s1">f(s</span><span class="s3">, </span><span class="s1">x</span><span class="s3">, </span><span class="s1">y</span><span class="s3">, </span><span class="s1">z) {</span>
+  <span class="s2">switch </span><span class="s1">(s) {</span>
+    <span class="s2">case </span><span class="s4">0</span><span class="s1">:</span>
+      <span class="s2">return </span><span class="s1">x &amp; y ^ ~x &amp; z</span><span class="s3">;</span>
+
+    <span class="s2">case </span><span class="s4">1</span><span class="s1">:</span>
+      <span class="s2">return </span><span class="s1">x ^ y ^ z</span><span class="s3">;</span>
+
+    <span class="s2">case </span><span class="s4">2</span><span class="s1">:</span>
+      <span class="s2">return </span><span class="s1">x &amp; y ^ x &amp; z ^ y &amp; z</span><span class="s3">;</span>
+
+    <span class="s2">case </span><span class="s4">3</span><span class="s1">:</span>
+      <span class="s2">return </span><span class="s1">x ^ y ^ z</span><span class="s3">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">ROTL(x</span><span class="s3">, </span><span class="s1">n) {</span>
+  <span class="s2">return </span><span class="s1">x &lt;&lt; n | x &gt;&gt;&gt; </span><span class="s4">32 </span><span class="s1">- n</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">sha1(bytes) {</span>
+  <span class="s2">var </span><span class="s1">K = [</span><span class="s4">0x5a827999</span><span class="s3">, </span><span class="s4">0x6ed9eba1</span><span class="s3">, </span><span class="s4">0x8f1bbcdc</span><span class="s3">, </span><span class="s4">0xca62c1d6</span><span class="s1">]</span><span class="s3">;</span>
+  <span class="s2">var </span><span class="s1">H = [</span><span class="s4">0x67452301</span><span class="s3">, </span><span class="s4">0xefcdab89</span><span class="s3">, </span><span class="s4">0x98badcfe</span><span class="s3">, </span><span class="s4">0x10325476</span><span class="s3">, </span><span class="s4">0xc3d2e1f0</span><span class="s1">]</span><span class="s3">;</span>
+
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">bytes === </span><span class="s5">'string'</span><span class="s1">) {</span>
+    <span class="s2">var </span><span class="s1">msg = unescape(encodeURIComponent(bytes))</span><span class="s3">; </span><span class="s0">// UTF8 escape</span>
+
+    <span class="s1">bytes = []</span><span class="s3">;</span>
+
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; msg.length</span><span class="s3">; </span><span class="s1">++i) {</span>
+      <span class="s1">bytes.push(msg.charCodeAt(i))</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">} </span><span class="s2">else if </span><span class="s1">(!Array.isArray(bytes)) {</span>
+    <span class="s0">// Convert Array-like to Array</span>
+    <span class="s1">bytes = Array.prototype.slice.call(bytes)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">bytes.push(</span><span class="s4">0x80</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s2">var </span><span class="s1">l = bytes.length / </span><span class="s4">4 </span><span class="s1">+ </span><span class="s4">2</span><span class="s3">;</span>
+  <span class="s2">var </span><span class="s1">N = Math.ceil(l / </span><span class="s4">16</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s2">var </span><span class="s1">M = </span><span class="s2">new </span><span class="s1">Array(N)</span><span class="s3">;</span>
+
+  <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">_i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">_i &lt; N</span><span class="s3">; </span><span class="s1">++_i) {</span>
+    <span class="s2">var </span><span class="s1">arr = </span><span class="s2">new </span><span class="s1">Uint32Array(</span><span class="s4">16</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">j = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">j &lt; </span><span class="s4">16</span><span class="s3">; </span><span class="s1">++j) {</span>
+      <span class="s1">arr[j] = bytes[_i * </span><span class="s4">64 </span><span class="s1">+ j * </span><span class="s4">4</span><span class="s1">] &lt;&lt; </span><span class="s4">24 </span><span class="s1">| bytes[_i * </span><span class="s4">64 </span><span class="s1">+ j * </span><span class="s4">4 </span><span class="s1">+ </span><span class="s4">1</span><span class="s1">] &lt;&lt; </span><span class="s4">16 </span><span class="s1">| bytes[_i * </span><span class="s4">64 </span><span class="s1">+ j * </span><span class="s4">4 </span><span class="s1">+ </span><span class="s4">2</span><span class="s1">] &lt;&lt; </span><span class="s4">8 </span><span class="s1">| bytes[_i * </span><span class="s4">64 </span><span class="s1">+ j * </span><span class="s4">4 </span><span class="s1">+ </span><span class="s4">3</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">M[_i] = arr</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">M[N - </span><span class="s4">1</span><span class="s1">][</span><span class="s4">14</span><span class="s1">] = (bytes.length - </span><span class="s4">1</span><span class="s1">) * </span><span class="s4">8 </span><span class="s1">/ Math.pow(</span><span class="s4">2</span><span class="s3">, </span><span class="s4">32</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">M[N - </span><span class="s4">1</span><span class="s1">][</span><span class="s4">14</span><span class="s1">] = Math.floor(M[N - </span><span class="s4">1</span><span class="s1">][</span><span class="s4">14</span><span class="s1">])</span><span class="s3">;</span>
+  <span class="s1">M[N - </span><span class="s4">1</span><span class="s1">][</span><span class="s4">15</span><span class="s1">] = (bytes.length - </span><span class="s4">1</span><span class="s1">) * </span><span class="s4">8 </span><span class="s1">&amp; </span><span class="s4">0xffffffff</span><span class="s3">;</span>
+
+  <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">_i2 = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">_i2 &lt; N</span><span class="s3">; </span><span class="s1">++_i2) {</span>
+    <span class="s2">var </span><span class="s1">W = </span><span class="s2">new </span><span class="s1">Uint32Array(</span><span class="s4">80</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">t = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">t &lt; </span><span class="s4">16</span><span class="s3">; </span><span class="s1">++t) {</span>
+      <span class="s1">W[t] = M[_i2][t]</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">_t = </span><span class="s4">16</span><span class="s3">; </span><span class="s1">_t &lt; </span><span class="s4">80</span><span class="s3">; </span><span class="s1">++_t) {</span>
+      <span class="s1">W[_t] = ROTL(W[_t - </span><span class="s4">3</span><span class="s1">] ^ W[_t - </span><span class="s4">8</span><span class="s1">] ^ W[_t - </span><span class="s4">14</span><span class="s1">] ^ W[_t - </span><span class="s4">16</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">var </span><span class="s1">a = H[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s2">var </span><span class="s1">b = H[</span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s2">var </span><span class="s1">c = H[</span><span class="s4">2</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s2">var </span><span class="s1">d = H[</span><span class="s4">3</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s2">var </span><span class="s1">e = H[</span><span class="s4">4</span><span class="s1">]</span><span class="s3">;</span>
+
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">_t2 = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">_t2 &lt; </span><span class="s4">80</span><span class="s3">; </span><span class="s1">++_t2) {</span>
+      <span class="s2">var </span><span class="s1">s = Math.floor(_t2 / </span><span class="s4">20</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s2">var </span><span class="s1">T = ROTL(a</span><span class="s3">, </span><span class="s4">5</span><span class="s1">) + f(s</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">c</span><span class="s3">, </span><span class="s1">d) + e + K[s] + W[_t2] &gt;&gt;&gt; </span><span class="s4">0</span><span class="s3">;</span>
+      <span class="s1">e = d</span><span class="s3">;</span>
+      <span class="s1">d = c</span><span class="s3">;</span>
+      <span class="s1">c = ROTL(b</span><span class="s3">, </span><span class="s4">30</span><span class="s1">) &gt;&gt;&gt; </span><span class="s4">0</span><span class="s3">;</span>
+      <span class="s1">b = a</span><span class="s3">;</span>
+      <span class="s1">a = T</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">H[</span><span class="s4">0</span><span class="s1">] = H[</span><span class="s4">0</span><span class="s1">] + a &gt;&gt;&gt; </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s1">H[</span><span class="s4">1</span><span class="s1">] = H[</span><span class="s4">1</span><span class="s1">] + b &gt;&gt;&gt; </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s1">H[</span><span class="s4">2</span><span class="s1">] = H[</span><span class="s4">2</span><span class="s1">] + c &gt;&gt;&gt; </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s1">H[</span><span class="s4">3</span><span class="s1">] = H[</span><span class="s4">3</span><span class="s1">] + d &gt;&gt;&gt; </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s1">H[</span><span class="s4">4</span><span class="s1">] = H[</span><span class="s4">4</span><span class="s1">] + e &gt;&gt;&gt; </span><span class="s4">0</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s2">return </span><span class="s1">[H[</span><span class="s4">0</span><span class="s1">] &gt;&gt; </span><span class="s4">24 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">0</span><span class="s1">] &gt;&gt; </span><span class="s4">16 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">0</span><span class="s1">] &gt;&gt; </span><span class="s4">8 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">0</span><span class="s1">] &amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">1</span><span class="s1">] &gt;&gt; </span><span class="s4">24 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">1</span><span class="s1">] &gt;&gt; </span><span class="s4">16 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">1</span><span class="s1">] &gt;&gt; </span><span class="s4">8 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">1</span><span class="s1">] &amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">2</span><span class="s1">] &gt;&gt; </span><span class="s4">24 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">2</span><span class="s1">] &gt;&gt; </span><span class="s4">16 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">2</span><span class="s1">] &gt;&gt; </span><span class="s4">8 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">2</span><span class="s1">] &amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">3</span><span class="s1">] &gt;&gt; </span><span class="s4">24 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">3</span><span class="s1">] &gt;&gt; </span><span class="s4">16 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">3</span><span class="s1">] &gt;&gt; </span><span class="s4">8 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">3</span><span class="s1">] &amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">4</span><span class="s1">] &gt;&gt; </span><span class="s4">24 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">4</span><span class="s1">] &gt;&gt; </span><span class="s4">16 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">4</span><span class="s1">] &gt;&gt; </span><span class="s4">8 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">, </span><span class="s1">H[</span><span class="s4">4</span><span class="s1">] &amp; </span><span class="s4">0xff</span><span class="s1">]</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s2">export default </span><span class="s1">sha1</span><span class="s3">;</span></pre>
+</body>
+</html>

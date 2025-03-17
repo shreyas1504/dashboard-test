@@ -1,0 +1,75 @@
+<html>
+<head>
+<title>build.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+build.js</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+
+<span class="s2">'use strict'</span><span class="s3">;</span>
+
+<span class="s4">const </span><span class="s1">fs = require(</span><span class="s2">'fs'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">const </span><span class="s1">path = require(</span><span class="s2">'path'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">const </span><span class="s1">mimeScore = require(</span><span class="s2">'mime-score'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">let </span><span class="s1">db = require(</span><span class="s2">'mime-db'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">let </span><span class="s1">chalk = require(</span><span class="s2">'chalk'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">const </span><span class="s1">STANDARD_FACET_SCORE = </span><span class="s5">900</span><span class="s3">;</span>
+
+<span class="s4">const </span><span class="s1">byExtension = {}</span><span class="s3">;</span>
+
+<span class="s0">// Clear out any conflict extensions in mime-db</span>
+<span class="s4">for </span><span class="s1">(</span><span class="s4">let </span><span class="s1">type </span><span class="s4">in </span><span class="s1">db) {</span>
+  <span class="s4">let </span><span class="s1">entry = db[type]</span><span class="s3">;</span>
+  <span class="s1">entry.type = type</span><span class="s3">;</span>
+
+  <span class="s4">if </span><span class="s1">(!entry.extensions) </span><span class="s4">continue</span><span class="s3">;</span>
+
+  <span class="s1">entry.extensions.forEach(ext =&gt; {</span>
+    <span class="s4">if </span><span class="s1">(ext </span><span class="s4">in </span><span class="s1">byExtension) {</span>
+      <span class="s4">const </span><span class="s1">e0 = entry</span><span class="s3">;</span>
+      <span class="s4">const </span><span class="s1">e1 = byExtension[ext]</span><span class="s3">;</span>
+      <span class="s1">e0.pri = mimeScore(e0.type</span><span class="s3">, </span><span class="s1">e0.source)</span><span class="s3">;</span>
+      <span class="s1">e1.pri = mimeScore(e1.type</span><span class="s3">, </span><span class="s1">e1.source)</span><span class="s3">;</span>
+
+      <span class="s4">let </span><span class="s1">drop = e0.pri &lt; e1.pri ? e0 : e1</span><span class="s3">;</span>
+      <span class="s4">let </span><span class="s1">keep = e0.pri &gt;= e1.pri ? e0 : e1</span><span class="s3">;</span>
+      <span class="s1">drop.extensions = drop.extensions.filter(e =&gt; e !== ext)</span><span class="s3">;</span>
+
+      <span class="s1">console.log(</span><span class="s2">`</span><span class="s1">${ext}</span><span class="s2">: Keeping </span><span class="s1">${chalk.green(keep.type)} </span><span class="s2">(</span><span class="s1">${keep.pri}</span><span class="s2">), dropping </span><span class="s1">${chalk.red(drop.type)} </span><span class="s2">(</span><span class="s1">${drop.pri}</span><span class="s2">)`</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s1">byExtension[ext] = entry</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">function </span><span class="s1">writeTypesFile(types</span><span class="s3">, </span><span class="s1">path) {</span>
+  <span class="s1">fs.writeFileSync(path</span><span class="s3">, </span><span class="s1">JSON.stringify(types))</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">// Segregate into standard and non-standard types based on facet per</span>
+<span class="s0">// https://tools.ietf.org/html/rfc6838#section-3.1</span>
+<span class="s4">const </span><span class="s1">types = {}</span><span class="s3">;</span>
+
+<span class="s1">Object.keys(db).sort().forEach(k =&gt; {</span>
+  <span class="s4">const </span><span class="s1">entry = db[k]</span><span class="s3">;</span>
+  <span class="s1">types[entry.type] = entry.extensions</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">writeTypesFile(types</span><span class="s3">, </span><span class="s1">path.join(__dirname</span><span class="s3">, </span><span class="s2">'..'</span><span class="s3">, </span><span class="s2">'types.json'</span><span class="s1">))</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

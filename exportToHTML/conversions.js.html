@@ -1,0 +1,892 @@
+<html>
+<head>
+<title>conversions.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #808080;}
+.s6 { color: #6897bb;}
+.s7 { color: #8a8a8a; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+conversions.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* MIT license */</span>
+<span class="s2">var </span><span class="s1">cssKeywords = require(</span><span class="s3">'color-name'</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s5">// NOTE: conversions should only return primitive values (i.e. arrays, or</span>
+<span class="s5">//       values that give correct `typeof` results).</span>
+<span class="s5">//       do not use box values types (i.e. Number(), String(), etc.)</span>
+
+<span class="s2">var </span><span class="s1">reverseKeywords = {}</span><span class="s4">;</span>
+<span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">key </span><span class="s2">in </span><span class="s1">cssKeywords) {</span>
+	<span class="s2">if </span><span class="s1">(cssKeywords.hasOwnProperty(key)) {</span>
+		<span class="s1">reverseKeywords[cssKeywords[key]] = key</span><span class="s4">;</span>
+	<span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s2">var </span><span class="s1">convert = module.exports = {</span>
+	<span class="s1">rgb: {channels: </span><span class="s6">3</span><span class="s4">, </span><span class="s1">labels: </span><span class="s3">'rgb'</span><span class="s1">}</span><span class="s4">,</span>
+	<span class="s1">hsl: {channels: </span><span class="s6">3</span><span class="s4">, </span><span class="s1">labels: </span><span class="s3">'hsl'</span><span class="s1">}</span><span class="s4">,</span>
+	<span class="s1">hsv: {channels: </span><span class="s6">3</span><span class="s4">, </span><span class="s1">labels: </span><span class="s3">'hsv'</span><span class="s1">}</span><span class="s4">,</span>
+	<span class="s1">hwb: {channels: </span><span class="s6">3</span><span class="s4">, </span><span class="s1">labels: </span><span class="s3">'hwb'</span><span class="s1">}</span><span class="s4">,</span>
+	<span class="s1">cmyk: {channels: </span><span class="s6">4</span><span class="s4">, </span><span class="s1">labels: </span><span class="s3">'cmyk'</span><span class="s1">}</span><span class="s4">,</span>
+	<span class="s1">xyz: {channels: </span><span class="s6">3</span><span class="s4">, </span><span class="s1">labels: </span><span class="s3">'xyz'</span><span class="s1">}</span><span class="s4">,</span>
+	<span class="s1">lab: {channels: </span><span class="s6">3</span><span class="s4">, </span><span class="s1">labels: </span><span class="s3">'lab'</span><span class="s1">}</span><span class="s4">,</span>
+	<span class="s1">lch: {channels: </span><span class="s6">3</span><span class="s4">, </span><span class="s1">labels: </span><span class="s3">'lch'</span><span class="s1">}</span><span class="s4">,</span>
+	<span class="s1">hex: {channels: </span><span class="s6">1</span><span class="s4">, </span><span class="s1">labels: [</span><span class="s3">'hex'</span><span class="s1">]}</span><span class="s4">,</span>
+	<span class="s1">keyword: {channels: </span><span class="s6">1</span><span class="s4">, </span><span class="s1">labels: [</span><span class="s3">'keyword'</span><span class="s1">]}</span><span class="s4">,</span>
+	<span class="s1">ansi16: {channels: </span><span class="s6">1</span><span class="s4">, </span><span class="s1">labels: [</span><span class="s3">'ansi16'</span><span class="s1">]}</span><span class="s4">,</span>
+	<span class="s1">ansi256: {channels: </span><span class="s6">1</span><span class="s4">, </span><span class="s1">labels: [</span><span class="s3">'ansi256'</span><span class="s1">]}</span><span class="s4">,</span>
+	<span class="s1">hcg: {channels: </span><span class="s6">3</span><span class="s4">, </span><span class="s1">labels: [</span><span class="s3">'h'</span><span class="s4">, </span><span class="s3">'c'</span><span class="s4">, </span><span class="s3">'g'</span><span class="s1">]}</span><span class="s4">,</span>
+	<span class="s1">apple: {channels: </span><span class="s6">3</span><span class="s4">, </span><span class="s1">labels: [</span><span class="s3">'r16'</span><span class="s4">, </span><span class="s3">'g16'</span><span class="s4">, </span><span class="s3">'b16'</span><span class="s1">]}</span><span class="s4">,</span>
+	<span class="s1">gray: {channels: </span><span class="s6">1</span><span class="s4">, </span><span class="s1">labels: [</span><span class="s3">'gray'</span><span class="s1">]}</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">// hide .channels and .labels properties</span>
+<span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">model </span><span class="s2">in </span><span class="s1">convert) {</span>
+	<span class="s2">if </span><span class="s1">(convert.hasOwnProperty(model)) {</span>
+		<span class="s2">if </span><span class="s1">(!(</span><span class="s3">'channels' </span><span class="s2">in </span><span class="s1">convert[model])) {</span>
+			<span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">'missing channels property: ' </span><span class="s1">+ model)</span><span class="s4">;</span>
+		<span class="s1">}</span>
+
+		<span class="s2">if </span><span class="s1">(!(</span><span class="s3">'labels' </span><span class="s2">in </span><span class="s1">convert[model])) {</span>
+			<span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">'missing channel labels property: ' </span><span class="s1">+ model)</span><span class="s4">;</span>
+		<span class="s1">}</span>
+
+		<span class="s2">if </span><span class="s1">(convert[model].labels.length !== convert[model].channels) {</span>
+			<span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">'channel and label counts mismatch: ' </span><span class="s1">+ model)</span><span class="s4">;</span>
+		<span class="s1">}</span>
+
+		<span class="s2">var </span><span class="s1">channels = convert[model].channels</span><span class="s4">;</span>
+		<span class="s2">var </span><span class="s1">labels = convert[model].labels</span><span class="s4">;</span>
+		<span class="s2">delete </span><span class="s1">convert[model].channels</span><span class="s4">;</span>
+		<span class="s2">delete </span><span class="s1">convert[model].labels</span><span class="s4">;</span>
+		<span class="s1">Object.defineProperty(convert[model]</span><span class="s4">, </span><span class="s3">'channels'</span><span class="s4">, </span><span class="s1">{value: channels})</span><span class="s4">;</span>
+		<span class="s1">Object.defineProperty(convert[model]</span><span class="s4">, </span><span class="s3">'labels'</span><span class="s4">, </span><span class="s1">{value: labels})</span><span class="s4">;</span>
+	<span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">convert.rgb.hsl = </span><span class="s2">function </span><span class="s1">(rgb) {</span>
+	<span class="s2">var </span><span class="s1">r = rgb[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = rgb[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b = rgb[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">min = Math.min(r</span><span class="s4">, </span><span class="s1">g</span><span class="s4">, </span><span class="s1">b)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">max = Math.max(r</span><span class="s4">, </span><span class="s1">g</span><span class="s4">, </span><span class="s1">b)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">delta = max - min</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">h</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">s</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">l</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(max === min) {</span>
+		<span class="s1">h = </span><span class="s6">0</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s2">else if </span><span class="s1">(r === max) {</span>
+		<span class="s1">h = (g - b) / delta</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s2">else if </span><span class="s1">(g === max) {</span>
+		<span class="s1">h = </span><span class="s6">2 </span><span class="s1">+ (b - r) / delta</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s2">else if </span><span class="s1">(b === max) {</span>
+		<span class="s1">h = </span><span class="s6">4 </span><span class="s1">+ (r - g) / delta</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s1">h = Math.min(h * </span><span class="s6">60</span><span class="s4">, </span><span class="s6">360</span><span class="s1">)</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(h &lt; </span><span class="s6">0</span><span class="s1">) {</span>
+		<span class="s1">h += </span><span class="s6">360</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s1">l = (min + max) / </span><span class="s6">2</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(max === min) {</span>
+		<span class="s1">s = </span><span class="s6">0</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s2">else if </span><span class="s1">(l &lt;= </span><span class="s6">0.5</span><span class="s1">) {</span>
+		<span class="s1">s = delta / (max + min)</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+		<span class="s1">s = delta / (</span><span class="s6">2 </span><span class="s1">- max - min)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">return </span><span class="s1">[h</span><span class="s4">, </span><span class="s1">s * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">l * </span><span class="s6">100</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.rgb.hsv = </span><span class="s2">function </span><span class="s1">(rgb) {</span>
+	<span class="s2">var </span><span class="s1">rdif</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">gdif</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">bdif</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">h</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">s</span><span class="s4">;</span>
+
+	<span class="s2">var </span><span class="s1">r = rgb[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = rgb[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b = rgb[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">v = Math.max(r</span><span class="s4">, </span><span class="s1">g</span><span class="s4">, </span><span class="s1">b)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">diff = v - Math.min(r</span><span class="s4">, </span><span class="s1">g</span><span class="s4">, </span><span class="s1">b)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">diffc = </span><span class="s2">function </span><span class="s1">(c) {</span>
+		<span class="s2">return </span><span class="s1">(v - c) / </span><span class="s6">6 </span><span class="s1">/ diff + </span><span class="s6">1 </span><span class="s1">/ </span><span class="s6">2</span><span class="s4">;</span>
+	<span class="s1">}</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(diff === </span><span class="s6">0</span><span class="s1">) {</span>
+		<span class="s1">h = s = </span><span class="s6">0</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+		<span class="s1">s = diff / v</span><span class="s4">;</span>
+		<span class="s1">rdif = diffc(r)</span><span class="s4">;</span>
+		<span class="s1">gdif = diffc(g)</span><span class="s4">;</span>
+		<span class="s1">bdif = diffc(b)</span><span class="s4">;</span>
+
+		<span class="s2">if </span><span class="s1">(r === v) {</span>
+			<span class="s1">h = bdif - gdif</span><span class="s4">;</span>
+		<span class="s1">} </span><span class="s2">else if </span><span class="s1">(g === v) {</span>
+			<span class="s1">h = (</span><span class="s6">1 </span><span class="s1">/ </span><span class="s6">3</span><span class="s1">) + rdif - bdif</span><span class="s4">;</span>
+		<span class="s1">} </span><span class="s2">else if </span><span class="s1">(b === v) {</span>
+			<span class="s1">h = (</span><span class="s6">2 </span><span class="s1">/ </span><span class="s6">3</span><span class="s1">) + gdif - rdif</span><span class="s4">;</span>
+		<span class="s1">}</span>
+		<span class="s2">if </span><span class="s1">(h &lt; </span><span class="s6">0</span><span class="s1">) {</span>
+			<span class="s1">h += </span><span class="s6">1</span><span class="s4">;</span>
+		<span class="s1">} </span><span class="s2">else if </span><span class="s1">(h &gt; </span><span class="s6">1</span><span class="s1">) {</span>
+			<span class="s1">h -= </span><span class="s6">1</span><span class="s4">;</span>
+		<span class="s1">}</span>
+	<span class="s1">}</span>
+
+	<span class="s2">return </span><span class="s1">[</span>
+		<span class="s1">h * </span><span class="s6">360</span><span class="s4">,</span>
+		<span class="s1">s * </span><span class="s6">100</span><span class="s4">,</span>
+		<span class="s1">v * </span><span class="s6">100</span>
+	<span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.rgb.hwb = </span><span class="s2">function </span><span class="s1">(rgb) {</span>
+	<span class="s2">var </span><span class="s1">r = rgb[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = rgb[</span><span class="s6">1</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b = rgb[</span><span class="s6">2</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">h = convert.rgb.hsl(rgb)[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">w = </span><span class="s6">1 </span><span class="s1">/ </span><span class="s6">255 </span><span class="s1">* Math.min(r</span><span class="s4">, </span><span class="s1">Math.min(g</span><span class="s4">, </span><span class="s1">b))</span><span class="s4">;</span>
+
+	<span class="s1">b = </span><span class="s6">1 </span><span class="s1">- </span><span class="s6">1 </span><span class="s1">/ </span><span class="s6">255 </span><span class="s1">* Math.max(r</span><span class="s4">, </span><span class="s1">Math.max(g</span><span class="s4">, </span><span class="s1">b))</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[h</span><span class="s4">, </span><span class="s1">w * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">b * </span><span class="s6">100</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.rgb.cmyk = </span><span class="s2">function </span><span class="s1">(rgb) {</span>
+	<span class="s2">var </span><span class="s1">r = rgb[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = rgb[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b = rgb[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">c</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">m</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">y</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">k</span><span class="s4">;</span>
+
+	<span class="s1">k = Math.min(</span><span class="s6">1 </span><span class="s1">- r</span><span class="s4">, </span><span class="s6">1 </span><span class="s1">- g</span><span class="s4">, </span><span class="s6">1 </span><span class="s1">- b)</span><span class="s4">;</span>
+	<span class="s1">c = (</span><span class="s6">1 </span><span class="s1">- r - k) / (</span><span class="s6">1 </span><span class="s1">- k) || </span><span class="s6">0</span><span class="s4">;</span>
+	<span class="s1">m = (</span><span class="s6">1 </span><span class="s1">- g - k) / (</span><span class="s6">1 </span><span class="s1">- k) || </span><span class="s6">0</span><span class="s4">;</span>
+	<span class="s1">y = (</span><span class="s6">1 </span><span class="s1">- b - k) / (</span><span class="s6">1 </span><span class="s1">- k) || </span><span class="s6">0</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[c * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">m * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">y * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">k * </span><span class="s6">100</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s7">/**</span>
+ <span class="s7">* See https://en.m.wikipedia.org/wiki/Euclidean_distance#Squared_Euclidean_distance</span>
+ <span class="s7">* */</span>
+<span class="s2">function </span><span class="s1">comparativeDistance(x</span><span class="s4">, </span><span class="s1">y) {</span>
+	<span class="s2">return </span><span class="s1">(</span>
+		<span class="s1">Math.pow(x[</span><span class="s6">0</span><span class="s1">] - y[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">, </span><span class="s6">2</span><span class="s1">) +</span>
+		<span class="s1">Math.pow(x[</span><span class="s6">1</span><span class="s1">] - y[</span><span class="s6">1</span><span class="s1">]</span><span class="s4">, </span><span class="s6">2</span><span class="s1">) +</span>
+		<span class="s1">Math.pow(x[</span><span class="s6">2</span><span class="s1">] - y[</span><span class="s6">2</span><span class="s1">]</span><span class="s4">, </span><span class="s6">2</span><span class="s1">)</span>
+	<span class="s1">)</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s1">convert.rgb.keyword = </span><span class="s2">function </span><span class="s1">(rgb) {</span>
+	<span class="s2">var </span><span class="s1">reversed = reverseKeywords[rgb]</span><span class="s4">;</span>
+	<span class="s2">if </span><span class="s1">(reversed) {</span>
+		<span class="s2">return </span><span class="s1">reversed</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">var </span><span class="s1">currentClosestDistance = Infinity</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">currentClosestKeyword</span><span class="s4">;</span>
+
+	<span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">keyword </span><span class="s2">in </span><span class="s1">cssKeywords) {</span>
+		<span class="s2">if </span><span class="s1">(cssKeywords.hasOwnProperty(keyword)) {</span>
+			<span class="s2">var </span><span class="s1">value = cssKeywords[keyword]</span><span class="s4">;</span>
+
+			<span class="s5">// Compute comparative distance</span>
+			<span class="s2">var </span><span class="s1">distance = comparativeDistance(rgb</span><span class="s4">, </span><span class="s1">value)</span><span class="s4">;</span>
+
+			<span class="s5">// Check if its less, if so set as closest</span>
+			<span class="s2">if </span><span class="s1">(distance &lt; currentClosestDistance) {</span>
+				<span class="s1">currentClosestDistance = distance</span><span class="s4">;</span>
+				<span class="s1">currentClosestKeyword = keyword</span><span class="s4">;</span>
+			<span class="s1">}</span>
+		<span class="s1">}</span>
+	<span class="s1">}</span>
+
+	<span class="s2">return </span><span class="s1">currentClosestKeyword</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.keyword.rgb = </span><span class="s2">function </span><span class="s1">(keyword) {</span>
+	<span class="s2">return </span><span class="s1">cssKeywords[keyword]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.rgb.xyz = </span><span class="s2">function </span><span class="s1">(rgb) {</span>
+	<span class="s2">var </span><span class="s1">r = rgb[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = rgb[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b = rgb[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+
+	<span class="s5">// assume sRGB</span>
+	<span class="s1">r = r &gt; </span><span class="s6">0.04045 </span><span class="s1">? Math.pow(((r + </span><span class="s6">0.055</span><span class="s1">) / </span><span class="s6">1.055</span><span class="s1">)</span><span class="s4">, </span><span class="s6">2.4</span><span class="s1">) : (r / </span><span class="s6">12.92</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">g = g &gt; </span><span class="s6">0.04045 </span><span class="s1">? Math.pow(((g + </span><span class="s6">0.055</span><span class="s1">) / </span><span class="s6">1.055</span><span class="s1">)</span><span class="s4">, </span><span class="s6">2.4</span><span class="s1">) : (g / </span><span class="s6">12.92</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">b = b &gt; </span><span class="s6">0.04045 </span><span class="s1">? Math.pow(((b + </span><span class="s6">0.055</span><span class="s1">) / </span><span class="s6">1.055</span><span class="s1">)</span><span class="s4">, </span><span class="s6">2.4</span><span class="s1">) : (b / </span><span class="s6">12.92</span><span class="s1">)</span><span class="s4">;</span>
+
+	<span class="s2">var </span><span class="s1">x = (r * </span><span class="s6">0.4124</span><span class="s1">) + (g * </span><span class="s6">0.3576</span><span class="s1">) + (b * </span><span class="s6">0.1805</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">y = (r * </span><span class="s6">0.2126</span><span class="s1">) + (g * </span><span class="s6">0.7152</span><span class="s1">) + (b * </span><span class="s6">0.0722</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">z = (r * </span><span class="s6">0.0193</span><span class="s1">) + (g * </span><span class="s6">0.1192</span><span class="s1">) + (b * </span><span class="s6">0.9505</span><span class="s1">)</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[x * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">y * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">z * </span><span class="s6">100</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.rgb.lab = </span><span class="s2">function </span><span class="s1">(rgb) {</span>
+	<span class="s2">var </span><span class="s1">xyz = convert.rgb.xyz(rgb)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">x = xyz[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">y = xyz[</span><span class="s6">1</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">z = xyz[</span><span class="s6">2</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">l</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">a</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b</span><span class="s4">;</span>
+
+	<span class="s1">x /= </span><span class="s6">95.047</span><span class="s4">;</span>
+	<span class="s1">y /= </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s1">z /= </span><span class="s6">108.883</span><span class="s4">;</span>
+
+	<span class="s1">x = x &gt; </span><span class="s6">0.008856 </span><span class="s1">? Math.pow(x</span><span class="s4">, </span><span class="s6">1 </span><span class="s1">/ </span><span class="s6">3</span><span class="s1">) : (</span><span class="s6">7.787 </span><span class="s1">* x) + (</span><span class="s6">16 </span><span class="s1">/ </span><span class="s6">116</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">y = y &gt; </span><span class="s6">0.008856 </span><span class="s1">? Math.pow(y</span><span class="s4">, </span><span class="s6">1 </span><span class="s1">/ </span><span class="s6">3</span><span class="s1">) : (</span><span class="s6">7.787 </span><span class="s1">* y) + (</span><span class="s6">16 </span><span class="s1">/ </span><span class="s6">116</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">z = z &gt; </span><span class="s6">0.008856 </span><span class="s1">? Math.pow(z</span><span class="s4">, </span><span class="s6">1 </span><span class="s1">/ </span><span class="s6">3</span><span class="s1">) : (</span><span class="s6">7.787 </span><span class="s1">* z) + (</span><span class="s6">16 </span><span class="s1">/ </span><span class="s6">116</span><span class="s1">)</span><span class="s4">;</span>
+
+	<span class="s1">l = (</span><span class="s6">116 </span><span class="s1">* y) - </span><span class="s6">16</span><span class="s4">;</span>
+	<span class="s1">a = </span><span class="s6">500 </span><span class="s1">* (x - y)</span><span class="s4">;</span>
+	<span class="s1">b = </span><span class="s6">200 </span><span class="s1">* (y - z)</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[l</span><span class="s4">, </span><span class="s1">a</span><span class="s4">, </span><span class="s1">b]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.hsl.rgb = </span><span class="s2">function </span><span class="s1">(hsl) {</span>
+	<span class="s2">var </span><span class="s1">h = hsl[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">360</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">s = hsl[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">l = hsl[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">t1</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">t2</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">t3</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">rgb</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">val</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(s === </span><span class="s6">0</span><span class="s1">) {</span>
+		<span class="s1">val = l * </span><span class="s6">255</span><span class="s4">;</span>
+		<span class="s2">return </span><span class="s1">[val</span><span class="s4">, </span><span class="s1">val</span><span class="s4">, </span><span class="s1">val]</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">if </span><span class="s1">(l &lt; </span><span class="s6">0.5</span><span class="s1">) {</span>
+		<span class="s1">t2 = l * (</span><span class="s6">1 </span><span class="s1">+ s)</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+		<span class="s1">t2 = l + s - l * s</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s1">t1 = </span><span class="s6">2 </span><span class="s1">* l - t2</span><span class="s4">;</span>
+
+	<span class="s1">rgb = [</span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s6">0</span><span class="s4">; </span><span class="s1">i &lt; </span><span class="s6">3</span><span class="s4">; </span><span class="s1">i++) {</span>
+		<span class="s1">t3 = h + </span><span class="s6">1 </span><span class="s1">/ </span><span class="s6">3 </span><span class="s1">* -(i - </span><span class="s6">1</span><span class="s1">)</span><span class="s4">;</span>
+		<span class="s2">if </span><span class="s1">(t3 &lt; </span><span class="s6">0</span><span class="s1">) {</span>
+			<span class="s1">t3++</span><span class="s4">;</span>
+		<span class="s1">}</span>
+		<span class="s2">if </span><span class="s1">(t3 &gt; </span><span class="s6">1</span><span class="s1">) {</span>
+			<span class="s1">t3--</span><span class="s4">;</span>
+		<span class="s1">}</span>
+
+		<span class="s2">if </span><span class="s1">(</span><span class="s6">6 </span><span class="s1">* t3 &lt; </span><span class="s6">1</span><span class="s1">) {</span>
+			<span class="s1">val = t1 + (t2 - t1) * </span><span class="s6">6 </span><span class="s1">* t3</span><span class="s4">;</span>
+		<span class="s1">} </span><span class="s2">else if </span><span class="s1">(</span><span class="s6">2 </span><span class="s1">* t3 &lt; </span><span class="s6">1</span><span class="s1">) {</span>
+			<span class="s1">val = t2</span><span class="s4">;</span>
+		<span class="s1">} </span><span class="s2">else if </span><span class="s1">(</span><span class="s6">3 </span><span class="s1">* t3 &lt; </span><span class="s6">2</span><span class="s1">) {</span>
+			<span class="s1">val = t1 + (t2 - t1) * (</span><span class="s6">2 </span><span class="s1">/ </span><span class="s6">3 </span><span class="s1">- t3) * </span><span class="s6">6</span><span class="s4">;</span>
+		<span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+			<span class="s1">val = t1</span><span class="s4">;</span>
+		<span class="s1">}</span>
+
+		<span class="s1">rgb[i] = val * </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">return </span><span class="s1">rgb</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.hsl.hsv = </span><span class="s2">function </span><span class="s1">(hsl) {</span>
+	<span class="s2">var </span><span class="s1">h = hsl[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">s = hsl[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">l = hsl[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">smin = s</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">lmin = Math.max(l</span><span class="s4">, </span><span class="s6">0.01</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">sv</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">v</span><span class="s4">;</span>
+
+	<span class="s1">l *= </span><span class="s6">2</span><span class="s4">;</span>
+	<span class="s1">s *= (l &lt;= </span><span class="s6">1</span><span class="s1">) ? l : </span><span class="s6">2 </span><span class="s1">- l</span><span class="s4">;</span>
+	<span class="s1">smin *= lmin &lt;= </span><span class="s6">1 </span><span class="s1">? lmin : </span><span class="s6">2 </span><span class="s1">- lmin</span><span class="s4">;</span>
+	<span class="s1">v = (l + s) / </span><span class="s6">2</span><span class="s4">;</span>
+	<span class="s1">sv = l === </span><span class="s6">0 </span><span class="s1">? (</span><span class="s6">2 </span><span class="s1">* smin) / (lmin + smin) : (</span><span class="s6">2 </span><span class="s1">* s) / (l + s)</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[h</span><span class="s4">, </span><span class="s1">sv * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">v * </span><span class="s6">100</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.hsv.rgb = </span><span class="s2">function </span><span class="s1">(hsv) {</span>
+	<span class="s2">var </span><span class="s1">h = hsv[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">60</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">s = hsv[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">v = hsv[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">hi = Math.floor(h) % </span><span class="s6">6</span><span class="s4">;</span>
+
+	<span class="s2">var </span><span class="s1">f = h - Math.floor(h)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">p = </span><span class="s6">255 </span><span class="s1">* v * (</span><span class="s6">1 </span><span class="s1">- s)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">q = </span><span class="s6">255 </span><span class="s1">* v * (</span><span class="s6">1 </span><span class="s1">- (s * f))</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">t = </span><span class="s6">255 </span><span class="s1">* v * (</span><span class="s6">1 </span><span class="s1">- (s * (</span><span class="s6">1 </span><span class="s1">- f)))</span><span class="s4">;</span>
+	<span class="s1">v *= </span><span class="s6">255</span><span class="s4">;</span>
+
+	<span class="s2">switch </span><span class="s1">(hi) {</span>
+		<span class="s2">case </span><span class="s6">0</span><span class="s1">:</span>
+			<span class="s2">return </span><span class="s1">[v</span><span class="s4">, </span><span class="s1">t</span><span class="s4">, </span><span class="s1">p]</span><span class="s4">;</span>
+		<span class="s2">case </span><span class="s6">1</span><span class="s1">:</span>
+			<span class="s2">return </span><span class="s1">[q</span><span class="s4">, </span><span class="s1">v</span><span class="s4">, </span><span class="s1">p]</span><span class="s4">;</span>
+		<span class="s2">case </span><span class="s6">2</span><span class="s1">:</span>
+			<span class="s2">return </span><span class="s1">[p</span><span class="s4">, </span><span class="s1">v</span><span class="s4">, </span><span class="s1">t]</span><span class="s4">;</span>
+		<span class="s2">case </span><span class="s6">3</span><span class="s1">:</span>
+			<span class="s2">return </span><span class="s1">[p</span><span class="s4">, </span><span class="s1">q</span><span class="s4">, </span><span class="s1">v]</span><span class="s4">;</span>
+		<span class="s2">case </span><span class="s6">4</span><span class="s1">:</span>
+			<span class="s2">return </span><span class="s1">[t</span><span class="s4">, </span><span class="s1">p</span><span class="s4">, </span><span class="s1">v]</span><span class="s4">;</span>
+		<span class="s2">case </span><span class="s6">5</span><span class="s1">:</span>
+			<span class="s2">return </span><span class="s1">[v</span><span class="s4">, </span><span class="s1">p</span><span class="s4">, </span><span class="s1">q]</span><span class="s4">;</span>
+	<span class="s1">}</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.hsv.hsl = </span><span class="s2">function </span><span class="s1">(hsv) {</span>
+	<span class="s2">var </span><span class="s1">h = hsv[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">s = hsv[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">v = hsv[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">vmin = Math.max(v</span><span class="s4">, </span><span class="s6">0.01</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">lmin</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">sl</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">l</span><span class="s4">;</span>
+
+	<span class="s1">l = (</span><span class="s6">2 </span><span class="s1">- s) * v</span><span class="s4">;</span>
+	<span class="s1">lmin = (</span><span class="s6">2 </span><span class="s1">- s) * vmin</span><span class="s4">;</span>
+	<span class="s1">sl = s * vmin</span><span class="s4">;</span>
+	<span class="s1">sl /= (lmin &lt;= </span><span class="s6">1</span><span class="s1">) ? lmin : </span><span class="s6">2 </span><span class="s1">- lmin</span><span class="s4">;</span>
+	<span class="s1">sl = sl || </span><span class="s6">0</span><span class="s4">;</span>
+	<span class="s1">l /= </span><span class="s6">2</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[h</span><span class="s4">, </span><span class="s1">sl * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">l * </span><span class="s6">100</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">// http://dev.w3.org/csswg/css-color/#hwb-to-rgb</span>
+<span class="s1">convert.hwb.rgb = </span><span class="s2">function </span><span class="s1">(hwb) {</span>
+	<span class="s2">var </span><span class="s1">h = hwb[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">360</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">wh = hwb[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">bl = hwb[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">ratio = wh + bl</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">i</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">v</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">f</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">n</span><span class="s4">;</span>
+
+	<span class="s5">// wh + bl cant be &gt; 1</span>
+	<span class="s2">if </span><span class="s1">(ratio &gt; </span><span class="s6">1</span><span class="s1">) {</span>
+		<span class="s1">wh /= ratio</span><span class="s4">;</span>
+		<span class="s1">bl /= ratio</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s1">i = Math.floor(</span><span class="s6">6 </span><span class="s1">* h)</span><span class="s4">;</span>
+	<span class="s1">v = </span><span class="s6">1 </span><span class="s1">- bl</span><span class="s4">;</span>
+	<span class="s1">f = </span><span class="s6">6 </span><span class="s1">* h - i</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">((i &amp; </span><span class="s6">0x01</span><span class="s1">) !== </span><span class="s6">0</span><span class="s1">) {</span>
+		<span class="s1">f = </span><span class="s6">1 </span><span class="s1">- f</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s1">n = wh + f * (v - wh)</span><span class="s4">; </span><span class="s5">// linear interpolation</span>
+
+	<span class="s2">var </span><span class="s1">r</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b</span><span class="s4">;</span>
+	<span class="s2">switch </span><span class="s1">(i) {</span>
+		<span class="s2">default</span><span class="s1">:</span>
+		<span class="s2">case </span><span class="s6">6</span><span class="s1">:</span>
+		<span class="s2">case </span><span class="s6">0</span><span class="s1">: r = v</span><span class="s4">; </span><span class="s1">g = n</span><span class="s4">; </span><span class="s1">b = wh</span><span class="s4">; </span><span class="s2">break</span><span class="s4">;</span>
+		<span class="s2">case </span><span class="s6">1</span><span class="s1">: r = n</span><span class="s4">; </span><span class="s1">g = v</span><span class="s4">; </span><span class="s1">b = wh</span><span class="s4">; </span><span class="s2">break</span><span class="s4">;</span>
+		<span class="s2">case </span><span class="s6">2</span><span class="s1">: r = wh</span><span class="s4">; </span><span class="s1">g = v</span><span class="s4">; </span><span class="s1">b = n</span><span class="s4">; </span><span class="s2">break</span><span class="s4">;</span>
+		<span class="s2">case </span><span class="s6">3</span><span class="s1">: r = wh</span><span class="s4">; </span><span class="s1">g = n</span><span class="s4">; </span><span class="s1">b = v</span><span class="s4">; </span><span class="s2">break</span><span class="s4">;</span>
+		<span class="s2">case </span><span class="s6">4</span><span class="s1">: r = n</span><span class="s4">; </span><span class="s1">g = wh</span><span class="s4">; </span><span class="s1">b = v</span><span class="s4">; </span><span class="s2">break</span><span class="s4">;</span>
+		<span class="s2">case </span><span class="s6">5</span><span class="s1">: r = v</span><span class="s4">; </span><span class="s1">g = wh</span><span class="s4">; </span><span class="s1">b = n</span><span class="s4">; </span><span class="s2">break</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">return </span><span class="s1">[r * </span><span class="s6">255</span><span class="s4">, </span><span class="s1">g * </span><span class="s6">255</span><span class="s4">, </span><span class="s1">b * </span><span class="s6">255</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.cmyk.rgb = </span><span class="s2">function </span><span class="s1">(cmyk) {</span>
+	<span class="s2">var </span><span class="s1">c = cmyk[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">m = cmyk[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">y = cmyk[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">k = cmyk[</span><span class="s6">3</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">r</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b</span><span class="s4">;</span>
+
+	<span class="s1">r = </span><span class="s6">1 </span><span class="s1">- Math.min(</span><span class="s6">1</span><span class="s4">, </span><span class="s1">c * (</span><span class="s6">1 </span><span class="s1">- k) + k)</span><span class="s4">;</span>
+	<span class="s1">g = </span><span class="s6">1 </span><span class="s1">- Math.min(</span><span class="s6">1</span><span class="s4">, </span><span class="s1">m * (</span><span class="s6">1 </span><span class="s1">- k) + k)</span><span class="s4">;</span>
+	<span class="s1">b = </span><span class="s6">1 </span><span class="s1">- Math.min(</span><span class="s6">1</span><span class="s4">, </span><span class="s1">y * (</span><span class="s6">1 </span><span class="s1">- k) + k)</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[r * </span><span class="s6">255</span><span class="s4">, </span><span class="s1">g * </span><span class="s6">255</span><span class="s4">, </span><span class="s1">b * </span><span class="s6">255</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.xyz.rgb = </span><span class="s2">function </span><span class="s1">(xyz) {</span>
+	<span class="s2">var </span><span class="s1">x = xyz[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">y = xyz[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">z = xyz[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">r</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b</span><span class="s4">;</span>
+
+	<span class="s1">r = (x * </span><span class="s6">3.2406</span><span class="s1">) + (y * -</span><span class="s6">1.5372</span><span class="s1">) + (z * -</span><span class="s6">0.4986</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">g = (x * -</span><span class="s6">0.9689</span><span class="s1">) + (y * </span><span class="s6">1.8758</span><span class="s1">) + (z * </span><span class="s6">0.0415</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">b = (x * </span><span class="s6">0.0557</span><span class="s1">) + (y * -</span><span class="s6">0.2040</span><span class="s1">) + (z * </span><span class="s6">1.0570</span><span class="s1">)</span><span class="s4">;</span>
+
+	<span class="s5">// assume sRGB</span>
+	<span class="s1">r = r &gt; </span><span class="s6">0.0031308</span>
+		<span class="s1">? ((</span><span class="s6">1.055 </span><span class="s1">* Math.pow(r</span><span class="s4">, </span><span class="s6">1.0 </span><span class="s1">/ </span><span class="s6">2.4</span><span class="s1">)) - </span><span class="s6">0.055</span><span class="s1">)</span>
+		<span class="s1">: r * </span><span class="s6">12.92</span><span class="s4">;</span>
+
+	<span class="s1">g = g &gt; </span><span class="s6">0.0031308</span>
+		<span class="s1">? ((</span><span class="s6">1.055 </span><span class="s1">* Math.pow(g</span><span class="s4">, </span><span class="s6">1.0 </span><span class="s1">/ </span><span class="s6">2.4</span><span class="s1">)) - </span><span class="s6">0.055</span><span class="s1">)</span>
+		<span class="s1">: g * </span><span class="s6">12.92</span><span class="s4">;</span>
+
+	<span class="s1">b = b &gt; </span><span class="s6">0.0031308</span>
+		<span class="s1">? ((</span><span class="s6">1.055 </span><span class="s1">* Math.pow(b</span><span class="s4">, </span><span class="s6">1.0 </span><span class="s1">/ </span><span class="s6">2.4</span><span class="s1">)) - </span><span class="s6">0.055</span><span class="s1">)</span>
+		<span class="s1">: b * </span><span class="s6">12.92</span><span class="s4">;</span>
+
+	<span class="s1">r = Math.min(Math.max(</span><span class="s6">0</span><span class="s4">, </span><span class="s1">r)</span><span class="s4">, </span><span class="s6">1</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">g = Math.min(Math.max(</span><span class="s6">0</span><span class="s4">, </span><span class="s1">g)</span><span class="s4">, </span><span class="s6">1</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">b = Math.min(Math.max(</span><span class="s6">0</span><span class="s4">, </span><span class="s1">b)</span><span class="s4">, </span><span class="s6">1</span><span class="s1">)</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[r * </span><span class="s6">255</span><span class="s4">, </span><span class="s1">g * </span><span class="s6">255</span><span class="s4">, </span><span class="s1">b * </span><span class="s6">255</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.xyz.lab = </span><span class="s2">function </span><span class="s1">(xyz) {</span>
+	<span class="s2">var </span><span class="s1">x = xyz[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">y = xyz[</span><span class="s6">1</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">z = xyz[</span><span class="s6">2</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">l</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">a</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b</span><span class="s4">;</span>
+
+	<span class="s1">x /= </span><span class="s6">95.047</span><span class="s4">;</span>
+	<span class="s1">y /= </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s1">z /= </span><span class="s6">108.883</span><span class="s4">;</span>
+
+	<span class="s1">x = x &gt; </span><span class="s6">0.008856 </span><span class="s1">? Math.pow(x</span><span class="s4">, </span><span class="s6">1 </span><span class="s1">/ </span><span class="s6">3</span><span class="s1">) : (</span><span class="s6">7.787 </span><span class="s1">* x) + (</span><span class="s6">16 </span><span class="s1">/ </span><span class="s6">116</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">y = y &gt; </span><span class="s6">0.008856 </span><span class="s1">? Math.pow(y</span><span class="s4">, </span><span class="s6">1 </span><span class="s1">/ </span><span class="s6">3</span><span class="s1">) : (</span><span class="s6">7.787 </span><span class="s1">* y) + (</span><span class="s6">16 </span><span class="s1">/ </span><span class="s6">116</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">z = z &gt; </span><span class="s6">0.008856 </span><span class="s1">? Math.pow(z</span><span class="s4">, </span><span class="s6">1 </span><span class="s1">/ </span><span class="s6">3</span><span class="s1">) : (</span><span class="s6">7.787 </span><span class="s1">* z) + (</span><span class="s6">16 </span><span class="s1">/ </span><span class="s6">116</span><span class="s1">)</span><span class="s4">;</span>
+
+	<span class="s1">l = (</span><span class="s6">116 </span><span class="s1">* y) - </span><span class="s6">16</span><span class="s4">;</span>
+	<span class="s1">a = </span><span class="s6">500 </span><span class="s1">* (x - y)</span><span class="s4">;</span>
+	<span class="s1">b = </span><span class="s6">200 </span><span class="s1">* (y - z)</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[l</span><span class="s4">, </span><span class="s1">a</span><span class="s4">, </span><span class="s1">b]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.lab.xyz = </span><span class="s2">function </span><span class="s1">(lab) {</span>
+	<span class="s2">var </span><span class="s1">l = lab[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">a = lab[</span><span class="s6">1</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b = lab[</span><span class="s6">2</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">x</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">y</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">z</span><span class="s4">;</span>
+
+	<span class="s1">y = (l + </span><span class="s6">16</span><span class="s1">) / </span><span class="s6">116</span><span class="s4">;</span>
+	<span class="s1">x = a / </span><span class="s6">500 </span><span class="s1">+ y</span><span class="s4">;</span>
+	<span class="s1">z = y - b / </span><span class="s6">200</span><span class="s4">;</span>
+
+	<span class="s2">var </span><span class="s1">y2 = Math.pow(y</span><span class="s4">, </span><span class="s6">3</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">x2 = Math.pow(x</span><span class="s4">, </span><span class="s6">3</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">z2 = Math.pow(z</span><span class="s4">, </span><span class="s6">3</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">y = y2 &gt; </span><span class="s6">0.008856 </span><span class="s1">? y2 : (y - </span><span class="s6">16 </span><span class="s1">/ </span><span class="s6">116</span><span class="s1">) / </span><span class="s6">7.787</span><span class="s4">;</span>
+	<span class="s1">x = x2 &gt; </span><span class="s6">0.008856 </span><span class="s1">? x2 : (x - </span><span class="s6">16 </span><span class="s1">/ </span><span class="s6">116</span><span class="s1">) / </span><span class="s6">7.787</span><span class="s4">;</span>
+	<span class="s1">z = z2 &gt; </span><span class="s6">0.008856 </span><span class="s1">? z2 : (z - </span><span class="s6">16 </span><span class="s1">/ </span><span class="s6">116</span><span class="s1">) / </span><span class="s6">7.787</span><span class="s4">;</span>
+
+	<span class="s1">x *= </span><span class="s6">95.047</span><span class="s4">;</span>
+	<span class="s1">y *= </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s1">z *= </span><span class="s6">108.883</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[x</span><span class="s4">, </span><span class="s1">y</span><span class="s4">, </span><span class="s1">z]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.lab.lch = </span><span class="s2">function </span><span class="s1">(lab) {</span>
+	<span class="s2">var </span><span class="s1">l = lab[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">a = lab[</span><span class="s6">1</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b = lab[</span><span class="s6">2</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">hr</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">h</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">c</span><span class="s4">;</span>
+
+	<span class="s1">hr = Math.atan2(b</span><span class="s4">, </span><span class="s1">a)</span><span class="s4">;</span>
+	<span class="s1">h = hr * </span><span class="s6">360 </span><span class="s1">/ </span><span class="s6">2 </span><span class="s1">/ Math.PI</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(h &lt; </span><span class="s6">0</span><span class="s1">) {</span>
+		<span class="s1">h += </span><span class="s6">360</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s1">c = Math.sqrt(a * a + b * b)</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[l</span><span class="s4">, </span><span class="s1">c</span><span class="s4">, </span><span class="s1">h]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.lch.lab = </span><span class="s2">function </span><span class="s1">(lch) {</span>
+	<span class="s2">var </span><span class="s1">l = lch[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">c = lch[</span><span class="s6">1</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">h = lch[</span><span class="s6">2</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">a</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">hr</span><span class="s4">;</span>
+
+	<span class="s1">hr = h / </span><span class="s6">360 </span><span class="s1">* </span><span class="s6">2 </span><span class="s1">* Math.PI</span><span class="s4">;</span>
+	<span class="s1">a = c * Math.cos(hr)</span><span class="s4">;</span>
+	<span class="s1">b = c * Math.sin(hr)</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[l</span><span class="s4">, </span><span class="s1">a</span><span class="s4">, </span><span class="s1">b]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.rgb.ansi16 = </span><span class="s2">function </span><span class="s1">(args) {</span>
+	<span class="s2">var </span><span class="s1">r = args[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = args[</span><span class="s6">1</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b = args[</span><span class="s6">2</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">value = </span><span class="s6">1 </span><span class="s2">in </span><span class="s1">arguments ? arguments[</span><span class="s6">1</span><span class="s1">] : convert.rgb.hsv(args)[</span><span class="s6">2</span><span class="s1">]</span><span class="s4">; </span><span class="s5">// hsv -&gt; ansi16 optimization</span>
+
+	<span class="s1">value = Math.round(value / </span><span class="s6">50</span><span class="s1">)</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(value === </span><span class="s6">0</span><span class="s1">) {</span>
+		<span class="s2">return </span><span class="s6">30</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">var </span><span class="s1">ansi = </span><span class="s6">30</span>
+		<span class="s1">+ ((Math.round(b / </span><span class="s6">255</span><span class="s1">) &lt;&lt; </span><span class="s6">2</span><span class="s1">)</span>
+		<span class="s1">| (Math.round(g / </span><span class="s6">255</span><span class="s1">) &lt;&lt; </span><span class="s6">1</span><span class="s1">)</span>
+		<span class="s1">| Math.round(r / </span><span class="s6">255</span><span class="s1">))</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(value === </span><span class="s6">2</span><span class="s1">) {</span>
+		<span class="s1">ansi += </span><span class="s6">60</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">return </span><span class="s1">ansi</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.hsv.ansi16 = </span><span class="s2">function </span><span class="s1">(args) {</span>
+	<span class="s5">// optimization here; we already know the value and don't need to get</span>
+	<span class="s5">// it converted for us.</span>
+	<span class="s2">return </span><span class="s1">convert.rgb.ansi16(convert.hsv.rgb(args)</span><span class="s4">, </span><span class="s1">args[</span><span class="s6">2</span><span class="s1">])</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.rgb.ansi256 = </span><span class="s2">function </span><span class="s1">(args) {</span>
+	<span class="s2">var </span><span class="s1">r = args[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = args[</span><span class="s6">1</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b = args[</span><span class="s6">2</span><span class="s1">]</span><span class="s4">;</span>
+
+	<span class="s5">// we use the extended greyscale palette here, with the exception of</span>
+	<span class="s5">// black and white. normal palette only has 4 greyscale shades.</span>
+	<span class="s2">if </span><span class="s1">(r === g &amp;&amp; g === b) {</span>
+		<span class="s2">if </span><span class="s1">(r &lt; </span><span class="s6">8</span><span class="s1">) {</span>
+			<span class="s2">return </span><span class="s6">16</span><span class="s4">;</span>
+		<span class="s1">}</span>
+
+		<span class="s2">if </span><span class="s1">(r &gt; </span><span class="s6">248</span><span class="s1">) {</span>
+			<span class="s2">return </span><span class="s6">231</span><span class="s4">;</span>
+		<span class="s1">}</span>
+
+		<span class="s2">return </span><span class="s1">Math.round(((r - </span><span class="s6">8</span><span class="s1">) / </span><span class="s6">247</span><span class="s1">) * </span><span class="s6">24</span><span class="s1">) + </span><span class="s6">232</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">var </span><span class="s1">ansi = </span><span class="s6">16</span>
+		<span class="s1">+ (</span><span class="s6">36 </span><span class="s1">* Math.round(r / </span><span class="s6">255 </span><span class="s1">* </span><span class="s6">5</span><span class="s1">))</span>
+		<span class="s1">+ (</span><span class="s6">6 </span><span class="s1">* Math.round(g / </span><span class="s6">255 </span><span class="s1">* </span><span class="s6">5</span><span class="s1">))</span>
+		<span class="s1">+ Math.round(b / </span><span class="s6">255 </span><span class="s1">* </span><span class="s6">5</span><span class="s1">)</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">ansi</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.ansi16.rgb = </span><span class="s2">function </span><span class="s1">(args) {</span>
+	<span class="s2">var </span><span class="s1">color = args % </span><span class="s6">10</span><span class="s4">;</span>
+
+	<span class="s5">// handle greyscale</span>
+	<span class="s2">if </span><span class="s1">(color === </span><span class="s6">0 </span><span class="s1">|| color === </span><span class="s6">7</span><span class="s1">) {</span>
+		<span class="s2">if </span><span class="s1">(args &gt; </span><span class="s6">50</span><span class="s1">) {</span>
+			<span class="s1">color += </span><span class="s6">3.5</span><span class="s4">;</span>
+		<span class="s1">}</span>
+
+		<span class="s1">color = color / </span><span class="s6">10.5 </span><span class="s1">* </span><span class="s6">255</span><span class="s4">;</span>
+
+		<span class="s2">return </span><span class="s1">[color</span><span class="s4">, </span><span class="s1">color</span><span class="s4">, </span><span class="s1">color]</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">var </span><span class="s1">mult = (~~(args &gt; </span><span class="s6">50</span><span class="s1">) + </span><span class="s6">1</span><span class="s1">) * </span><span class="s6">0.5</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">r = ((color &amp; </span><span class="s6">1</span><span class="s1">) * mult) * </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = (((color &gt;&gt; </span><span class="s6">1</span><span class="s1">) &amp; </span><span class="s6">1</span><span class="s1">) * mult) * </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b = (((color &gt;&gt; </span><span class="s6">2</span><span class="s1">) &amp; </span><span class="s6">1</span><span class="s1">) * mult) * </span><span class="s6">255</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[r</span><span class="s4">, </span><span class="s1">g</span><span class="s4">, </span><span class="s1">b]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.ansi256.rgb = </span><span class="s2">function </span><span class="s1">(args) {</span>
+	<span class="s5">// handle greyscale</span>
+	<span class="s2">if </span><span class="s1">(args &gt;= </span><span class="s6">232</span><span class="s1">) {</span>
+		<span class="s2">var </span><span class="s1">c = (args - </span><span class="s6">232</span><span class="s1">) * </span><span class="s6">10 </span><span class="s1">+ </span><span class="s6">8</span><span class="s4">;</span>
+		<span class="s2">return </span><span class="s1">[c</span><span class="s4">, </span><span class="s1">c</span><span class="s4">, </span><span class="s1">c]</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s1">args -= </span><span class="s6">16</span><span class="s4">;</span>
+
+	<span class="s2">var </span><span class="s1">rem</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">r = Math.floor(args / </span><span class="s6">36</span><span class="s1">) / </span><span class="s6">5 </span><span class="s1">* </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = Math.floor((rem = args % </span><span class="s6">36</span><span class="s1">) / </span><span class="s6">6</span><span class="s1">) / </span><span class="s6">5 </span><span class="s1">* </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b = (rem % </span><span class="s6">6</span><span class="s1">) / </span><span class="s6">5 </span><span class="s1">* </span><span class="s6">255</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[r</span><span class="s4">, </span><span class="s1">g</span><span class="s4">, </span><span class="s1">b]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.rgb.hex = </span><span class="s2">function </span><span class="s1">(args) {</span>
+	<span class="s2">var </span><span class="s1">integer = ((Math.round(args[</span><span class="s6">0</span><span class="s1">]) &amp; </span><span class="s6">0xFF</span><span class="s1">) &lt;&lt; </span><span class="s6">16</span><span class="s1">)</span>
+		<span class="s1">+ ((Math.round(args[</span><span class="s6">1</span><span class="s1">]) &amp; </span><span class="s6">0xFF</span><span class="s1">) &lt;&lt; </span><span class="s6">8</span><span class="s1">)</span>
+		<span class="s1">+ (Math.round(args[</span><span class="s6">2</span><span class="s1">]) &amp; </span><span class="s6">0xFF</span><span class="s1">)</span><span class="s4">;</span>
+
+	<span class="s2">var </span><span class="s1">string = integer.toString(</span><span class="s6">16</span><span class="s1">).toUpperCase()</span><span class="s4">;</span>
+	<span class="s2">return </span><span class="s3">'000000'</span><span class="s1">.substring(string.length) + string</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.hex.rgb = </span><span class="s2">function </span><span class="s1">(args) {</span>
+	<span class="s2">var </span><span class="s1">match = args.toString(</span><span class="s6">16</span><span class="s1">).match(</span><span class="s6">/[a-f0-9]{6}|[a-f0-9]{3}/i</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s2">if </span><span class="s1">(!match) {</span>
+		<span class="s2">return </span><span class="s1">[</span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">var </span><span class="s1">colorString = match[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(match[</span><span class="s6">0</span><span class="s1">].length === </span><span class="s6">3</span><span class="s1">) {</span>
+		<span class="s1">colorString = colorString.split(</span><span class="s3">''</span><span class="s1">).map(</span><span class="s2">function </span><span class="s1">(char) {</span>
+			<span class="s2">return </span><span class="s1">char + char</span><span class="s4">;</span>
+		<span class="s1">}).join(</span><span class="s3">''</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">var </span><span class="s1">integer = parseInt(colorString</span><span class="s4">, </span><span class="s6">16</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">r = (integer &gt;&gt; </span><span class="s6">16</span><span class="s1">) &amp; </span><span class="s6">0xFF</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = (integer &gt;&gt; </span><span class="s6">8</span><span class="s1">) &amp; </span><span class="s6">0xFF</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b = integer &amp; </span><span class="s6">0xFF</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[r</span><span class="s4">, </span><span class="s1">g</span><span class="s4">, </span><span class="s1">b]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.rgb.hcg = </span><span class="s2">function </span><span class="s1">(rgb) {</span>
+	<span class="s2">var </span><span class="s1">r = rgb[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = rgb[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b = rgb[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">255</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">max = Math.max(Math.max(r</span><span class="s4">, </span><span class="s1">g)</span><span class="s4">, </span><span class="s1">b)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">min = Math.min(Math.min(r</span><span class="s4">, </span><span class="s1">g)</span><span class="s4">, </span><span class="s1">b)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">chroma = (max - min)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">grayscale</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">hue</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(chroma &lt; </span><span class="s6">1</span><span class="s1">) {</span>
+		<span class="s1">grayscale = min / (</span><span class="s6">1 </span><span class="s1">- chroma)</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+		<span class="s1">grayscale = </span><span class="s6">0</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">if </span><span class="s1">(chroma &lt;= </span><span class="s6">0</span><span class="s1">) {</span>
+		<span class="s1">hue = </span><span class="s6">0</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s2">else</span>
+	<span class="s2">if </span><span class="s1">(max === r) {</span>
+		<span class="s1">hue = ((g - b) / chroma) % </span><span class="s6">6</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s2">else</span>
+	<span class="s2">if </span><span class="s1">(max === g) {</span>
+		<span class="s1">hue = </span><span class="s6">2 </span><span class="s1">+ (b - r) / chroma</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+		<span class="s1">hue = </span><span class="s6">4 </span><span class="s1">+ (r - g) / chroma + </span><span class="s6">4</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s1">hue /= </span><span class="s6">6</span><span class="s4">;</span>
+	<span class="s1">hue %= </span><span class="s6">1</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[hue * </span><span class="s6">360</span><span class="s4">, </span><span class="s1">chroma * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">grayscale * </span><span class="s6">100</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.hsl.hcg = </span><span class="s2">function </span><span class="s1">(hsl) {</span>
+	<span class="s2">var </span><span class="s1">s = hsl[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">l = hsl[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">c = </span><span class="s6">1</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">f = </span><span class="s6">0</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(l &lt; </span><span class="s6">0.5</span><span class="s1">) {</span>
+		<span class="s1">c = </span><span class="s6">2.0 </span><span class="s1">* s * l</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+		<span class="s1">c = </span><span class="s6">2.0 </span><span class="s1">* s * (</span><span class="s6">1.0 </span><span class="s1">- l)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">if </span><span class="s1">(c &lt; </span><span class="s6">1.0</span><span class="s1">) {</span>
+		<span class="s1">f = (l - </span><span class="s6">0.5 </span><span class="s1">* c) / (</span><span class="s6">1.0 </span><span class="s1">- c)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">return </span><span class="s1">[hsl[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">, </span><span class="s1">c * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">f * </span><span class="s6">100</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.hsv.hcg = </span><span class="s2">function </span><span class="s1">(hsv) {</span>
+	<span class="s2">var </span><span class="s1">s = hsv[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">v = hsv[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+
+	<span class="s2">var </span><span class="s1">c = s * v</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">f = </span><span class="s6">0</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(c &lt; </span><span class="s6">1.0</span><span class="s1">) {</span>
+		<span class="s1">f = (v - c) / (</span><span class="s6">1 </span><span class="s1">- c)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">return </span><span class="s1">[hsv[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">, </span><span class="s1">c * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">f * </span><span class="s6">100</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.hcg.rgb = </span><span class="s2">function </span><span class="s1">(hcg) {</span>
+	<span class="s2">var </span><span class="s1">h = hcg[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">360</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">c = hcg[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = hcg[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(c === </span><span class="s6">0.0</span><span class="s1">) {</span>
+		<span class="s2">return </span><span class="s1">[g * </span><span class="s6">255</span><span class="s4">, </span><span class="s1">g * </span><span class="s6">255</span><span class="s4">, </span><span class="s1">g * </span><span class="s6">255</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">var </span><span class="s1">pure = [</span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">hi = (h % </span><span class="s6">1</span><span class="s1">) * </span><span class="s6">6</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">v = hi % </span><span class="s6">1</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">w = </span><span class="s6">1 </span><span class="s1">- v</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">mg = </span><span class="s6">0</span><span class="s4">;</span>
+
+	<span class="s2">switch </span><span class="s1">(Math.floor(hi)) {</span>
+		<span class="s2">case </span><span class="s6">0</span><span class="s1">:</span>
+			<span class="s1">pure[</span><span class="s6">0</span><span class="s1">] = </span><span class="s6">1</span><span class="s4">; </span><span class="s1">pure[</span><span class="s6">1</span><span class="s1">] = v</span><span class="s4">; </span><span class="s1">pure[</span><span class="s6">2</span><span class="s1">] = </span><span class="s6">0</span><span class="s4">; </span><span class="s2">break</span><span class="s4">;</span>
+		<span class="s2">case </span><span class="s6">1</span><span class="s1">:</span>
+			<span class="s1">pure[</span><span class="s6">0</span><span class="s1">] = w</span><span class="s4">; </span><span class="s1">pure[</span><span class="s6">1</span><span class="s1">] = </span><span class="s6">1</span><span class="s4">; </span><span class="s1">pure[</span><span class="s6">2</span><span class="s1">] = </span><span class="s6">0</span><span class="s4">; </span><span class="s2">break</span><span class="s4">;</span>
+		<span class="s2">case </span><span class="s6">2</span><span class="s1">:</span>
+			<span class="s1">pure[</span><span class="s6">0</span><span class="s1">] = </span><span class="s6">0</span><span class="s4">; </span><span class="s1">pure[</span><span class="s6">1</span><span class="s1">] = </span><span class="s6">1</span><span class="s4">; </span><span class="s1">pure[</span><span class="s6">2</span><span class="s1">] = v</span><span class="s4">; </span><span class="s2">break</span><span class="s4">;</span>
+		<span class="s2">case </span><span class="s6">3</span><span class="s1">:</span>
+			<span class="s1">pure[</span><span class="s6">0</span><span class="s1">] = </span><span class="s6">0</span><span class="s4">; </span><span class="s1">pure[</span><span class="s6">1</span><span class="s1">] = w</span><span class="s4">; </span><span class="s1">pure[</span><span class="s6">2</span><span class="s1">] = </span><span class="s6">1</span><span class="s4">; </span><span class="s2">break</span><span class="s4">;</span>
+		<span class="s2">case </span><span class="s6">4</span><span class="s1">:</span>
+			<span class="s1">pure[</span><span class="s6">0</span><span class="s1">] = v</span><span class="s4">; </span><span class="s1">pure[</span><span class="s6">1</span><span class="s1">] = </span><span class="s6">0</span><span class="s4">; </span><span class="s1">pure[</span><span class="s6">2</span><span class="s1">] = </span><span class="s6">1</span><span class="s4">; </span><span class="s2">break</span><span class="s4">;</span>
+		<span class="s2">default</span><span class="s1">:</span>
+			<span class="s1">pure[</span><span class="s6">0</span><span class="s1">] = </span><span class="s6">1</span><span class="s4">; </span><span class="s1">pure[</span><span class="s6">1</span><span class="s1">] = </span><span class="s6">0</span><span class="s4">; </span><span class="s1">pure[</span><span class="s6">2</span><span class="s1">] = w</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s1">mg = (</span><span class="s6">1.0 </span><span class="s1">- c) * g</span><span class="s4">;</span>
+
+	<span class="s2">return </span><span class="s1">[</span>
+		<span class="s1">(c * pure[</span><span class="s6">0</span><span class="s1">] + mg) * </span><span class="s6">255</span><span class="s4">,</span>
+		<span class="s1">(c * pure[</span><span class="s6">1</span><span class="s1">] + mg) * </span><span class="s6">255</span><span class="s4">,</span>
+		<span class="s1">(c * pure[</span><span class="s6">2</span><span class="s1">] + mg) * </span><span class="s6">255</span>
+	<span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.hcg.hsv = </span><span class="s2">function </span><span class="s1">(hcg) {</span>
+	<span class="s2">var </span><span class="s1">c = hcg[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = hcg[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+
+	<span class="s2">var </span><span class="s1">v = c + g * (</span><span class="s6">1.0 </span><span class="s1">- c)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">f = </span><span class="s6">0</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(v &gt; </span><span class="s6">0.0</span><span class="s1">) {</span>
+		<span class="s1">f = c / v</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">return </span><span class="s1">[hcg[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">, </span><span class="s1">f * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">v * </span><span class="s6">100</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.hcg.hsl = </span><span class="s2">function </span><span class="s1">(hcg) {</span>
+	<span class="s2">var </span><span class="s1">c = hcg[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = hcg[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+
+	<span class="s2">var </span><span class="s1">l = g * (</span><span class="s6">1.0 </span><span class="s1">- c) + </span><span class="s6">0.5 </span><span class="s1">* c</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">s = </span><span class="s6">0</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(l &gt; </span><span class="s6">0.0 </span><span class="s1">&amp;&amp; l &lt; </span><span class="s6">0.5</span><span class="s1">) {</span>
+		<span class="s1">s = c / (</span><span class="s6">2 </span><span class="s1">* l)</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s2">else</span>
+	<span class="s2">if </span><span class="s1">(l &gt;= </span><span class="s6">0.5 </span><span class="s1">&amp;&amp; l &lt; </span><span class="s6">1.0</span><span class="s1">) {</span>
+		<span class="s1">s = c / (</span><span class="s6">2 </span><span class="s1">* (</span><span class="s6">1 </span><span class="s1">- l))</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">return </span><span class="s1">[hcg[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">, </span><span class="s1">s * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">l * </span><span class="s6">100</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.hcg.hwb = </span><span class="s2">function </span><span class="s1">(hcg) {</span>
+	<span class="s2">var </span><span class="s1">c = hcg[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = hcg[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">v = c + g * (</span><span class="s6">1.0 </span><span class="s1">- c)</span><span class="s4">;</span>
+	<span class="s2">return </span><span class="s1">[hcg[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">, </span><span class="s1">(v - c) * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">(</span><span class="s6">1 </span><span class="s1">- v) * </span><span class="s6">100</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.hwb.hcg = </span><span class="s2">function </span><span class="s1">(hwb) {</span>
+	<span class="s2">var </span><span class="s1">w = hwb[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">b = hwb[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">100</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">v = </span><span class="s6">1 </span><span class="s1">- b</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">c = v - w</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">g = </span><span class="s6">0</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(c &lt; </span><span class="s6">1</span><span class="s1">) {</span>
+		<span class="s1">g = (v - c) / (</span><span class="s6">1 </span><span class="s1">- c)</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+	<span class="s2">return </span><span class="s1">[hwb[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">, </span><span class="s1">c * </span><span class="s6">100</span><span class="s4">, </span><span class="s1">g * </span><span class="s6">100</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.apple.rgb = </span><span class="s2">function </span><span class="s1">(apple) {</span>
+	<span class="s2">return </span><span class="s1">[(apple[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">65535</span><span class="s1">) * </span><span class="s6">255</span><span class="s4">, </span><span class="s1">(apple[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">65535</span><span class="s1">) * </span><span class="s6">255</span><span class="s4">, </span><span class="s1">(apple[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">65535</span><span class="s1">) * </span><span class="s6">255</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.rgb.apple = </span><span class="s2">function </span><span class="s1">(rgb) {</span>
+	<span class="s2">return </span><span class="s1">[(rgb[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">255</span><span class="s1">) * </span><span class="s6">65535</span><span class="s4">, </span><span class="s1">(rgb[</span><span class="s6">1</span><span class="s1">] / </span><span class="s6">255</span><span class="s1">) * </span><span class="s6">65535</span><span class="s4">, </span><span class="s1">(rgb[</span><span class="s6">2</span><span class="s1">] / </span><span class="s6">255</span><span class="s1">) * </span><span class="s6">65535</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.gray.rgb = </span><span class="s2">function </span><span class="s1">(args) {</span>
+	<span class="s2">return </span><span class="s1">[args[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">100 </span><span class="s1">* </span><span class="s6">255</span><span class="s4">, </span><span class="s1">args[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">100 </span><span class="s1">* </span><span class="s6">255</span><span class="s4">, </span><span class="s1">args[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">100 </span><span class="s1">* </span><span class="s6">255</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.gray.hsl = convert.gray.hsv = </span><span class="s2">function </span><span class="s1">(args) {</span>
+	<span class="s2">return </span><span class="s1">[</span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s4">, </span><span class="s1">args[</span><span class="s6">0</span><span class="s1">]]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.gray.hwb = </span><span class="s2">function </span><span class="s1">(gray) {</span>
+	<span class="s2">return </span><span class="s1">[</span><span class="s6">0</span><span class="s4">, </span><span class="s6">100</span><span class="s4">, </span><span class="s1">gray[</span><span class="s6">0</span><span class="s1">]]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.gray.cmyk = </span><span class="s2">function </span><span class="s1">(gray) {</span>
+	<span class="s2">return </span><span class="s1">[</span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s4">, </span><span class="s1">gray[</span><span class="s6">0</span><span class="s1">]]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.gray.lab = </span><span class="s2">function </span><span class="s1">(gray) {</span>
+	<span class="s2">return </span><span class="s1">[gray[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">, </span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.gray.hex = </span><span class="s2">function </span><span class="s1">(gray) {</span>
+	<span class="s2">var </span><span class="s1">val = Math.round(gray[</span><span class="s6">0</span><span class="s1">] / </span><span class="s6">100 </span><span class="s1">* </span><span class="s6">255</span><span class="s1">) &amp; </span><span class="s6">0xFF</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">integer = (val &lt;&lt; </span><span class="s6">16</span><span class="s1">) + (val &lt;&lt; </span><span class="s6">8</span><span class="s1">) + val</span><span class="s4">;</span>
+
+	<span class="s2">var </span><span class="s1">string = integer.toString(</span><span class="s6">16</span><span class="s1">).toUpperCase()</span><span class="s4">;</span>
+	<span class="s2">return </span><span class="s3">'000000'</span><span class="s1">.substring(string.length) + string</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">convert.rgb.gray = </span><span class="s2">function </span><span class="s1">(rgb) {</span>
+	<span class="s2">var </span><span class="s1">val = (rgb[</span><span class="s6">0</span><span class="s1">] + rgb[</span><span class="s6">1</span><span class="s1">] + rgb[</span><span class="s6">2</span><span class="s1">]) / </span><span class="s6">3</span><span class="s4">;</span>
+	<span class="s2">return </span><span class="s1">[val / </span><span class="s6">255 </span><span class="s1">* </span><span class="s6">100</span><span class="s1">]</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

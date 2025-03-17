@@ -1,0 +1,454 @@
+<html>
+<head>
+<title>4-restructShorthand.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+4-restructShorthand.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">List = require(</span><span class="s2">'css-tree'</span><span class="s1">).List</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">generate = require(</span><span class="s2">'css-tree'</span><span class="s1">).generate</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">walk = require(</span><span class="s2">'css-tree'</span><span class="s1">).walk</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">REPLACE = </span><span class="s4">1</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">REMOVE = </span><span class="s4">2</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">TOP = </span><span class="s4">0</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">RIGHT = </span><span class="s4">1</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">BOTTOM = </span><span class="s4">2</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">LEFT = </span><span class="s4">3</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">SIDES = [</span><span class="s2">'top'</span><span class="s3">, </span><span class="s2">'right'</span><span class="s3">, </span><span class="s2">'bottom'</span><span class="s3">, </span><span class="s2">'left'</span><span class="s1">]</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">SIDE = {</span>
+    <span class="s2">'margin-top'</span><span class="s1">: </span><span class="s2">'top'</span><span class="s3">,</span>
+    <span class="s2">'margin-right'</span><span class="s1">: </span><span class="s2">'right'</span><span class="s3">,</span>
+    <span class="s2">'margin-bottom'</span><span class="s1">: </span><span class="s2">'bottom'</span><span class="s3">,</span>
+    <span class="s2">'margin-left'</span><span class="s1">: </span><span class="s2">'left'</span><span class="s3">,</span>
+
+    <span class="s2">'padding-top'</span><span class="s1">: </span><span class="s2">'top'</span><span class="s3">,</span>
+    <span class="s2">'padding-right'</span><span class="s1">: </span><span class="s2">'right'</span><span class="s3">,</span>
+    <span class="s2">'padding-bottom'</span><span class="s1">: </span><span class="s2">'bottom'</span><span class="s3">,</span>
+    <span class="s2">'padding-left'</span><span class="s1">: </span><span class="s2">'left'</span><span class="s3">,</span>
+
+    <span class="s2">'border-top-color'</span><span class="s1">: </span><span class="s2">'top'</span><span class="s3">,</span>
+    <span class="s2">'border-right-color'</span><span class="s1">: </span><span class="s2">'right'</span><span class="s3">,</span>
+    <span class="s2">'border-bottom-color'</span><span class="s1">: </span><span class="s2">'bottom'</span><span class="s3">,</span>
+    <span class="s2">'border-left-color'</span><span class="s1">: </span><span class="s2">'left'</span><span class="s3">,</span>
+    <span class="s2">'border-top-width'</span><span class="s1">: </span><span class="s2">'top'</span><span class="s3">,</span>
+    <span class="s2">'border-right-width'</span><span class="s1">: </span><span class="s2">'right'</span><span class="s3">,</span>
+    <span class="s2">'border-bottom-width'</span><span class="s1">: </span><span class="s2">'bottom'</span><span class="s3">,</span>
+    <span class="s2">'border-left-width'</span><span class="s1">: </span><span class="s2">'left'</span><span class="s3">,</span>
+    <span class="s2">'border-top-style'</span><span class="s1">: </span><span class="s2">'top'</span><span class="s3">,</span>
+    <span class="s2">'border-right-style'</span><span class="s1">: </span><span class="s2">'right'</span><span class="s3">,</span>
+    <span class="s2">'border-bottom-style'</span><span class="s1">: </span><span class="s2">'bottom'</span><span class="s3">,</span>
+    <span class="s2">'border-left-style'</span><span class="s1">: </span><span class="s2">'left'</span>
+<span class="s1">}</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">MAIN_PROPERTY = {</span>
+    <span class="s2">'margin'</span><span class="s1">: </span><span class="s2">'margin'</span><span class="s3">,</span>
+    <span class="s2">'margin-top'</span><span class="s1">: </span><span class="s2">'margin'</span><span class="s3">,</span>
+    <span class="s2">'margin-right'</span><span class="s1">: </span><span class="s2">'margin'</span><span class="s3">,</span>
+    <span class="s2">'margin-bottom'</span><span class="s1">: </span><span class="s2">'margin'</span><span class="s3">,</span>
+    <span class="s2">'margin-left'</span><span class="s1">: </span><span class="s2">'margin'</span><span class="s3">,</span>
+
+    <span class="s2">'padding'</span><span class="s1">: </span><span class="s2">'padding'</span><span class="s3">,</span>
+    <span class="s2">'padding-top'</span><span class="s1">: </span><span class="s2">'padding'</span><span class="s3">,</span>
+    <span class="s2">'padding-right'</span><span class="s1">: </span><span class="s2">'padding'</span><span class="s3">,</span>
+    <span class="s2">'padding-bottom'</span><span class="s1">: </span><span class="s2">'padding'</span><span class="s3">,</span>
+    <span class="s2">'padding-left'</span><span class="s1">: </span><span class="s2">'padding'</span><span class="s3">,</span>
+
+    <span class="s2">'border-color'</span><span class="s1">: </span><span class="s2">'border-color'</span><span class="s3">,</span>
+    <span class="s2">'border-top-color'</span><span class="s1">: </span><span class="s2">'border-color'</span><span class="s3">,</span>
+    <span class="s2">'border-right-color'</span><span class="s1">: </span><span class="s2">'border-color'</span><span class="s3">,</span>
+    <span class="s2">'border-bottom-color'</span><span class="s1">: </span><span class="s2">'border-color'</span><span class="s3">,</span>
+    <span class="s2">'border-left-color'</span><span class="s1">: </span><span class="s2">'border-color'</span><span class="s3">,</span>
+    <span class="s2">'border-width'</span><span class="s1">: </span><span class="s2">'border-width'</span><span class="s3">,</span>
+    <span class="s2">'border-top-width'</span><span class="s1">: </span><span class="s2">'border-width'</span><span class="s3">,</span>
+    <span class="s2">'border-right-width'</span><span class="s1">: </span><span class="s2">'border-width'</span><span class="s3">,</span>
+    <span class="s2">'border-bottom-width'</span><span class="s1">: </span><span class="s2">'border-width'</span><span class="s3">,</span>
+    <span class="s2">'border-left-width'</span><span class="s1">: </span><span class="s2">'border-width'</span><span class="s3">,</span>
+    <span class="s2">'border-style'</span><span class="s1">: </span><span class="s2">'border-style'</span><span class="s3">,</span>
+    <span class="s2">'border-top-style'</span><span class="s1">: </span><span class="s2">'border-style'</span><span class="s3">,</span>
+    <span class="s2">'border-right-style'</span><span class="s1">: </span><span class="s2">'border-style'</span><span class="s3">,</span>
+    <span class="s2">'border-bottom-style'</span><span class="s1">: </span><span class="s2">'border-style'</span><span class="s3">,</span>
+    <span class="s2">'border-left-style'</span><span class="s1">: </span><span class="s2">'border-style'</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">TRBL(name) {</span>
+    <span class="s0">this</span><span class="s1">.name = name</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.loc = </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.iehack = undefined</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.sides = {</span>
+        <span class="s2">'top'</span><span class="s1">: </span><span class="s0">null</span><span class="s3">,</span>
+        <span class="s2">'right'</span><span class="s1">: </span><span class="s0">null</span><span class="s3">,</span>
+        <span class="s2">'bottom'</span><span class="s1">: </span><span class="s0">null</span><span class="s3">,</span>
+        <span class="s2">'left'</span><span class="s1">: </span><span class="s0">null</span>
+    <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">TRBL.prototype.getValueSequence = </span><span class="s0">function</span><span class="s1">(declaration</span><span class="s3">, </span><span class="s1">count) {</span>
+    <span class="s0">var </span><span class="s1">values = []</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">iehack = </span><span class="s2">''</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">hasBadValues = declaration.value.type !== </span><span class="s2">'Value' </span><span class="s1">|| declaration.value.children.some(</span><span class="s0">function</span><span class="s1">(child) {</span>
+        <span class="s0">var </span><span class="s1">special = </span><span class="s0">false</span><span class="s3">;</span>
+
+        <span class="s0">switch </span><span class="s1">(child.type) {</span>
+            <span class="s0">case </span><span class="s2">'Identifier'</span><span class="s1">:</span>
+                <span class="s0">switch </span><span class="s1">(child.name) {</span>
+                    <span class="s0">case </span><span class="s2">'</span><span class="s3">\\</span><span class="s2">0'</span><span class="s1">:</span>
+                    <span class="s0">case </span><span class="s2">'</span><span class="s3">\\</span><span class="s2">9'</span><span class="s1">:</span>
+                        <span class="s1">iehack = child.name</span><span class="s3">;</span>
+                        <span class="s0">return</span><span class="s3">;</span>
+
+                    <span class="s0">case </span><span class="s2">'inherit'</span><span class="s1">:</span>
+                    <span class="s0">case </span><span class="s2">'initial'</span><span class="s1">:</span>
+                    <span class="s0">case </span><span class="s2">'unset'</span><span class="s1">:</span>
+                    <span class="s0">case </span><span class="s2">'revert'</span><span class="s1">:</span>
+                        <span class="s1">special = child.name</span><span class="s3">;</span>
+                        <span class="s0">break</span><span class="s3">;</span>
+                <span class="s1">}</span>
+                <span class="s0">break</span><span class="s3">;</span>
+
+            <span class="s0">case </span><span class="s2">'Dimension'</span><span class="s1">:</span>
+                <span class="s0">switch </span><span class="s1">(child.unit) {</span>
+                    <span class="s5">// is not supported until IE11</span>
+                    <span class="s0">case </span><span class="s2">'rem'</span><span class="s1">:</span>
+
+                    <span class="s5">// v* units is too buggy across browsers and better</span>
+                    <span class="s5">// don't merge values with those units</span>
+                    <span class="s0">case </span><span class="s2">'vw'</span><span class="s1">:</span>
+                    <span class="s0">case </span><span class="s2">'vh'</span><span class="s1">:</span>
+                    <span class="s0">case </span><span class="s2">'vmin'</span><span class="s1">:</span>
+                    <span class="s0">case </span><span class="s2">'vmax'</span><span class="s1">:</span>
+                    <span class="s0">case </span><span class="s2">'vm'</span><span class="s1">: </span><span class="s5">// IE9 supporting &quot;vm&quot; instead of &quot;vmin&quot;.</span>
+                        <span class="s1">special = child.unit</span><span class="s3">;</span>
+                        <span class="s0">break</span><span class="s3">;</span>
+                <span class="s1">}</span>
+                <span class="s0">break</span><span class="s3">;</span>
+
+            <span class="s0">case </span><span class="s2">'Hash'</span><span class="s1">: </span><span class="s5">// color</span>
+            <span class="s0">case </span><span class="s2">'Number'</span><span class="s1">:</span>
+            <span class="s0">case </span><span class="s2">'Percentage'</span><span class="s1">:</span>
+                <span class="s0">break</span><span class="s3">;</span>
+
+            <span class="s0">case </span><span class="s2">'Function'</span><span class="s1">:</span>
+                <span class="s0">if </span><span class="s1">(child.name === </span><span class="s2">'var'</span><span class="s1">) {</span>
+                    <span class="s0">return true</span><span class="s3">;</span>
+                <span class="s1">}</span>
+
+                <span class="s1">special = child.name</span><span class="s3">;</span>
+                <span class="s0">break</span><span class="s3">;</span>
+
+            <span class="s0">case </span><span class="s2">'WhiteSpace'</span><span class="s1">:</span>
+                <span class="s0">return false</span><span class="s3">; </span><span class="s5">// ignore space</span>
+
+            <span class="s0">default</span><span class="s1">:</span>
+                <span class="s0">return true</span><span class="s3">;  </span><span class="s5">// bad value</span>
+        <span class="s1">}</span>
+
+        <span class="s1">values.push({</span>
+            <span class="s1">node: child</span><span class="s3">,</span>
+            <span class="s1">special: special</span><span class="s3">,</span>
+            <span class="s1">important: declaration.important</span>
+        <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(hasBadValues || values.length &gt; count) {</span>
+        <span class="s0">return false</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof this</span><span class="s1">.iehack === </span><span class="s2">'string' </span><span class="s1">&amp;&amp; </span><span class="s0">this</span><span class="s1">.iehack !== iehack) {</span>
+        <span class="s0">return false</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">this</span><span class="s1">.iehack = iehack</span><span class="s3">; </span><span class="s5">// move outside</span>
+
+    <span class="s0">return </span><span class="s1">values</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">TRBL.prototype.canOverride = </span><span class="s0">function</span><span class="s1">(side</span><span class="s3">, </span><span class="s1">value) {</span>
+    <span class="s0">var </span><span class="s1">currentValue = </span><span class="s0">this</span><span class="s1">.sides[side]</span><span class="s3">;</span>
+
+    <span class="s0">return </span><span class="s1">!currentValue || (value.important &amp;&amp; !currentValue.important)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">TRBL.prototype.add = </span><span class="s0">function</span><span class="s1">(name</span><span class="s3">, </span><span class="s1">declaration) {</span>
+    <span class="s0">function </span><span class="s1">attemptToAdd() {</span>
+        <span class="s0">var </span><span class="s1">sides = </span><span class="s0">this</span><span class="s1">.sides</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">side = SIDE[name]</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(side) {</span>
+            <span class="s0">if </span><span class="s1">(side </span><span class="s0">in </span><span class="s1">sides === </span><span class="s0">false</span><span class="s1">) {</span>
+                <span class="s0">return false</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">var </span><span class="s1">values = </span><span class="s0">this</span><span class="s1">.getValueSequence(declaration</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+
+            <span class="s0">if </span><span class="s1">(!values || !values.length) {</span>
+                <span class="s0">return false</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s5">// can mix only if specials are equal</span>
+            <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">key </span><span class="s0">in </span><span class="s1">sides) {</span>
+                <span class="s0">if </span><span class="s1">(sides[key] !== </span><span class="s0">null </span><span class="s1">&amp;&amp; sides[key].special !== values[</span><span class="s4">0</span><span class="s1">].special) {</span>
+                    <span class="s0">return false</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+
+            <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.canOverride(side</span><span class="s3">, </span><span class="s1">values[</span><span class="s4">0</span><span class="s1">])) {</span>
+                <span class="s0">return true</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s1">sides[side] = values[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">;</span>
+            <span class="s0">return true</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else if </span><span class="s1">(name === </span><span class="s0">this</span><span class="s1">.name) {</span>
+            <span class="s0">var </span><span class="s1">values = </span><span class="s0">this</span><span class="s1">.getValueSequence(declaration</span><span class="s3">, </span><span class="s4">4</span><span class="s1">)</span><span class="s3">;</span>
+
+            <span class="s0">if </span><span class="s1">(!values || !values.length) {</span>
+                <span class="s0">return false</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">switch </span><span class="s1">(values.length) {</span>
+                <span class="s0">case </span><span class="s4">1</span><span class="s1">:</span>
+                    <span class="s1">values[RIGHT] = values[TOP]</span><span class="s3">;</span>
+                    <span class="s1">values[BOTTOM] = values[TOP]</span><span class="s3">;</span>
+                    <span class="s1">values[LEFT] = values[TOP]</span><span class="s3">;</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s4">2</span><span class="s1">:</span>
+                    <span class="s1">values[BOTTOM] = values[TOP]</span><span class="s3">;</span>
+                    <span class="s1">values[LEFT] = values[RIGHT]</span><span class="s3">;</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s4">3</span><span class="s1">:</span>
+                    <span class="s1">values[LEFT] = values[RIGHT]</span><span class="s3">;</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s5">// can mix only if specials are equal</span>
+            <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s4">4</span><span class="s3">; </span><span class="s1">i++) {</span>
+                <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">key </span><span class="s0">in </span><span class="s1">sides) {</span>
+                    <span class="s0">if </span><span class="s1">(sides[key] !== </span><span class="s0">null </span><span class="s1">&amp;&amp; sides[key].special !== values[i].special) {</span>
+                        <span class="s0">return false</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+
+            <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s4">4</span><span class="s3">; </span><span class="s1">i++) {</span>
+                <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.canOverride(SIDES[i]</span><span class="s3">, </span><span class="s1">values[i])) {</span>
+                    <span class="s1">sides[SIDES[i]] = values[i]</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+
+            <span class="s0">return true</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(!attemptToAdd.call(</span><span class="s0">this</span><span class="s1">)) {</span>
+        <span class="s0">return false</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">// TODO: use it when we can refer to several points in source</span>
+    <span class="s5">// if (this.loc) {</span>
+    <span class="s5">//     this.loc = {</span>
+    <span class="s5">//         primary: this.loc,</span>
+    <span class="s5">//         merged: declaration.loc</span>
+    <span class="s5">//     };</span>
+    <span class="s5">// } else {</span>
+    <span class="s5">//     this.loc = declaration.loc;</span>
+    <span class="s5">// }</span>
+    <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.loc) {</span>
+        <span class="s0">this</span><span class="s1">.loc = declaration.loc</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return true</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">TRBL.prototype.isOkToMinimize = </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s0">var </span><span class="s1">top = </span><span class="s0">this</span><span class="s1">.sides.top</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">right = </span><span class="s0">this</span><span class="s1">.sides.right</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">bottom = </span><span class="s0">this</span><span class="s1">.sides.bottom</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">left = </span><span class="s0">this</span><span class="s1">.sides.left</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(top &amp;&amp; right &amp;&amp; bottom &amp;&amp; left) {</span>
+        <span class="s0">var </span><span class="s1">important =</span>
+            <span class="s1">top.important +</span>
+            <span class="s1">right.important +</span>
+            <span class="s1">bottom.important +</span>
+            <span class="s1">left.important</span><span class="s3">;</span>
+
+        <span class="s0">return </span><span class="s1">important === </span><span class="s4">0 </span><span class="s1">|| important === </span><span class="s4">4</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return false</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">TRBL.prototype.getValue = </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s0">var </span><span class="s1">result = </span><span class="s0">new </span><span class="s1">List()</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">sides = </span><span class="s0">this</span><span class="s1">.sides</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">values = [</span>
+        <span class="s1">sides.top</span><span class="s3">,</span>
+        <span class="s1">sides.right</span><span class="s3">,</span>
+        <span class="s1">sides.bottom</span><span class="s3">,</span>
+        <span class="s1">sides.left</span>
+    <span class="s1">]</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">stringValues = [</span>
+        <span class="s1">generate(sides.top.node)</span><span class="s3">,</span>
+        <span class="s1">generate(sides.right.node)</span><span class="s3">,</span>
+        <span class="s1">generate(sides.bottom.node)</span><span class="s3">,</span>
+        <span class="s1">generate(sides.left.node)</span>
+    <span class="s1">]</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(stringValues[LEFT] === stringValues[RIGHT]) {</span>
+        <span class="s1">values.pop()</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(stringValues[BOTTOM] === stringValues[TOP]) {</span>
+            <span class="s1">values.pop()</span><span class="s3">;</span>
+            <span class="s0">if </span><span class="s1">(stringValues[RIGHT] === stringValues[TOP]) {</span>
+                <span class="s1">values.pop()</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; values.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+        <span class="s0">if </span><span class="s1">(i) {</span>
+            <span class="s1">result.appendData({ type: </span><span class="s2">'WhiteSpace'</span><span class="s3">, </span><span class="s1">value: </span><span class="s2">' ' </span><span class="s1">})</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">result.appendData(values[i].node)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.iehack) {</span>
+        <span class="s1">result.appendData({ type: </span><span class="s2">'WhiteSpace'</span><span class="s3">, </span><span class="s1">value: </span><span class="s2">' ' </span><span class="s1">})</span><span class="s3">;</span>
+        <span class="s1">result.appendData({</span>
+            <span class="s1">type: </span><span class="s2">'Identifier'</span><span class="s3">,</span>
+            <span class="s1">loc: </span><span class="s0">null</span><span class="s3">,</span>
+            <span class="s1">name: </span><span class="s0">this</span><span class="s1">.iehack</span>
+        <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">{</span>
+        <span class="s1">type: </span><span class="s2">'Value'</span><span class="s3">,</span>
+        <span class="s1">loc: </span><span class="s0">null</span><span class="s3">,</span>
+        <span class="s1">children: result</span>
+    <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">TRBL.prototype.getDeclaration = </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s0">return </span><span class="s1">{</span>
+        <span class="s1">type: </span><span class="s2">'Declaration'</span><span class="s3">,</span>
+        <span class="s1">loc: </span><span class="s0">this</span><span class="s1">.loc</span><span class="s3">,</span>
+        <span class="s1">important: </span><span class="s0">this</span><span class="s1">.sides.top.important</span><span class="s3">,</span>
+        <span class="s1">property: </span><span class="s0">this</span><span class="s1">.name</span><span class="s3">,</span>
+        <span class="s1">value: </span><span class="s0">this</span><span class="s1">.getValue()</span>
+    <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">processRule(rule</span><span class="s3">, </span><span class="s1">shorts</span><span class="s3">, </span><span class="s1">shortDeclarations</span><span class="s3">, </span><span class="s1">lastShortSelector) {</span>
+    <span class="s0">var </span><span class="s1">declarations = rule.block.children</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">selector = rule.prelude.children.first().id</span><span class="s3">;</span>
+
+    <span class="s1">rule.block.children.eachRight(</span><span class="s0">function</span><span class="s1">(declaration</span><span class="s3">, </span><span class="s1">item) {</span>
+        <span class="s0">var </span><span class="s1">property = declaration.property</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(!MAIN_PROPERTY.hasOwnProperty(property)) {</span>
+            <span class="s0">return</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">var </span><span class="s1">key = MAIN_PROPERTY[property]</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">shorthand</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">operation</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(!lastShortSelector || selector === lastShortSelector) {</span>
+            <span class="s0">if </span><span class="s1">(key </span><span class="s0">in </span><span class="s1">shorts) {</span>
+                <span class="s1">operation = REMOVE</span><span class="s3">;</span>
+                <span class="s1">shorthand = shorts[key]</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(!shorthand || !shorthand.add(property</span><span class="s3">, </span><span class="s1">declaration)) {</span>
+            <span class="s1">operation = REPLACE</span><span class="s3">;</span>
+            <span class="s1">shorthand = </span><span class="s0">new </span><span class="s1">TRBL(key)</span><span class="s3">;</span>
+
+            <span class="s5">// if can't parse value ignore it and break shorthand children</span>
+            <span class="s0">if </span><span class="s1">(!shorthand.add(property</span><span class="s3">, </span><span class="s1">declaration)) {</span>
+                <span class="s1">lastShortSelector = </span><span class="s0">null</span><span class="s3">;</span>
+                <span class="s0">return</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s1">shorts[key] = shorthand</span><span class="s3">;</span>
+        <span class="s1">shortDeclarations.push({</span>
+            <span class="s1">operation: operation</span><span class="s3">,</span>
+            <span class="s1">block: declarations</span><span class="s3">,</span>
+            <span class="s1">item: item</span><span class="s3">,</span>
+            <span class="s1">shorthand: shorthand</span>
+        <span class="s1">})</span><span class="s3">;</span>
+
+        <span class="s1">lastShortSelector = selector</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s0">return </span><span class="s1">lastShortSelector</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">processShorthands(shortDeclarations</span><span class="s3">, </span><span class="s1">markDeclaration) {</span>
+    <span class="s1">shortDeclarations.forEach(</span><span class="s0">function</span><span class="s1">(item) {</span>
+        <span class="s0">var </span><span class="s1">shorthand = item.shorthand</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(!shorthand.isOkToMinimize()) {</span>
+            <span class="s0">return</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(item.operation === REPLACE) {</span>
+            <span class="s1">item.item.data = markDeclaration(shorthand.getDeclaration())</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s1">item.block.remove(item.item)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">restructBlock(ast</span><span class="s3">, </span><span class="s1">indexer) {</span>
+    <span class="s0">var </span><span class="s1">stylesheetMap = {}</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">shortDeclarations = []</span><span class="s3">;</span>
+
+    <span class="s1">walk(ast</span><span class="s3">, </span><span class="s1">{</span>
+        <span class="s1">visit: </span><span class="s2">'Rule'</span><span class="s3">,</span>
+        <span class="s1">reverse: </span><span class="s0">true</span><span class="s3">,</span>
+        <span class="s1">enter: </span><span class="s0">function</span><span class="s1">(node) {</span>
+            <span class="s0">var </span><span class="s1">stylesheet = </span><span class="s0">this</span><span class="s1">.block || </span><span class="s0">this</span><span class="s1">.stylesheet</span><span class="s3">;</span>
+            <span class="s0">var </span><span class="s1">ruleId = (node.pseudoSignature || </span><span class="s2">''</span><span class="s1">) + </span><span class="s2">'|' </span><span class="s1">+ node.prelude.children.first().id</span><span class="s3">;</span>
+            <span class="s0">var </span><span class="s1">ruleMap</span><span class="s3">;</span>
+            <span class="s0">var </span><span class="s1">shorts</span><span class="s3">;</span>
+
+            <span class="s0">if </span><span class="s1">(!stylesheetMap.hasOwnProperty(stylesheet.id)) {</span>
+                <span class="s1">ruleMap = {</span>
+                    <span class="s1">lastShortSelector: </span><span class="s0">null</span>
+                <span class="s1">}</span><span class="s3">;</span>
+                <span class="s1">stylesheetMap[stylesheet.id] = ruleMap</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                <span class="s1">ruleMap = stylesheetMap[stylesheet.id]</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">if </span><span class="s1">(ruleMap.hasOwnProperty(ruleId)) {</span>
+                <span class="s1">shorts = ruleMap[ruleId]</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                <span class="s1">shorts = {}</span><span class="s3">;</span>
+                <span class="s1">ruleMap[ruleId] = shorts</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s1">ruleMap.lastShortSelector = processRule.call(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">node</span><span class="s3">, </span><span class="s1">shorts</span><span class="s3">, </span><span class="s1">shortDeclarations</span><span class="s3">, </span><span class="s1">ruleMap.lastShortSelector)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">processShorthands(shortDeclarations</span><span class="s3">, </span><span class="s1">indexer.declaration)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

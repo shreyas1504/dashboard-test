@@ -1,0 +1,28 @@
+<html>
+<head>
+<title>const.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+const.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+<span class="s0">{{# def.$data }}</span>
+
+<span class="s0">{{? !$isData }}</span>
+  <span class="s0">var schema{{=$lvl}} = validate.schema{{=$schemaPath}};</span>
+<span class="s0">{{?}}</span>
+<span class="s0">var {{=$valid}} = equal({{=$data}}, schema{{=$lvl}});</span>
+<span class="s0">{{# def.checkError:'const' }}</span>
+<span class="s0">{{? $breakOnError }} else { {{?}}</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<html>
+<head>
+<title>AttributeSelector.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+AttributeSelector.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).TYPE</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">IDENT = TYPE.Ident</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">STRING = TYPE.String</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">COLON = TYPE.Colon</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">LEFTSQUAREBRACKET = TYPE.LeftSquareBracket</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">RIGHTSQUAREBRACKET = TYPE.RightSquareBracket</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">DOLLARSIGN = </span><span class="s4">0x0024</span><span class="s3">;       </span><span class="s5">// U+0024 DOLLAR SIGN ($)</span>
+<span class="s0">var </span><span class="s1">ASTERISK = </span><span class="s4">0x002A</span><span class="s3">;         </span><span class="s5">// U+002A ASTERISK (*)</span>
+<span class="s0">var </span><span class="s1">EQUALSSIGN = </span><span class="s4">0x003D</span><span class="s3">;       </span><span class="s5">// U+003D EQUALS SIGN (=)</span>
+<span class="s0">var </span><span class="s1">CIRCUMFLEXACCENT = </span><span class="s4">0x005E</span><span class="s3">; </span><span class="s5">// U+005E (^)</span>
+<span class="s0">var </span><span class="s1">VERTICALLINE = </span><span class="s4">0x007C</span><span class="s3">;     </span><span class="s5">// U+007C VERTICAL LINE (|)</span>
+<span class="s0">var </span><span class="s1">TILDE = </span><span class="s4">0x007E</span><span class="s3">;            </span><span class="s5">// U+007E TILDE (~)</span>
+
+<span class="s0">function </span><span class="s1">getAttributeName() {</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.eof) {</span>
+        <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Unexpected end of input'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">start = </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">expectIdent = </span><span class="s0">false</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">checkColon = </span><span class="s0">true</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.isDelim(ASTERISK)) {</span>
+        <span class="s1">expectIdent = </span><span class="s0">true</span><span class="s3">;</span>
+        <span class="s1">checkColon = </span><span class="s0">false</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s0">else if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.scanner.isDelim(VERTICALLINE)) {</span>
+        <span class="s0">this</span><span class="s1">.eat(IDENT)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.isDelim(VERTICALLINE)) {</span>
+        <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.source.charCodeAt(</span><span class="s0">this</span><span class="s1">.scanner.tokenStart + </span><span class="s4">1</span><span class="s1">) !== EQUALSSIGN) {</span>
+            <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.eat(IDENT)</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else if </span><span class="s1">(expectIdent) {</span>
+            <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Identifier is expected'</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenEnd)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">} </span><span class="s0">else if </span><span class="s1">(expectIdent) {</span>
+        <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Vertical line is expected'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(checkColon &amp;&amp; </span><span class="s0">this</span><span class="s1">.scanner.tokenType === COLON) {</span>
+        <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.eat(IDENT)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">{</span>
+        <span class="s1">type: </span><span class="s2">'Identifier'</span><span class="s3">,</span>
+        <span class="s1">loc: </span><span class="s0">this</span><span class="s1">.getLocation(start</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart)</span><span class="s3">,</span>
+        <span class="s1">name: </span><span class="s0">this</span><span class="s1">.scanner.substrToCursor(start)</span>
+    <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">getOperator() {</span>
+    <span class="s0">var </span><span class="s1">start = </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">code = </span><span class="s0">this</span><span class="s1">.scanner.source.charCodeAt(start)</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(code !== EQUALSSIGN &amp;&amp;        </span><span class="s5">// =</span>
+        <span class="s1">code !== TILDE &amp;&amp;             </span><span class="s5">// ~=</span>
+        <span class="s1">code !== CIRCUMFLEXACCENT &amp;&amp;  </span><span class="s5">// ^=</span>
+        <span class="s1">code !== DOLLARSIGN &amp;&amp;        </span><span class="s5">// $=</span>
+        <span class="s1">code !== ASTERISK &amp;&amp;          </span><span class="s5">// *=</span>
+        <span class="s1">code !== VERTICALLINE         </span><span class="s5">// |=</span>
+    <span class="s1">) {</span>
+        <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Attribute selector (=, ~=, ^=, $=, *=, |=) is expected'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(code !== EQUALSSIGN) {</span>
+        <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.scanner.isDelim(EQUALSSIGN)) {</span>
+            <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Equal sign is expected'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return this</span><span class="s1">.scanner.substrToCursor(start)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s5">// '[' &lt;wq-name&gt; ']'</span>
+<span class="s5">// '[' &lt;wq-name&gt; &lt;attr-matcher&gt; [ &lt;string-token&gt; | &lt;ident-token&gt; ] &lt;attr-modifier&gt;? ']'</span>
+<span class="s1">module.exports = {</span>
+    <span class="s1">name: </span><span class="s2">'AttributeSelector'</span><span class="s3">,</span>
+    <span class="s1">structure: {</span>
+        <span class="s1">name: </span><span class="s2">'Identifier'</span><span class="s3">,</span>
+        <span class="s1">matcher: [String</span><span class="s3">, </span><span class="s0">null</span><span class="s1">]</span><span class="s3">,</span>
+        <span class="s1">value: [</span><span class="s2">'String'</span><span class="s3">, </span><span class="s2">'Identifier'</span><span class="s3">, </span><span class="s0">null</span><span class="s1">]</span><span class="s3">,</span>
+        <span class="s1">flags: [String</span><span class="s3">, </span><span class="s0">null</span><span class="s1">]</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">parse: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">var </span><span class="s1">start = </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">name</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">matcher = </span><span class="s0">null</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">value = </span><span class="s0">null</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">flags = </span><span class="s0">null</span><span class="s3">;</span>
+
+        <span class="s0">this</span><span class="s1">.eat(LEFTSQUAREBRACKET)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.scanner.skipSC()</span><span class="s3">;</span>
+
+        <span class="s1">name = getAttributeName.call(</span><span class="s0">this</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.scanner.skipSC()</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenType !== RIGHTSQUAREBRACKET) {</span>
+            <span class="s5">// avoid case `[name i]`</span>
+            <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenType !== IDENT) {</span>
+                <span class="s1">matcher = getOperator.call(</span><span class="s0">this</span><span class="s1">)</span><span class="s3">;</span>
+
+                <span class="s0">this</span><span class="s1">.scanner.skipSC()</span><span class="s3">;</span>
+
+                <span class="s1">value = </span><span class="s0">this</span><span class="s1">.scanner.tokenType === STRING</span>
+                    <span class="s1">? </span><span class="s0">this</span><span class="s1">.String()</span>
+                    <span class="s1">: </span><span class="s0">this</span><span class="s1">.Identifier()</span><span class="s3">;</span>
+
+                <span class="s0">this</span><span class="s1">.scanner.skipSC()</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s5">// attribute flags</span>
+            <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenType === IDENT) {</span>
+                <span class="s1">flags = </span><span class="s0">this</span><span class="s1">.scanner.getTokenValue()</span><span class="s3">;</span>
+                <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+
+                <span class="s0">this</span><span class="s1">.scanner.skipSC()</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">this</span><span class="s1">.eat(RIGHTSQUAREBRACKET)</span><span class="s3">;</span>
+
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">type: </span><span class="s2">'AttributeSelector'</span><span class="s3">,</span>
+            <span class="s1">loc: </span><span class="s0">this</span><span class="s1">.getLocation(start</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart)</span><span class="s3">,</span>
+            <span class="s1">name: name</span><span class="s3">,</span>
+            <span class="s1">matcher: matcher</span><span class="s3">,</span>
+            <span class="s1">value: value</span><span class="s3">,</span>
+            <span class="s1">flags: flags</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">generate: </span><span class="s0">function</span><span class="s1">(node) {</span>
+        <span class="s0">var </span><span class="s1">flagsPrefix = </span><span class="s2">' '</span><span class="s3">;</span>
+
+        <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">'['</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.node(node.name)</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(node.matcher !== </span><span class="s0">null</span><span class="s1">) {</span>
+            <span class="s0">this</span><span class="s1">.chunk(node.matcher)</span><span class="s3">;</span>
+
+            <span class="s0">if </span><span class="s1">(node.value !== </span><span class="s0">null</span><span class="s1">) {</span>
+                <span class="s0">this</span><span class="s1">.node(node.value)</span><span class="s3">;</span>
+
+                <span class="s5">// space between string and flags is not required</span>
+                <span class="s0">if </span><span class="s1">(node.value.type === </span><span class="s2">'String'</span><span class="s1">) {</span>
+                    <span class="s1">flagsPrefix = </span><span class="s2">''</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(node.flags !== </span><span class="s0">null</span><span class="s1">) {</span>
+            <span class="s0">this</span><span class="s1">.chunk(flagsPrefix)</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.chunk(node.flags)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">']'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<html>
+<head>
+<title>coa.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+coa.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">/// &lt;reference types=&quot;q&quot;/&gt;</span>
+
+<span class="s2">export const </span><span class="s1">Arg: undefined</span><span class="s3">;</span>
+
+<span class="s2">export const </span><span class="s1">Opt: undefined</span><span class="s3">;</span>
+
+<span class="s2">export function </span><span class="s1">Cmd(cmd?: classes.Cmd): classes.Cmd</span><span class="s3">;</span>
+
+<span class="s2">export </span><span class="s1">namespace classes {</span>
+    <span class="s2">class </span><span class="s1">Arg {</span>
+        <span class="s1">constructor(cmd: Cmd)</span><span class="s3">;</span>
+        <span class="s1">name(name: string): Arg</span><span class="s3">;</span>
+        <span class="s1">title(title: string): Arg</span><span class="s3">;</span>
+        <span class="s1">arr(): Arg</span><span class="s3">;</span>
+        <span class="s1">req(): Arg</span><span class="s3">;</span>
+        <span class="s1">val(validation: (</span><span class="s2">this</span><span class="s1">: Arg</span><span class="s3">, </span><span class="s1">value: any) =&gt; boolean): Arg</span><span class="s3">;</span>
+        <span class="s1">def(def: any): Arg</span><span class="s3">;</span>
+        <span class="s1">output(): Arg</span><span class="s3">;</span>
+        <span class="s1">comp(fn: (opts: any) =&gt; any): Arg</span><span class="s3">;</span>
+        <span class="s1">end(): Cmd</span><span class="s3">;</span>
+        <span class="s1">apply(...args: any[]): Arg</span><span class="s3">;</span>
+        <span class="s1">input(): Arg</span><span class="s3">;</span>
+        <span class="s1">reject(...args: any[]): Arg</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">class </span><span class="s1">Cmd {</span>
+        <span class="s1">constructor(cmd?: Cmd)</span><span class="s3">;</span>
+        <span class="s2">static </span><span class="s1">create(cmd?: Cmd): Cmd</span><span class="s3">;</span>
+        <span class="s1">api(): any</span><span class="s3">;</span>
+        <span class="s1">name(name: string): Cmd</span><span class="s3">;</span>
+        <span class="s1">title(title: string): Cmd</span><span class="s3">;</span>
+        <span class="s1">cmd(cmd?: Cmd): Cmd</span><span class="s3">;</span>
+        <span class="s1">opt(): Opt</span><span class="s3">;</span>
+        <span class="s1">arg(): Arg</span><span class="s3">;</span>
+        <span class="s1">act(act: (opts: any</span><span class="s3">, </span><span class="s1">args: any[]</span><span class="s3">, </span><span class="s1">res: any) =&gt; any</span><span class="s3">, </span><span class="s1">force?: boolean): Cmd</span><span class="s3">;</span>
+        <span class="s1">apply(fn: Function</span><span class="s3">, </span><span class="s1">args?: any[]): Cmd</span><span class="s3">;</span>
+        <span class="s1">comp(fs: (opts: any) =&gt; any): Cmd</span><span class="s3">;</span>
+        <span class="s1">helpful(): Cmd</span><span class="s3">;</span>
+        <span class="s1">completable(): Cmd</span><span class="s3">;</span>
+        <span class="s1">usage(): string</span><span class="s3">;</span>
+        <span class="s1">run(argv: string[]): Cmd</span><span class="s3">;</span>
+        <span class="s1">invoke(cmds?: string|string[]</span><span class="s3">, </span><span class="s1">opts?: any</span><span class="s3">, </span><span class="s1">args?: any): Q.Promise&lt;any&gt;</span><span class="s3">;</span>
+        <span class="s1">reject(reason: any): Q.Promise&lt;any&gt;</span><span class="s3">;</span>
+        <span class="s1">end(): Cmd</span><span class="s3">;</span>
+        <span class="s2">do</span><span class="s1">(argv: string[]): any</span><span class="s3">;</span>
+        <span class="s1">extendable(pattern?: string): Cmd</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">class </span><span class="s1">Opt {</span>
+        <span class="s1">constructor(cmd?: Cmd)</span><span class="s3">;</span>
+        <span class="s1">name(name: string): Opt</span><span class="s3">;</span>
+        <span class="s1">title(title: string): Opt</span><span class="s3">;</span>
+        <span class="s1">short(short: string): Opt</span><span class="s3">;</span>
+        <span class="s1">long(long: string): Opt</span><span class="s3">;</span>
+        <span class="s1">flag(): Opt</span><span class="s3">;</span>
+        <span class="s1">arr(): Opt</span><span class="s3">;</span>
+        <span class="s1">req(): Opt</span><span class="s3">;</span>
+        <span class="s1">only(): Opt</span><span class="s3">;</span>
+        <span class="s1">val(validation: (</span><span class="s2">this</span><span class="s1">: Opt</span><span class="s3">, </span><span class="s1">value: any) =&gt; boolean): Opt</span><span class="s3">;</span>
+        <span class="s1">def(def: any): Opt</span><span class="s3">;</span>
+        <span class="s1">input(): Opt</span><span class="s3">;</span>
+        <span class="s1">output(): Opt</span><span class="s3">;</span>
+        <span class="s1">act(act: (opts: any</span><span class="s3">, </span><span class="s1">args: any[]</span><span class="s3">, </span><span class="s1">res: any) =&gt; any): Opt</span><span class="s3">;</span>
+        <span class="s1">comp(fn: (opts: any) =&gt; any): Opt</span><span class="s3">;</span>
+        <span class="s1">end(): Cmd</span><span class="s3">;</span>
+        <span class="s1">apply(...args: any[]): </span><span class="s2">void</span><span class="s3">;</span>
+        <span class="s1">reject(...args: any[]): </span><span class="s2">void</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s2">export </span><span class="s1">namespace shell {</span>
+    <span class="s2">function </span><span class="s1">escape(w: string): string</span><span class="s3">;</span>
+    <span class="s2">function </span><span class="s1">unescape(w: string): string</span><span class="s3">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

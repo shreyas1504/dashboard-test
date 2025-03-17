@@ -1,0 +1,85 @@
+<html>
+<head>
+<title>watchPluginsHelpers.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+watchPluginsHelpers.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">Object.defineProperty(exports</span><span class="s1">, </span><span class="s0">'__esModule'</span><span class="s1">, </span><span class="s2">{</span>
+  <span class="s2">value: </span><span class="s3">true</span>
+<span class="s2">})</span><span class="s1">;</span>
+<span class="s2">exports.getSortedUsageRows = exports.filterInteractivePlugins = </span><span class="s3">void </span><span class="s4">0</span><span class="s1">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s5">*</span>
+ <span class="s5">* This source code is licensed under the MIT license found in the</span>
+ <span class="s5">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s5">*/</span>
+<span class="s3">const </span><span class="s2">filterInteractivePlugins = (watchPlugins</span><span class="s1">, </span><span class="s2">globalConfig) =&gt; {</span>
+  <span class="s3">const </span><span class="s2">usageInfos = watchPlugins.map(</span>
+    <span class="s2">p =&gt; p.getUsageInfo &amp;&amp; p.getUsageInfo(globalConfig)</span>
+  <span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">watchPlugins.filter((_plugin</span><span class="s1">, </span><span class="s2">i) =&gt; {</span>
+    <span class="s3">const </span><span class="s2">usageInfo = usageInfos[i]</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(usageInfo) {</span>
+      <span class="s3">const </span><span class="s2">{key} = usageInfo</span><span class="s1">;</span>
+      <span class="s3">return </span><span class="s2">!usageInfos.slice(i + </span><span class="s4">1</span><span class="s2">).some(u =&gt; !!u &amp;&amp; key === u.key)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return false</span><span class="s1">;</span>
+  <span class="s2">})</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">exports.filterInteractivePlugins = filterInteractivePlugins</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">notEmpty(value) {</span>
+  <span class="s3">return </span><span class="s2">value != </span><span class="s3">null</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">const </span><span class="s2">getSortedUsageRows = (watchPlugins</span><span class="s1">, </span><span class="s2">globalConfig) =&gt;</span>
+  <span class="s2">filterInteractivePlugins(watchPlugins</span><span class="s1">, </span><span class="s2">globalConfig)</span>
+    <span class="s2">.sort((a</span><span class="s1">, </span><span class="s2">b) =&gt; {</span>
+      <span class="s3">if </span><span class="s2">(a.isInternal &amp;&amp; b.isInternal) {</span>
+        <span class="s6">// internal plugins in the order we specify them</span>
+        <span class="s3">return </span><span class="s4">0</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">if </span><span class="s2">(a.isInternal !== b.isInternal) {</span>
+        <span class="s6">// external plugins afterwards</span>
+        <span class="s3">return </span><span class="s2">a.isInternal ? -</span><span class="s4">1 </span><span class="s2">: </span><span class="s4">1</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">const </span><span class="s2">usageInfoA = a.getUsageInfo &amp;&amp; a.getUsageInfo(globalConfig)</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">usageInfoB = b.getUsageInfo &amp;&amp; b.getUsageInfo(globalConfig)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(usageInfoA &amp;&amp; usageInfoB) {</span>
+        <span class="s6">// external plugins in alphabetical order</span>
+        <span class="s3">return </span><span class="s2">usageInfoA.key.localeCompare(usageInfoB.key)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">return </span><span class="s4">0</span><span class="s1">;</span>
+    <span class="s2">})</span>
+    <span class="s2">.map(p =&gt; p.getUsageInfo &amp;&amp; p.getUsageInfo(globalConfig))</span>
+    <span class="s2">.filter(notEmpty)</span><span class="s1">;</span>
+
+<span class="s2">exports.getSortedUsageRows = getSortedUsageRows</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

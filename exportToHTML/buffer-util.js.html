@@ -1,0 +1,154 @@
+<html>
+<head>
+<title>buffer-util.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #6897bb;}
+.s7 { color: #808080;}
+.s8 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+buffer-util.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">{ EMPTY_BUFFER } = require(</span><span class="s0">'./constants'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Merges an array of buffers into a new buffer.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Buffer[]} list The array of buffers to concat</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Number} totalLength The total length of buffers in the list</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Buffer} The resulting buffer</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">concat(list</span><span class="s1">, </span><span class="s2">totalLength) {</span>
+  <span class="s3">if </span><span class="s2">(list.length === </span><span class="s6">0</span><span class="s2">) </span><span class="s3">return </span><span class="s2">EMPTY_BUFFER</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(list.length === </span><span class="s6">1</span><span class="s2">) </span><span class="s3">return </span><span class="s2">list[</span><span class="s6">0</span><span class="s2">]</span><span class="s1">;</span>
+
+  <span class="s3">const </span><span class="s2">target = Buffer.allocUnsafe(totalLength)</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">offset = </span><span class="s6">0</span><span class="s1">;</span>
+
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">let </span><span class="s2">i = </span><span class="s6">0</span><span class="s1">; </span><span class="s2">i &lt; list.length</span><span class="s1">; </span><span class="s2">i++) {</span>
+    <span class="s3">const </span><span class="s2">buf = list[i]</span><span class="s1">;</span>
+    <span class="s2">target.set(buf</span><span class="s1">, </span><span class="s2">offset)</span><span class="s1">;</span>
+    <span class="s2">offset += buf.length</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(offset &lt; totalLength) </span><span class="s3">return </span><span class="s2">target.slice(</span><span class="s6">0</span><span class="s1">, </span><span class="s2">offset)</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">target</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Masks a buffer using the given mask.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Buffer} source The buffer to mask</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Buffer} mask The mask to use</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Buffer} output The buffer where to store the result</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Number} offset The offset at which to start writing</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Number} length The number of bytes to mask.</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">_mask(source</span><span class="s1">, </span><span class="s2">mask</span><span class="s1">, </span><span class="s2">output</span><span class="s1">, </span><span class="s2">offset</span><span class="s1">, </span><span class="s2">length) {</span>
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">let </span><span class="s2">i = </span><span class="s6">0</span><span class="s1">; </span><span class="s2">i &lt; length</span><span class="s1">; </span><span class="s2">i++) {</span>
+    <span class="s2">output[offset + i] = source[i] ^ mask[i &amp; </span><span class="s6">3</span><span class="s2">]</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Unmasks a buffer using the given mask.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Buffer} buffer The buffer to unmask</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Buffer} mask The mask to use</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">_unmask(buffer</span><span class="s1">, </span><span class="s2">mask) {</span>
+  <span class="s7">// Required until https://github.com/nodejs/node/issues/9006 is resolved.</span>
+  <span class="s3">const </span><span class="s2">length = buffer.length</span><span class="s1">;</span>
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">let </span><span class="s2">i = </span><span class="s6">0</span><span class="s1">; </span><span class="s2">i &lt; length</span><span class="s1">; </span><span class="s2">i++) {</span>
+    <span class="s2">buffer[i] ^= mask[i &amp; </span><span class="s6">3</span><span class="s2">]</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Converts a buffer to an `ArrayBuffer`.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Buffer} buf The buffer to convert</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{ArrayBuffer} Converted buffer</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">toArrayBuffer(buf) {</span>
+  <span class="s3">if </span><span class="s2">(buf.byteLength === buf.buffer.byteLength) {</span>
+    <span class="s3">return </span><span class="s2">buf.buffer</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">buf.buffer.slice(buf.byteOffset</span><span class="s1">, </span><span class="s2">buf.byteOffset + buf.byteLength)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Converts `data` to a `Buffer`.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{*} data The data to convert</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Buffer} The buffer</span>
+ <span class="s4">* </span><span class="s5">@throws </span><span class="s4">{TypeError}</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">toBuffer(data) {</span>
+  <span class="s2">toBuffer.readOnly = </span><span class="s3">true</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(Buffer.isBuffer(data)) </span><span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+
+  <span class="s3">let </span><span class="s2">buf</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(data </span><span class="s3">instanceof </span><span class="s2">ArrayBuffer) {</span>
+    <span class="s2">buf = Buffer.from(data)</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else if </span><span class="s2">(ArrayBuffer.isView(data)) {</span>
+    <span class="s2">buf = Buffer.from(data.buffer</span><span class="s1">, </span><span class="s2">data.byteOffset</span><span class="s1">, </span><span class="s2">data.byteLength)</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s2">buf = Buffer.from(data)</span><span class="s1">;</span>
+    <span class="s2">toBuffer.readOnly = </span><span class="s3">false</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">buf</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">try </span><span class="s2">{</span>
+  <span class="s3">const </span><span class="s2">bufferUtil = require(</span><span class="s0">'bufferutil'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">bu = bufferUtil.BufferUtil || bufferUtil</span><span class="s1">;</span>
+
+  <span class="s2">module.exports = {</span>
+    <span class="s2">concat</span><span class="s1">,</span>
+    <span class="s2">mask(source</span><span class="s1">, </span><span class="s2">mask</span><span class="s1">, </span><span class="s2">output</span><span class="s1">, </span><span class="s2">offset</span><span class="s1">, </span><span class="s2">length) {</span>
+      <span class="s3">if </span><span class="s2">(length &lt; </span><span class="s6">48</span><span class="s2">) _mask(source</span><span class="s1">, </span><span class="s2">mask</span><span class="s1">, </span><span class="s2">output</span><span class="s1">, </span><span class="s2">offset</span><span class="s1">, </span><span class="s2">length)</span><span class="s1">;</span>
+      <span class="s3">else </span><span class="s2">bu.mask(source</span><span class="s1">, </span><span class="s2">mask</span><span class="s1">, </span><span class="s2">output</span><span class="s1">, </span><span class="s2">offset</span><span class="s1">, </span><span class="s2">length)</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">toArrayBuffer</span><span class="s1">,</span>
+    <span class="s2">toBuffer</span><span class="s1">,</span>
+    <span class="s2">unmask(buffer</span><span class="s1">, </span><span class="s2">mask) {</span>
+      <span class="s3">if </span><span class="s2">(buffer.length &lt; </span><span class="s6">32</span><span class="s2">) _unmask(buffer</span><span class="s1">, </span><span class="s2">mask)</span><span class="s1">;</span>
+      <span class="s3">else </span><span class="s2">bu.unmask(buffer</span><span class="s1">, </span><span class="s2">mask)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span><span class="s1">;</span>
+<span class="s2">} </span><span class="s3">catch </span><span class="s2">(e) </span><span class="s8">/* istanbul ignore next */ </span><span class="s2">{</span>
+  <span class="s2">module.exports = {</span>
+    <span class="s2">concat</span><span class="s1">,</span>
+    <span class="s2">mask: _mask</span><span class="s1">,</span>
+    <span class="s2">toArrayBuffer</span><span class="s1">,</span>
+    <span class="s2">toBuffer</span><span class="s1">,</span>
+    <span class="s2">unmask: _unmask</span>
+  <span class="s2">}</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

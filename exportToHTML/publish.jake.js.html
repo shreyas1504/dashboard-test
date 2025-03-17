@@ -1,0 +1,71 @@
+<html>
+<head>
+<title>publish.jake.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #8ea765;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+publish.jake.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * Jake JavaScript build tool 
+ * Copyright 2112 Matthew Eernisse (mde@fleegix.org) 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *         http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+*/</span>
+
+<span class="s2">const </span><span class="s1">PROJECT_DIR = process.env.PROJECT_DIR</span><span class="s3">;</span>
+
+<span class="s2">let </span><span class="s1">fs = require(</span><span class="s4">'fs'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">{ publishTask</span><span class="s3">, </span><span class="s1">rmRf</span><span class="s3">, </span><span class="s1">mkdirP } = require(</span><span class="s4">`</span><span class="s1">${PROJECT_DIR}</span><span class="s4">/lib/jake`</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s1">fs.writeFileSync(</span><span class="s4">'package.json'</span><span class="s3">, </span><span class="s4">'{&quot;version&quot;: &quot;0.0.1&quot;}'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">mkdirP(</span><span class="s4">'tmp_publish'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">fs.writeFileSync(</span><span class="s4">'tmp_publish/foo.txt'</span><span class="s3">, </span><span class="s4">'FOO'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s1">publishTask(</span><span class="s4">'zerb'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s2">this</span><span class="s1">.packageFiles.include([</span>
+    <span class="s4">'package.json'</span>
+    <span class="s3">, </span><span class="s4">'tmp_publish/**'</span>
+  <span class="s1">])</span><span class="s3">;</span>
+  <span class="s2">this</span><span class="s1">.publishCmd = </span><span class="s4">'node -p -e &quot;</span><span class="s3">\'</span><span class="s4">%filename</span><span class="s3">\'</span><span class="s4">&quot;'</span><span class="s3">;</span>
+  <span class="s2">this</span><span class="s1">.gitCmd = </span><span class="s4">'echo'</span><span class="s3">;</span>
+  <span class="s2">this</span><span class="s1">.scheduleDelay = </span><span class="s5">0</span><span class="s3">;</span>
+
+  <span class="s2">this</span><span class="s1">._ensureRepoClean = </span><span class="s2">function </span><span class="s1">() {}</span><span class="s3">;</span>
+  <span class="s2">this</span><span class="s1">._getCurrentBranch = </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">return </span><span class="s4">'v0.0'</span><span class="s3">;</span>
+  <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">jake.setTaskTimeout(</span><span class="s5">5000</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s1">jake.Task[</span><span class="s4">'publish'</span><span class="s1">].on(</span><span class="s4">'complete'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s1">rmRf(</span><span class="s4">'tmp_publish'</span><span class="s3">, </span><span class="s1">{silent: </span><span class="s2">true</span><span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">rmRf(</span><span class="s4">'package.json'</span><span class="s3">, </span><span class="s1">{silent: </span><span class="s2">true</span><span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+</pre>
+</body>
+</html>

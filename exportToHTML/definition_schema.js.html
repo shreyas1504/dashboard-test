@@ -1,0 +1,57 @@
+<html>
+<head>
+<title>definition_schema.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+definition_schema.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">metaSchema = require(</span><span class="s0">'./refs/json-schema-draft-07.json'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s2">module.exports = {</span>
+  <span class="s2">$id: </span><span class="s0">'https://github.com/ajv-validator/ajv/blob/master/lib/definition_schema.js'</span><span class="s1">,</span>
+  <span class="s2">definitions: {</span>
+    <span class="s2">simpleTypes: metaSchema.definitions.simpleTypes</span>
+  <span class="s2">}</span><span class="s1">,</span>
+  <span class="s2">type: </span><span class="s0">'object'</span><span class="s1">,</span>
+  <span class="s2">dependencies: {</span>
+    <span class="s2">schema: [</span><span class="s0">'validate'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">$data: [</span><span class="s0">'validate'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">statements: [</span><span class="s0">'inline'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">valid: {not: {required: [</span><span class="s0">'macro'</span><span class="s2">]}}</span>
+  <span class="s2">}</span><span class="s1">,</span>
+  <span class="s2">properties: {</span>
+    <span class="s2">type: metaSchema.properties.type</span><span class="s1">,</span>
+    <span class="s2">schema: {type: </span><span class="s0">'boolean'</span><span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">statements: {type: </span><span class="s0">'boolean'</span><span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">dependencies: {</span>
+      <span class="s2">type: </span><span class="s0">'array'</span><span class="s1">,</span>
+      <span class="s2">items: {type: </span><span class="s0">'string'</span><span class="s2">}</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">metaSchema: {type: </span><span class="s0">'object'</span><span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">modifying: {type: </span><span class="s0">'boolean'</span><span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">valid: {type: </span><span class="s0">'boolean'</span><span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">$data: {type: </span><span class="s0">'boolean'</span><span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">async: {type: </span><span class="s0">'boolean'</span><span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">errors: {</span>
+      <span class="s2">anyOf: [</span>
+        <span class="s2">{type: </span><span class="s0">'boolean'</span><span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span><span class="s3">const</span><span class="s2">: </span><span class="s0">'full'</span><span class="s2">}</span>
+      <span class="s2">]</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

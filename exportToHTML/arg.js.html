@@ -1,0 +1,80 @@
+<html>
+<head>
+<title>arg.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+arg.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">const</span>
+    <span class="s2">CoaParam = require(</span><span class="s0">'./coaparam'</span><span class="s2">)</span><span class="s1">,</span>
+    <span class="s2">chalk = require(</span><span class="s0">'chalk'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Argument</span>
+ <span class="s4">*</span>
+ <span class="s4">* Unnamed entity. From command line arguments passed as list of unnamed values.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@class </span><span class="s4">Arg</span>
+ <span class="s4">* </span><span class="s5">@extends </span><span class="s4">CoaParam</span>
+ <span class="s4">*/</span>
+<span class="s2">module.exports = </span><span class="s3">class </span><span class="s2">Arg </span><span class="s3">extends </span><span class="s2">CoaParam {</span>
+    <span class="s4">/**</span>
+     <span class="s4">* </span><span class="s5">@constructs</span>
+     <span class="s4">* </span><span class="s5">@param </span><span class="s4">{COA.Cmd} cmd - parent command</span>
+     <span class="s4">*/</span>
+    <span class="s2">constructor(cmd) {</span>
+        <span class="s3">super</span><span class="s2">(cmd)</span><span class="s1">;</span>
+
+        <span class="s3">this</span><span class="s2">._cmd._args.push(</span><span class="s3">this</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s2">_saveVal(args</span><span class="s1">, </span><span class="s2">val) {</span>
+        <span class="s3">this</span><span class="s2">._val &amp;&amp; (val = </span><span class="s3">this</span><span class="s2">._val(val))</span><span class="s1">;</span>
+
+        <span class="s3">const </span><span class="s2">name = </span><span class="s3">this</span><span class="s2">._name</span><span class="s1">;</span>
+        <span class="s3">this</span><span class="s2">._arr</span>
+            <span class="s2">? (args[name] || (args[name] = [])).push(val)</span>
+            <span class="s2">: (args[name] = val)</span><span class="s1">;</span>
+
+        <span class="s3">return </span><span class="s2">val</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s2">_parse(arg</span><span class="s1">, </span><span class="s2">args) {</span>
+        <span class="s3">return this</span><span class="s2">._saveVal(args</span><span class="s1">, </span><span class="s2">arg)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s2">_checkParsed(opts</span><span class="s1">, </span><span class="s2">args) {</span>
+        <span class="s3">return </span><span class="s2">!args.hasOwnProperty(</span><span class="s3">this</span><span class="s2">._name)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s2">_usage() {</span>
+        <span class="s3">const </span><span class="s2">res = []</span><span class="s1">;</span>
+
+        <span class="s2">res.push(chalk.magentaBright(</span><span class="s3">this</span><span class="s2">._name.toUpperCase())</span><span class="s1">, </span><span class="s0">' : '</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._title)</span><span class="s1">;</span>
+
+        <span class="s3">this</span><span class="s2">._req &amp;&amp; res.push(</span><span class="s0">' '</span><span class="s1">, </span><span class="s2">chalk.redBright(</span><span class="s0">'(required)'</span><span class="s2">))</span><span class="s1">;</span>
+
+        <span class="s3">return </span><span class="s2">res.join(</span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s2">_requiredText() {</span>
+        <span class="s3">return </span><span class="s0">`Missing required argument:</span><span class="s1">\n  </span><span class="s2">${</span><span class="s3">this</span><span class="s2">._usage()}</span><span class="s0">`</span><span class="s1">;</span>
+    <span class="s2">}</span>
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

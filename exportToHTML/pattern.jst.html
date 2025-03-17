@@ -1,0 +1,31 @@
+<html>
+<head>
+<title>pattern.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+pattern.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+<span class="s0">{{# def.$data }}</span>
+
+<span class="s0">{{</span>
+  <span class="s0">var $regexp = $isData</span>
+                <span class="s0">? '(new RegExp(' + $schemaValue + '))'</span>
+                <span class="s0">: it.usePattern($schema);</span>
+<span class="s0">}}</span>
+
+<span class="s0">if ({{# def.$dataNotType:'string' }} !{{=$regexp}}.test({{=$data}}) ) {</span>
+  <span class="s0">{{# def.error:'pattern' }}</span>
+<span class="s0">} {{? $breakOnError }} else { {{?}}</span>
+</pre>
+</body>
+</html>

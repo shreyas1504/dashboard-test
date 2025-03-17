@@ -1,0 +1,200 @@
+<html>
+<head>
+<title>completion.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #808080;}
+.s7 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+completion.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">constants = require(</span><span class="s0">'constants'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">fs = require(</span><span class="s0">'fs'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">path = require(</span><span class="s0">'path'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">Q = require(</span><span class="s0">'q'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">shell = require(</span><span class="s0">'./shell'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">escape = shell.escape</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">unescape = shell.unescape</span><span class="s1">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Most of the code adopted from the npm package shell completion code.</span>
+ <span class="s4">* See https://github.com/isaacs/npm/blob/master/lib/completion.js</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@returns </span><span class="s4">{COA.CoaObject}</span>
+ <span class="s4">*/</span>
+<span class="s2">module.exports = </span><span class="s3">function </span><span class="s2">completion() {</span>
+    <span class="s3">return this</span>
+        <span class="s2">.title(</span><span class="s0">'Shell completion'</span><span class="s2">)</span>
+        <span class="s2">.helpful()</span>
+        <span class="s2">.arg()</span>
+            <span class="s2">.name(</span><span class="s0">'raw'</span><span class="s2">)</span>
+            <span class="s2">.title(</span><span class="s0">'Completion words'</span><span class="s2">)</span>
+            <span class="s2">.arr()</span>
+            <span class="s2">.end()</span>
+        <span class="s2">.act((opts</span><span class="s1">, </span><span class="s2">args) =&gt; {</span>
+            <span class="s3">if</span><span class="s2">(process.platform === </span><span class="s0">'win32'</span><span class="s2">) {</span>
+                <span class="s3">const </span><span class="s2">e = </span><span class="s3">new </span><span class="s2">Error(</span><span class="s0">'shell completion not supported on windows'</span><span class="s2">)</span><span class="s1">;</span>
+                <span class="s2">e.code = </span><span class="s0">'ENOTSUP'</span><span class="s1">;</span>
+                <span class="s2">e.errno = constants.ENOTSUP</span><span class="s1">;</span>
+                <span class="s3">return this</span><span class="s2">.reject(e)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+
+            <span class="s6">// if the COMP_* isn't in the env, then just dump the script</span>
+            <span class="s3">if</span><span class="s2">((process.env.COMP_CWORD == </span><span class="s3">null</span><span class="s2">)</span>
+                <span class="s2">|| (process.env.COMP_LINE == </span><span class="s3">null</span><span class="s2">)</span>
+                <span class="s2">|| (process.env.COMP_POINT == </span><span class="s3">null</span><span class="s2">)) {</span>
+                <span class="s3">return </span><span class="s2">dumpScript(</span><span class="s3">this</span><span class="s2">._cmd._name)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+
+            <span class="s2">console.error(</span><span class="s0">'COMP_LINE:  %s'</span><span class="s1">, </span><span class="s2">process.env.COMP_LINE)</span><span class="s1">;</span>
+            <span class="s2">console.error(</span><span class="s0">'COMP_CWORD: %s'</span><span class="s1">, </span><span class="s2">process.env.COMP_CWORD)</span><span class="s1">;</span>
+            <span class="s2">console.error(</span><span class="s0">'COMP_POINT: %s'</span><span class="s1">, </span><span class="s2">process.env.COMP_POINT)</span><span class="s1">;</span>
+            <span class="s2">console.error(</span><span class="s0">'args: %j'</span><span class="s1">, </span><span class="s2">args.raw)</span><span class="s1">;</span>
+
+            <span class="s6">// completion opts</span>
+            <span class="s2">opts = getOpts(args.raw)</span><span class="s1">;</span>
+
+            <span class="s6">// cmd</span>
+            <span class="s3">const </span><span class="s2">parsed = </span><span class="s3">this</span><span class="s2">._cmd._parseCmd(opts.partialWords)</span><span class="s1">;</span>
+            <span class="s3">return </span><span class="s2">Q.when(complete(parsed.cmd</span><span class="s1">, </span><span class="s2">parsed.opts)</span><span class="s1">, </span><span class="s2">compls =&gt; {</span>
+                <span class="s2">console.error(</span><span class="s0">'filtered: %j'</span><span class="s1">, </span><span class="s2">compls)</span><span class="s1">;</span>
+                <span class="s3">return </span><span class="s2">console.log(compls.map(escape).join(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">))</span><span class="s1">;</span>
+            <span class="s2">})</span><span class="s1">;</span>
+        <span class="s2">})</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">dumpScript(name) {</span>
+    <span class="s3">const </span><span class="s2">defer = Q.defer()</span><span class="s1">;</span>
+
+    <span class="s2">fs.readFile(path.resolve(__dirname</span><span class="s1">, </span><span class="s0">'completion.sh'</span><span class="s2">)</span><span class="s1">, </span><span class="s0">'utf8'</span><span class="s1">, </span><span class="s3">function</span><span class="s2">(err</span><span class="s1">, </span><span class="s2">d) {</span>
+        <span class="s3">if</span><span class="s2">(err) </span><span class="s3">return </span><span class="s2">defer.reject(err)</span><span class="s1">;</span>
+        <span class="s2">d = d.replace(</span><span class="s7">/{{cmd}}/g</span><span class="s1">, </span><span class="s2">path.basename(name)).replace(</span><span class="s7">/^#!.*?\n/</span><span class="s1">, </span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+
+        <span class="s2">process.stdout.on(</span><span class="s0">'error'</span><span class="s1">, </span><span class="s2">onError)</span><span class="s1">;</span>
+        <span class="s2">process.stdout.write(d</span><span class="s1">, </span><span class="s2">() =&gt; defer.resolve())</span><span class="s1">;</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s3">return </span><span class="s2">defer.promise</span><span class="s1">;</span>
+
+    <span class="s3">function </span><span class="s2">onError(err) {</span>
+        <span class="s6">// Darwin is a real dick sometimes.</span>
+        <span class="s6">//</span>
+        <span class="s6">// This is necessary because the &quot;source&quot; or &quot;.&quot; program in</span>
+        <span class="s6">// bash on OS X closes its file argument before reading</span>
+        <span class="s6">// from it, meaning that you get exactly 1 write, which will</span>
+        <span class="s6">// work most of the time, and will always raise an EPIPE.</span>
+        <span class="s6">//</span>
+        <span class="s6">// Really, one should not be tossing away EPIPE errors, or any</span>
+        <span class="s6">// errors, so casually. But, without this, `. &lt;(cmd completion)`</span>
+        <span class="s6">// can never ever work on OS X.</span>
+        <span class="s3">if</span><span class="s2">(err.errno !== constants.EPIPE) </span><span class="s3">return </span><span class="s2">defer.reject(err)</span><span class="s1">;</span>
+        <span class="s2">process.stdout.removeListener(</span><span class="s0">'error'</span><span class="s1">, </span><span class="s2">onError)</span><span class="s1">;</span>
+        <span class="s3">return </span><span class="s2">defer.resolve()</span><span class="s1">;</span>
+    <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">getOpts(argv) {</span>
+    <span class="s6">// get the partial line and partial word, if the point isn't at the end</span>
+    <span class="s6">// ie, tabbing at: cmd foo b|ar</span>
+    <span class="s3">const </span><span class="s2">line = process.env.COMP_LINE</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">w = +process.env.COMP_CWORD</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">point = +process.env.COMP_POINT</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">words = argv.map(unescape)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">word = words[w]</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">partialLine = line.substr(</span><span class="s7">0</span><span class="s1">, </span><span class="s2">point)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">partialWords = words.slice(</span><span class="s7">0</span><span class="s1">, </span><span class="s2">w)</span><span class="s1">;</span>
+
+    <span class="s6">// figure out where in that last word the point is</span>
+    <span class="s3">let </span><span class="s2">partialWord = argv[w] || </span><span class="s0">''</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">i = partialWord.length</span><span class="s1">;</span>
+    <span class="s3">while</span><span class="s2">(partialWord.substr(</span><span class="s7">0</span><span class="s1">, </span><span class="s2">i) !== partialLine.substr(-</span><span class="s7">1 </span><span class="s2">* i) &amp;&amp; i &gt; </span><span class="s7">0</span><span class="s2">) i--</span><span class="s1">;</span>
+
+    <span class="s2">partialWord = unescape(partialWord.substr(</span><span class="s7">0</span><span class="s1">, </span><span class="s2">i))</span><span class="s1">;</span>
+    <span class="s2">partialWord &amp;&amp; partialWords.push(partialWord)</span><span class="s1">;</span>
+
+    <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">line</span><span class="s1">,</span>
+        <span class="s2">w</span><span class="s1">,</span>
+        <span class="s2">point</span><span class="s1">,</span>
+        <span class="s2">words</span><span class="s1">,</span>
+        <span class="s2">word</span><span class="s1">,</span>
+        <span class="s2">partialLine</span><span class="s1">,</span>
+        <span class="s2">partialWords</span><span class="s1">,</span>
+        <span class="s2">partialWord</span>
+    <span class="s2">}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">complete(cmd</span><span class="s1">, </span><span class="s2">opts) {</span>
+    <span class="s3">let </span><span class="s2">optWord</span><span class="s1">, </span><span class="s2">optPrefix</span><span class="s1">,</span>
+        <span class="s2">compls = []</span><span class="s1">;</span>
+
+    <span class="s6">// Complete on cmds</span>
+    <span class="s3">if</span><span class="s2">(opts.partialWord.indexOf(</span><span class="s0">'-'</span><span class="s2">))</span>
+        <span class="s2">compls = Object.keys(cmd._cmdsByName)</span><span class="s1">;</span>
+        <span class="s6">// Complete on required opts without '-' in last partial word</span>
+        <span class="s6">// (if required not already specified)</span>
+        <span class="s6">//</span>
+        <span class="s6">// Commented out because of uselessness:</span>
+        <span class="s6">// -b, --block suggest results in '-' on cmd line;</span>
+        <span class="s6">// next completion suggest all options, because of '-'</span>
+        <span class="s6">//.concat Object.keys(cmd._optsByKey).filter (v) -&gt; cmd._optsByKey[v]._req</span>
+    <span class="s3">else </span><span class="s2">{</span>
+        <span class="s6">// complete on opt values: --opt=| case</span>
+        <span class="s3">const </span><span class="s2">m = opts.partialWord.match(</span><span class="s7">/^(--\w[\w-_]*)=(.*)$/</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s3">if</span><span class="s2">(m) {</span>
+            <span class="s2">optWord = m[</span><span class="s7">1</span><span class="s2">]</span><span class="s1">;</span>
+            <span class="s2">optPrefix = optWord + </span><span class="s0">'='</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s3">else</span>
+            <span class="s6">// complete on opts</span>
+            <span class="s6">// don't complete on opts in case of --opt=val completion</span>
+            <span class="s6">// TODO: don't complete on opts in case of unknown arg after commands</span>
+            <span class="s6">// TODO: complete only on opts with arr() or not already used</span>
+            <span class="s6">// TODO: complete only on full opts?</span>
+            <span class="s2">compls = Object.keys(cmd._optsByKey)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s6">// complete on opt values: next arg case</span>
+    <span class="s2">opts.partialWords[opts.w - </span><span class="s7">1</span><span class="s2">].indexOf(</span><span class="s0">'-'</span><span class="s2">) || (optWord = opts.partialWords[opts.w - </span><span class="s7">1</span><span class="s2">])</span><span class="s1">;</span>
+
+    <span class="s6">// complete on opt values: completion</span>
+    <span class="s3">let </span><span class="s2">opt</span><span class="s1">;</span>
+    <span class="s2">optWord</span>
+        <span class="s2">&amp;&amp; (opt = cmd._optsByKey[optWord])</span>
+        <span class="s2">&amp;&amp; !opt._flag</span>
+        <span class="s2">&amp;&amp; opt._comp</span>
+        <span class="s2">&amp;&amp; (compls = Q.join(compls</span><span class="s1">,</span>
+            <span class="s2">Q.when(opt._comp(opts)</span><span class="s1">,</span>
+                <span class="s2">(c</span><span class="s1">, </span><span class="s2">o) =&gt; c.concat(o.map(v =&gt; (optPrefix || </span><span class="s0">''</span><span class="s2">) + v)))))</span><span class="s1">;</span>
+
+    <span class="s6">// TODO: complete on args values (context aware, custom completion?)</span>
+
+    <span class="s6">// custom completion on cmds</span>
+    <span class="s2">cmd._comp &amp;&amp; (compls = Q.join(compls</span><span class="s1">, </span><span class="s2">Q.when(cmd._comp(opts))</span><span class="s1">, </span><span class="s2">(c</span><span class="s1">, </span><span class="s2">o) =&gt; c.concat(o)))</span><span class="s1">;</span>
+
+    <span class="s6">// TODO: context aware custom completion on cmds, opts and args</span>
+    <span class="s6">// (can depend on already entered values, especially options)</span>
+
+    <span class="s3">return </span><span class="s2">Q.when(compls</span><span class="s1">, </span><span class="s2">complitions =&gt; {</span>
+        <span class="s2">console.error(</span><span class="s0">'partialWord: %s'</span><span class="s1">, </span><span class="s2">opts.partialWord)</span><span class="s1">;</span>
+        <span class="s2">console.error(</span><span class="s0">'compls: %j'</span><span class="s1">, </span><span class="s2">complitions)</span><span class="s1">;</span>
+        <span class="s3">return </span><span class="s2">compls.filter(c =&gt; c.indexOf(opts.partialWord) === </span><span class="s7">0</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">})</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

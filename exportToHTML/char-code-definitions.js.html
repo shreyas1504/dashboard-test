@@ -1,0 +1,270 @@
+<html>
+<head>
+<title>char-code-definitions.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #6897bb;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+char-code-definitions.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">EOF = </span><span class="s2">0</span><span class="s3">;</span>
+
+<span class="s4">// https://drafts.csswg.org/css-syntax-3/</span>
+<span class="s4">// § 4.2. Definitions</span>
+
+<span class="s4">// digit</span>
+<span class="s4">// A code point between U+0030 DIGIT ZERO (0) and U+0039 DIGIT NINE (9).</span>
+<span class="s0">function </span><span class="s1">isDigit(code) {</span>
+    <span class="s0">return </span><span class="s1">code &gt;= </span><span class="s2">0x0030 </span><span class="s1">&amp;&amp; code &lt;= </span><span class="s2">0x0039</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// hex digit</span>
+<span class="s4">// A digit, or a code point between U+0041 LATIN CAPITAL LETTER A (A) and U+0046 LATIN CAPITAL LETTER F (F),</span>
+<span class="s4">// or a code point between U+0061 LATIN SMALL LETTER A (a) and U+0066 LATIN SMALL LETTER F (f).</span>
+<span class="s0">function </span><span class="s1">isHexDigit(code) {</span>
+    <span class="s0">return </span><span class="s1">(</span>
+        <span class="s1">isDigit(code) || </span><span class="s4">// 0 .. 9</span>
+        <span class="s1">(code &gt;= </span><span class="s2">0x0041 </span><span class="s1">&amp;&amp; code &lt;= </span><span class="s2">0x0046</span><span class="s1">) || </span><span class="s4">// A .. F</span>
+        <span class="s1">(code &gt;= </span><span class="s2">0x0061 </span><span class="s1">&amp;&amp; code &lt;= </span><span class="s2">0x0066</span><span class="s1">)    </span><span class="s4">// a .. f</span>
+    <span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// uppercase letter</span>
+<span class="s4">// A code point between U+0041 LATIN CAPITAL LETTER A (A) and U+005A LATIN CAPITAL LETTER Z (Z).</span>
+<span class="s0">function </span><span class="s1">isUppercaseLetter(code) {</span>
+    <span class="s0">return </span><span class="s1">code &gt;= </span><span class="s2">0x0041 </span><span class="s1">&amp;&amp; code &lt;= </span><span class="s2">0x005A</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// lowercase letter</span>
+<span class="s4">// A code point between U+0061 LATIN SMALL LETTER A (a) and U+007A LATIN SMALL LETTER Z (z).</span>
+<span class="s0">function </span><span class="s1">isLowercaseLetter(code) {</span>
+    <span class="s0">return </span><span class="s1">code &gt;= </span><span class="s2">0x0061 </span><span class="s1">&amp;&amp; code &lt;= </span><span class="s2">0x007A</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// letter</span>
+<span class="s4">// An uppercase letter or a lowercase letter.</span>
+<span class="s0">function </span><span class="s1">isLetter(code) {</span>
+    <span class="s0">return </span><span class="s1">isUppercaseLetter(code) || isLowercaseLetter(code)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// non-ASCII code point</span>
+<span class="s4">// A code point with a value equal to or greater than U+0080 &lt;control&gt;.</span>
+<span class="s0">function </span><span class="s1">isNonAscii(code) {</span>
+    <span class="s0">return </span><span class="s1">code &gt;= </span><span class="s2">0x0080</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// name-start code point</span>
+<span class="s4">// A letter, a non-ASCII code point, or U+005F LOW LINE (_).</span>
+<span class="s0">function </span><span class="s1">isNameStart(code) {</span>
+    <span class="s0">return </span><span class="s1">isLetter(code) || isNonAscii(code) || code === </span><span class="s2">0x005F</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// name code point</span>
+<span class="s4">// A name-start code point, a digit, or U+002D HYPHEN-MINUS (-).</span>
+<span class="s0">function </span><span class="s1">isName(code) {</span>
+    <span class="s0">return </span><span class="s1">isNameStart(code) || isDigit(code) || code === </span><span class="s2">0x002D</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// non-printable code point</span>
+<span class="s4">// A code point between U+0000 NULL and U+0008 BACKSPACE, or U+000B LINE TABULATION,</span>
+<span class="s4">// or a code point between U+000E SHIFT OUT and U+001F INFORMATION SEPARATOR ONE, or U+007F DELETE.</span>
+<span class="s0">function </span><span class="s1">isNonPrintable(code) {</span>
+    <span class="s0">return </span><span class="s1">(</span>
+        <span class="s1">(code &gt;= </span><span class="s2">0x0000 </span><span class="s1">&amp;&amp; code &lt;= </span><span class="s2">0x0008</span><span class="s1">) ||</span>
+        <span class="s1">(code === </span><span class="s2">0x000B</span><span class="s1">) ||</span>
+        <span class="s1">(code &gt;= </span><span class="s2">0x000E </span><span class="s1">&amp;&amp; code &lt;= </span><span class="s2">0x001F</span><span class="s1">) ||</span>
+        <span class="s1">(code === </span><span class="s2">0x007F</span><span class="s1">)</span>
+    <span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// newline</span>
+<span class="s4">// U+000A LINE FEED. Note that U+000D CARRIAGE RETURN and U+000C FORM FEED are not included in this definition,</span>
+<span class="s4">// as they are converted to U+000A LINE FEED during preprocessing.</span>
+<span class="s4">// TODO: we doesn't do a preprocessing, so check a code point for U+000D CARRIAGE RETURN and U+000C FORM FEED</span>
+<span class="s0">function </span><span class="s1">isNewline(code) {</span>
+    <span class="s0">return </span><span class="s1">code === </span><span class="s2">0x000A </span><span class="s1">|| code === </span><span class="s2">0x000D </span><span class="s1">|| code === </span><span class="s2">0x000C</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// whitespace</span>
+<span class="s4">// A newline, U+0009 CHARACTER TABULATION, or U+0020 SPACE.</span>
+<span class="s0">function </span><span class="s1">isWhiteSpace(code) {</span>
+    <span class="s0">return </span><span class="s1">isNewline(code) || code === </span><span class="s2">0x0020 </span><span class="s1">|| code === </span><span class="s2">0x0009</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// § 4.3.8. Check if two code points are a valid escape</span>
+<span class="s0">function </span><span class="s1">isValidEscape(first</span><span class="s3">, </span><span class="s1">second) {</span>
+    <span class="s4">// If the first code point is not U+005C REVERSE SOLIDUS (\), return false.</span>
+    <span class="s0">if </span><span class="s1">(first !== </span><span class="s2">0x005C</span><span class="s1">) {</span>
+        <span class="s0">return false</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">// Otherwise, if the second code point is a newline or EOF, return false.</span>
+    <span class="s0">if </span><span class="s1">(isNewline(second) || second === EOF) {</span>
+        <span class="s0">return false</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">// Otherwise, return true.</span>
+    <span class="s0">return true</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// § 4.3.9. Check if three code points would start an identifier</span>
+<span class="s0">function </span><span class="s1">isIdentifierStart(first</span><span class="s3">, </span><span class="s1">second</span><span class="s3">, </span><span class="s1">third) {</span>
+    <span class="s4">// Look at the first code point:</span>
+
+    <span class="s4">// U+002D HYPHEN-MINUS</span>
+    <span class="s0">if </span><span class="s1">(first === </span><span class="s2">0x002D</span><span class="s1">) {</span>
+        <span class="s4">// If the second code point is a name-start code point or a U+002D HYPHEN-MINUS,</span>
+        <span class="s4">// or the second and third code points are a valid escape, return true. Otherwise, return false.</span>
+        <span class="s0">return </span><span class="s1">(</span>
+            <span class="s1">isNameStart(second) ||</span>
+            <span class="s1">second === </span><span class="s2">0x002D </span><span class="s1">||</span>
+            <span class="s1">isValidEscape(second</span><span class="s3">, </span><span class="s1">third)</span>
+        <span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">// name-start code point</span>
+    <span class="s0">if </span><span class="s1">(isNameStart(first)) {</span>
+        <span class="s4">// Return true.</span>
+        <span class="s0">return true</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">// U+005C REVERSE SOLIDUS (\)</span>
+    <span class="s0">if </span><span class="s1">(first === </span><span class="s2">0x005C</span><span class="s1">) {</span>
+        <span class="s4">// If the first and second code points are a valid escape, return true. Otherwise, return false.</span>
+        <span class="s0">return </span><span class="s1">isValidEscape(first</span><span class="s3">, </span><span class="s1">second)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">// anything else</span>
+    <span class="s4">// Return false.</span>
+    <span class="s0">return false</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// § 4.3.10. Check if three code points would start a number</span>
+<span class="s0">function </span><span class="s1">isNumberStart(first</span><span class="s3">, </span><span class="s1">second</span><span class="s3">, </span><span class="s1">third) {</span>
+    <span class="s4">// Look at the first code point:</span>
+
+    <span class="s4">// U+002B PLUS SIGN (+)</span>
+    <span class="s4">// U+002D HYPHEN-MINUS (-)</span>
+    <span class="s0">if </span><span class="s1">(first === </span><span class="s2">0x002B </span><span class="s1">|| first === </span><span class="s2">0x002D</span><span class="s1">) {</span>
+        <span class="s4">// If the second code point is a digit, return true.</span>
+        <span class="s0">if </span><span class="s1">(isDigit(second)) {</span>
+            <span class="s0">return </span><span class="s2">2</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s4">// Otherwise, if the second code point is a U+002E FULL STOP (.)</span>
+        <span class="s4">// and the third code point is a digit, return true.</span>
+        <span class="s4">// Otherwise, return false.</span>
+        <span class="s0">return </span><span class="s1">second === </span><span class="s2">0x002E </span><span class="s1">&amp;&amp; isDigit(third) ? </span><span class="s2">3 </span><span class="s1">: </span><span class="s2">0</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">// U+002E FULL STOP (.)</span>
+    <span class="s0">if </span><span class="s1">(first === </span><span class="s2">0x002E</span><span class="s1">) {</span>
+        <span class="s4">// If the second code point is a digit, return true. Otherwise, return false.</span>
+        <span class="s0">return </span><span class="s1">isDigit(second) ? </span><span class="s2">2 </span><span class="s1">: </span><span class="s2">0</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">// digit</span>
+    <span class="s0">if </span><span class="s1">(isDigit(first)) {</span>
+        <span class="s4">// Return true.</span>
+        <span class="s0">return </span><span class="s2">1</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">// anything else</span>
+    <span class="s4">// Return false.</span>
+    <span class="s0">return </span><span class="s2">0</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">//</span>
+<span class="s4">// Misc</span>
+<span class="s4">//</span>
+
+<span class="s4">// detect BOM (https://en.wikipedia.org/wiki/Byte_order_mark)</span>
+<span class="s0">function </span><span class="s1">isBOM(code) {</span>
+    <span class="s4">// UTF-16BE</span>
+    <span class="s0">if </span><span class="s1">(code === </span><span class="s2">0xFEFF</span><span class="s1">) {</span>
+        <span class="s0">return </span><span class="s2">1</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">// UTF-16LE</span>
+    <span class="s0">if </span><span class="s1">(code === </span><span class="s2">0xFFFE</span><span class="s1">) {</span>
+        <span class="s0">return </span><span class="s2">1</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s2">0</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// Fast code category</span>
+<span class="s4">//</span>
+<span class="s4">// https://drafts.csswg.org/css-syntax/#tokenizer-definitions</span>
+<span class="s4">// &gt; non-ASCII code point</span>
+<span class="s4">// &gt;   A code point with a value equal to or greater than U+0080 &lt;control&gt;</span>
+<span class="s4">// &gt; name-start code point</span>
+<span class="s4">// &gt;   A letter, a non-ASCII code point, or U+005F LOW LINE (_).</span>
+<span class="s4">// &gt; name code point</span>
+<span class="s4">// &gt;   A name-start code point, a digit, or U+002D HYPHEN-MINUS (-)</span>
+<span class="s4">// That means only ASCII code points has a special meaning and we define a maps for 0..127 codes only</span>
+<span class="s0">var </span><span class="s1">CATEGORY = </span><span class="s0">new </span><span class="s1">Array(</span><span class="s2">0x80</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">charCodeCategory.Eof = </span><span class="s2">0x80</span><span class="s3">;</span>
+<span class="s1">charCodeCategory.WhiteSpace = </span><span class="s2">0x82</span><span class="s3">;</span>
+<span class="s1">charCodeCategory.Digit = </span><span class="s2">0x83</span><span class="s3">;</span>
+<span class="s1">charCodeCategory.NameStart = </span><span class="s2">0x84</span><span class="s3">;</span>
+<span class="s1">charCodeCategory.NonPrintable = </span><span class="s2">0x85</span><span class="s3">;</span>
+
+<span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s2">0</span><span class="s3">; </span><span class="s1">i &lt; CATEGORY.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+    <span class="s0">switch </span><span class="s1">(</span><span class="s0">true</span><span class="s1">) {</span>
+        <span class="s0">case </span><span class="s1">isWhiteSpace(i):</span>
+            <span class="s1">CATEGORY[i] = charCodeCategory.WhiteSpace</span><span class="s3">;</span>
+            <span class="s0">break</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">isDigit(i):</span>
+            <span class="s1">CATEGORY[i] = charCodeCategory.Digit</span><span class="s3">;</span>
+            <span class="s0">break</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">isNameStart(i):</span>
+            <span class="s1">CATEGORY[i] = charCodeCategory.NameStart</span><span class="s3">;</span>
+            <span class="s0">break</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">isNonPrintable(i):</span>
+            <span class="s1">CATEGORY[i] = charCodeCategory.NonPrintable</span><span class="s3">;</span>
+            <span class="s0">break</span><span class="s3">;</span>
+
+        <span class="s0">default</span><span class="s1">:</span>
+            <span class="s1">CATEGORY[i] = i || charCodeCategory.Eof</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">charCodeCategory(code) {</span>
+    <span class="s0">return </span><span class="s1">code &lt; </span><span class="s2">0x80 </span><span class="s1">? CATEGORY[code] : charCodeCategory.NameStart</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">isDigit: isDigit</span><span class="s3">,</span>
+    <span class="s1">isHexDigit: isHexDigit</span><span class="s3">,</span>
+    <span class="s1">isUppercaseLetter: isUppercaseLetter</span><span class="s3">,</span>
+    <span class="s1">isLowercaseLetter: isLowercaseLetter</span><span class="s3">,</span>
+    <span class="s1">isLetter: isLetter</span><span class="s3">,</span>
+    <span class="s1">isNonAscii: isNonAscii</span><span class="s3">,</span>
+    <span class="s1">isNameStart: isNameStart</span><span class="s3">,</span>
+    <span class="s1">isName: isName</span><span class="s3">,</span>
+    <span class="s1">isNonPrintable: isNonPrintable</span><span class="s3">,</span>
+    <span class="s1">isNewline: isNewline</span><span class="s3">,</span>
+    <span class="s1">isWhiteSpace: isWhiteSpace</span><span class="s3">,</span>
+    <span class="s1">isValidEscape: isValidEscape</span><span class="s3">,</span>
+    <span class="s1">isIdentifierStart: isIdentifierStart</span><span class="s3">,</span>
+    <span class="s1">isNumberStart: isNumberStart</span><span class="s3">,</span>
+
+    <span class="s1">isBOM: isBOM</span><span class="s3">,</span>
+    <span class="s1">charCodeCategory: charCodeCategory</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

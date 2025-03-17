@@ -1,0 +1,518 @@
+<html>
+<head>
+<title>cmd.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s7 { color: #808080;}
+.s8 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+cmd.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* eslint-disable class-methods-use-this */</span>
+<span class="s2">'use strict'</span><span class="s3">;</span>
+
+<span class="s4">const</span>
+    <span class="s1">UTIL = require(</span><span class="s2">'util'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">PATH = require(</span><span class="s2">'path'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">EOL = require(</span><span class="s2">'os'</span><span class="s1">).EOL</span><span class="s3">,</span>
+
+    <span class="s1">Q = require(</span><span class="s2">'q'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">chalk = require(</span><span class="s2">'chalk'</span><span class="s1">)</span><span class="s3">,</span>
+
+    <span class="s1">CoaObject = require(</span><span class="s2">'./coaobject'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">Opt = require(</span><span class="s2">'./opt'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">Arg = require(</span><span class="s2">'./arg'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">completion = require(</span><span class="s2">'./completion'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Command</span>
+ <span class="s5">*</span>
+ <span class="s5">* Top level entity. Commands may have options and arguments.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@namespace</span>
+ <span class="s5">* </span><span class="s6">@class </span><span class="s5">Cmd</span>
+ <span class="s5">* </span><span class="s6">@extends </span><span class="s5">CoaObject</span>
+ <span class="s5">*/</span>
+<span class="s4">class </span><span class="s1">Cmd </span><span class="s4">extends </span><span class="s1">CoaObject {</span>
+    <span class="s5">/**</span>
+     <span class="s5">* </span><span class="s6">@constructs</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{COA.Cmd} [cmd] parent command</span>
+     <span class="s5">*/</span>
+    <span class="s1">constructor(cmd) {</span>
+        <span class="s4">super</span><span class="s1">(cmd)</span><span class="s3">;</span>
+
+        <span class="s4">this</span><span class="s1">._parent(cmd)</span><span class="s3">;</span>
+        <span class="s4">this</span><span class="s1">._cmds = []</span><span class="s3">;</span>
+        <span class="s4">this</span><span class="s1">._cmdsByName = {}</span><span class="s3">;</span>
+        <span class="s4">this</span><span class="s1">._opts = []</span><span class="s3">;</span>
+        <span class="s4">this</span><span class="s1">._optsByKey = {}</span><span class="s3">;</span>
+        <span class="s4">this</span><span class="s1">._args = []</span><span class="s3">;</span>
+        <span class="s4">this</span><span class="s1">._api = </span><span class="s4">null</span><span class="s3">;</span>
+        <span class="s4">this</span><span class="s1">._ext = </span><span class="s4">false</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">static </span><span class="s1">create(cmd) {</span>
+        <span class="s4">return new </span><span class="s1">Cmd(cmd)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Returns object containing all its subcommands as methods</span>
+     <span class="s5">* to use from other programs.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{Object}</span>
+     <span class="s5">*/</span>
+    <span class="s1">get api() {</span>
+        <span class="s7">// Need _this here because of passed arguments into _api</span>
+        <span class="s4">const </span><span class="s1">_this = </span><span class="s4">this</span><span class="s3">;</span>
+        <span class="s4">this</span><span class="s1">._api || (</span><span class="s4">this</span><span class="s1">._api = </span><span class="s4">function </span><span class="s1">() {</span>
+            <span class="s4">return </span><span class="s1">_this.invoke.apply(_this</span><span class="s3">, </span><span class="s1">arguments)</span><span class="s3">;</span>
+        <span class="s1">})</span><span class="s3">;</span>
+
+        <span class="s4">const </span><span class="s1">cmds = </span><span class="s4">this</span><span class="s1">._cmdsByName</span><span class="s3">;</span>
+        <span class="s1">Object.keys(cmds).forEach(cmd =&gt; { </span><span class="s4">this</span><span class="s1">._api[cmd] = cmds[cmd].api</span><span class="s3">; </span><span class="s1">})</span><span class="s3">;</span>
+
+        <span class="s4">return this</span><span class="s1">._api</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_parent(cmd) {</span>
+        <span class="s4">this</span><span class="s1">._cmd = cmd || </span><span class="s4">this</span><span class="s3">;</span>
+
+        <span class="s4">this</span><span class="s1">.isRootCmd ||</span>
+            <span class="s1">cmd._cmds.push(</span><span class="s4">this</span><span class="s1">) &amp;&amp;</span>
+            <span class="s4">this</span><span class="s1">._name &amp;&amp;</span>
+            <span class="s1">(</span><span class="s4">this</span><span class="s1">._cmd._cmdsByName[</span><span class="s4">this</span><span class="s1">._name] = </span><span class="s4">this</span><span class="s1">)</span><span class="s3">;</span>
+
+        <span class="s4">return this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">get isRootCmd() {</span>
+        <span class="s4">return this</span><span class="s1">._cmd === </span><span class="s4">this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Set a canonical command identifier to be used anywhere in the API.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{String} name - command name</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{COA.Cmd} - this instance (for chainability)</span>
+     <span class="s5">*/</span>
+    <span class="s1">name(name) {</span>
+        <span class="s4">super</span><span class="s1">.name(name)</span><span class="s3">;</span>
+
+        <span class="s4">this</span><span class="s1">.isRootCmd ||</span>
+            <span class="s1">(</span><span class="s4">this</span><span class="s1">._cmd._cmdsByName[name] = </span><span class="s4">this</span><span class="s1">)</span><span class="s3">;</span>
+
+        <span class="s4">return this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Create new or add existing subcommand for current command.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{COA.Cmd} [cmd] existing command instance</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{COA.Cmd} new subcommand instance</span>
+     <span class="s5">*/</span>
+    <span class="s1">cmd(cmd) {</span>
+        <span class="s4">return </span><span class="s1">cmd?</span>
+            <span class="s1">cmd._parent(</span><span class="s4">this</span><span class="s1">)</span>
+            <span class="s1">: </span><span class="s4">new </span><span class="s1">Cmd(</span><span class="s4">this</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Create option for current command.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{COA.Opt} new option instance</span>
+     <span class="s5">*/</span>
+    <span class="s1">opt() {</span>
+        <span class="s4">return new </span><span class="s1">Opt(</span><span class="s4">this</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Create argument for current command.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{COA.Opt} new argument instance</span>
+     <span class="s5">*/</span>
+    <span class="s1">arg() {</span>
+        <span class="s4">return new </span><span class="s1">Arg(</span><span class="s4">this</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Add (or set) action for current command.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Function} act - action function,</span>
+     <span class="s5">*         invoked in the context of command instance</span>
+     <span class="s5">*         and has the parameters:</span>
+     <span class="s5">*                 - {Object} opts - parsed options</span>
+     <span class="s5">*                 - {String[]} args - parsed arguments</span>
+     <span class="s5">*                 - {Object} res - actions result accumulator</span>
+     <span class="s5">*         It can return rejected promise by Cmd.reject (in case of error)</span>
+     <span class="s5">*         or any other value treated as result.</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Boolean} [force=false] flag for set action instead add to existings</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{COA.Cmd} - this instance (for chainability)</span>
+     <span class="s5">*/</span>
+    <span class="s1">act(act</span><span class="s3">, </span><span class="s1">force) {</span>
+        <span class="s4">if</span><span class="s1">(!act) </span><span class="s4">return this</span><span class="s3">;</span>
+
+        <span class="s1">(!</span><span class="s4">this</span><span class="s1">._act || force) &amp;&amp; (</span><span class="s4">this</span><span class="s1">._act = [])</span><span class="s3">;</span>
+        <span class="s4">this</span><span class="s1">._act.push(act)</span><span class="s3">;</span>
+
+        <span class="s4">return this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Make command &quot;helpful&quot;, i.e. add -h --help flags for print usage.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{COA.Cmd} - this instance (for chainability)</span>
+     <span class="s5">*/</span>
+    <span class="s1">helpful() {</span>
+        <span class="s4">return this</span><span class="s1">.opt()</span>
+            <span class="s1">.name(</span><span class="s2">'help'</span><span class="s1">)</span>
+            <span class="s1">.title(</span><span class="s2">'Help'</span><span class="s1">)</span>
+            <span class="s1">.short(</span><span class="s2">'h'</span><span class="s1">)</span>
+            <span class="s1">.long(</span><span class="s2">'help'</span><span class="s1">)</span>
+            <span class="s1">.flag()</span>
+            <span class="s1">.only()</span>
+            <span class="s1">.act(</span><span class="s4">function</span><span class="s1">() {</span>
+                <span class="s4">return this</span><span class="s1">.usage()</span><span class="s3">;</span>
+            <span class="s1">})</span>
+            <span class="s1">.end()</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Adds shell completion to command, adds &quot;completion&quot; subcommand,</span>
+     <span class="s5">* that makes all the magic.</span>
+     <span class="s5">* Must be called only on root command.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{COA.Cmd} - this instance (for chainability)</span>
+     <span class="s5">*/</span>
+    <span class="s1">completable() {</span>
+        <span class="s4">return this</span><span class="s1">.cmd()</span>
+            <span class="s1">.name(</span><span class="s2">'completion'</span><span class="s1">)</span>
+            <span class="s1">.apply(completion)</span>
+            <span class="s1">.end()</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Allow command to be extendable by external node.js modules.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{String} [pattern]  Pattern of node.js module to find subcommands at.</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{COA.Cmd} - this instance (for chainability)</span>
+     <span class="s5">*/</span>
+    <span class="s1">extendable(pattern) {</span>
+        <span class="s4">this</span><span class="s1">._ext = pattern || </span><span class="s4">true</span><span class="s3">;</span>
+        <span class="s4">return this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_exit(msg</span><span class="s3">, </span><span class="s1">code) {</span>
+        <span class="s4">return </span><span class="s1">process.once(</span><span class="s2">'exit'</span><span class="s3">, </span><span class="s4">function</span><span class="s1">(exitCode) {</span>
+            <span class="s1">msg &amp;&amp; console[code === </span><span class="s8">0 </span><span class="s1">? </span><span class="s2">'log' </span><span class="s1">: </span><span class="s2">'error'</span><span class="s1">](msg)</span><span class="s3">;</span>
+            <span class="s1">process.exit(code || exitCode || </span><span class="s8">0</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Build full usage text for current command instance.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{String} usage text</span>
+     <span class="s5">*/</span>
+    <span class="s1">usage() {</span>
+        <span class="s4">const </span><span class="s1">res = []</span><span class="s3">;</span>
+
+        <span class="s4">this</span><span class="s1">._title &amp;&amp; res.push(</span><span class="s4">this</span><span class="s1">._fullTitle())</span><span class="s3">;</span>
+
+        <span class="s1">res.push(</span><span class="s2">''</span><span class="s3">, </span><span class="s2">'Usage:'</span><span class="s1">)</span><span class="s3">;</span>
+
+        <span class="s4">this</span><span class="s1">._cmds.length</span>
+            <span class="s1">&amp;&amp; res.push([</span>
+                <span class="s2">''</span><span class="s3">, </span><span class="s2">''</span><span class="s3">, </span><span class="s1">chalk.redBright(</span><span class="s4">this</span><span class="s1">._fullName())</span><span class="s3">, </span><span class="s1">chalk.blueBright(</span><span class="s2">'COMMAND'</span><span class="s1">)</span><span class="s3">,</span>
+                <span class="s1">chalk.greenBright(</span><span class="s2">'[OPTIONS]'</span><span class="s1">)</span><span class="s3">, </span><span class="s1">chalk.magentaBright(</span><span class="s2">'[ARGS]'</span><span class="s1">)</span>
+            <span class="s1">].join(</span><span class="s2">' '</span><span class="s1">))</span><span class="s3">;</span>
+
+        <span class="s1">(</span><span class="s4">this</span><span class="s1">._opts.length + </span><span class="s4">this</span><span class="s1">._args.length)</span>
+            <span class="s1">&amp;&amp; res.push([</span>
+                <span class="s2">''</span><span class="s3">, </span><span class="s2">''</span><span class="s3">, </span><span class="s1">chalk.redBright(</span><span class="s4">this</span><span class="s1">._fullName())</span><span class="s3">,</span>
+                <span class="s1">chalk.greenBright(</span><span class="s2">'[OPTIONS]'</span><span class="s1">)</span><span class="s3">, </span><span class="s1">chalk.magentaBright(</span><span class="s2">'[ARGS]'</span><span class="s1">)</span>
+            <span class="s1">].join(</span><span class="s2">' '</span><span class="s1">))</span><span class="s3">;</span>
+
+        <span class="s1">res.push(</span>
+            <span class="s4">this</span><span class="s1">._usages(</span><span class="s4">this</span><span class="s1">._cmds</span><span class="s3">, </span><span class="s2">'Commands'</span><span class="s1">)</span><span class="s3">,</span>
+            <span class="s4">this</span><span class="s1">._usages(</span><span class="s4">this</span><span class="s1">._opts</span><span class="s3">, </span><span class="s2">'Options'</span><span class="s1">)</span><span class="s3">,</span>
+            <span class="s4">this</span><span class="s1">._usages(</span><span class="s4">this</span><span class="s1">._args</span><span class="s3">, </span><span class="s2">'Arguments'</span><span class="s1">)</span>
+        <span class="s1">)</span><span class="s3">;</span>
+
+        <span class="s4">return </span><span class="s1">res.join(EOL)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_usage() {</span>
+        <span class="s4">return </span><span class="s1">chalk.blueBright(</span><span class="s4">this</span><span class="s1">._name) + </span><span class="s2">' : ' </span><span class="s1">+ </span><span class="s4">this</span><span class="s1">._title</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_usages(os</span><span class="s3">, </span><span class="s1">title) {</span>
+        <span class="s4">if</span><span class="s1">(!os.length) </span><span class="s4">return</span><span class="s3">;</span>
+
+        <span class="s4">return </span><span class="s1">[</span><span class="s2">''</span><span class="s3">, </span><span class="s1">title + </span><span class="s2">':'</span><span class="s1">]</span>
+            <span class="s1">.concat(os.map(o =&gt; </span><span class="s2">`  </span><span class="s1">${o._usage()}</span><span class="s2">`</span><span class="s1">))</span>
+            <span class="s1">.join(EOL)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_fullTitle() {</span>
+        <span class="s4">return </span><span class="s2">`</span><span class="s1">${</span><span class="s4">this</span><span class="s1">.isRootCmd? </span><span class="s2">'' </span><span class="s1">: </span><span class="s4">this</span><span class="s1">._cmd._fullTitle() + EOL}${</span><span class="s4">this</span><span class="s1">._title}</span><span class="s2">`</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_fullName() {</span>
+        <span class="s4">return </span><span class="s2">`</span><span class="s1">${</span><span class="s4">this</span><span class="s1">.isRootCmd? </span><span class="s2">'' </span><span class="s1">: </span><span class="s4">this</span><span class="s1">._cmd._fullName() + </span><span class="s2">' '</span><span class="s1">}${PATH.basename(</span><span class="s4">this</span><span class="s1">._name)}</span><span class="s2">`</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_ejectOpt(opts</span><span class="s3">, </span><span class="s1">opt) {</span>
+        <span class="s4">const </span><span class="s1">pos = opts.indexOf(opt)</span><span class="s3">;</span>
+        <span class="s4">if</span><span class="s1">(pos === -</span><span class="s8">1</span><span class="s1">) </span><span class="s4">return</span><span class="s3">;</span>
+
+        <span class="s4">return </span><span class="s1">opts[pos]._arr?</span>
+            <span class="s1">opts[pos] :</span>
+            <span class="s1">opts.splice(pos</span><span class="s3">, </span><span class="s8">1</span><span class="s1">)[</span><span class="s8">0</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_checkRequired(opts</span><span class="s3">, </span><span class="s1">args) {</span>
+        <span class="s4">if</span><span class="s1">(</span><span class="s4">this</span><span class="s1">._opts.some(opt =&gt; opt._only &amp;&amp; opts.hasOwnProperty(opt._name))) </span><span class="s4">return</span><span class="s3">;</span>
+
+        <span class="s4">const </span><span class="s1">all = </span><span class="s4">this</span><span class="s1">._opts.concat(</span><span class="s4">this</span><span class="s1">._args)</span><span class="s3">;</span>
+        <span class="s4">let </span><span class="s1">i</span><span class="s3">;</span>
+        <span class="s4">while</span><span class="s1">(i = all.shift())</span>
+            <span class="s4">if</span><span class="s1">(i._req &amp;&amp; i._checkParsed(opts</span><span class="s3">, </span><span class="s1">args))</span>
+                <span class="s4">return this</span><span class="s1">.reject(i._requiredText())</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_parseCmd(argv</span><span class="s3">, </span><span class="s1">unparsed) {</span>
+        <span class="s1">unparsed || (unparsed = [])</span><span class="s3">;</span>
+
+        <span class="s4">let </span><span class="s1">i</span><span class="s3">,</span>
+            <span class="s1">optSeen = </span><span class="s4">false</span><span class="s3">;</span>
+        <span class="s4">while</span><span class="s1">(i = argv.shift()) {</span>
+            <span class="s1">i.indexOf(</span><span class="s2">'-'</span><span class="s1">) || (optSeen = </span><span class="s4">true</span><span class="s1">)</span><span class="s3">;</span>
+
+            <span class="s4">if</span><span class="s1">(optSeen || !</span><span class="s8">/^\w[\w-_]*$/</span><span class="s1">.test(i)) {</span>
+                <span class="s1">unparsed.push(i)</span><span class="s3">;</span>
+                <span class="s4">continue</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s4">let </span><span class="s1">pkg</span><span class="s3">, </span><span class="s1">cmd = </span><span class="s4">this</span><span class="s1">._cmdsByName[i]</span><span class="s3">;</span>
+            <span class="s4">if</span><span class="s1">(!cmd &amp;&amp; </span><span class="s4">this</span><span class="s1">._ext) {</span>
+                <span class="s4">if</span><span class="s1">(</span><span class="s4">this</span><span class="s1">._ext === </span><span class="s4">true</span><span class="s1">) {</span>
+                    <span class="s1">pkg = i</span><span class="s3">;</span>
+                    <span class="s4">let </span><span class="s1">c = </span><span class="s4">this</span><span class="s3">;</span>
+                    <span class="s4">while</span><span class="s1">(</span><span class="s4">true</span><span class="s1">) { </span><span class="s7">// eslint-disable-line</span>
+                        <span class="s1">pkg = c._name + </span><span class="s2">'-' </span><span class="s1">+ pkg</span><span class="s3">;</span>
+                        <span class="s4">if</span><span class="s1">(c.isRootCmd) </span><span class="s4">break</span><span class="s3">;</span>
+                        <span class="s1">c = c._cmd</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">} </span><span class="s4">else if</span><span class="s1">(</span><span class="s4">typeof this</span><span class="s1">._ext === </span><span class="s2">'string'</span><span class="s1">)</span>
+                    <span class="s1">pkg = ~</span><span class="s4">this</span><span class="s1">._ext.indexOf(</span><span class="s2">'%s'</span><span class="s1">)?</span>
+                        <span class="s1">UTIL.format(</span><span class="s4">this</span><span class="s1">._ext</span><span class="s3">, </span><span class="s1">i) :</span>
+                        <span class="s4">this</span><span class="s1">._ext + i</span><span class="s3">;</span>
+
+                <span class="s4">let </span><span class="s1">cmdDesc</span><span class="s3">;</span>
+                <span class="s4">try </span><span class="s1">{</span>
+                    <span class="s1">cmdDesc = require(pkg)</span><span class="s3">;</span>
+                <span class="s1">} </span><span class="s4">catch</span><span class="s1">(e) {</span>
+                    <span class="s7">// Dummy</span>
+                <span class="s1">}</span>
+
+                <span class="s4">if</span><span class="s1">(cmdDesc) {</span>
+                    <span class="s4">if</span><span class="s1">(</span><span class="s4">typeof </span><span class="s1">cmdDesc === </span><span class="s2">'function'</span><span class="s1">) {</span>
+                        <span class="s4">this</span><span class="s1">.cmd().name(i).apply(cmdDesc).end()</span><span class="s3">;</span>
+                    <span class="s1">} </span><span class="s4">else if</span><span class="s1">(</span><span class="s4">typeof </span><span class="s1">cmdDesc === </span><span class="s2">'object'</span><span class="s1">) {</span>
+                        <span class="s4">this</span><span class="s1">.cmd(cmdDesc)</span><span class="s3">;</span>
+                        <span class="s1">cmdDesc.name(i)</span><span class="s3">;</span>
+                    <span class="s1">} </span><span class="s4">else throw new </span><span class="s1">Error(</span><span class="s2">'Error: Unsupported command declaration type, '</span>
+                        <span class="s1">+ </span><span class="s2">'should be a function or COA.Cmd() object'</span><span class="s1">)</span><span class="s3">;</span>
+
+                    <span class="s1">cmd = </span><span class="s4">this</span><span class="s1">._cmdsByName[i]</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+
+            <span class="s4">if</span><span class="s1">(cmd) </span><span class="s4">return </span><span class="s1">cmd._parseCmd(argv</span><span class="s3">, </span><span class="s1">unparsed)</span><span class="s3">;</span>
+
+            <span class="s1">unparsed.push(i)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s4">return </span><span class="s1">{ cmd : </span><span class="s4">this</span><span class="s3">, </span><span class="s1">argv : unparsed }</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_parseOptsAndArgs(argv) {</span>
+        <span class="s4">const </span><span class="s1">opts = {}</span><span class="s3">,</span>
+            <span class="s1">args = {}</span><span class="s3">,</span>
+            <span class="s1">nonParsedOpts = </span><span class="s4">this</span><span class="s1">._opts.concat()</span><span class="s3">,</span>
+            <span class="s1">nonParsedArgs = </span><span class="s4">this</span><span class="s1">._args.concat()</span><span class="s3">;</span>
+
+        <span class="s4">let </span><span class="s1">res</span><span class="s3">, </span><span class="s1">i</span><span class="s3">;</span>
+        <span class="s4">while</span><span class="s1">(i = argv.shift()) {</span>
+            <span class="s4">if</span><span class="s1">(i !== </span><span class="s2">'--' </span><span class="s1">&amp;&amp; i[</span><span class="s8">0</span><span class="s1">] === </span><span class="s2">'-'</span><span class="s1">) {</span>
+                <span class="s4">const </span><span class="s1">m = i.match(</span><span class="s8">/^(--\w[\w-_]*)=(.*)$/</span><span class="s1">)</span><span class="s3">;</span>
+                <span class="s4">if</span><span class="s1">(m) {</span>
+                    <span class="s1">i = m[</span><span class="s8">1</span><span class="s1">]</span><span class="s3">;</span>
+                    <span class="s4">this</span><span class="s1">._optsByKey[i]._flag || argv.unshift(m[</span><span class="s8">2</span><span class="s1">])</span><span class="s3">;</span>
+                <span class="s1">}</span>
+
+                <span class="s4">const </span><span class="s1">opt = </span><span class="s4">this</span><span class="s1">._ejectOpt(nonParsedOpts</span><span class="s3">, </span><span class="s4">this</span><span class="s1">._optsByKey[i])</span><span class="s3">;</span>
+                <span class="s4">if</span><span class="s1">(!opt) </span><span class="s4">return this</span><span class="s1">.reject(</span><span class="s2">`Unknown option: </span><span class="s1">${i}</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+
+                <span class="s4">if</span><span class="s1">(Q.isRejected(res = opt._parse(argv</span><span class="s3">, </span><span class="s1">opts))) </span><span class="s4">return </span><span class="s1">res</span><span class="s3">;</span>
+
+                <span class="s4">continue</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s1">i === </span><span class="s2">'--' </span><span class="s1">&amp;&amp; (i = argv.splice(</span><span class="s8">0</span><span class="s1">))</span><span class="s3">;</span>
+            <span class="s1">Array.isArray(i) || (i = [i])</span><span class="s3">;</span>
+
+            <span class="s4">let </span><span class="s1">a</span><span class="s3">;</span>
+            <span class="s4">while</span><span class="s1">(a = i.shift()) {</span>
+                <span class="s4">let </span><span class="s1">arg = nonParsedArgs.shift()</span><span class="s3">;</span>
+                <span class="s4">if</span><span class="s1">(!arg) </span><span class="s4">return this</span><span class="s1">.reject(</span><span class="s2">`Unknown argument: </span><span class="s1">${a}</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+
+                <span class="s1">arg._arr &amp;&amp; nonParsedArgs.unshift(arg)</span><span class="s3">;</span>
+                <span class="s4">if</span><span class="s1">(Q.isRejected(res = arg._parse(a</span><span class="s3">, </span><span class="s1">args))) </span><span class="s4">return </span><span class="s1">res</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s4">return </span><span class="s1">{</span>
+            <span class="s1">opts : </span><span class="s4">this</span><span class="s1">._setDefaults(opts</span><span class="s3">, </span><span class="s1">nonParsedOpts)</span><span class="s3">,</span>
+            <span class="s1">args : </span><span class="s4">this</span><span class="s1">._setDefaults(args</span><span class="s3">, </span><span class="s1">nonParsedArgs)</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_setDefaults(params</span><span class="s3">, </span><span class="s1">desc) {</span>
+        <span class="s4">for</span><span class="s1">(</span><span class="s4">const </span><span class="s1">item of desc)</span>
+            <span class="s1">item._def !== undefined &amp;&amp;</span>
+                <span class="s1">!params.hasOwnProperty(item._name) &amp;&amp;</span>
+                <span class="s1">item._saveVal(params</span><span class="s3">, </span><span class="s1">item._def)</span><span class="s3">;</span>
+
+        <span class="s4">return </span><span class="s1">params</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_processParams(params</span><span class="s3">, </span><span class="s1">desc) {</span>
+        <span class="s4">const </span><span class="s1">notExists = []</span><span class="s3">;</span>
+
+        <span class="s4">for</span><span class="s1">(</span><span class="s4">const </span><span class="s1">item of desc) {</span>
+            <span class="s4">const </span><span class="s1">n = item._name</span><span class="s3">;</span>
+
+            <span class="s4">if</span><span class="s1">(!params.hasOwnProperty(n)) {</span>
+                <span class="s1">notExists.push(item)</span><span class="s3">;</span>
+                <span class="s4">continue</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s4">const </span><span class="s1">vals = Array.isArray(params[n])? params[n] : [params[n]]</span><span class="s3">;</span>
+            <span class="s4">delete </span><span class="s1">params[n]</span><span class="s3">;</span>
+
+            <span class="s4">let </span><span class="s1">res</span><span class="s3">;</span>
+            <span class="s4">for</span><span class="s1">(</span><span class="s4">const </span><span class="s1">v of vals)</span>
+                <span class="s4">if</span><span class="s1">(Q.isRejected(res = item._saveVal(params</span><span class="s3">, </span><span class="s1">v)))</span>
+                    <span class="s4">return </span><span class="s1">res</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s4">return this</span><span class="s1">._setDefaults(params</span><span class="s3">, </span><span class="s1">notExists)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_parseArr(argv) {</span>
+        <span class="s4">return </span><span class="s1">Q.when(</span><span class="s4">this</span><span class="s1">._parseCmd(argv)</span><span class="s3">, </span><span class="s1">p =&gt;</span>
+            <span class="s1">Q.when(p.cmd._parseOptsAndArgs(p.argv)</span><span class="s3">, </span><span class="s1">r =&gt; ({</span>
+                <span class="s1">cmd : p.cmd</span><span class="s3">,</span>
+                <span class="s1">opts : r.opts</span><span class="s3">,</span>
+                <span class="s1">args : r.args</span>
+            <span class="s1">})))</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">_do(inputPromise) {</span>
+        <span class="s4">return </span><span class="s1">Q.when(inputPromise</span><span class="s3">, </span><span class="s1">input =&gt; {</span>
+            <span class="s4">return </span><span class="s1">[</span><span class="s4">this</span><span class="s1">._checkRequired]</span>
+                <span class="s1">.concat(input.cmd._act || [])</span>
+                <span class="s1">.reduce((res</span><span class="s3">, </span><span class="s1">act) =&gt;</span>
+                    <span class="s1">Q.when(res</span><span class="s3">, </span><span class="s1">prev =&gt; act.call(input.cmd</span><span class="s3">, </span><span class="s1">input.opts</span><span class="s3">, </span><span class="s1">input.args</span><span class="s3">, </span><span class="s1">prev))</span><span class="s3">,</span>
+                    <span class="s1">undefined)</span><span class="s3">;</span>
+        <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Parse arguments from simple format like NodeJS process.argv</span>
+     <span class="s5">* and run ahead current program, i.e. call process.exit when all actions done.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{String[]} argv - arguments</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{COA.Cmd} - this instance (for chainability)</span>
+     <span class="s5">*/</span>
+    <span class="s1">run(argv) {</span>
+        <span class="s1">argv || (argv = process.argv.slice(</span><span class="s8">2</span><span class="s1">))</span><span class="s3">;</span>
+
+        <span class="s4">const </span><span class="s1">cb = code =&gt;</span>
+            <span class="s1">res =&gt; res?</span>
+                <span class="s4">this</span><span class="s1">._exit(res.stack || res.toString()</span><span class="s3">, </span><span class="s1">(res.hasOwnProperty(</span><span class="s2">'exitCode'</span><span class="s1">)? res.exitCode : code) || </span><span class="s8">0</span><span class="s1">) :</span>
+                <span class="s4">this</span><span class="s1">._exit()</span><span class="s3">;</span>
+
+        <span class="s1">Q.when(</span><span class="s4">this</span><span class="s1">.do(argv)</span><span class="s3">, </span><span class="s1">cb(</span><span class="s8">0</span><span class="s1">)</span><span class="s3">, </span><span class="s1">cb(</span><span class="s8">1</span><span class="s1">)).done()</span><span class="s3">;</span>
+
+        <span class="s4">return this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Invoke specified (or current) command using provided</span>
+     <span class="s5">* options and arguments.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{String|String[]} [cmds] - subcommand to invoke (optional)</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Object} [opts] - command options (optional)</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Object} [args] - command arguments (optional)</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{Q.Promise}</span>
+     <span class="s5">*/</span>
+    <span class="s1">invoke(cmds</span><span class="s3">, </span><span class="s1">opts</span><span class="s3">, </span><span class="s1">args) {</span>
+        <span class="s1">cmds || (cmds = [])</span><span class="s3">;</span>
+        <span class="s1">opts || (opts = {})</span><span class="s3">;</span>
+        <span class="s1">args || (args = {})</span><span class="s3">;</span>
+        <span class="s4">typeof </span><span class="s1">cmds === </span><span class="s2">'string' </span><span class="s1">&amp;&amp; (cmds = cmds.split(</span><span class="s2">' '</span><span class="s1">))</span><span class="s3">;</span>
+
+        <span class="s4">if</span><span class="s1">(arguments.length &lt; </span><span class="s8">3 </span><span class="s1">&amp;&amp; !Array.isArray(cmds)) {</span>
+            <span class="s1">args = opts</span><span class="s3">;</span>
+            <span class="s1">opts = cmds</span><span class="s3">;</span>
+            <span class="s1">cmds = []</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s4">return </span><span class="s1">Q.when(</span><span class="s4">this</span><span class="s1">._parseCmd(cmds)</span><span class="s3">, </span><span class="s1">p =&gt; {</span>
+            <span class="s4">if</span><span class="s1">(p.argv.length)</span>
+                <span class="s4">return this</span><span class="s1">.reject(</span><span class="s2">`Unknown command: </span><span class="s1">${cmds.join(</span><span class="s2">' '</span><span class="s1">)}</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+
+            <span class="s4">return </span><span class="s1">Q.all([</span>
+                <span class="s4">this</span><span class="s1">._processParams(opts</span><span class="s3">, </span><span class="s4">this</span><span class="s1">._opts)</span><span class="s3">,</span>
+                <span class="s4">this</span><span class="s1">._processParams(args</span><span class="s3">, </span><span class="s4">this</span><span class="s1">._args)</span>
+            <span class="s1">]).spread((_opts</span><span class="s3">, </span><span class="s1">_args) =&gt;</span>
+                <span class="s4">this</span><span class="s1">._do({</span>
+                    <span class="s1">cmd : p.cmd</span><span class="s3">,</span>
+                    <span class="s1">opts : _opts</span><span class="s3">,</span>
+                    <span class="s1">args : _args</span>
+                <span class="s1">})</span>
+                <span class="s1">.fail(res =&gt; (res &amp;&amp; res.exitCode === </span><span class="s8">0</span><span class="s1">)?</span>
+                    <span class="s1">res.toString() :</span>
+                    <span class="s4">this</span><span class="s1">.reject(res)))</span><span class="s3">;</span>
+        <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Convenient function to run command from tests.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{String[]} argv - arguments</span>
+ <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{Q.Promise}</span>
+ <span class="s5">*/</span>
+<span class="s1">Cmd.prototype.do = </span><span class="s4">function</span><span class="s1">(argv) {</span>
+    <span class="s4">return this</span><span class="s1">._do(</span><span class="s4">this</span><span class="s1">._parseArr(argv || []))</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">module.exports = Cmd</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

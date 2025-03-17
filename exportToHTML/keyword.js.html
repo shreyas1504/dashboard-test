@@ -1,0 +1,170 @@
+<html>
+<head>
+<title>keyword.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s7 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+keyword.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">IDENTIFIER = </span><span class="s4">/^[a-z_$][a-z0-9_$-]*$/i</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">customRuleCode = require(</span><span class="s0">'./dotjs/custom'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">definitionSchema = require(</span><span class="s0">'./definition_schema'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s2">module.exports = {</span>
+  <span class="s2">add: addKeyword</span><span class="s1">,</span>
+  <span class="s2">get: getKeyword</span><span class="s1">,</span>
+  <span class="s2">remove: removeKeyword</span><span class="s1">,</span>
+  <span class="s2">validate: validateKeyword</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+
+<span class="s5">/**</span>
+ <span class="s5">* Define custom keyword</span>
+ <span class="s5">* </span><span class="s6">@this  </span><span class="s5">Ajv</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{String} keyword custom keyword, should be unique (including different from all standard, custom and macro keywords).</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Object} definition keyword definition object with properties `type` (type(s) which the keyword applies to), `validate` or `compile`.</span>
+ <span class="s5">* </span><span class="s6">@return </span><span class="s5">{Ajv} this for method chaining</span>
+ <span class="s5">*/</span>
+<span class="s3">function </span><span class="s2">addKeyword(keyword</span><span class="s1">, </span><span class="s2">definition) {</span>
+  <span class="s7">/* jshint validthis: true */</span>
+  <span class="s7">/* eslint no-shadow: 0 */</span>
+  <span class="s3">var </span><span class="s2">RULES = </span><span class="s3">this</span><span class="s2">.RULES</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(RULES.keywords[keyword])</span>
+    <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'Keyword ' </span><span class="s2">+ keyword + </span><span class="s0">' is already defined'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(!IDENTIFIER.test(keyword))</span>
+    <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'Keyword ' </span><span class="s2">+ keyword + </span><span class="s0">' is not a valid identifier'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(definition) {</span>
+    <span class="s3">this</span><span class="s2">.validateKeyword(definition</span><span class="s1">, </span><span class="s3">true</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">var </span><span class="s2">dataType = definition.type</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(Array.isArray(dataType)) {</span>
+      <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i=</span><span class="s4">0</span><span class="s1">; </span><span class="s2">i&lt;dataType.length</span><span class="s1">; </span><span class="s2">i++)</span>
+        <span class="s2">_addRule(keyword</span><span class="s1">, </span><span class="s2">dataType[i]</span><span class="s1">, </span><span class="s2">definition)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">_addRule(keyword</span><span class="s1">, </span><span class="s2">dataType</span><span class="s1">, </span><span class="s2">definition)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">var </span><span class="s2">metaSchema = definition.metaSchema</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(metaSchema) {</span>
+      <span class="s3">if </span><span class="s2">(definition.$data &amp;&amp; </span><span class="s3">this</span><span class="s2">._opts.$data) {</span>
+        <span class="s2">metaSchema = {</span>
+          <span class="s2">anyOf: [</span>
+            <span class="s2">metaSchema</span><span class="s1">,</span>
+            <span class="s2">{ </span><span class="s0">'$ref'</span><span class="s2">: </span><span class="s0">'https://raw.githubusercontent.com/ajv-validator/ajv/master/lib/refs/data.json#' </span><span class="s2">}</span>
+          <span class="s2">]</span>
+        <span class="s2">}</span><span class="s1">;</span>
+      <span class="s2">}</span>
+      <span class="s2">definition.validateSchema = </span><span class="s3">this</span><span class="s2">.compile(metaSchema</span><span class="s1">, </span><span class="s3">true</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">RULES.keywords[keyword] = RULES.all[keyword] = </span><span class="s3">true</span><span class="s1">;</span>
+
+
+  <span class="s3">function </span><span class="s2">_addRule(keyword</span><span class="s1">, </span><span class="s2">dataType</span><span class="s1">, </span><span class="s2">definition) {</span>
+    <span class="s3">var </span><span class="s2">ruleGroup</span><span class="s1">;</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i=</span><span class="s4">0</span><span class="s1">; </span><span class="s2">i&lt;RULES.length</span><span class="s1">; </span><span class="s2">i++) {</span>
+      <span class="s3">var </span><span class="s2">rg = RULES[i]</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(rg.type == dataType) {</span>
+        <span class="s2">ruleGroup = rg</span><span class="s1">;</span>
+        <span class="s3">break</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(!ruleGroup) {</span>
+      <span class="s2">ruleGroup = { type: dataType</span><span class="s1">, </span><span class="s2">rules: [] }</span><span class="s1">;</span>
+      <span class="s2">RULES.push(ruleGroup)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">var </span><span class="s2">rule = {</span>
+      <span class="s2">keyword: keyword</span><span class="s1">,</span>
+      <span class="s2">definition: definition</span><span class="s1">,</span>
+      <span class="s2">custom: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">code: customRuleCode</span><span class="s1">,</span>
+      <span class="s3">implements</span><span class="s2">: definition.implements</span>
+    <span class="s2">}</span><span class="s1">;</span>
+    <span class="s2">ruleGroup.rules.push(rule)</span><span class="s1">;</span>
+    <span class="s2">RULES.custom[keyword] = rule</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return this</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s5">/**</span>
+ <span class="s5">* Get keyword</span>
+ <span class="s5">* </span><span class="s6">@this  </span><span class="s5">Ajv</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{String} keyword pre-defined or custom keyword.</span>
+ <span class="s5">* </span><span class="s6">@return </span><span class="s5">{Object|Boolean} custom keyword definition, `true` if it is a predefined keyword, `false` otherwise.</span>
+ <span class="s5">*/</span>
+<span class="s3">function </span><span class="s2">getKeyword(keyword) {</span>
+  <span class="s7">/* jshint validthis: true */</span>
+  <span class="s3">var </span><span class="s2">rule = </span><span class="s3">this</span><span class="s2">.RULES.custom[keyword]</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">rule ? rule.definition : </span><span class="s3">this</span><span class="s2">.RULES.keywords[keyword] || </span><span class="s3">false</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s5">/**</span>
+ <span class="s5">* Remove keyword</span>
+ <span class="s5">* </span><span class="s6">@this  </span><span class="s5">Ajv</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{String} keyword pre-defined or custom keyword.</span>
+ <span class="s5">* </span><span class="s6">@return </span><span class="s5">{Ajv} this for method chaining</span>
+ <span class="s5">*/</span>
+<span class="s3">function </span><span class="s2">removeKeyword(keyword) {</span>
+  <span class="s7">/* jshint validthis: true */</span>
+  <span class="s3">var </span><span class="s2">RULES = </span><span class="s3">this</span><span class="s2">.RULES</span><span class="s1">;</span>
+  <span class="s3">delete </span><span class="s2">RULES.keywords[keyword]</span><span class="s1">;</span>
+  <span class="s3">delete </span><span class="s2">RULES.all[keyword]</span><span class="s1">;</span>
+  <span class="s3">delete </span><span class="s2">RULES.custom[keyword]</span><span class="s1">;</span>
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i=</span><span class="s4">0</span><span class="s1">; </span><span class="s2">i&lt;RULES.length</span><span class="s1">; </span><span class="s2">i++) {</span>
+    <span class="s3">var </span><span class="s2">rules = RULES[i].rules</span><span class="s1">;</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">j=</span><span class="s4">0</span><span class="s1">; </span><span class="s2">j&lt;rules.length</span><span class="s1">; </span><span class="s2">j++) {</span>
+      <span class="s3">if </span><span class="s2">(rules[j].keyword == keyword) {</span>
+        <span class="s2">rules.splice(j</span><span class="s1">, </span><span class="s4">1</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s3">break</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s3">return this</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s5">/**</span>
+ <span class="s5">* Validate keyword definition</span>
+ <span class="s5">* </span><span class="s6">@this  </span><span class="s5">Ajv</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Object} definition keyword definition object.</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Boolean} throwError true to throw exception if definition is invalid</span>
+ <span class="s5">* </span><span class="s6">@return </span><span class="s5">{boolean} validation result</span>
+ <span class="s5">*/</span>
+<span class="s3">function </span><span class="s2">validateKeyword(definition</span><span class="s1">, </span><span class="s2">throwError) {</span>
+  <span class="s2">validateKeyword.errors = </span><span class="s3">null</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">v = </span><span class="s3">this</span><span class="s2">._validateKeyword = </span><span class="s3">this</span><span class="s2">._validateKeyword</span>
+                                  <span class="s2">|| </span><span class="s3">this</span><span class="s2">.compile(definitionSchema</span><span class="s1">, </span><span class="s3">true</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(v(definition)) </span><span class="s3">return true</span><span class="s1">;</span>
+  <span class="s2">validateKeyword.errors = v.errors</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(throwError)</span>
+    <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'custom keyword definition is invalid: '  </span><span class="s2">+ </span><span class="s3">this</span><span class="s2">.errorsText(v.errors))</span><span class="s1">;</span>
+  <span class="s3">else</span>
+    <span class="s3">return false</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<html>
+<head>
+<title>BufferedConsole.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a; font-style: italic;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #808080;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8ea765;}
+.s5 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+BufferedConsole.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">/**</span>
+ <span class="s0">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s0">*</span>
+ <span class="s0">* This source code is licensed under the MIT license found in the</span>
+ <span class="s0">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s0">*/</span>
+<span class="s2">/// &lt;reference types=&quot;node&quot; /&gt;</span>
+<span class="s3">import </span><span class="s1">{ Console } from </span><span class="s4">'console'</span><span class="s5">;</span>
+<span class="s3">import </span><span class="s1">{ InspectOptions } from </span><span class="s4">'util'</span><span class="s5">;</span>
+<span class="s3">import </span><span class="s1">type { ConsoleBuffer</span><span class="s5">, </span><span class="s1">LogMessage</span><span class="s5">, </span><span class="s1">LogType } from </span><span class="s4">'./types'</span><span class="s5">;</span>
+<span class="s3">export default class </span><span class="s1">BufferedConsole </span><span class="s3">extends </span><span class="s1">Console {</span>
+    <span class="s3">private </span><span class="s1">_buffer</span><span class="s5">;</span>
+    <span class="s3">private </span><span class="s1">_counters</span><span class="s5">;</span>
+    <span class="s3">private </span><span class="s1">_timers</span><span class="s5">;</span>
+    <span class="s3">private </span><span class="s1">_groupDepth</span><span class="s5">;</span>
+    <span class="s1">Console: </span><span class="s3">typeof </span><span class="s1">Console</span><span class="s5">;</span>
+    <span class="s1">constructor()</span><span class="s5">;</span>
+    <span class="s3">static </span><span class="s1">write(buffer: ConsoleBuffer</span><span class="s5">, </span><span class="s1">type: LogType</span><span class="s5">, </span><span class="s1">message: LogMessage</span><span class="s5">, </span><span class="s1">level?: number | </span><span class="s3">null</span><span class="s1">): ConsoleBuffer</span><span class="s5">;</span>
+    <span class="s3">private </span><span class="s1">_log</span><span class="s5">;</span>
+    <span class="s1">assert(value: unknown</span><span class="s5">, </span><span class="s1">message?: string | Error): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">count(label?: string): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">countReset(label?: string): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">debug(firstArg: unknown</span><span class="s5">, </span><span class="s1">...rest: Array&lt;unknown&gt;): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">dir(firstArg: unknown</span><span class="s5">, </span><span class="s1">options?: InspectOptions): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">dirxml(firstArg: unknown</span><span class="s5">, </span><span class="s1">...rest: Array&lt;unknown&gt;): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">error(firstArg: unknown</span><span class="s5">, </span><span class="s1">...rest: Array&lt;unknown&gt;): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">group(title?: string</span><span class="s5">, </span><span class="s1">...rest: Array&lt;unknown&gt;): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">groupCollapsed(title?: string</span><span class="s5">, </span><span class="s1">...rest: Array&lt;unknown&gt;): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">groupEnd(): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">info(firstArg: unknown</span><span class="s5">, </span><span class="s1">...rest: Array&lt;unknown&gt;): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">log(firstArg: unknown</span><span class="s5">, </span><span class="s1">...rest: Array&lt;unknown&gt;): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">time(label?: string): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">timeEnd(label?: string): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">timeLog(label?: string</span><span class="s5">, </span><span class="s1">...data: Array&lt;unknown&gt;): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">warn(firstArg: unknown</span><span class="s5">, </span><span class="s1">...rest: Array&lt;unknown&gt;): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">getBuffer(): ConsoleBuffer | undefined</span><span class="s5">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

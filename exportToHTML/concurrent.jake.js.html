@@ -1,0 +1,134 @@
+<html>
+<head>
+<title>concurrent.jake.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #8ea765;}
+.s2 { color: #cc7832;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+concurrent.jake.js</font>
+</center></td></tr></table>
+<pre>
+<span class="s0">namespace(</span><span class="s1">'concurrent'</span><span class="s2">, </span><span class="s3">function </span><span class="s0">() {</span>
+  <span class="s0">task(</span><span class="s1">'A'</span><span class="s2">, </span><span class="s3">function </span><span class="s0">() {</span>
+    <span class="s0">console.log(</span><span class="s1">'Started A'</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s3">return new </span><span class="s0">Promise((resolve</span><span class="s2">, </span><span class="s0">reject) =&gt; {</span>
+      <span class="s0">setTimeout(() =&gt; {</span>
+        <span class="s0">console.log(</span><span class="s1">'Finished A'</span><span class="s0">)</span><span class="s2">;</span>
+        <span class="s0">resolve()</span><span class="s2">;</span>
+      <span class="s0">}</span><span class="s2">, </span><span class="s4">200</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s0">})</span><span class="s2">;</span>
+  <span class="s0">})</span><span class="s2">;</span>
+
+  <span class="s0">task(</span><span class="s1">'B'</span><span class="s2">, </span><span class="s3">function </span><span class="s0">() {</span>
+    <span class="s0">console.log(</span><span class="s1">'Started B'</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s3">return new </span><span class="s0">Promise((resolve</span><span class="s2">, </span><span class="s0">reject) =&gt; {</span>
+      <span class="s0">setTimeout(() =&gt; {</span>
+        <span class="s0">console.log(</span><span class="s1">'Finished B'</span><span class="s0">)</span><span class="s2">;</span>
+        <span class="s0">resolve()</span><span class="s2">;</span>
+      <span class="s0">}</span><span class="s2">, </span><span class="s4">50</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s0">})</span><span class="s2">;</span>
+  <span class="s0">})</span><span class="s2">;</span>
+
+  <span class="s0">task(</span><span class="s1">'C'</span><span class="s2">, </span><span class="s3">function </span><span class="s0">() {</span>
+    <span class="s0">console.log(</span><span class="s1">'Started C'</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s3">return new </span><span class="s0">Promise((resolve</span><span class="s2">, </span><span class="s0">reject) =&gt; {</span>
+      <span class="s0">setTimeout(() =&gt; {</span>
+        <span class="s0">console.log(</span><span class="s1">'Finished C'</span><span class="s0">)</span><span class="s2">;</span>
+        <span class="s0">resolve()</span><span class="s2">;</span>
+      <span class="s0">}</span><span class="s2">, </span><span class="s4">100</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s0">})</span><span class="s2">;</span>
+  <span class="s0">})</span><span class="s2">;</span>
+
+  <span class="s0">task(</span><span class="s1">'D'</span><span class="s2">, </span><span class="s3">function </span><span class="s0">() {</span>
+    <span class="s0">console.log(</span><span class="s1">'Started D'</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s3">return new </span><span class="s0">Promise((resolve</span><span class="s2">, </span><span class="s0">reject) =&gt; {</span>
+      <span class="s0">setTimeout(() =&gt; {</span>
+        <span class="s0">console.log(</span><span class="s1">'Finished D'</span><span class="s0">)</span><span class="s2">;</span>
+        <span class="s0">resolve()</span><span class="s2">;</span>
+      <span class="s0">}</span><span class="s2">, </span><span class="s4">300</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s0">})</span><span class="s2">;</span>
+  <span class="s0">})</span><span class="s2">;</span>
+
+  <span class="s0">task(</span><span class="s1">'Ba'</span><span class="s2">, </span><span class="s0">[</span><span class="s1">'A'</span><span class="s0">]</span><span class="s2">, </span><span class="s3">function </span><span class="s0">() {</span>
+    <span class="s0">console.log(</span><span class="s1">'Started Ba'</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s3">return new </span><span class="s0">Promise((resolve</span><span class="s2">, </span><span class="s0">reject) =&gt; {</span>
+      <span class="s0">setTimeout(() =&gt; {</span>
+        <span class="s0">console.log(</span><span class="s1">'Finished Ba'</span><span class="s0">)</span><span class="s2">;</span>
+        <span class="s0">resolve()</span><span class="s2">;</span>
+      <span class="s0">}</span><span class="s2">, </span><span class="s4">50</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s0">})</span><span class="s2">;</span>
+  <span class="s0">})</span><span class="s2">;</span>
+
+  <span class="s0">task(</span><span class="s1">'Afail'</span><span class="s2">, </span><span class="s3">function </span><span class="s0">() {</span>
+    <span class="s0">console.log(</span><span class="s1">'Started failing task'</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s3">return new </span><span class="s0">Promise((resolve</span><span class="s2">, </span><span class="s0">reject) =&gt; {</span>
+      <span class="s0">setTimeout(() =&gt; {</span>
+        <span class="s0">console.log(</span><span class="s1">'Failing B with error'</span><span class="s0">)</span><span class="s2">;</span>
+        <span class="s3">throw new </span><span class="s0">Error(</span><span class="s1">'I failed'</span><span class="s0">)</span><span class="s2">;</span>
+      <span class="s0">}</span><span class="s2">, </span><span class="s4">50</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s0">})</span><span class="s2">;</span>
+  <span class="s0">})</span><span class="s2">;</span>
+
+  <span class="s0">task(</span><span class="s1">'simple1'</span><span class="s2">, </span><span class="s0">[</span><span class="s1">'A'</span><span class="s2">,</span><span class="s1">'B'</span><span class="s0">]</span><span class="s2">, </span><span class="s0">{concurrency: </span><span class="s4">2</span><span class="s0">}</span><span class="s2">, </span><span class="s3">function </span><span class="s0">() {</span>
+    <span class="s3">return new </span><span class="s0">Promise((resolve</span><span class="s2">, </span><span class="s0">reject) =&gt; {</span>
+      <span class="s0">setTimeout(() =&gt; {</span>
+        <span class="s0">resolve()</span><span class="s2">;</span>
+      <span class="s0">}</span><span class="s2">, </span><span class="s4">50</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s0">})</span><span class="s2">;</span>
+  <span class="s0">})</span><span class="s2">;</span>
+
+  <span class="s0">task(</span><span class="s1">'simple2'</span><span class="s2">, </span><span class="s0">[</span><span class="s1">'C'</span><span class="s2">,</span><span class="s1">'D'</span><span class="s0">]</span><span class="s2">, </span><span class="s0">{concurrency: </span><span class="s4">2</span><span class="s0">}</span><span class="s2">, </span><span class="s3">function </span><span class="s0">() {</span>
+    <span class="s3">return new </span><span class="s0">Promise((resolve</span><span class="s2">, </span><span class="s0">reject) =&gt; {</span>
+      <span class="s0">setTimeout(() =&gt; {</span>
+        <span class="s0">resolve()</span><span class="s2">;</span>
+      <span class="s0">}</span><span class="s2">, </span><span class="s4">50</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s0">})</span><span class="s2">;</span>
+  <span class="s0">})</span><span class="s2">;</span>
+
+  <span class="s0">task(</span><span class="s1">'seqconcurrent'</span><span class="s2">, </span><span class="s0">[</span><span class="s1">'simple1'</span><span class="s2">,</span><span class="s1">'simple2'</span><span class="s0">]</span><span class="s2">, </span><span class="s3">function </span><span class="s0">() {</span>
+    <span class="s3">return new </span><span class="s0">Promise((resolve</span><span class="s2">, </span><span class="s0">reject) =&gt; {</span>
+      <span class="s0">setTimeout(() =&gt; {</span>
+        <span class="s0">resolve()</span><span class="s2">;</span>
+      <span class="s0">}</span><span class="s2">, </span><span class="s4">50</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s0">})</span><span class="s2">;</span>
+  <span class="s0">})</span><span class="s2">;</span>
+
+  <span class="s0">task(</span><span class="s1">'concurrentconcurrent'</span><span class="s2">, </span><span class="s0">[</span><span class="s1">'simple1'</span><span class="s2">,</span><span class="s1">'simple2'</span><span class="s0">]</span><span class="s2">, </span><span class="s0">{concurrency: </span><span class="s4">2</span><span class="s0">}</span><span class="s2">, </span><span class="s3">function </span><span class="s0">() {</span>
+    <span class="s3">return new </span><span class="s0">Promise((resolve</span><span class="s2">, </span><span class="s0">reject) =&gt; {</span>
+      <span class="s0">setTimeout(() =&gt; {</span>
+        <span class="s0">resolve()</span><span class="s2">;</span>
+      <span class="s0">}</span><span class="s2">, </span><span class="s4">50</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s0">})</span><span class="s2">;</span>
+  <span class="s0">})</span><span class="s2">;</span>
+
+  <span class="s0">task(</span><span class="s1">'subdep'</span><span class="s2">, </span><span class="s0">[</span><span class="s1">'A'</span><span class="s2">,</span><span class="s1">'Ba'</span><span class="s0">]</span><span class="s2">, </span><span class="s0">{concurrency: </span><span class="s4">2</span><span class="s0">}</span><span class="s2">, </span><span class="s3">function </span><span class="s0">() {</span>
+    <span class="s3">return new </span><span class="s0">Promise((resolve</span><span class="s2">, </span><span class="s0">reject) =&gt; {</span>
+      <span class="s0">setTimeout(() =&gt; {</span>
+        <span class="s0">resolve()</span><span class="s2">;</span>
+      <span class="s0">}</span><span class="s2">, </span><span class="s4">50</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s0">})</span><span class="s2">;</span>
+  <span class="s0">})</span><span class="s2">;</span>
+
+  <span class="s0">task(</span><span class="s1">'fail'</span><span class="s2">, </span><span class="s0">[</span><span class="s1">'A'</span><span class="s2">, </span><span class="s1">'B'</span><span class="s2">, </span><span class="s1">'Afail'</span><span class="s0">]</span><span class="s2">, </span><span class="s0">{concurrency: </span><span class="s4">3</span><span class="s0">}</span><span class="s2">, </span><span class="s3">function </span><span class="s0">() {</span>
+    <span class="s3">return new </span><span class="s0">Promise((resolve</span><span class="s2">, </span><span class="s0">reject) =&gt; {</span>
+      <span class="s0">setTimeout(() =&gt; {</span>
+        <span class="s0">resolve()</span><span class="s2">;</span>
+      <span class="s0">}</span><span class="s2">, </span><span class="s4">50</span><span class="s0">)</span><span class="s2">;</span>
+    <span class="s0">})</span><span class="s2">;</span>
+  <span class="s0">})</span><span class="s2">;</span>
+
+<span class="s0">})</span><span class="s2">;</span>
+
+
+</pre>
+</body>
+</html>

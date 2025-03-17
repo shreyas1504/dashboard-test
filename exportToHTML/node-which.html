@@ -1,0 +1,74 @@
+<html>
+<head>
+<title>node-which</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #6897bb;}
+.s5 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+node-which</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+<span class="s2">var </span><span class="s1">which = require(</span><span class="s3">&quot;../&quot;</span><span class="s1">)</span>
+<span class="s2">if </span><span class="s1">(process.argv.length &lt; </span><span class="s4">3</span><span class="s1">)</span>
+  <span class="s1">usage()</span>
+
+<span class="s2">function </span><span class="s1">usage () {</span>
+  <span class="s1">console.error(</span><span class="s3">'usage: which [-as] program ...'</span><span class="s1">)</span>
+  <span class="s1">process.exit(</span><span class="s4">1</span><span class="s1">)</span>
+<span class="s1">}</span>
+
+<span class="s2">var </span><span class="s1">all = </span><span class="s2">false</span>
+<span class="s2">var </span><span class="s1">silent = </span><span class="s2">false</span>
+<span class="s2">var </span><span class="s1">dashdash = </span><span class="s2">false</span>
+<span class="s2">var </span><span class="s1">args = process.argv.slice(</span><span class="s4">2</span><span class="s1">).filter(</span><span class="s2">function </span><span class="s1">(arg) {</span>
+  <span class="s2">if </span><span class="s1">(dashdash || !</span><span class="s4">/^-/</span><span class="s1">.test(arg))</span>
+    <span class="s2">return true</span>
+
+  <span class="s2">if </span><span class="s1">(arg === </span><span class="s3">'--'</span><span class="s1">) {</span>
+    <span class="s1">dashdash = </span><span class="s2">true</span>
+    <span class="s2">return false</span>
+  <span class="s1">}</span>
+
+  <span class="s2">var </span><span class="s1">flags = arg.substr(</span><span class="s4">1</span><span class="s1">).split(</span><span class="s3">''</span><span class="s1">)</span>
+  <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">f = </span><span class="s4">0</span><span class="s5">; </span><span class="s1">f &lt; flags.length</span><span class="s5">; </span><span class="s1">f++) {</span>
+    <span class="s2">var </span><span class="s1">flag = flags[f]</span>
+    <span class="s2">switch </span><span class="s1">(flag) {</span>
+      <span class="s2">case </span><span class="s3">'s'</span><span class="s1">:</span>
+        <span class="s1">silent = </span><span class="s2">true</span>
+        <span class="s2">break</span>
+      <span class="s2">case </span><span class="s3">'a'</span><span class="s1">:</span>
+        <span class="s1">all = </span><span class="s2">true</span>
+        <span class="s2">break</span>
+      <span class="s2">default</span><span class="s1">:</span>
+        <span class="s1">console.error(</span><span class="s3">'which: illegal option -- ' </span><span class="s1">+ flag)</span>
+        <span class="s1">usage()</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s2">return false</span>
+<span class="s1">})</span>
+
+<span class="s1">process.exit(args.reduce(</span><span class="s2">function </span><span class="s1">(pv</span><span class="s5">, </span><span class="s1">current) {</span>
+  <span class="s2">try </span><span class="s1">{</span>
+    <span class="s2">var </span><span class="s1">f = which.sync(current</span><span class="s5">, </span><span class="s1">{ all: all })</span>
+    <span class="s2">if </span><span class="s1">(all)</span>
+      <span class="s1">f = f.join(</span><span class="s3">'</span><span class="s5">\n</span><span class="s3">'</span><span class="s1">)</span>
+    <span class="s2">if </span><span class="s1">(!silent)</span>
+      <span class="s1">console.log(f)</span>
+    <span class="s2">return </span><span class="s1">pv</span><span class="s5">;</span>
+  <span class="s1">} </span><span class="s2">catch </span><span class="s1">(e) {</span>
+    <span class="s2">return </span><span class="s4">1</span><span class="s5">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s5">, </span><span class="s4">0</span><span class="s1">))</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,433 @@
+<html>
+<head>
+<title>sender.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #6897bb;}
+.s6 { color: #8a8a8a; font-style: italic;}
+.s7 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+sender.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* eslint no-unused-vars: [&quot;error&quot;, { &quot;varsIgnorePattern&quot;: &quot;^net|tls$&quot; }] */</span>
+
+<span class="s2">'use strict'</span><span class="s3">;</span>
+
+<span class="s4">const </span><span class="s1">net = require(</span><span class="s2">'net'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">const </span><span class="s1">tls = require(</span><span class="s2">'tls'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">const </span><span class="s1">{ randomFillSync } = require(</span><span class="s2">'crypto'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">const </span><span class="s1">PerMessageDeflate = require(</span><span class="s2">'./permessage-deflate'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">const </span><span class="s1">{ EMPTY_BUFFER } = require(</span><span class="s2">'./constants'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">const </span><span class="s1">{ isValidStatusCode } = require(</span><span class="s2">'./validation'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">const </span><span class="s1">{ mask: applyMask</span><span class="s3">, </span><span class="s1">toBuffer } = require(</span><span class="s2">'./buffer-util'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">const </span><span class="s1">mask = Buffer.alloc(</span><span class="s5">4</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* HyBi Sender implementation.</span>
+ <span class="s6">*/</span>
+<span class="s4">class </span><span class="s1">Sender {</span>
+  <span class="s6">/**</span>
+   <span class="s6">* Creates a Sender instance.</span>
+   <span class="s6">*</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{(net.Socket|tls.Socket)} socket The connection socket</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} [extensions] An object containing the negotiated extensions</span>
+   <span class="s6">*/</span>
+  <span class="s1">constructor(socket</span><span class="s3">, </span><span class="s1">extensions) {</span>
+    <span class="s4">this</span><span class="s1">._extensions = extensions || {}</span><span class="s3">;</span>
+    <span class="s4">this</span><span class="s1">._socket = socket</span><span class="s3">;</span>
+
+    <span class="s4">this</span><span class="s1">._firstFragment = </span><span class="s4">true</span><span class="s3">;</span>
+    <span class="s4">this</span><span class="s1">._compress = </span><span class="s4">false</span><span class="s3">;</span>
+
+    <span class="s4">this</span><span class="s1">._bufferedBytes = </span><span class="s5">0</span><span class="s3">;</span>
+    <span class="s4">this</span><span class="s1">._deflating = </span><span class="s4">false</span><span class="s3">;</span>
+    <span class="s4">this</span><span class="s1">._queue = []</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+   <span class="s6">* Frames a piece of data according to the HyBi WebSocket protocol.</span>
+   <span class="s6">*</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Buffer} data The data to frame</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} options Options object</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Number} options.opcode The opcode</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [options.readOnly=false] Specifies whether `data` can be</span>
+   <span class="s6">*     modified</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [options.fin=false] Specifies whether or not to set the</span>
+   <span class="s6">*     FIN bit</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [options.mask=false] Specifies whether or not to mask</span>
+   <span class="s6">*     `data`</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [options.rsv1=false] Specifies whether or not to set the</span>
+   <span class="s6">*     RSV1 bit</span>
+   <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Buffer[]} The framed data as a list of `Buffer` instances</span>
+   <span class="s6">* </span><span class="s7">@public</span>
+   <span class="s6">*/</span>
+  <span class="s4">static </span><span class="s1">frame(data</span><span class="s3">, </span><span class="s1">options) {</span>
+    <span class="s4">const </span><span class="s1">merge = options.mask &amp;&amp; options.readOnly</span><span class="s3">;</span>
+    <span class="s4">let </span><span class="s1">offset = options.mask ? </span><span class="s5">6 </span><span class="s1">: </span><span class="s5">2</span><span class="s3">;</span>
+    <span class="s4">let </span><span class="s1">payloadLength = data.length</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s1">(data.length &gt;= </span><span class="s5">65536</span><span class="s1">) {</span>
+      <span class="s1">offset += </span><span class="s5">8</span><span class="s3">;</span>
+      <span class="s1">payloadLength = </span><span class="s5">127</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">else if </span><span class="s1">(data.length &gt; </span><span class="s5">125</span><span class="s1">) {</span>
+      <span class="s1">offset += </span><span class="s5">2</span><span class="s3">;</span>
+      <span class="s1">payloadLength = </span><span class="s5">126</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">const </span><span class="s1">target = Buffer.allocUnsafe(merge ? data.length + offset : offset)</span><span class="s3">;</span>
+
+    <span class="s1">target[</span><span class="s5">0</span><span class="s1">] = options.fin ? options.opcode | </span><span class="s5">0x80 </span><span class="s1">: options.opcode</span><span class="s3">;</span>
+    <span class="s4">if </span><span class="s1">(options.rsv1) target[</span><span class="s5">0</span><span class="s1">] |= </span><span class="s5">0x40</span><span class="s3">;</span>
+
+    <span class="s1">target[</span><span class="s5">1</span><span class="s1">] = payloadLength</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s1">(payloadLength === </span><span class="s5">126</span><span class="s1">) {</span>
+      <span class="s1">target.writeUInt16BE(data.length</span><span class="s3">, </span><span class="s5">2</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">else if </span><span class="s1">(payloadLength === </span><span class="s5">127</span><span class="s1">) {</span>
+      <span class="s1">target.writeUInt32BE(</span><span class="s5">0</span><span class="s3">, </span><span class="s5">2</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">target.writeUInt32BE(data.length</span><span class="s3">, </span><span class="s5">6</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">if </span><span class="s1">(!options.mask) </span><span class="s4">return </span><span class="s1">[target</span><span class="s3">, </span><span class="s1">data]</span><span class="s3">;</span>
+
+    <span class="s1">randomFillSync(mask</span><span class="s3">, </span><span class="s5">0</span><span class="s3">, </span><span class="s5">4</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s1">target[</span><span class="s5">1</span><span class="s1">] |= </span><span class="s5">0x80</span><span class="s3">;</span>
+    <span class="s1">target[offset - </span><span class="s5">4</span><span class="s1">] = mask[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s1">target[offset - </span><span class="s5">3</span><span class="s1">] = mask[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s1">target[offset - </span><span class="s5">2</span><span class="s1">] = mask[</span><span class="s5">2</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s1">target[offset - </span><span class="s5">1</span><span class="s1">] = mask[</span><span class="s5">3</span><span class="s1">]</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s1">(merge) {</span>
+      <span class="s1">applyMask(data</span><span class="s3">, </span><span class="s1">mask</span><span class="s3">, </span><span class="s1">target</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">data.length)</span><span class="s3">;</span>
+      <span class="s4">return </span><span class="s1">[target]</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">applyMask(data</span><span class="s3">, </span><span class="s1">mask</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s5">0</span><span class="s3">, </span><span class="s1">data.length)</span><span class="s3">;</span>
+    <span class="s4">return </span><span class="s1">[target</span><span class="s3">, </span><span class="s1">data]</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+   <span class="s6">* Sends a close message to the other peer.</span>
+   <span class="s6">*</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Number} [code] The status code component of the body</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{String} [data] The message component of the body</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [mask=false] Specifies whether or not to mask the message</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Function} [cb] Callback</span>
+   <span class="s6">* </span><span class="s7">@public</span>
+   <span class="s6">*/</span>
+  <span class="s1">close(code</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">mask</span><span class="s3">, </span><span class="s1">cb) {</span>
+    <span class="s4">let </span><span class="s1">buf</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s1">(code === undefined) {</span>
+      <span class="s1">buf = EMPTY_BUFFER</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">else if </span><span class="s1">(</span><span class="s4">typeof </span><span class="s1">code !== </span><span class="s2">'number' </span><span class="s1">|| !isValidStatusCode(code)) {</span>
+      <span class="s4">throw new </span><span class="s1">TypeError(</span><span class="s2">'First argument must be a valid error code number'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">else if </span><span class="s1">(data === undefined || data === </span><span class="s2">''</span><span class="s1">) {</span>
+      <span class="s1">buf = Buffer.allocUnsafe(</span><span class="s5">2</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">buf.writeUInt16BE(code</span><span class="s3">, </span><span class="s5">0</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+      <span class="s4">const </span><span class="s1">length = Buffer.byteLength(data)</span><span class="s3">;</span>
+
+      <span class="s4">if </span><span class="s1">(length &gt; </span><span class="s5">123</span><span class="s1">) {</span>
+        <span class="s4">throw new </span><span class="s1">RangeError(</span><span class="s2">'The message must not be greater than 123 bytes'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s1">buf = Buffer.allocUnsafe(</span><span class="s5">2 </span><span class="s1">+ length)</span><span class="s3">;</span>
+      <span class="s1">buf.writeUInt16BE(code</span><span class="s3">, </span><span class="s5">0</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">buf.write(data</span><span class="s3">, </span><span class="s5">2</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">if </span><span class="s1">(</span><span class="s4">this</span><span class="s1">._deflating) {</span>
+      <span class="s4">this</span><span class="s1">.enqueue([</span><span class="s4">this</span><span class="s1">.doClose</span><span class="s3">, </span><span class="s1">buf</span><span class="s3">, </span><span class="s1">mask</span><span class="s3">, </span><span class="s1">cb])</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+      <span class="s4">this</span><span class="s1">.doClose(buf</span><span class="s3">, </span><span class="s1">mask</span><span class="s3">, </span><span class="s1">cb)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+   <span class="s6">* Frames and sends a close message.</span>
+   <span class="s6">*</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Buffer} data The message to send</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [mask=false] Specifies whether or not to mask `data`</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Function} [cb] Callback</span>
+   <span class="s6">* </span><span class="s7">@private</span>
+   <span class="s6">*/</span>
+  <span class="s1">doClose(data</span><span class="s3">, </span><span class="s1">mask</span><span class="s3">, </span><span class="s1">cb) {</span>
+    <span class="s4">this</span><span class="s1">.sendFrame(</span>
+      <span class="s1">Sender.frame(data</span><span class="s3">, </span><span class="s1">{</span>
+        <span class="s1">fin: </span><span class="s4">true</span><span class="s3">,</span>
+        <span class="s1">rsv1: </span><span class="s4">false</span><span class="s3">,</span>
+        <span class="s1">opcode: </span><span class="s5">0x08</span><span class="s3">,</span>
+        <span class="s1">mask</span><span class="s3">,</span>
+        <span class="s1">readOnly: </span><span class="s4">false</span>
+      <span class="s1">})</span><span class="s3">,</span>
+      <span class="s1">cb</span>
+    <span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+   <span class="s6">* Sends a ping message to the other peer.</span>
+   <span class="s6">*</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{*} data The message to send</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [mask=false] Specifies whether or not to mask `data`</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Function} [cb] Callback</span>
+   <span class="s6">* </span><span class="s7">@public</span>
+   <span class="s6">*/</span>
+  <span class="s1">ping(data</span><span class="s3">, </span><span class="s1">mask</span><span class="s3">, </span><span class="s1">cb) {</span>
+    <span class="s4">const </span><span class="s1">buf = toBuffer(data)</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s1">(buf.length &gt; </span><span class="s5">125</span><span class="s1">) {</span>
+      <span class="s4">throw new </span><span class="s1">RangeError(</span><span class="s2">'The data size must not be greater than 125 bytes'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">if </span><span class="s1">(</span><span class="s4">this</span><span class="s1">._deflating) {</span>
+      <span class="s4">this</span><span class="s1">.enqueue([</span><span class="s4">this</span><span class="s1">.doPing</span><span class="s3">, </span><span class="s1">buf</span><span class="s3">, </span><span class="s1">mask</span><span class="s3">, </span><span class="s1">toBuffer.readOnly</span><span class="s3">, </span><span class="s1">cb])</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+      <span class="s4">this</span><span class="s1">.doPing(buf</span><span class="s3">, </span><span class="s1">mask</span><span class="s3">, </span><span class="s1">toBuffer.readOnly</span><span class="s3">, </span><span class="s1">cb)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+   <span class="s6">* Frames and sends a ping message.</span>
+   <span class="s6">*</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Buffer} data The message to send</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [mask=false] Specifies whether or not to mask `data`</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [readOnly=false] Specifies whether `data` can be modified</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Function} [cb] Callback</span>
+   <span class="s6">* </span><span class="s7">@private</span>
+   <span class="s6">*/</span>
+  <span class="s1">doPing(data</span><span class="s3">, </span><span class="s1">mask</span><span class="s3">, </span><span class="s1">readOnly</span><span class="s3">, </span><span class="s1">cb) {</span>
+    <span class="s4">this</span><span class="s1">.sendFrame(</span>
+      <span class="s1">Sender.frame(data</span><span class="s3">, </span><span class="s1">{</span>
+        <span class="s1">fin: </span><span class="s4">true</span><span class="s3">,</span>
+        <span class="s1">rsv1: </span><span class="s4">false</span><span class="s3">,</span>
+        <span class="s1">opcode: </span><span class="s5">0x09</span><span class="s3">,</span>
+        <span class="s1">mask</span><span class="s3">,</span>
+        <span class="s1">readOnly</span>
+      <span class="s1">})</span><span class="s3">,</span>
+      <span class="s1">cb</span>
+    <span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+   <span class="s6">* Sends a pong message to the other peer.</span>
+   <span class="s6">*</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{*} data The message to send</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [mask=false] Specifies whether or not to mask `data`</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Function} [cb] Callback</span>
+   <span class="s6">* </span><span class="s7">@public</span>
+   <span class="s6">*/</span>
+  <span class="s1">pong(data</span><span class="s3">, </span><span class="s1">mask</span><span class="s3">, </span><span class="s1">cb) {</span>
+    <span class="s4">const </span><span class="s1">buf = toBuffer(data)</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s1">(buf.length &gt; </span><span class="s5">125</span><span class="s1">) {</span>
+      <span class="s4">throw new </span><span class="s1">RangeError(</span><span class="s2">'The data size must not be greater than 125 bytes'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">if </span><span class="s1">(</span><span class="s4">this</span><span class="s1">._deflating) {</span>
+      <span class="s4">this</span><span class="s1">.enqueue([</span><span class="s4">this</span><span class="s1">.doPong</span><span class="s3">, </span><span class="s1">buf</span><span class="s3">, </span><span class="s1">mask</span><span class="s3">, </span><span class="s1">toBuffer.readOnly</span><span class="s3">, </span><span class="s1">cb])</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+      <span class="s4">this</span><span class="s1">.doPong(buf</span><span class="s3">, </span><span class="s1">mask</span><span class="s3">, </span><span class="s1">toBuffer.readOnly</span><span class="s3">, </span><span class="s1">cb)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+   <span class="s6">* Frames and sends a pong message.</span>
+   <span class="s6">*</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Buffer} data The message to send</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [mask=false] Specifies whether or not to mask `data`</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [readOnly=false] Specifies whether `data` can be modified</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Function} [cb] Callback</span>
+   <span class="s6">* </span><span class="s7">@private</span>
+   <span class="s6">*/</span>
+  <span class="s1">doPong(data</span><span class="s3">, </span><span class="s1">mask</span><span class="s3">, </span><span class="s1">readOnly</span><span class="s3">, </span><span class="s1">cb) {</span>
+    <span class="s4">this</span><span class="s1">.sendFrame(</span>
+      <span class="s1">Sender.frame(data</span><span class="s3">, </span><span class="s1">{</span>
+        <span class="s1">fin: </span><span class="s4">true</span><span class="s3">,</span>
+        <span class="s1">rsv1: </span><span class="s4">false</span><span class="s3">,</span>
+        <span class="s1">opcode: </span><span class="s5">0x0a</span><span class="s3">,</span>
+        <span class="s1">mask</span><span class="s3">,</span>
+        <span class="s1">readOnly</span>
+      <span class="s1">})</span><span class="s3">,</span>
+      <span class="s1">cb</span>
+    <span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+   <span class="s6">* Sends a data message to the other peer.</span>
+   <span class="s6">*</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{*} data The message to send</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} options Options object</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [options.compress=false] Specifies whether or not to</span>
+   <span class="s6">*     compress `data`</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [options.binary=false] Specifies whether `data` is binary</span>
+   <span class="s6">*     or text</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [options.fin=false] Specifies whether the fragment is the</span>
+   <span class="s6">*     last one</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [options.mask=false] Specifies whether or not to mask</span>
+   <span class="s6">*     `data`</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Function} [cb] Callback</span>
+   <span class="s6">* </span><span class="s7">@public</span>
+   <span class="s6">*/</span>
+  <span class="s1">send(data</span><span class="s3">, </span><span class="s1">options</span><span class="s3">, </span><span class="s1">cb) {</span>
+    <span class="s4">const </span><span class="s1">buf = toBuffer(data)</span><span class="s3">;</span>
+    <span class="s4">const </span><span class="s1">perMessageDeflate = </span><span class="s4">this</span><span class="s1">._extensions[PerMessageDeflate.extensionName]</span><span class="s3">;</span>
+    <span class="s4">let </span><span class="s1">opcode = options.binary ? </span><span class="s5">2 </span><span class="s1">: </span><span class="s5">1</span><span class="s3">;</span>
+    <span class="s4">let </span><span class="s1">rsv1 = options.compress</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s1">(</span><span class="s4">this</span><span class="s1">._firstFragment) {</span>
+      <span class="s4">this</span><span class="s1">._firstFragment = </span><span class="s4">false</span><span class="s3">;</span>
+      <span class="s4">if </span><span class="s1">(rsv1 &amp;&amp; perMessageDeflate) {</span>
+        <span class="s1">rsv1 = buf.length &gt;= perMessageDeflate._threshold</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s4">this</span><span class="s1">._compress = rsv1</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+      <span class="s1">rsv1 = </span><span class="s4">false</span><span class="s3">;</span>
+      <span class="s1">opcode = </span><span class="s5">0</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">if </span><span class="s1">(options.fin) </span><span class="s4">this</span><span class="s1">._firstFragment = </span><span class="s4">true</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s1">(perMessageDeflate) {</span>
+      <span class="s4">const </span><span class="s1">opts = {</span>
+        <span class="s1">fin: options.fin</span><span class="s3">,</span>
+        <span class="s1">rsv1</span><span class="s3">,</span>
+        <span class="s1">opcode</span><span class="s3">,</span>
+        <span class="s1">mask: options.mask</span><span class="s3">,</span>
+        <span class="s1">readOnly: toBuffer.readOnly</span>
+      <span class="s1">}</span><span class="s3">;</span>
+
+      <span class="s4">if </span><span class="s1">(</span><span class="s4">this</span><span class="s1">._deflating) {</span>
+        <span class="s4">this</span><span class="s1">.enqueue([</span><span class="s4">this</span><span class="s1">.dispatch</span><span class="s3">, </span><span class="s1">buf</span><span class="s3">, </span><span class="s4">this</span><span class="s1">._compress</span><span class="s3">, </span><span class="s1">opts</span><span class="s3">, </span><span class="s1">cb])</span><span class="s3">;</span>
+      <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+        <span class="s4">this</span><span class="s1">.dispatch(buf</span><span class="s3">, </span><span class="s4">this</span><span class="s1">._compress</span><span class="s3">, </span><span class="s1">opts</span><span class="s3">, </span><span class="s1">cb)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+      <span class="s4">this</span><span class="s1">.sendFrame(</span>
+        <span class="s1">Sender.frame(buf</span><span class="s3">, </span><span class="s1">{</span>
+          <span class="s1">fin: options.fin</span><span class="s3">,</span>
+          <span class="s1">rsv1: </span><span class="s4">false</span><span class="s3">,</span>
+          <span class="s1">opcode</span><span class="s3">,</span>
+          <span class="s1">mask: options.mask</span><span class="s3">,</span>
+          <span class="s1">readOnly: toBuffer.readOnly</span>
+        <span class="s1">})</span><span class="s3">,</span>
+        <span class="s1">cb</span>
+      <span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+   <span class="s6">* Dispatches a data message.</span>
+   <span class="s6">*</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Buffer} data The message to send</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [compress=false] Specifies whether or not to compress</span>
+   <span class="s6">*     `data`</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} options Options object</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Number} options.opcode The opcode</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [options.readOnly=false] Specifies whether `data` can be</span>
+   <span class="s6">*     modified</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [options.fin=false] Specifies whether or not to set the</span>
+   <span class="s6">*     FIN bit</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [options.mask=false] Specifies whether or not to mask</span>
+   <span class="s6">*     `data`</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} [options.rsv1=false] Specifies whether or not to set the</span>
+   <span class="s6">*     RSV1 bit</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Function} [cb] Callback</span>
+   <span class="s6">* </span><span class="s7">@private</span>
+   <span class="s6">*/</span>
+  <span class="s1">dispatch(data</span><span class="s3">, </span><span class="s1">compress</span><span class="s3">, </span><span class="s1">options</span><span class="s3">, </span><span class="s1">cb) {</span>
+    <span class="s4">if </span><span class="s1">(!compress) {</span>
+      <span class="s4">this</span><span class="s1">.sendFrame(Sender.frame(data</span><span class="s3">, </span><span class="s1">options)</span><span class="s3">, </span><span class="s1">cb)</span><span class="s3">;</span>
+      <span class="s4">return</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">const </span><span class="s1">perMessageDeflate = </span><span class="s4">this</span><span class="s1">._extensions[PerMessageDeflate.extensionName]</span><span class="s3">;</span>
+
+    <span class="s4">this</span><span class="s1">._bufferedBytes += data.length</span><span class="s3">;</span>
+    <span class="s4">this</span><span class="s1">._deflating = </span><span class="s4">true</span><span class="s3">;</span>
+    <span class="s1">perMessageDeflate.compress(data</span><span class="s3">, </span><span class="s1">options.fin</span><span class="s3">, </span><span class="s1">(_</span><span class="s3">, </span><span class="s1">buf) =&gt; {</span>
+      <span class="s4">if </span><span class="s1">(</span><span class="s4">this</span><span class="s1">._socket.destroyed) {</span>
+        <span class="s4">const </span><span class="s1">err = </span><span class="s4">new </span><span class="s1">Error(</span>
+          <span class="s2">'The socket was closed while data was being compressed'</span>
+        <span class="s1">)</span><span class="s3">;</span>
+
+        <span class="s4">if </span><span class="s1">(</span><span class="s4">typeof </span><span class="s1">cb === </span><span class="s2">'function'</span><span class="s1">) cb(err)</span><span class="s3">;</span>
+
+        <span class="s4">for </span><span class="s1">(</span><span class="s4">let </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s4">this</span><span class="s1">._queue.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+          <span class="s4">const </span><span class="s1">callback = </span><span class="s4">this</span><span class="s1">._queue[i][</span><span class="s5">4</span><span class="s1">]</span><span class="s3">;</span>
+
+          <span class="s4">if </span><span class="s1">(</span><span class="s4">typeof </span><span class="s1">callback === </span><span class="s2">'function'</span><span class="s1">) callback(err)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s4">return</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s4">this</span><span class="s1">._bufferedBytes -= data.length</span><span class="s3">;</span>
+      <span class="s4">this</span><span class="s1">._deflating = </span><span class="s4">false</span><span class="s3">;</span>
+      <span class="s1">options.readOnly = </span><span class="s4">false</span><span class="s3">;</span>
+      <span class="s4">this</span><span class="s1">.sendFrame(Sender.frame(buf</span><span class="s3">, </span><span class="s1">options)</span><span class="s3">, </span><span class="s1">cb)</span><span class="s3">;</span>
+      <span class="s4">this</span><span class="s1">.dequeue()</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+   <span class="s6">* Executes queued send operations.</span>
+   <span class="s6">*</span>
+   <span class="s6">* </span><span class="s7">@private</span>
+   <span class="s6">*/</span>
+  <span class="s1">dequeue() {</span>
+    <span class="s4">while </span><span class="s1">(!</span><span class="s4">this</span><span class="s1">._deflating &amp;&amp; </span><span class="s4">this</span><span class="s1">._queue.length) {</span>
+      <span class="s4">const </span><span class="s1">params = </span><span class="s4">this</span><span class="s1">._queue.shift()</span><span class="s3">;</span>
+
+      <span class="s4">this</span><span class="s1">._bufferedBytes -= params[</span><span class="s5">1</span><span class="s1">].length</span><span class="s3">;</span>
+      <span class="s1">Reflect.apply(params[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">this</span><span class="s3">, </span><span class="s1">params.slice(</span><span class="s5">1</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+   <span class="s6">* Enqueues a send operation.</span>
+   <span class="s6">*</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} params Send operation parameters.</span>
+   <span class="s6">* </span><span class="s7">@private</span>
+   <span class="s6">*/</span>
+  <span class="s1">enqueue(params) {</span>
+    <span class="s4">this</span><span class="s1">._bufferedBytes += params[</span><span class="s5">1</span><span class="s1">].length</span><span class="s3">;</span>
+    <span class="s4">this</span><span class="s1">._queue.push(params)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+   <span class="s6">* Sends a frame.</span>
+   <span class="s6">*</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Buffer[]} list The frame to send</span>
+   <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Function} [cb] Callback</span>
+   <span class="s6">* </span><span class="s7">@private</span>
+   <span class="s6">*/</span>
+  <span class="s1">sendFrame(list</span><span class="s3">, </span><span class="s1">cb) {</span>
+    <span class="s4">if </span><span class="s1">(list.length === </span><span class="s5">2</span><span class="s1">) {</span>
+      <span class="s4">this</span><span class="s1">._socket.cork()</span><span class="s3">;</span>
+      <span class="s4">this</span><span class="s1">._socket.write(list[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">;</span>
+      <span class="s4">this</span><span class="s1">._socket.write(list[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">cb)</span><span class="s3">;</span>
+      <span class="s4">this</span><span class="s1">._socket.uncork()</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+      <span class="s4">this</span><span class="s1">._socket.write(list[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">cb)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = Sender</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

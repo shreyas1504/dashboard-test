@@ -1,0 +1,289 @@
+<html>
+<head>
+<title>buffer-test.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+buffer-test.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">assert = require(</span><span class="s2">'assert'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">OffsetBuffer = require(</span><span class="s2">'../'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s1">describe(</span><span class="s2">'OffsetBuffer'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+  <span class="s0">var </span><span class="s1">o</span><span class="s3">;</span>
+  <span class="s1">beforeEach(</span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">o = </span><span class="s0">new </span><span class="s1">OffsetBuffer()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.take()'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return empty buffer'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s0">var </span><span class="s1">b = </span><span class="s0">new </span><span class="s1">Buffer(</span><span class="s2">'hello world'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">o.push(b)</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">r = o.take(</span><span class="s4">0</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(r.length</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.size</span><span class="s3">, </span><span class="s1">b.length)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should return the first buffer itself'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s0">var </span><span class="s1">b = </span><span class="s0">new </span><span class="s1">Buffer(</span><span class="s2">'hello world'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">o.push(b)</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">r = o.take(b.length)</span><span class="s3">;</span>
+      <span class="s1">assert(r === b)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should return the slice of the buffer '</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s0">var </span><span class="s1">b = </span><span class="s0">new </span><span class="s1">Buffer(</span><span class="s2">'hello world'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">o.push(b)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.take(</span><span class="s4">5</span><span class="s1">).toString()</span><span class="s3">, </span><span class="s2">'hello'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.take(</span><span class="s4">1</span><span class="s1">).toString()</span><span class="s3">, </span><span class="s2">' '</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.take(</span><span class="s4">5</span><span class="s1">).toString()</span><span class="s3">, </span><span class="s2">'world'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should concat buffers'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer(</span><span class="s2">'hello'</span><span class="s1">))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer(</span><span class="s2">' '</span><span class="s1">))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer(</span><span class="s2">'world!'</span><span class="s1">))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.take(</span><span class="s4">11</span><span class="s1">).toString()</span><span class="s3">, </span><span class="s2">'hello world'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.take(</span><span class="s4">1</span><span class="s1">).toString()</span><span class="s3">, </span><span class="s2">'!'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.skip'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should skip bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer(</span><span class="s2">'hello '</span><span class="s1">))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer(</span><span class="s2">'world'</span><span class="s1">))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer(</span><span class="s2">' oh gosh'</span><span class="s1">))</span><span class="s3">;</span>
+
+      <span class="s1">assert.equal(o.take(</span><span class="s4">2</span><span class="s1">).toString()</span><span class="s3">, </span><span class="s2">'he'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">o.skip(</span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.take(</span><span class="s4">2</span><span class="s1">).toString()</span><span class="s3">, </span><span class="s2">'lo'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">o.skip(</span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.take(</span><span class="s4">2</span><span class="s1">).toString()</span><span class="s3">, </span><span class="s2">'wo'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">o.skip(</span><span class="s4">4</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.take(</span><span class="s4">7</span><span class="s1">).toString()</span><span class="s3">, </span><span class="s2">'oh gosh'</span><span class="s1">)</span><span class="s3">;</span>
+
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.peekUInt8'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return and not move by one byte'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x1</span><span class="s3">, </span><span class="s4">0x2 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.peekUInt8()</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt8()</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.peekUInt8()</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt8()</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.peekInt8'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return signed number'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x80 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.peekInt8()</span><span class="s3">, </span><span class="s1">-</span><span class="s4">128</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readInt8()</span><span class="s3">, </span><span class="s1">-</span><span class="s4">128</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.readUInt8'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return and move by one byte'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x1</span><span class="s3">, </span><span class="s4">0x2 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x3</span><span class="s3">, </span><span class="s4">0x4 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt8()</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt8()</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt8()</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt8()</span><span class="s3">, </span><span class="s4">4</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.readInt8'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return signed number'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x8f</span><span class="s3">, </span><span class="s4">0x7f </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readInt8()</span><span class="s3">, </span><span class="s1">-</span><span class="s4">113</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readInt8()</span><span class="s3">, </span><span class="s4">127</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.readUInt16LE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return and move by two bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x1</span><span class="s3">, </span><span class="s4">0x2</span><span class="s3">, </span><span class="s4">0x3 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x4</span><span class="s3">, </span><span class="s4">0x5</span><span class="s3">, </span><span class="s4">0x6 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt16LE()</span><span class="s3">, </span><span class="s4">0x0201</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt16LE()</span><span class="s3">, </span><span class="s4">0x0403</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt16LE()</span><span class="s3">, </span><span class="s4">0x0605</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should return and move by two bytes (regression #1)'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x1 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x2</span><span class="s3">, </span><span class="s4">0x3</span><span class="s3">, </span><span class="s4">0x4 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt16LE()</span><span class="s3">, </span><span class="s4">0x0201</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt16LE()</span><span class="s3">, </span><span class="s4">0x0403</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.readInt16LE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return signed number'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x23</span><span class="s3">, </span><span class="s4">0x81 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readInt16LE()</span><span class="s3">, </span><span class="s1">-</span><span class="s4">32477</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.readUInt24LE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return and move by three bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x1</span><span class="s3">, </span><span class="s4">0x2</span><span class="s3">, </span><span class="s4">0x3</span><span class="s3">, </span><span class="s4">0x4</span><span class="s3">, </span><span class="s4">0x5 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x6</span><span class="s3">, </span><span class="s4">0x7 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x8</span><span class="s3">, </span><span class="s4">0x9 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt24LE()</span><span class="s3">, </span><span class="s4">0x030201</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt24LE()</span><span class="s3">, </span><span class="s4">0x060504</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt24LE()</span><span class="s3">, </span><span class="s4">0x090807</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should return and move by three bytes (regression #1)'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x1</span><span class="s3">, </span><span class="s4">0x2 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x3 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt24LE()</span><span class="s3">, </span><span class="s4">0x030201</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.buffers.length</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.readInt24LE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return signed number'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x23</span><span class="s3">, </span><span class="s4">0x45</span><span class="s3">, </span><span class="s4">0x81 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readInt24LE()</span><span class="s3">, </span><span class="s1">-</span><span class="s4">8305373</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.readUInt32LE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return and move by four bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x1</span><span class="s3">, </span><span class="s4">0x2</span><span class="s3">, </span><span class="s4">0x3</span><span class="s3">, </span><span class="s4">0x4</span><span class="s3">, </span><span class="s4">0x5</span><span class="s3">, </span><span class="s4">0x6</span><span class="s3">, </span><span class="s4">0x7 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x8</span><span class="s3">, </span><span class="s4">0x9</span><span class="s3">, </span><span class="s4">0xa </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0xb</span><span class="s3">, </span><span class="s4">0xc</span><span class="s3">, </span><span class="s4">0xd </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0xe</span><span class="s3">, </span><span class="s4">0xf</span><span class="s3">, </span><span class="s4">0x10 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt32LE()</span><span class="s3">, </span><span class="s4">0x04030201</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt32LE()</span><span class="s3">, </span><span class="s4">0x08070605</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt32LE()</span><span class="s3">, </span><span class="s4">0x0c0b0a09</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt32LE()</span><span class="s3">, </span><span class="s4">0x100f0e0d</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should return and move by four bytes (regression #1)'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x1</span><span class="s3">, </span><span class="s4">0x2</span><span class="s3">, </span><span class="s4">0x3 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x4 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt32LE()</span><span class="s3">, </span><span class="s4">0x04030201</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.buffers.length</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.readInt32LE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return signed number'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0xff</span><span class="s3">, </span><span class="s4">0xff</span><span class="s3">, </span><span class="s4">0xff</span><span class="s3">, </span><span class="s4">0xff </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readInt32LE()</span><span class="s3">, </span><span class="s1">-</span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.readUInt16BE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return and move by two bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x1</span><span class="s3">, </span><span class="s4">0x2</span><span class="s3">, </span><span class="s4">0x3 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x4</span><span class="s3">, </span><span class="s4">0x5</span><span class="s3">, </span><span class="s4">0x6 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt16BE()</span><span class="s3">, </span><span class="s4">0x0102</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt16BE()</span><span class="s3">, </span><span class="s4">0x0304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt16BE()</span><span class="s3">, </span><span class="s4">0x0506</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.readInt16BE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return signed number'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x81</span><span class="s3">, </span><span class="s4">0x23 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readInt16BE()</span><span class="s3">, </span><span class="s1">-</span><span class="s4">32477</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.readUInt24BE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return and move by three bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x1</span><span class="s3">, </span><span class="s4">0x2</span><span class="s3">, </span><span class="s4">0x3</span><span class="s3">, </span><span class="s4">0x4</span><span class="s3">, </span><span class="s4">0x5 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x6</span><span class="s3">, </span><span class="s4">0x7 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x8</span><span class="s3">, </span><span class="s4">0x9 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt24BE()</span><span class="s3">, </span><span class="s4">0x010203</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt24BE()</span><span class="s3">, </span><span class="s4">0x040506</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt24BE()</span><span class="s3">, </span><span class="s4">0x070809</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.readInt24BE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return signed number'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x81</span><span class="s3">, </span><span class="s4">0x45</span><span class="s3">, </span><span class="s4">0x23 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readInt24BE()</span><span class="s3">, </span><span class="s1">-</span><span class="s4">8305373</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.readUInt32BE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return and move by four bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x1</span><span class="s3">, </span><span class="s4">0x2</span><span class="s3">, </span><span class="s4">0x3</span><span class="s3">, </span><span class="s4">0x4</span><span class="s3">, </span><span class="s4">0x5</span><span class="s3">, </span><span class="s4">0x6</span><span class="s3">, </span><span class="s4">0x7 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0x8</span><span class="s3">, </span><span class="s4">0x9</span><span class="s3">, </span><span class="s4">0xa </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0xb</span><span class="s3">, </span><span class="s4">0xc</span><span class="s3">, </span><span class="s4">0xd </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0xe</span><span class="s3">, </span><span class="s4">0xf</span><span class="s3">, </span><span class="s4">0x10 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt32BE()</span><span class="s3">, </span><span class="s4">0x01020304</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt32BE()</span><span class="s3">, </span><span class="s4">0x05060708</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt32BE()</span><span class="s3">, </span><span class="s4">0x090a0b0c</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt32BE()</span><span class="s3">, </span><span class="s4">0x0d0e0f10</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">'should return positive values'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0xff</span><span class="s3">, </span><span class="s4">0xff</span><span class="s3">, </span><span class="s4">0xff</span><span class="s3">, </span><span class="s4">0xff </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt32BE()</span><span class="s3">, </span><span class="s4">0xffffffff</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.readInt32BE'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should return signed number'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">0xff</span><span class="s3">, </span><span class="s4">0xff</span><span class="s3">, </span><span class="s4">0xff</span><span class="s3">, </span><span class="s4">0xff </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readInt32BE()</span><span class="s3">, </span><span class="s1">-</span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(o.isEmpty())</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">'.has'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s1">it(</span><span class="s2">'should properly check the amount of the remaining bytes'</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+      <span class="s1">o.push(</span><span class="s0">new </span><span class="s1">Buffer([ </span><span class="s4">1</span><span class="s3">, </span><span class="s4">2</span><span class="s3">, </span><span class="s4">3 </span><span class="s1">]))</span><span class="s3">;</span>
+      <span class="s1">assert(o.has(</span><span class="s4">3</span><span class="s1">))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt8()</span><span class="s3">, </span><span class="s4">0x01</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(!o.has(</span><span class="s4">3</span><span class="s1">))</span><span class="s3">;</span>
+      <span class="s1">assert(o.has(</span><span class="s4">2</span><span class="s1">))</span><span class="s3">;</span>
+      <span class="s1">assert.equal(o.readUInt16BE()</span><span class="s3">, </span><span class="s4">0x0203</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">assert(!o.has(</span><span class="s4">1</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

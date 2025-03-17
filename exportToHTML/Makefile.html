@@ -1,0 +1,40 @@
+<html>
+<head>
+<title>Makefile</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #ffc66d;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Makefile</font>
+</center></td></tr></table>
+<pre><span class="s0">test</span><span class="s1">:</span>
+	<span class="s2">@</span><span class="s1">npm run test</span>
+
+<span class="s0">lib-cov</span><span class="s1">:</span>
+	<span class="s2">@</span><span class="s1">./node_modules/.bin/istanbul instrument --output lib-cov --no-compact --variable global.__coverage__ lib</span>
+
+<span class="s0">coverage</span><span class="s1">: lib-cov</span>
+	<span class="s2">@</span><span class="s1">COVERAGE=1 ISTANBUL_REPORTERS=text-summary ./node_modules/.bin/mocha --reporter mocha-istanbul</span>
+	<span class="s2">@</span><span class="s1">rm -rf lib-cov</span>
+
+<span class="s0">coveralls</span><span class="s1">: lib-cov</span>
+	<span class="s2">@</span><span class="s1">COVERAGE=1 ISTANBUL_REPORTERS=lcovonly ./node_modules/.bin/mocha --reporter mocha-istanbul</span>
+	<span class="s2">@</span><span class="s1">cat lcov.info | ./node_modules/.bin/coveralls</span>
+	<span class="s2">@</span><span class="s1">rm -rf lib-cov lcov.info</span>
+
+<span class="s0">travis</span><span class="s1">: lint test coveralls</span>
+
+<span class="s0">lint</span><span class="s1">:</span>
+	<span class="s2">@</span><span class="s1">npm run lint</span>
+
+<span class="s1">.PHONY: test</span>
+</pre>
+</body>
+</html>

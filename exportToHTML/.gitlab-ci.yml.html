@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>.gitlab-ci.yml</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cfd2d5;}
+.s4 { color: #e8bf6a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+.gitlab-ci.yml</font>
+</center></td></tr></table>
+<pre><span class="s0">cache</span><span class="s1">:</span>
+  <span class="s0">key</span><span class="s1">: </span><span class="s2">&quot;$CI_JOB_NAME&quot;</span>
+  <span class="s0">untracked</span><span class="s1">: </span><span class="s3">true</span>
+  <span class="s0">paths</span><span class="s1">:</span>
+    <span class="s1">- </span><span class="s3">node_modules/</span>
+
+<span class="s0">before_script</span><span class="s1">:</span>
+  <span class="s1">- </span><span class="s3">npm install</span>
+
+<span class="s0">.test_template</span><span class="s1">: &amp;</span><span class="s4">npm_test</span>
+  <span class="s0">script</span><span class="s1">:</span>
+    <span class="s1">- </span><span class="s3">npm run lint</span>
+    <span class="s1">- </span><span class="s3">npm test</span>
+
+<span class="s0">test:node8</span><span class="s1">:</span>
+  <span class="s0">image</span><span class="s1">: </span><span class="s3">node:8</span>
+  <span class="s0">&lt;&lt;</span><span class="s1">: *</span><span class="s4">npm_test</span>
+
+<span class="s0">test:node10</span><span class="s1">:</span>
+  <span class="s0">image</span><span class="s1">: </span><span class="s3">node:10</span>
+  <span class="s0">&lt;&lt;</span><span class="s1">: *</span><span class="s4">npm_test</span>
+
+<span class="s0">test:node12</span><span class="s1">:</span>
+  <span class="s0">image</span><span class="s1">: </span><span class="s3">node:12</span>
+  <span class="s0">&lt;&lt;</span><span class="s1">: *</span><span class="s4">npm_test</span>
+</pre>
+</body>
+</html>

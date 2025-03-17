@@ -1,0 +1,338 @@
+<html>
+<head>
+<title>html-minifier-terser</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8a8a8a; font-style: italic;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #cc7832; font-weight: bold;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+html-minifier-terser</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+<span class="s2">/**</span>
+ <span class="s2">* html-minifier-terser CLI tool</span>
+ <span class="s2">*</span>
+ <span class="s2">* The MIT License (MIT)</span>
+ <span class="s2">*</span>
+ <span class="s2">*  Copyright (c) 2014-2016 Zoltan Frombach</span>
+ <span class="s2">*</span>
+ <span class="s2">*  Permission is hereby granted, free of charge, to any person obtaining a copy of</span>
+ <span class="s2">*  this software and associated documentation files (the &quot;Software&quot;), to deal in</span>
+ <span class="s2">*  the Software without restriction, including without limitation the rights to</span>
+ <span class="s2">*  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of</span>
+ <span class="s2">*  the Software, and to permit persons to whom the Software is furnished to do so,</span>
+ <span class="s2">*  subject to the following conditions:</span>
+ <span class="s2">*</span>
+ <span class="s2">*  The above copyright notice and this permission notice shall be included in all</span>
+ <span class="s2">*  copies or substantial portions of the Software.</span>
+ <span class="s2">*</span>
+ <span class="s2">*  THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</span>
+ <span class="s2">*  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS</span>
+ <span class="s2">*  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR</span>
+ <span class="s2">*  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER</span>
+ <span class="s2">*  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN</span>
+ <span class="s2">*  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</span>
+ <span class="s2">*</span>
+ <span class="s2">*/</span>
+
+<span class="s3">'use strict'</span><span class="s4">;</span>
+
+<span class="s5">var </span><span class="s1">camelCase = require(</span><span class="s3">'camel-case'</span><span class="s1">).camelCase</span><span class="s4">;</span>
+<span class="s5">var </span><span class="s1">fs = require(</span><span class="s3">'fs'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s5">var </span><span class="s1">info = require(</span><span class="s3">'./package.json'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s5">var </span><span class="s1">minify = require(</span><span class="s3">'./' </span><span class="s1">+ info.main).minify</span><span class="s4">;</span>
+<span class="s5">var </span><span class="s1">paramCase = require(</span><span class="s3">'param-case'</span><span class="s1">).paramCase</span><span class="s4">;</span>
+<span class="s5">var </span><span class="s1">path = require(</span><span class="s3">'path'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s5">var </span><span class="s1">{ Command } = require(</span><span class="s3">'commander'</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">program = </span><span class="s5">new </span><span class="s1">Command()</span><span class="s4">;</span>
+<span class="s1">program.name(info.name)</span><span class="s4">;</span>
+<span class="s1">program.version(info.version)</span><span class="s4">;</span>
+
+<span class="s5">function </span><span class="s1">fatal(message) {</span>
+  <span class="s1">console.error(message)</span><span class="s4">;</span>
+  <span class="s1">process.exit(</span><span class="s6">1</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* JSON does not support regexes, so, e.g., JSON.parse() will not create</span>
+ <span class="s2">* a RegExp from the JSON value `[ &quot;/matchString/&quot; ]`, which is</span>
+ <span class="s2">* technically just an array containing a string that begins and end with</span>
+ <span class="s2">* a forward slash. To get a RegExp from a JSON string, it must be</span>
+ <span class="s2">* constructed explicitly in JavaScript.</span>
+ <span class="s2">*</span>
+ <span class="s2">* The likelihood of actually wanting to match text that is enclosed in</span>
+ <span class="s2">* forward slashes is probably quite rare, so if forward slashes were</span>
+ <span class="s2">* included in an argument that requires a regex, the user most likely</span>
+ <span class="s2">* thought they were part of the syntax for specifying a regex.</span>
+ <span class="s2">*</span>
+ <span class="s2">* In the unlikely case that forward slashes are indeed desired in the</span>
+ <span class="s2">* search string, the user would need to enclose the expression in a</span>
+ <span class="s2">* second set of slashes:</span>
+ <span class="s2">*</span>
+ <span class="s2">*    --customAttrSrround &quot;[\&quot;//matchString//\&quot;]&quot;</span>
+ <span class="s2">*/</span>
+<span class="s5">function </span><span class="s1">parseRegExp(value) {</span>
+  <span class="s5">if </span><span class="s1">(value) {</span>
+    <span class="s5">return new </span><span class="s1">RegExp(value.replace(</span><span class="s6">/^\/(.*)\/$/</span><span class="s4">, </span><span class="s3">'$1'</span><span class="s1">))</span><span class="s4">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s5">function </span><span class="s1">parseJSON(value) {</span>
+  <span class="s5">if </span><span class="s1">(value) {</span>
+    <span class="s5">try </span><span class="s1">{</span>
+      <span class="s5">return </span><span class="s1">JSON.parse(value)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">catch </span><span class="s1">(e) {</span>
+      <span class="s5">if </span><span class="s1">(</span><span class="s6">/^{/</span><span class="s1">.test(value)) {</span>
+        <span class="s1">fatal(</span><span class="s3">'Could not parse JSON value </span><span class="s4">\'</span><span class="s3">' </span><span class="s1">+ value + </span><span class="s3">'</span><span class="s4">\'</span><span class="s3">'</span><span class="s1">)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s5">return </span><span class="s1">value</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s5">function </span><span class="s1">parseJSONArray(value) {</span>
+  <span class="s5">if </span><span class="s1">(value) {</span>
+    <span class="s1">value = parseJSON(value)</span><span class="s4">;</span>
+    <span class="s5">return </span><span class="s1">Array.isArray(value) ? value : [value]</span><span class="s4">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s5">function </span><span class="s1">parseJSONRegExpArray(value) {</span>
+  <span class="s1">value = parseJSONArray(value)</span><span class="s4">;</span>
+  <span class="s5">return </span><span class="s1">value &amp;&amp; value.map(parseRegExp)</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s5">function </span><span class="s1">parseString(value) {</span>
+  <span class="s5">return </span><span class="s1">value</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s5">var </span><span class="s1">mainOptions = {</span>
+  <span class="s1">caseSensitive: </span><span class="s3">'Treat attributes in case sensitive manner (useful for SVG; e.g. viewBox)'</span><span class="s4">,</span>
+  <span class="s1">collapseBooleanAttributes: </span><span class="s3">'Omit attribute values from boolean attributes'</span><span class="s4">,</span>
+  <span class="s1">collapseInlineTagWhitespace: </span><span class="s3">'Collapse white space around inline tag'</span><span class="s4">,</span>
+  <span class="s1">collapseWhitespace: </span><span class="s3">'Collapse white space that contributes to text nodes in a document tree.'</span><span class="s4">,</span>
+  <span class="s1">conservativeCollapse: </span><span class="s3">'Always collapse to 1 space (never remove it entirely)'</span><span class="s4">,</span>
+  <span class="s1">continueOnParseError: </span><span class="s3">'Handle parse errors instead of aborting'</span><span class="s4">,</span>
+  <span class="s1">customAttrAssign: [</span><span class="s3">'Arrays of regex</span><span class="s4">\'</span><span class="s3">es that allow to support custom attribute assign expressions (e.g. </span><span class="s4">\'</span><span class="s3">&lt;div flex?=&quot;{{mode != cover}}&quot;&gt;&lt;/div&gt;</span><span class="s4">\'</span><span class="s3">)'</span><span class="s4">, </span><span class="s1">parseJSONRegExpArray]</span><span class="s4">,</span>
+  <span class="s1">customAttrCollapse: [</span><span class="s3">'Regex that specifies custom attribute to strip newlines from (e.g. /ng-class/)'</span><span class="s4">, </span><span class="s1">parseRegExp]</span><span class="s4">,</span>
+  <span class="s1">customAttrSurround: [</span><span class="s3">'Arrays of regex</span><span class="s4">\'</span><span class="s3">es that allow to support custom attribute surround expressions (e.g. &lt;input {{#if value}}checked=&quot;checked&quot;{{/if}}&gt;)'</span><span class="s4">, </span><span class="s1">parseJSONRegExpArray]</span><span class="s4">,</span>
+  <span class="s1">customEventAttributes: [</span><span class="s3">'Arrays of regex</span><span class="s4">\'</span><span class="s3">es that allow to support custom event attributes for minifyJS (e.g. ng-click)'</span><span class="s4">, </span><span class="s1">parseJSONRegExpArray]</span><span class="s4">,</span>
+  <span class="s1">decodeEntities: </span><span class="s3">'Use direct Unicode characters whenever possible'</span><span class="s4">,</span>
+  <span class="s1">html5: </span><span class="s3">'Parse input according to HTML5 specifications'</span><span class="s4">,</span>
+  <span class="s1">ignoreCustomComments: [</span><span class="s3">'Array of regex</span><span class="s4">\'</span><span class="s3">es that allow to ignore certain comments, when matched'</span><span class="s4">, </span><span class="s1">parseJSONRegExpArray]</span><span class="s4">,</span>
+  <span class="s1">ignoreCustomFragments: [</span><span class="s3">'Array of regex</span><span class="s4">\'</span><span class="s3">es that allow to ignore certain fragments, when matched (e.g. &lt;?php ... ?&gt;, {{ ... }})'</span><span class="s4">, </span><span class="s1">parseJSONRegExpArray]</span><span class="s4">,</span>
+  <span class="s1">includeAutoGeneratedTags: </span><span class="s3">'Insert tags generated by HTML parser'</span><span class="s4">,</span>
+  <span class="s1">keepClosingSlash: </span><span class="s3">'Keep the trailing slash on singleton elements'</span><span class="s4">,</span>
+  <span class="s1">maxLineLength: [</span><span class="s3">'Max line length'</span><span class="s4">, </span><span class="s1">parseInt]</span><span class="s4">,</span>
+  <span class="s1">minifyCSS: [</span><span class="s3">'Minify CSS in style elements and style attributes (uses clean-css)'</span><span class="s4">, </span><span class="s1">parseJSON]</span><span class="s4">,</span>
+  <span class="s1">minifyJS: [</span><span class="s3">'Minify Javascript in script elements and on* attributes (uses terser)'</span><span class="s4">, </span><span class="s1">parseJSON]</span><span class="s4">,</span>
+  <span class="s1">minifyURLs: [</span><span class="s3">'Minify URLs in various attributes (uses relateurl)'</span><span class="s4">, </span><span class="s1">parseJSON]</span><span class="s4">,</span>
+  <span class="s1">noNewlinesBeforeTagClose: </span><span class="s3">'Never add a newline before a tag that closes an element'</span><span class="s4">,</span>
+  <span class="s1">preserveLineBreaks: </span><span class="s3">'Always collapse to 1 line break (never remove it entirely) when whitespace between tags include a line break.'</span><span class="s4">,</span>
+  <span class="s1">preventAttributesEscaping: </span><span class="s3">'Prevents the escaping of the values of attributes.'</span><span class="s4">,</span>
+  <span class="s1">processConditionalComments: </span><span class="s3">'Process contents of conditional comments through minifier'</span><span class="s4">,</span>
+  <span class="s1">processScripts: [</span><span class="s3">'Array of strings corresponding to types of script elements to process through minifier (e.g. &quot;text/ng-template&quot;, &quot;text/x-handlebars-template&quot;, etc.)'</span><span class="s4">, </span><span class="s1">parseJSONArray]</span><span class="s4">,</span>
+  <span class="s1">quoteCharacter: [</span><span class="s3">'Type of quote to use for attribute values (</span><span class="s4">\' </span><span class="s3">or &quot;)'</span><span class="s4">, </span><span class="s1">parseString]</span><span class="s4">,</span>
+  <span class="s1">removeAttributeQuotes: </span><span class="s3">'Remove quotes around attributes when possible.'</span><span class="s4">,</span>
+  <span class="s1">removeComments: </span><span class="s3">'Strip HTML comments'</span><span class="s4">,</span>
+  <span class="s1">removeEmptyAttributes: </span><span class="s3">'Remove all attributes with whitespace-only values'</span><span class="s4">,</span>
+  <span class="s1">removeEmptyElements: </span><span class="s3">'Remove all elements with empty contents'</span><span class="s4">,</span>
+  <span class="s1">removeOptionalTags: </span><span class="s3">'Remove unrequired tags'</span><span class="s4">,</span>
+  <span class="s1">removeRedundantAttributes: </span><span class="s3">'Remove attributes when value matches default.'</span><span class="s4">,</span>
+  <span class="s1">removeScriptTypeAttributes: </span><span class="s3">'Removes the following attributes from script tags: text/javascript, text/ecmascript, text/jscript, application/javascript, application/x-javascript, application/ecmascript. Other type attribute values are left intact'</span><span class="s4">,</span>
+  <span class="s1">removeStyleLinkTypeAttributes: </span><span class="s3">'Remove type=&quot;text/css&quot; from style and link tags. Other type attribute values are left intact.'</span><span class="s4">,</span>
+  <span class="s1">removeTagWhitespace: </span><span class="s3">'Remove space between attributes whenever possible'</span><span class="s4">,</span>
+  <span class="s1">sortAttributes: </span><span class="s3">'Sort attributes by frequency'</span><span class="s4">,</span>
+  <span class="s1">sortClassName: </span><span class="s3">'Sort style classes by frequency'</span><span class="s4">,</span>
+  <span class="s1">trimCustomFragments: </span><span class="s3">'Trim white space around ignoreCustomFragments.'</span><span class="s4">,</span>
+  <span class="s1">useShortDoctype: </span><span class="s3">'Replaces the doctype with the short (HTML5) doctype'</span>
+<span class="s1">}</span><span class="s4">;</span>
+<span class="s5">var </span><span class="s1">mainOptionKeys = Object.keys(mainOptions)</span><span class="s4">;</span>
+<span class="s1">mainOptionKeys.forEach(</span><span class="s5">function</span><span class="s1">(key) {</span>
+  <span class="s5">var </span><span class="s1">option = mainOptions[key]</span><span class="s4">;</span>
+  <span class="s5">if </span><span class="s1">(Array.isArray(option)) {</span>
+    <span class="s1">key = key === </span><span class="s3">'minifyURLs' </span><span class="s1">? </span><span class="s3">'--minify-urls' </span><span class="s1">: </span><span class="s3">'--' </span><span class="s1">+ paramCase(key)</span><span class="s4">;</span>
+    <span class="s1">key += option[</span><span class="s6">1</span><span class="s1">] === parseJSON ? </span><span class="s3">' [value]' </span><span class="s1">: </span><span class="s3">' &lt;value&gt;'</span><span class="s4">;</span>
+    <span class="s1">program.option(key</span><span class="s4">, </span><span class="s1">option[</span><span class="s6">0</span><span class="s1">]</span><span class="s4">, </span><span class="s1">option[</span><span class="s6">1</span><span class="s1">])</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s5">else if </span><span class="s1">(~[</span><span class="s3">'html5'</span><span class="s4">, </span><span class="s3">'includeAutoGeneratedTags'</span><span class="s1">].indexOf(key)) {</span>
+    <span class="s1">program.option(</span><span class="s3">'--no-' </span><span class="s1">+ paramCase(key)</span><span class="s4">, </span><span class="s1">option)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s5">else </span><span class="s1">{</span>
+    <span class="s1">program.option(</span><span class="s3">'--' </span><span class="s1">+ paramCase(key)</span><span class="s4">, </span><span class="s1">option)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+<span class="s1">})</span><span class="s4">;</span>
+<span class="s1">program.option(</span><span class="s3">'-o --output &lt;file&gt;'</span><span class="s4">, </span><span class="s3">'Specify output file (if not specified STDOUT will be used for output)'</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s5">function </span><span class="s1">readFile(file) {</span>
+  <span class="s5">try </span><span class="s1">{</span>
+    <span class="s5">return </span><span class="s1">fs.readFileSync(file</span><span class="s4">, </span><span class="s1">{ encoding: </span><span class="s3">'utf8' </span><span class="s1">})</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s5">catch </span><span class="s1">(e) {</span>
+    <span class="s1">fatal(</span><span class="s3">'Cannot read ' </span><span class="s1">+ file + </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">' </span><span class="s1">+ e.message)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s5">var </span><span class="s1">config = {}</span><span class="s4">;</span>
+<span class="s1">program.option(</span><span class="s3">'-c --config-file &lt;file&gt;'</span><span class="s4">, </span><span class="s3">'Use config file'</span><span class="s4">, </span><span class="s5">function</span><span class="s1">(configPath) {</span>
+  <span class="s5">var </span><span class="s1">data = readFile(configPath)</span><span class="s4">;</span>
+  <span class="s5">try </span><span class="s1">{</span>
+    <span class="s1">config = JSON.parse(data)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s5">catch </span><span class="s1">(je) {</span>
+    <span class="s5">try </span><span class="s1">{</span>
+      <span class="s1">config = require(path.resolve(configPath))</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">catch </span><span class="s1">(ne) {</span>
+      <span class="s1">fatal(</span><span class="s3">'Cannot read the specified config file.</span><span class="s4">\n</span><span class="s3">As JSON: ' </span><span class="s1">+ je.message + </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">As module: ' </span><span class="s1">+ ne.message)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s1">mainOptionKeys.forEach(</span><span class="s5">function</span><span class="s1">(key) {</span>
+    <span class="s5">if </span><span class="s1">(key </span><span class="s5">in </span><span class="s1">config) {</span>
+      <span class="s5">var </span><span class="s1">option = mainOptions[key]</span><span class="s4">;</span>
+      <span class="s5">if </span><span class="s1">(Array.isArray(option)) {</span>
+        <span class="s5">var </span><span class="s1">value = config[key]</span><span class="s4">;</span>
+        <span class="s1">config[key] = option[</span><span class="s6">1</span><span class="s1">](</span><span class="s5">typeof </span><span class="s1">value === </span><span class="s3">'string' </span><span class="s1">? value : JSON.stringify(value))</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span><span class="s4">;</span>
+<span class="s1">})</span><span class="s4">;</span>
+<span class="s1">program.option(</span><span class="s3">'--input-dir &lt;dir&gt;'</span><span class="s4">, </span><span class="s3">'Specify an input directory'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">program.option(</span><span class="s3">'--output-dir &lt;dir&gt;'</span><span class="s4">, </span><span class="s3">'Specify an output directory'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">program.option(</span><span class="s3">'--file-ext &lt;text&gt;'</span><span class="s4">, </span><span class="s3">'Specify an extension to be read, ex: html'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s5">var </span><span class="s1">content</span><span class="s4">;</span>
+<span class="s1">program.arguments(</span><span class="s3">'[files...]'</span><span class="s1">).action(</span><span class="s5">function</span><span class="s1">(files) {</span>
+  <span class="s1">content = files.map(readFile).join(</span><span class="s3">''</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">}).parse(process.argv)</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">programOptions = program.opts()</span><span class="s4">;</span>
+
+<span class="s5">function </span><span class="s1">createOptions() {</span>
+  <span class="s5">var </span><span class="s1">options = {}</span><span class="s4">;</span>
+  <span class="s1">mainOptionKeys.forEach(</span><span class="s5">function</span><span class="s1">(key) {</span>
+    <span class="s5">var </span><span class="s1">param = programOptions[key === </span><span class="s3">'minifyURLs' </span><span class="s1">? </span><span class="s3">'minifyUrls' </span><span class="s1">: camelCase(key)]</span><span class="s4">;</span>
+    <span class="s5">if </span><span class="s1">(</span><span class="s5">typeof </span><span class="s1">param !== </span><span class="s3">'undefined'</span><span class="s1">) {</span>
+      <span class="s1">options[key] = param</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">else if </span><span class="s1">(key </span><span class="s5">in </span><span class="s1">config) {</span>
+      <span class="s1">options[key] = config[key]</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span><span class="s4">;</span>
+  <span class="s5">return </span><span class="s1">options</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s5">function </span><span class="s1">mkdir(outputDir</span><span class="s4">, </span><span class="s1">callback) {</span>
+  <span class="s1">fs.mkdir(outputDir</span><span class="s4">, </span><span class="s5">function</span><span class="s1">(err) {</span>
+    <span class="s5">if </span><span class="s1">(err) {</span>
+      <span class="s5">switch </span><span class="s1">(err.code) {</span>
+        <span class="s5">case </span><span class="s3">'ENOENT'</span><span class="s1">:</span>
+          <span class="s5">return </span><span class="s1">mkdir(path.join(outputDir</span><span class="s4">, </span><span class="s3">'..'</span><span class="s1">)</span><span class="s4">, </span><span class="s5">function</span><span class="s1">() {</span>
+            <span class="s1">mkdir(outputDir</span><span class="s4">, </span><span class="s1">callback)</span><span class="s4">;</span>
+          <span class="s1">})</span><span class="s4">;</span>
+        <span class="s5">case </span><span class="s3">'EEXIST'</span><span class="s1">:</span>
+          <span class="s5">break</span><span class="s4">;</span>
+        <span class="s5">default</span><span class="s1">:</span>
+          <span class="s1">fatal(</span><span class="s3">'Cannot create directory ' </span><span class="s1">+ outputDir + </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">' </span><span class="s1">+ err.message)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s1">callback()</span><span class="s4">;</span>
+  <span class="s1">})</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s5">function </span><span class="s1">processFile(inputFile</span><span class="s4">, </span><span class="s1">outputFile) {</span>
+  <span class="s1">fs.readFile(inputFile</span><span class="s4">, </span><span class="s1">{ encoding: </span><span class="s3">'utf8' </span><span class="s1">}</span><span class="s4">, </span><span class="s1">async </span><span class="s5">function</span><span class="s1">(err</span><span class="s4">, </span><span class="s1">data) {</span>
+    <span class="s5">if </span><span class="s1">(err) {</span>
+      <span class="s1">fatal(</span><span class="s3">'Cannot read ' </span><span class="s1">+ inputFile + </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">' </span><span class="s1">+ err.message)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">var </span><span class="s1">minified</span><span class="s4">;</span>
+    <span class="s5">try </span><span class="s1">{</span>
+      <span class="s1">minified = </span><span class="s5">await </span><span class="s1">minify(data</span><span class="s4">, </span><span class="s1">createOptions())</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">catch </span><span class="s1">(e) {</span>
+      <span class="s1">fatal(</span><span class="s3">'Minification error on ' </span><span class="s1">+ inputFile + </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">' </span><span class="s1">+ e.message)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s1">fs.writeFile(outputFile</span><span class="s4">, </span><span class="s1">minified</span><span class="s4">, </span><span class="s1">{ encoding: </span><span class="s3">'utf8' </span><span class="s1">}</span><span class="s4">, </span><span class="s5">function</span><span class="s1">(err) {</span>
+      <span class="s5">if </span><span class="s1">(err) {</span>
+        <span class="s1">fatal(</span><span class="s3">'Cannot write ' </span><span class="s1">+ outputFile + </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">' </span><span class="s1">+ err.message)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span><span class="s4">;</span>
+  <span class="s1">})</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s5">function </span><span class="s1">processDirectory(inputDir</span><span class="s4">, </span><span class="s1">outputDir</span><span class="s4">, </span><span class="s1">fileExt) {</span>
+  <span class="s1">fs.readdir(inputDir</span><span class="s4">, </span><span class="s5">function</span><span class="s1">(err</span><span class="s4">, </span><span class="s1">files) {</span>
+    <span class="s5">if </span><span class="s1">(err) {</span>
+      <span class="s1">fatal(</span><span class="s3">'Cannot read directory ' </span><span class="s1">+ inputDir + </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">' </span><span class="s1">+ err.message)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s1">files.forEach(</span><span class="s5">function</span><span class="s1">(file) {</span>
+      <span class="s5">var </span><span class="s1">inputFile = path.join(inputDir</span><span class="s4">, </span><span class="s1">file)</span><span class="s4">;</span>
+      <span class="s5">var </span><span class="s1">outputFile = path.join(outputDir</span><span class="s4">, </span><span class="s1">file)</span><span class="s4">;</span>
+      <span class="s1">fs.stat(inputFile</span><span class="s4">, </span><span class="s5">function</span><span class="s1">(err</span><span class="s4">, </span><span class="s1">stat) {</span>
+        <span class="s5">if </span><span class="s1">(err) {</span>
+          <span class="s1">fatal(</span><span class="s3">'Cannot read ' </span><span class="s1">+ inputFile + </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">' </span><span class="s1">+ err.message)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">else if </span><span class="s1">(stat.isDirectory()) {</span>
+          <span class="s1">processDirectory(inputFile</span><span class="s4">, </span><span class="s1">outputFile</span><span class="s4">, </span><span class="s1">fileExt)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">else if </span><span class="s1">(!fileExt || path.extname(file) === </span><span class="s3">'.' </span><span class="s1">+ fileExt) {</span>
+          <span class="s1">mkdir(outputDir</span><span class="s4">, </span><span class="s5">function</span><span class="s1">() {</span>
+            <span class="s1">processFile(inputFile</span><span class="s4">, </span><span class="s1">outputFile)</span><span class="s4">;</span>
+          <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">})</span><span class="s4">;</span>
+    <span class="s1">})</span><span class="s4">;</span>
+  <span class="s1">})</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s1">async </span><span class="s5">function </span><span class="s1">writeMinify() {</span>
+  <span class="s5">var </span><span class="s1">minified</span><span class="s4">;</span>
+  <span class="s5">try </span><span class="s1">{</span>
+    <span class="s1">minified = </span><span class="s5">await </span><span class="s1">minify(content</span><span class="s4">, </span><span class="s1">createOptions())</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s5">catch </span><span class="s1">(e) {</span>
+    <span class="s1">fatal(</span><span class="s3">'Minification error:</span><span class="s4">\n</span><span class="s3">' </span><span class="s1">+ e.message)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s1">(programOptions.output ? fs.createWriteStream(programOptions.output).on(</span><span class="s3">'error'</span><span class="s4">, </span><span class="s5">function</span><span class="s1">(e) {</span>
+    <span class="s1">fatal(</span><span class="s3">'Cannot write ' </span><span class="s1">+ programOptions.output + </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">' </span><span class="s1">+ e.message)</span><span class="s4">;</span>
+  <span class="s1">}) : process.stdout).write(minified)</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s5">var </span><span class="s1">inputDir = programOptions.inputDir</span><span class="s4">;</span>
+<span class="s5">var </span><span class="s1">outputDir = programOptions.outputDir</span><span class="s4">;</span>
+<span class="s5">var </span><span class="s1">fileExt = programOptions.fileExt</span><span class="s4">;</span>
+<span class="s5">if </span><span class="s1">(inputDir || outputDir) {</span>
+  <span class="s5">if </span><span class="s1">(!inputDir) {</span>
+    <span class="s1">fatal(</span><span class="s3">'The option output-dir needs to be used with the option input-dir. If you are working with a single file, use -o.'</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s5">else if </span><span class="s1">(!outputDir) {</span>
+    <span class="s1">fatal(</span><span class="s3">'You need to specify where to write the output files with the option --output-dir'</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s1">processDirectory(inputDir</span><span class="s4">, </span><span class="s1">outputDir</span><span class="s4">, </span><span class="s1">fileExt)</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s0">// Minifying one or more files specified on the CMD line</span>
+<span class="s5">else if </span><span class="s1">(content) {</span>
+  <span class="s1">writeMinify()</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s0">// Minifying input coming from STDIN</span>
+<span class="s5">else </span><span class="s1">{</span>
+  <span class="s1">content = </span><span class="s3">''</span><span class="s4">;</span>
+  <span class="s1">process.stdin.setEncoding(</span><span class="s3">'utf8'</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">process.stdin.on(</span><span class="s3">'data'</span><span class="s4">, </span><span class="s5">function</span><span class="s1">(data) {</span>
+    <span class="s1">content += data</span><span class="s4">;</span>
+  <span class="s1">}).on(</span><span class="s3">'end'</span><span class="s4">, </span><span class="s1">writeMinify)</span><span class="s4">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

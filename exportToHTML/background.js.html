@@ -1,0 +1,91 @@
+<html>
+<head>
+<title>background.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+background.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">List = require(</span><span class="s2">'css-tree'</span><span class="s1">).List</span><span class="s3">;</span>
+
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">compressBackground(node) {</span>
+    <span class="s0">function </span><span class="s1">lastType() {</span>
+        <span class="s0">if </span><span class="s1">(buffer.length) {</span>
+            <span class="s0">return </span><span class="s1">buffer[buffer.length - </span><span class="s4">1</span><span class="s1">].type</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">function </span><span class="s1">flush() {</span>
+        <span class="s0">if </span><span class="s1">(lastType() === </span><span class="s2">'WhiteSpace'</span><span class="s1">) {</span>
+            <span class="s1">buffer.pop()</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(!buffer.length) {</span>
+            <span class="s1">buffer.unshift(</span>
+                <span class="s1">{</span>
+                    <span class="s1">type: </span><span class="s2">'Number'</span><span class="s3">,</span>
+                    <span class="s1">loc: </span><span class="s0">null</span><span class="s3">,</span>
+                    <span class="s1">value: </span><span class="s2">'0'</span>
+                <span class="s1">}</span><span class="s3">,</span>
+                <span class="s1">{</span>
+                    <span class="s1">type: </span><span class="s2">'WhiteSpace'</span><span class="s3">,</span>
+                    <span class="s1">value: </span><span class="s2">' '</span>
+                <span class="s1">}</span><span class="s3">,</span>
+                <span class="s1">{</span>
+                    <span class="s1">type: </span><span class="s2">'Number'</span><span class="s3">,</span>
+                    <span class="s1">loc: </span><span class="s0">null</span><span class="s3">,</span>
+                    <span class="s1">value: </span><span class="s2">'0'</span>
+                <span class="s1">}</span>
+            <span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">newValue.push.apply(newValue</span><span class="s3">, </span><span class="s1">buffer)</span><span class="s3">;</span>
+
+        <span class="s1">buffer = []</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">newValue = []</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">buffer = []</span><span class="s3">;</span>
+
+    <span class="s1">node.children.each(</span><span class="s0">function</span><span class="s1">(node) {</span>
+        <span class="s0">if </span><span class="s1">(node.type === </span><span class="s2">'Operator' </span><span class="s1">&amp;&amp; node.value === </span><span class="s2">','</span><span class="s1">) {</span>
+            <span class="s1">flush()</span><span class="s3">;</span>
+            <span class="s1">newValue.push(node)</span><span class="s3">;</span>
+            <span class="s0">return</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s5">// remove defaults</span>
+        <span class="s0">if </span><span class="s1">(node.type === </span><span class="s2">'Identifier'</span><span class="s1">) {</span>
+            <span class="s0">if </span><span class="s1">(node.name === </span><span class="s2">'transparent' </span><span class="s1">||</span>
+                <span class="s1">node.name === </span><span class="s2">'none' </span><span class="s1">||</span>
+                <span class="s1">node.name === </span><span class="s2">'repeat' </span><span class="s1">||</span>
+                <span class="s1">node.name === </span><span class="s2">'scroll'</span><span class="s1">) {</span>
+                <span class="s0">return</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s5">// don't add redundant spaces</span>
+        <span class="s0">if </span><span class="s1">(node.type === </span><span class="s2">'WhiteSpace' </span><span class="s1">&amp;&amp; (!buffer.length || lastType() === </span><span class="s2">'WhiteSpace'</span><span class="s1">)) {</span>
+            <span class="s0">return</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">buffer.push(node)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">flush()</span><span class="s3">;</span>
+    <span class="s1">node.children = </span><span class="s0">new </span><span class="s1">List().fromArray(newValue)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

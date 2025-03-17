@@ -1,0 +1,125 @@
+<html>
+<head>
+<title>required.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+required.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.missing }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+<span class="s0">{{# def.$data }}</span>
+
+<span class="s0">{{ var $vSchema = 'schema' + $lvl; }}</span>
+
+<span class="s0">{{## def.setupLoop:</span>
+  <span class="s0">{{? !$isData }}</span>
+    <span class="s0">var {{=$vSchema}} = validate.schema{{=$schemaPath}};</span>
+  <span class="s0">{{?}}</span>
+
+  <span class="s0">{{</span>
+    <span class="s0">var $i = 'i' + $lvl</span>
+      <span class="s0">, $propertyPath = 'schema' + $lvl + '[' + $i + ']'</span>
+      <span class="s0">, $missingProperty = '\' + ' + $propertyPath + ' + \'';</span>
+    <span class="s0">if (it.opts._errorDataPathProperty) {</span>
+      <span class="s0">it.errorPath = it.util.getPathExpr($currentErrorPath, $propertyPath, it.opts.jsonPointers);</span>
+    <span class="s0">}</span>
+  <span class="s0">}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.isRequiredOwnProperty:</span>
+  <span class="s0">Object.prototype.hasOwnProperty.call({{=$data}}, {{=$vSchema}}[{{=$i}}])</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{? !$isData }}</span>
+  <span class="s0">{{? $schema.length &lt; it.opts.loopRequired &amp;&amp;</span>
+      <span class="s0">it.schema.properties &amp;&amp; Object.keys(it.schema.properties).length }}</span>
+    <span class="s0">{{ var $required = []; }}</span>
+    <span class="s0">{{~ $schema:$property }}</span>
+      <span class="s0">{{ var $propertySch = it.schema.properties[$property]; }}</span>
+      <span class="s0">{{? !($propertySch &amp;&amp; {{# def.nonEmptySchema:$propertySch}}) }}</span>
+        <span class="s0">{{ $required[$required.length] = $property; }}</span>
+      <span class="s0">{{?}}</span>
+    <span class="s0">{{~}}</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">{{ var $required = $schema; }}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{?}}</span>
+
+
+<span class="s0">{{? $isData || $required.length }}</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $currentErrorPath = it.errorPath</span>
+      <span class="s0">, $loopRequired = $isData || $required.length &gt;= it.opts.loopRequired</span>
+      <span class="s0">, $ownProperties = it.opts.ownProperties;</span>
+  <span class="s0">}}</span>
+
+  <span class="s0">{{? $breakOnError }}</span>
+    <span class="s0">var missing{{=$lvl}};</span>
+    <span class="s0">{{? $loopRequired }}</span>
+      <span class="s0">{{# def.setupLoop }}</span>
+      <span class="s0">var {{=$valid}} = true;</span>
+
+      <span class="s0">{{?$isData}}{{# def.check$dataIsArray }}{{?}}</span>
+
+      <span class="s0">for (var {{=$i}} = 0; {{=$i}} &lt; {{=$vSchema}}.length; {{=$i}}++) {</span>
+        <span class="s0">{{=$valid}} = {{=$data}}[{{=$vSchema}}[{{=$i}}]] !== undefined</span>
+                      <span class="s0">{{? $ownProperties }}</span>
+                        <span class="s0">&amp;&amp; {{# def.isRequiredOwnProperty }}</span>
+                      <span class="s0">{{?}};</span>
+        <span class="s0">if (!{{=$valid}}) break;</span>
+      <span class="s0">}</span>
+
+      <span class="s0">{{? $isData }}  }  {{?}}</span>
+
+      <span class="s0">{{# def.checkError:'required' }}</span>
+      <span class="s0">else {</span>
+    <span class="s0">{{??}}</span>
+      <span class="s0">if ({{# def.checkMissingProperty:$required }}) {</span>
+        <span class="s0">{{# def.errorMissingProperty:'required' }}</span>
+      <span class="s0">} else {</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">{{? $loopRequired }}</span>
+      <span class="s0">{{# def.setupLoop }}</span>
+      <span class="s0">{{? $isData }}</span>
+        <span class="s0">if ({{=$vSchema}} &amp;&amp; !Array.isArray({{=$vSchema}})) {</span>
+          <span class="s0">{{# def.addError:'required' }}</span>
+        <span class="s0">} else if ({{=$vSchema}} !== undefined) {</span>
+      <span class="s0">{{?}}</span>
+
+      <span class="s0">for (var {{=$i}} = 0; {{=$i}} &lt; {{=$vSchema}}.length; {{=$i}}++) {</span>
+        <span class="s0">if ({{=$data}}[{{=$vSchema}}[{{=$i}}]] === undefined</span>
+            <span class="s0">{{? $ownProperties }}</span>
+              <span class="s0">|| !{{# def.isRequiredOwnProperty }}</span>
+            <span class="s0">{{?}}) {</span>
+          <span class="s0">{{# def.addError:'required' }}</span>
+        <span class="s0">}</span>
+      <span class="s0">}</span>
+
+      <span class="s0">{{? $isData }}  }  {{?}}</span>
+    <span class="s0">{{??}}</span>
+      <span class="s0">{{~ $required:$propertyKey }}</span>
+        <span class="s0">{{# def.allErrorsMissingProperty:'required' }}</span>
+      <span class="s0">{{~}}</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{?}}</span>
+
+  <span class="s0">{{ it.errorPath = $currentErrorPath; }}</span>
+
+<span class="s0">{{?? $breakOnError }}</span>
+  <span class="s0">if (true) {</span>
+<span class="s0">{{?}}</span>
+</pre>
+</body>
+</html>

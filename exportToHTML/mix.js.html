@@ -1,0 +1,161 @@
+<html>
+<head>
+<title>mix.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+mix.js</font>
+</center></td></tr></table>
+<pre><span class="s0">const </span><span class="s1">hasOwnProperty = Object.prototype.hasOwnProperty</span><span class="s2">;</span>
+<span class="s0">const </span><span class="s1">shape = {</span>
+    <span class="s1">generic: </span><span class="s0">true</span><span class="s2">,</span>
+    <span class="s1">types: appendOrAssign</span><span class="s2">,</span>
+    <span class="s1">atrules: {</span>
+        <span class="s1">prelude: appendOrAssignOrNull</span><span class="s2">,</span>
+        <span class="s1">descriptors: appendOrAssignOrNull</span>
+    <span class="s1">}</span><span class="s2">,</span>
+    <span class="s1">properties: appendOrAssign</span><span class="s2">,</span>
+    <span class="s1">parseContext: assign</span><span class="s2">,</span>
+    <span class="s1">scope: deepAssign</span><span class="s2">,</span>
+    <span class="s1">atrule: [</span><span class="s3">'parse'</span><span class="s1">]</span><span class="s2">,</span>
+    <span class="s1">pseudo: [</span><span class="s3">'parse'</span><span class="s1">]</span><span class="s2">,</span>
+    <span class="s1">node: [</span><span class="s3">'name'</span><span class="s2">, </span><span class="s3">'structure'</span><span class="s2">, </span><span class="s3">'parse'</span><span class="s2">, </span><span class="s3">'generate'</span><span class="s2">, </span><span class="s3">'walkContext'</span><span class="s1">]</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s0">function </span><span class="s1">isObject(value) {</span>
+    <span class="s0">return </span><span class="s1">value &amp;&amp; value.constructor === Object</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">copy(value) {</span>
+    <span class="s0">return </span><span class="s1">isObject(value)</span>
+        <span class="s1">? Object.assign({}</span><span class="s2">, </span><span class="s1">value)</span>
+        <span class="s1">: value</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">assign(dest</span><span class="s2">, </span><span class="s1">src) {</span>
+    <span class="s0">return </span><span class="s1">Object.assign(dest</span><span class="s2">, </span><span class="s1">src)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">deepAssign(dest</span><span class="s2">, </span><span class="s1">src) {</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">key </span><span class="s0">in </span><span class="s1">src) {</span>
+        <span class="s0">if </span><span class="s1">(hasOwnProperty.call(src</span><span class="s2">, </span><span class="s1">key)) {</span>
+            <span class="s0">if </span><span class="s1">(isObject(dest[key])) {</span>
+                <span class="s1">deepAssign(dest[key]</span><span class="s2">, </span><span class="s1">copy(src[key]))</span><span class="s2">;</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                <span class="s1">dest[key] = copy(src[key])</span><span class="s2">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">dest</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">append(a</span><span class="s2">, </span><span class="s1">b) {</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">b === </span><span class="s3">'string' </span><span class="s1">&amp;&amp; </span><span class="s4">/^\s*\|/</span><span class="s1">.test(b)) {</span>
+        <span class="s0">return typeof </span><span class="s1">a === </span><span class="s3">'string'</span>
+            <span class="s1">? a + b</span>
+            <span class="s1">: b.replace(</span><span class="s4">/^\s*\|\s*/</span><span class="s2">, </span><span class="s3">''</span><span class="s1">)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">b || </span><span class="s0">null</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">appendOrAssign(a</span><span class="s2">, </span><span class="s1">b) {</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">b === </span><span class="s3">'string'</span><span class="s1">) {</span>
+        <span class="s0">return </span><span class="s1">append(a</span><span class="s2">, </span><span class="s1">b)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">const </span><span class="s1">result = Object.assign({}</span><span class="s2">, </span><span class="s1">a)</span><span class="s2">;</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">let </span><span class="s1">key </span><span class="s0">in </span><span class="s1">b) {</span>
+        <span class="s0">if </span><span class="s1">(hasOwnProperty.call(b</span><span class="s2">, </span><span class="s1">key)) {</span>
+            <span class="s1">result[key] = append(hasOwnProperty.call(a</span><span class="s2">, </span><span class="s1">key) ? a[key] : undefined</span><span class="s2">, </span><span class="s1">b[key])</span><span class="s2">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">result</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">appendOrAssignOrNull(a</span><span class="s2">, </span><span class="s1">b) {</span>
+    <span class="s0">const </span><span class="s1">result = appendOrAssign(a</span><span class="s2">, </span><span class="s1">b)</span><span class="s2">;</span>
+
+    <span class="s0">return </span><span class="s1">!isObject(result) || Object.keys(result).length</span>
+        <span class="s1">? result</span>
+        <span class="s1">: </span><span class="s0">null</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">mix(dest</span><span class="s2">, </span><span class="s1">src</span><span class="s2">, </span><span class="s1">shape) {</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">key </span><span class="s0">in </span><span class="s1">shape) {</span>
+        <span class="s0">if </span><span class="s1">(hasOwnProperty.call(shape</span><span class="s2">, </span><span class="s1">key) === </span><span class="s0">false</span><span class="s1">) {</span>
+            <span class="s0">continue</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(shape[key] === </span><span class="s0">true</span><span class="s1">) {</span>
+            <span class="s0">if </span><span class="s1">(key </span><span class="s0">in </span><span class="s1">src) {</span>
+                <span class="s0">if </span><span class="s1">(hasOwnProperty.call(src</span><span class="s2">, </span><span class="s1">key)) {</span>
+                    <span class="s1">dest[key] = copy(src[key])</span><span class="s2">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+        <span class="s1">} </span><span class="s0">else if </span><span class="s1">(shape[key]) {</span>
+            <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">shape[key] === </span><span class="s3">'function'</span><span class="s1">) {</span>
+                <span class="s0">const </span><span class="s1">fn = shape[key]</span><span class="s2">;</span>
+                <span class="s1">dest[key] = fn({}</span><span class="s2">, </span><span class="s1">dest[key])</span><span class="s2">;</span>
+                <span class="s1">dest[key] = fn(dest[key] || {}</span><span class="s2">, </span><span class="s1">src[key])</span><span class="s2">;</span>
+            <span class="s1">} </span><span class="s0">else if </span><span class="s1">(isObject(shape[key])) {</span>
+                <span class="s0">const </span><span class="s1">result = {}</span><span class="s2">;</span>
+
+                <span class="s0">for </span><span class="s1">(</span><span class="s0">let </span><span class="s1">name </span><span class="s0">in </span><span class="s1">dest[key]) {</span>
+                    <span class="s1">result[name] = mix({}</span><span class="s2">, </span><span class="s1">dest[key][name]</span><span class="s2">, </span><span class="s1">shape[key])</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">for </span><span class="s1">(</span><span class="s0">let </span><span class="s1">name </span><span class="s0">in </span><span class="s1">src[key]) {</span>
+                    <span class="s1">result[name] = mix(result[name] || {}</span><span class="s2">, </span><span class="s1">src[key][name]</span><span class="s2">, </span><span class="s1">shape[key])</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s1">dest[key] = result</span><span class="s2">;</span>
+            <span class="s1">} </span><span class="s0">else if </span><span class="s1">(Array.isArray(shape[key])) {</span>
+                <span class="s0">const </span><span class="s1">res = {}</span><span class="s2">;</span>
+                <span class="s0">const </span><span class="s1">innerShape = shape[key].reduce(</span><span class="s0">function</span><span class="s1">(s</span><span class="s2">, </span><span class="s1">k) {</span>
+                    <span class="s1">s[k] = </span><span class="s0">true</span><span class="s2">;</span>
+                    <span class="s0">return </span><span class="s1">s</span><span class="s2">;</span>
+                <span class="s1">}</span><span class="s2">, </span><span class="s1">{})</span><span class="s2">;</span>
+
+                <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">[name</span><span class="s2">, </span><span class="s1">value] of Object.entries(dest[key] || {})) {</span>
+                    <span class="s1">res[name] = {}</span><span class="s2">;</span>
+                    <span class="s0">if </span><span class="s1">(value) {</span>
+                        <span class="s1">mix(res[name]</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">innerShape)</span><span class="s2">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+
+                <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">name </span><span class="s0">in </span><span class="s1">src[key]) {</span>
+                    <span class="s0">if </span><span class="s1">(hasOwnProperty.call(src[key]</span><span class="s2">, </span><span class="s1">name)) {</span>
+                        <span class="s0">if </span><span class="s1">(!res[name]) {</span>
+                            <span class="s1">res[name] = {}</span><span class="s2">;</span>
+                        <span class="s1">}</span>
+
+                        <span class="s0">if </span><span class="s1">(src[key] &amp;&amp; src[key][name]) {</span>
+                            <span class="s1">mix(res[name]</span><span class="s2">, </span><span class="s1">src[key][name]</span><span class="s2">, </span><span class="s1">innerShape)</span><span class="s2">;</span>
+                        <span class="s1">}</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+
+                <span class="s1">dest[key] = res</span><span class="s2">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s0">return </span><span class="s1">dest</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = (dest</span><span class="s2">, </span><span class="s1">src) =&gt; mix(dest</span><span class="s2">, </span><span class="s1">src</span><span class="s2">, </span><span class="s1">shape)</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

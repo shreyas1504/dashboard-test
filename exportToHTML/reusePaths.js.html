@@ -1,0 +1,192 @@
+<html>
+<head>
+<title>reusePaths.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a; font-style: italic;}
+.s1 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #cc7832; font-weight: bold;}
+.s6 { color: #6897bb;}
+.s7 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+reusePaths.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/**</span>
+ <span class="s0">* </span><span class="s1">@license</span>
+ <span class="s0">* The MIT License</span>
+ <span class="s0">*</span>
+ <span class="s0">* Copyright © 2012–2016 Kir Belevich</span>
+ <span class="s0">*</span>
+ <span class="s0">* Permission is hereby granted, free of charge, to any person</span>
+ <span class="s0">* obtaining a copy of this software and associated documentation</span>
+ <span class="s0">* files (the &quot;Software&quot;), to deal in the Software without</span>
+ <span class="s0">* restriction, including without limitation the rights to use,</span>
+ <span class="s0">* copy, modify, merge, publish, distribute, sublicense, and/or sell</span>
+ <span class="s0">* copies of the Software, and to permit persons to whom the</span>
+ <span class="s0">* Software is furnished to do so, subject to the following</span>
+ <span class="s0">* conditions:</span>
+ <span class="s0">*</span>
+ <span class="s0">* The above copyright notice and this permission notice shall be</span>
+ <span class="s0">* included in all copies or substantial portions of the Software.</span>
+ <span class="s0">*</span>
+ <span class="s0">* THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND,</span>
+ <span class="s0">* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES</span>
+ <span class="s0">* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND</span>
+ <span class="s0">* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT</span>
+ <span class="s0">* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,</span>
+ <span class="s0">* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING</span>
+ <span class="s0">* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR</span>
+ <span class="s0">* OTHER DEALINGS IN THE SOFTWARE.</span>
+ <span class="s0">*</span>
+ <span class="s0">* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
+ <span class="s0">*</span>
+ <span class="s0">* Лицензия MIT</span>
+ <span class="s0">*</span>
+ <span class="s0">* Copyright © 2012–2016 Кир Белевич</span>
+ <span class="s0">*</span>
+ <span class="s0">* Данная лицензия разрешает лицам, получившим копию</span>
+ <span class="s0">* данного</span>
+ <span class="s0">* программного обеспечения и сопутствующей</span>
+ <span class="s0">* документации</span>
+ <span class="s0">* (в дальнейшем именуемыми «Программное Обеспечение»),</span>
+ <span class="s0">* безвозмездно</span>
+ <span class="s0">* использовать Программное Обеспечение без</span>
+ <span class="s0">* ограничений, включая</span>
+ <span class="s0">* неограниченное право на использование, копирование,</span>
+ <span class="s0">* изменение,</span>
+ <span class="s0">* добавление, публикацию, распространение,</span>
+ <span class="s0">* сублицензирование</span>
+ <span class="s0">* и/или продажу копий Программного Обеспечения, также</span>
+ <span class="s0">* как и лицам,</span>
+ <span class="s0">* которым предоставляется данное Программное</span>
+ <span class="s0">* Обеспечение,</span>
+ <span class="s0">* при соблюдении следующих условий:</span>
+ <span class="s0">*</span>
+ <span class="s0">* Указанное выше уведомление об авторском праве и</span>
+ <span class="s0">* данные условия</span>
+ <span class="s0">* должны быть включены во все копии или значимые части</span>
+ <span class="s0">* данного</span>
+ <span class="s0">* Программного Обеспечения.</span>
+ <span class="s0">*</span>
+ <span class="s0">* ДАННОЕ ПРОГРАММНОЕ ОБЕСПЕЧЕНИЕ ПРЕДОСТАВЛЯЕТСЯ «КАК</span>
+ <span class="s0">* ЕСТЬ»,</span>
+ <span class="s0">* БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, ЯВНО ВЫРАЖЕННЫХ ИЛИ</span>
+ <span class="s0">* ПОДРАЗУМЕВАЕМЫХ,</span>
+ <span class="s0">* ВКЛЮЧАЯ, НО НЕ ОГРАНИЧИВАЯСЬ ГАРАНТИЯМИ ТОВАРНОЙ</span>
+ <span class="s0">* ПРИГОДНОСТИ,</span>
+ <span class="s0">* СООТВЕТСТВИЯ ПО ЕГО КОНКРЕТНОМУ НАЗНАЧЕНИЮ И</span>
+ <span class="s0">* ОТСУТСТВИЯ НАРУШЕНИЙ</span>
+ <span class="s0">* ПРАВ. НИ В КАКОМ СЛУЧАЕ АВТОРЫ ИЛИ ПРАВООБЛАДАТЕЛИ НЕ</span>
+ <span class="s0">* НЕСУТ</span>
+ <span class="s0">* ОТВЕТСТВЕННОСТИ ПО ИСКАМ О ВОЗМЕЩЕНИИ УЩЕРБА, УБЫТКОВ</span>
+ <span class="s0">* ИЛИ ДРУГИХ</span>
+ <span class="s0">* ТРЕБОВАНИЙ ПО ДЕЙСТВУЮЩИМ КОНТРАКТАМ, ДЕЛИКТАМ ИЛИ</span>
+ <span class="s0">* ИНОМУ,</span>
+ <span class="s0">* ВОЗНИКШИМ ИЗ, ИМЕЮЩИМ ПРИЧИНОЙ ИЛИ СВЯЗАННЫМ С</span>
+ <span class="s0">* ПРОГРАММНЫМ</span>
+ <span class="s0">* ОБЕСПЕЧЕНИЕМ ИЛИ ИСПОЛЬЗОВАНИЕМ ПРОГРАММНОГО</span>
+ <span class="s0">* ОБЕСПЕЧЕНИЯ</span>
+ <span class="s0">* ИЛИ ИНЫМИ ДЕЙСТВИЯМИ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ.</span>
+ <span class="s0">*/</span>
+
+<span class="s3">'use strict'</span><span class="s4">;</span>
+
+<span class="s5">var </span><span class="s2">JSAPI = require(</span><span class="s3">'../lib/svgo/jsAPI'</span><span class="s2">)</span><span class="s4">;</span>
+
+<span class="s2">exports.type = </span><span class="s3">'full'</span><span class="s4">;</span>
+
+<span class="s2">exports.active = </span><span class="s5">false</span><span class="s4">;</span>
+
+<span class="s2">exports.description = </span><span class="s3">'Finds &lt;path&gt; elements with the same d, fill, and ' </span><span class="s2">+</span>
+                      <span class="s3">'stroke, and converts them to &lt;use&gt; elements ' </span><span class="s2">+</span>
+                      <span class="s3">'referencing a single &lt;path&gt; def.'</span><span class="s4">;</span>
+
+<span class="s0">/**</span>
+ <span class="s0">* Finds &lt;path&gt; elements with the same d, fill, and stroke, and converts them to</span>
+ <span class="s0">* &lt;use&gt; elements referencing a single &lt;path&gt; def.</span>
+ <span class="s0">*</span>
+ <span class="s0">* </span><span class="s1">@author </span><span class="s0">Jacob Howcroft</span>
+ <span class="s0">*/</span>
+<span class="s2">exports.fn = </span><span class="s5">function</span><span class="s2">(data) {</span>
+  <span class="s5">const </span><span class="s2">seen = </span><span class="s5">new </span><span class="s2">Map()</span><span class="s4">;</span>
+  <span class="s5">let </span><span class="s2">count = </span><span class="s6">0</span><span class="s4">;</span>
+  <span class="s5">const </span><span class="s2">defs = []</span><span class="s4">;</span>
+  <span class="s2">traverse(data</span><span class="s4">, </span><span class="s2">item =&gt; {</span>
+    <span class="s5">if </span><span class="s2">(!item.isElem(</span><span class="s3">'path'</span><span class="s2">) || !item.hasAttr(</span><span class="s3">'d'</span><span class="s2">)) {</span>
+      <span class="s5">return</span><span class="s4">;</span>
+    <span class="s2">}</span>
+    <span class="s5">const </span><span class="s2">d = item.attr(</span><span class="s3">'d'</span><span class="s2">).value</span><span class="s4">;</span>
+    <span class="s5">const </span><span class="s2">fill = (item.hasAttr(</span><span class="s3">'fill'</span><span class="s2">) &amp;&amp; item.attr(</span><span class="s3">'fill'</span><span class="s2">).value) || </span><span class="s3">''</span><span class="s4">;</span>
+    <span class="s5">const </span><span class="s2">stroke = (item.hasAttr(</span><span class="s3">'stroke'</span><span class="s2">) &amp;&amp; item.attr(</span><span class="s3">'stroke'</span><span class="s2">).value) || </span><span class="s3">''</span><span class="s4">;</span>
+    <span class="s5">const </span><span class="s2">key = d + </span><span class="s3">';s:' </span><span class="s2">+ stroke + </span><span class="s3">';f:' </span><span class="s2">+ fill</span><span class="s4">;</span>
+    <span class="s5">const </span><span class="s2">hasSeen = seen.get(key)</span><span class="s4">;</span>
+    <span class="s5">if </span><span class="s2">(!hasSeen) {</span>
+      <span class="s2">seen.set(key</span><span class="s4">, </span><span class="s2">{elem: item</span><span class="s4">, </span><span class="s2">reused: </span><span class="s5">false</span><span class="s2">})</span><span class="s4">;</span>
+      <span class="s5">return</span><span class="s4">;</span>
+    <span class="s2">}</span>
+    <span class="s5">if </span><span class="s2">(!hasSeen.reused) {</span>
+      <span class="s2">hasSeen.reused = </span><span class="s5">true</span><span class="s4">;</span>
+      <span class="s5">if </span><span class="s2">(!hasSeen.elem.hasAttr(</span><span class="s3">'id'</span><span class="s2">)) {</span>
+        <span class="s2">hasSeen.elem.addAttr({name: </span><span class="s3">'id'</span><span class="s4">, </span><span class="s2">local: </span><span class="s3">'id'</span><span class="s4">,</span>
+                              <span class="s2">prefix: </span><span class="s3">''</span><span class="s4">, </span><span class="s2">value: </span><span class="s3">'reuse-' </span><span class="s2">+ (count++)})</span><span class="s4">;</span>
+      <span class="s2">}</span>
+      <span class="s2">defs.push(hasSeen.elem)</span><span class="s4">;</span>
+    <span class="s2">}</span>
+    <span class="s2">item = convertToUse(item</span><span class="s4">, </span><span class="s2">hasSeen.elem.attr(</span><span class="s3">'id'</span><span class="s2">).value)</span><span class="s4">;</span>
+  <span class="s2">})</span><span class="s4">;</span>
+  <span class="s5">const </span><span class="s2">defsTag = </span><span class="s5">new </span><span class="s2">JSAPI({</span>
+    <span class="s2">elem: </span><span class="s3">'defs'</span><span class="s4">, </span><span class="s2">prefix: </span><span class="s3">''</span><span class="s4">, </span><span class="s2">local: </span><span class="s3">'defs'</span><span class="s4">, </span><span class="s2">content: []</span><span class="s4">, </span><span class="s2">attrs: []}</span><span class="s4">, </span><span class="s2">data)</span><span class="s4">;</span>
+  <span class="s2">data.content[</span><span class="s6">0</span><span class="s2">].spliceContent(</span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s4">, </span><span class="s2">defsTag)</span><span class="s4">;</span>
+  <span class="s5">for </span><span class="s2">(</span><span class="s5">let </span><span class="s2">def of defs) {</span>
+    <span class="s7">// Remove class and style before copying to avoid circular refs in</span>
+    <span class="s7">// JSON.stringify. This is fine because we don't actually want class or</span>
+    <span class="s7">// style information to be copied.</span>
+    <span class="s5">const </span><span class="s2">style = def.style</span><span class="s4">;</span>
+    <span class="s5">const </span><span class="s2">defClass = def.class</span><span class="s4">;</span>
+    <span class="s5">delete </span><span class="s2">def.style</span><span class="s4">;</span>
+    <span class="s5">delete </span><span class="s2">def.class</span><span class="s4">;</span>
+    <span class="s5">const </span><span class="s2">defClone = def.clone()</span><span class="s4">;</span>
+    <span class="s2">def.style = style</span><span class="s4">;</span>
+    <span class="s2">def.class = defClass</span><span class="s4">;</span>
+    <span class="s2">defClone.removeAttr(</span><span class="s3">'transform'</span><span class="s2">)</span><span class="s4">;</span>
+    <span class="s2">defsTag.spliceContent(</span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s4">, </span><span class="s2">defClone)</span><span class="s4">;</span>
+    <span class="s7">// Convert the original def to a use so the first usage isn't duplicated.</span>
+    <span class="s2">def = convertToUse(def</span><span class="s4">, </span><span class="s2">defClone.attr(</span><span class="s3">'id'</span><span class="s2">).value)</span><span class="s4">;</span>
+    <span class="s2">def.removeAttr(</span><span class="s3">'id'</span><span class="s2">)</span><span class="s4">;</span>
+  <span class="s2">}</span>
+  <span class="s5">return </span><span class="s2">data</span><span class="s4">;</span>
+<span class="s2">}</span><span class="s4">;</span>
+
+<span class="s0">/** */</span>
+<span class="s5">function </span><span class="s2">convertToUse(item</span><span class="s4">, </span><span class="s2">href) {</span>
+  <span class="s2">item.renameElem(</span><span class="s3">'use'</span><span class="s2">)</span><span class="s4">;</span>
+  <span class="s2">item.removeAttr(</span><span class="s3">'d'</span><span class="s2">)</span><span class="s4">;</span>
+  <span class="s2">item.removeAttr(</span><span class="s3">'stroke'</span><span class="s2">)</span><span class="s4">;</span>
+  <span class="s2">item.removeAttr(</span><span class="s3">'fill'</span><span class="s2">)</span><span class="s4">;</span>
+  <span class="s2">item.addAttr({name: </span><span class="s3">'xlink:href'</span><span class="s4">, </span><span class="s2">local: </span><span class="s3">'xlink:href'</span><span class="s4">,</span>
+                <span class="s2">prefix: </span><span class="s3">'none'</span><span class="s4">, </span><span class="s2">value: </span><span class="s3">'#' </span><span class="s2">+ href})</span><span class="s4">;</span>
+  <span class="s5">delete </span><span class="s2">item.pathJS</span><span class="s4">;</span>
+  <span class="s5">return </span><span class="s2">item</span><span class="s4">;</span>
+<span class="s2">}</span>
+
+<span class="s0">/** */</span>
+<span class="s5">function </span><span class="s2">traverse(parent</span><span class="s4">, </span><span class="s2">callback) {</span>
+  <span class="s5">if </span><span class="s2">(parent.isEmpty()) {</span>
+    <span class="s5">return</span><span class="s4">;</span>
+  <span class="s2">}</span>
+  <span class="s5">for </span><span class="s2">(</span><span class="s5">let </span><span class="s2">child of parent.content) {</span>
+    <span class="s2">callback(child)</span><span class="s4">;</span>
+    <span class="s2">traverse(child</span><span class="s4">, </span><span class="s2">callback)</span><span class="s4">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

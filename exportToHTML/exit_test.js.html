@@ -1,0 +1,144 @@
+<html>
+<head>
+<title>exit_test.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #8a8a8a;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #808080;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+exit_test.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">/* 
+  ======== A Handy Little Nodeunit Reference ======== 
+  https://github.com/caolan/nodeunit 
+ 
+  Test methods: 
+    test.expect(numAssertions) 
+    test.done() 
+  Test assertions: 
+    test.ok(value, [message]) 
+    test.equal(actual, expected, [message]) 
+    test.notEqual(actual, expected, [message]) 
+    test.deepEqual(actual, expected, [message]) 
+    test.notDeepEqual(actual, expected, [message]) 
+    test.strictEqual(actual, expected, [message]) 
+    test.notStrictEqual(actual, expected, [message]) 
+    test.throws(block, [error], [message]) 
+    test.doesNotThrow(block, [error], [message]) 
+    test.ifError(value) 
+*/</span>
+
+<span class="s4">var </span><span class="s2">fs = require(</span><span class="s0">'fs'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s4">var </span><span class="s2">exec = require(</span><span class="s0">'child_process'</span><span class="s2">).exec</span><span class="s1">;</span>
+
+<span class="s4">var </span><span class="s2">_which = require(</span><span class="s0">'which'</span><span class="s2">).sync</span><span class="s1">;</span>
+<span class="s4">function </span><span class="s2">which(command) {</span>
+  <span class="s4">try </span><span class="s2">{</span>
+    <span class="s2">_which(command)</span><span class="s1">;</span>
+    <span class="s4">return </span><span class="s2">command</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s4">catch </span><span class="s2">(err) {</span>
+    <span class="s4">return false</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s5">// Look for grep first (any OS). If not found (but on Windows) look for find,</span>
+<span class="s5">// which is Windows' horribly crippled grep alternative.</span>
+<span class="s4">var </span><span class="s2">grep = which(</span><span class="s0">'grep'</span><span class="s2">) || process.platform === </span><span class="s0">'win32' </span><span class="s2">&amp;&amp; which(</span><span class="s0">'find'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s2">exports[</span><span class="s0">'exit'</span><span class="s2">] = {</span>
+  <span class="s2">setUp: </span><span class="s4">function</span><span class="s2">(done) {</span>
+    <span class="s4">this</span><span class="s2">.origCwd = process.cwd()</span><span class="s1">;</span>
+    <span class="s2">process.chdir(</span><span class="s0">'test/fixtures'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">done()</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">,</span>
+  <span class="s2">tearDown: </span><span class="s4">function</span><span class="s2">(done) {</span>
+    <span class="s2">process.chdir(</span><span class="s4">this</span><span class="s2">.origCwd)</span><span class="s1">;</span>
+    <span class="s2">done()</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">,</span>
+  <span class="s0">'grep'</span><span class="s2">: </span><span class="s4">function</span><span class="s2">(test) {</span>
+    <span class="s2">test.expect(</span><span class="s6">1</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s5">// Many unit tests depend on this.</span>
+    <span class="s2">test.ok(grep</span><span class="s1">, </span><span class="s0">'A suitable &quot;grep&quot; or &quot;find&quot; program was not found in the PATH.'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">test.done()</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">,</span>
+  <span class="s5">// The rest of the tests are built dynamically, to keep things sane.</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s5">// A few helper functions.</span>
+<span class="s4">function </span><span class="s2">normalizeLineEndings(s) {</span>
+  <span class="s4">return </span><span class="s2">s.replace(</span><span class="s6">/\r?\n/g</span><span class="s1">, </span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s5">// Capture command output, normalizing captured stdout to unix file endings.</span>
+<span class="s4">function </span><span class="s2">run(command</span><span class="s1">, </span><span class="s2">callback) {</span>
+  <span class="s2">exec(command</span><span class="s1">, </span><span class="s4">function</span><span class="s2">(error</span><span class="s1">, </span><span class="s2">stdout) {</span>
+    <span class="s2">callback(error ? error.code : </span><span class="s6">0</span><span class="s1">, </span><span class="s2">normalizeLineEndings(stdout))</span><span class="s1">;</span>
+  <span class="s2">})</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s5">// Read a fixture file, normalizing file contents to unix file endings.</span>
+<span class="s4">function </span><span class="s2">fixture(filename) {</span>
+  <span class="s4">return </span><span class="s2">normalizeLineEndings(String(fs.readFileSync(filename)))</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s4">function </span><span class="s2">buildTests() {</span>
+  <span class="s5">// Build individual unit tests for command output.</span>
+  <span class="s4">var </span><span class="s2">counts = [</span><span class="s6">10</span><span class="s1">, </span><span class="s6">100</span><span class="s1">, </span><span class="s6">1000</span><span class="s2">]</span><span class="s1">;</span>
+  <span class="s4">var </span><span class="s2">outputs = [</span><span class="s0">' stdout stderr'</span><span class="s1">, </span><span class="s0">' stdout'</span><span class="s1">, </span><span class="s0">' stderr'</span><span class="s2">]</span><span class="s1">;</span>
+  <span class="s4">var </span><span class="s2">pipes = [</span><span class="s0">''</span><span class="s1">, </span><span class="s0">' | ' </span><span class="s2">+ grep + </span><span class="s0">' &quot;std&quot;'</span><span class="s2">]</span><span class="s1">;</span>
+  <span class="s2">counts.forEach(</span><span class="s4">function</span><span class="s2">(count) {</span>
+    <span class="s2">outputs.forEach(</span><span class="s4">function</span><span class="s2">(output) {</span>
+      <span class="s2">pipes.forEach(</span><span class="s4">function</span><span class="s2">(pipe) {</span>
+        <span class="s4">var </span><span class="s2">command = </span><span class="s0">'node log.js 0 ' </span><span class="s2">+ count + output + </span><span class="s0">' 2&gt;&amp;1' </span><span class="s2">+ pipe</span><span class="s1">;</span>
+        <span class="s2">exports[</span><span class="s0">'exit'</span><span class="s2">][</span><span class="s0">'output (' </span><span class="s2">+ command + </span><span class="s0">')'</span><span class="s2">] = </span><span class="s4">function</span><span class="s2">(test) {</span>
+          <span class="s2">test.expect(</span><span class="s6">2</span><span class="s2">)</span><span class="s1">;</span>
+          <span class="s2">run(command</span><span class="s1">, </span><span class="s4">function</span><span class="s2">(code</span><span class="s1">, </span><span class="s2">actual) {</span>
+            <span class="s4">var </span><span class="s2">expected = fixture(count + output.replace(</span><span class="s6">/ /g</span><span class="s1">, </span><span class="s0">'-'</span><span class="s2">) + </span><span class="s0">'.txt'</span><span class="s2">)</span><span class="s1">;</span>
+            <span class="s5">// Sometimes, the actual file lines are out of order on Windows.</span>
+            <span class="s5">// But since the point of this lib is to drain the buffer and not</span>
+            <span class="s5">// guarantee output order, we only test the length.</span>
+            <span class="s2">test.equal(actual.length</span><span class="s1">, </span><span class="s2">expected.length</span><span class="s1">, </span><span class="s0">'should be the same length.'</span><span class="s2">)</span><span class="s1">;</span>
+            <span class="s5">// The &quot;fail&quot; lines in log.js should NOT be output!</span>
+            <span class="s2">test.ok(actual.indexOf(</span><span class="s0">'fail'</span><span class="s2">) === -</span><span class="s6">1</span><span class="s1">, </span><span class="s0">'should not output after exit is called.'</span><span class="s2">)</span><span class="s1">;</span>
+            <span class="s2">test.done()</span><span class="s1">;</span>
+          <span class="s2">})</span><span class="s1">;</span>
+        <span class="s2">}</span><span class="s1">;</span>
+      <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">})</span><span class="s1">;</span>
+
+  <span class="s5">// Build individual unit tests for exit codes.</span>
+  <span class="s4">var </span><span class="s2">codes = [</span><span class="s6">0</span><span class="s1">, </span><span class="s6">1</span><span class="s1">, </span><span class="s6">123</span><span class="s2">]</span><span class="s1">;</span>
+  <span class="s2">codes.forEach(</span><span class="s4">function</span><span class="s2">(code) {</span>
+    <span class="s4">var </span><span class="s2">command = </span><span class="s0">'node log.js ' </span><span class="s2">+ code + </span><span class="s0">' 10 stdout stderr'</span><span class="s1">;</span>
+    <span class="s2">exports[</span><span class="s0">'exit'</span><span class="s2">][</span><span class="s0">'exit code (' </span><span class="s2">+ command + </span><span class="s0">')'</span><span class="s2">] = </span><span class="s4">function</span><span class="s2">(test) {</span>
+      <span class="s2">test.expect(</span><span class="s6">1</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">run(command</span><span class="s1">, </span><span class="s4">function</span><span class="s2">(actual) {</span>
+        <span class="s5">// The specified exit code should be passed through.</span>
+        <span class="s2">test.equal(actual</span><span class="s1">, </span><span class="s2">code</span><span class="s1">, </span><span class="s0">'should exit with ' </span><span class="s2">+ code + </span><span class="s0">' error code.'</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">test.done()</span><span class="s1">;</span>
+      <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">;</span>
+  <span class="s2">})</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s5">// Don't bother building tests if grep wasn't found, otherwise everything will</span>
+<span class="s5">// fail and the error will get lost.</span>
+<span class="s4">if </span><span class="s2">(grep) {</span>
+  <span class="s2">buildTests()</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

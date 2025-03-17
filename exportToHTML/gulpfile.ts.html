@@ -1,0 +1,117 @@
+<html>
+<head>
+<title>gulpfile.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+gulpfile.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">* as buildTools from </span><span class="s2">&quot;turbo-gulp&quot;</span><span class="s3">;</span>
+<span class="s0">import </span><span class="s1">{ LibTarget</span><span class="s3">, </span><span class="s1">registerLibTasks } from </span><span class="s2">&quot;turbo-gulp/targets/lib&quot;</span><span class="s3">;</span>
+<span class="s0">import </span><span class="s1">{ MochaTarget</span><span class="s3">, </span><span class="s1">registerMochaTasks } from </span><span class="s2">&quot;turbo-gulp/targets/mocha&quot;</span><span class="s3">;</span>
+
+<span class="s0">import </span><span class="s1">gulp from </span><span class="s2">&quot;gulp&quot;</span><span class="s3">;</span>
+<span class="s0">import </span><span class="s1">minimist from </span><span class="s2">&quot;minimist&quot;</span><span class="s3">;</span>
+
+<span class="s0">interface </span><span class="s1">Options {</span>
+  <span class="s1">devDist?: string</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">const </span><span class="s1">options: Options &amp; minimist.ParsedArgs = minimist(process.argv.slice(</span><span class="s4">2</span><span class="s1">)</span><span class="s3">, </span><span class="s1">{</span>
+  <span class="s1">string: [</span><span class="s2">&quot;devDist&quot;</span><span class="s1">]</span><span class="s3">,</span>
+  <span class="s0">default</span><span class="s1">: {devDist: undefined}</span><span class="s3">,</span>
+  <span class="s1">alias: {devDist: </span><span class="s2">&quot;dev-dist&quot;</span><span class="s1">}</span><span class="s3">,</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s0">const </span><span class="s1">project: buildTools.Project = {</span>
+  <span class="s1">root: __dirname</span><span class="s3">,</span>
+  <span class="s1">packageJson: </span><span class="s2">&quot;package.json&quot;</span><span class="s3">,</span>
+  <span class="s1">buildDir: </span><span class="s2">&quot;build&quot;</span><span class="s3">,</span>
+  <span class="s1">distDir: </span><span class="s2">&quot;dist&quot;</span><span class="s3">,</span>
+  <span class="s1">srcDir: </span><span class="s2">&quot;src&quot;</span><span class="s3">,</span>
+  <span class="s1">typescript: {}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">const </span><span class="s1">lib: LibTarget = {</span>
+  <span class="s1">project</span><span class="s3">,</span>
+  <span class="s1">name: </span><span class="s2">&quot;lib&quot;</span><span class="s3">,</span>
+  <span class="s1">srcDir: </span><span class="s2">&quot;src/lib&quot;</span><span class="s3">,</span>
+  <span class="s1">scripts: [</span><span class="s2">&quot;**/*.ts&quot;</span><span class="s1">]</span><span class="s3">,</span>
+  <span class="s1">mainModule: </span><span class="s2">&quot;index&quot;</span><span class="s3">,</span>
+  <span class="s1">dist: {</span>
+    <span class="s1">packageJsonMap: (old: buildTools.PackageJson): buildTools.PackageJson =&gt; {</span>
+      <span class="s0">const </span><span class="s1">version: string = options.devDist !== undefined ? </span><span class="s2">`</span><span class="s1">${old.version}</span><span class="s2">-build.</span><span class="s1">${options.devDist}</span><span class="s2">` </span><span class="s1">: old.version</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">&lt;any&gt; {...old</span><span class="s3">, </span><span class="s1">version</span><span class="s3">, </span><span class="s1">scripts: undefined</span><span class="s3">, </span><span class="s0">private</span><span class="s1">: </span><span class="s0">false</span><span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">npmPublish: {</span>
+      <span class="s1">tag: options.devDist !== undefined ? </span><span class="s2">&quot;next&quot; </span><span class="s1">: </span><span class="s2">&quot;latest&quot;</span><span class="s3">,</span>
+    <span class="s1">}</span><span class="s3">,</span>
+  <span class="s1">}</span><span class="s3">,</span>
+  <span class="s1">tscOptions: {</span>
+    <span class="s1">declaration: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s1">skipLibCheck: </span><span class="s0">true</span><span class="s3">,</span>
+  <span class="s1">}</span><span class="s3">,</span>
+  <span class="s1">typedoc: {</span>
+    <span class="s1">dir: </span><span class="s2">&quot;typedoc&quot;</span><span class="s3">,</span>
+    <span class="s1">name: </span><span class="s2">&quot;Helpers for V8 coverage files&quot;</span><span class="s3">,</span>
+    <span class="s1">deploy: {</span>
+      <span class="s1">repository: </span><span class="s2">&quot;git@github.com:demurgos/v8-coverage.git&quot;</span><span class="s3">,</span>
+      <span class="s1">branch: </span><span class="s2">&quot;gh-pages&quot;</span><span class="s3">,</span>
+    <span class="s1">}</span><span class="s3">,</span>
+  <span class="s1">}</span><span class="s3">,</span>
+  <span class="s1">copy: [</span>
+    <span class="s1">{</span>
+      <span class="s1">files: [</span><span class="s2">&quot;**/*.json&quot;</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s1">}</span><span class="s3">,</span>
+  <span class="s1">]</span><span class="s3">,</span>
+  <span class="s1">clean: {</span>
+    <span class="s1">dirs: [</span><span class="s2">&quot;build/lib&quot;</span><span class="s3">, </span><span class="s2">&quot;dist/lib&quot;</span><span class="s1">]</span><span class="s3">,</span>
+  <span class="s1">}</span><span class="s3">,</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">const </span><span class="s1">test: MochaTarget = {</span>
+  <span class="s1">project</span><span class="s3">,</span>
+  <span class="s1">name: </span><span class="s2">&quot;test&quot;</span><span class="s3">,</span>
+  <span class="s1">srcDir: </span><span class="s2">&quot;src&quot;</span><span class="s3">,</span>
+  <span class="s1">scripts: [</span><span class="s2">&quot;test/**/*.ts&quot;</span><span class="s3">, </span><span class="s2">&quot;lib/**/*.ts&quot;</span><span class="s3">, </span><span class="s2">&quot;e2e/*/*.ts&quot;</span><span class="s1">]</span><span class="s3">,</span>
+  <span class="s1">customTypingsDir: </span><span class="s2">&quot;src/custom-typings&quot;</span><span class="s3">,</span>
+  <span class="s1">tscOptions: {</span>
+    <span class="s1">allowSyntheticDefaultImports: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s1">esModuleInterop: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s1">skipLibCheck: </span><span class="s0">true</span><span class="s3">,</span>
+  <span class="s1">}</span><span class="s3">,</span>
+  <span class="s5">// generateTestMain: true,</span>
+  <span class="s1">copy: [</span>
+    <span class="s1">{</span>
+      <span class="s1">src: </span><span class="s2">&quot;e2e&quot;</span><span class="s3">,</span>
+      <span class="s5">// &lt;project-name&gt;/(project|test-resources)/&lt;any&gt;</span>
+      <span class="s1">files: [</span><span class="s2">&quot;*/project/**/*&quot;</span><span class="s3">, </span><span class="s2">&quot;*/test-resources/**/*&quot;</span><span class="s1">]</span><span class="s3">,</span>
+      <span class="s1">dest: </span><span class="s2">&quot;e2e&quot;</span><span class="s3">,</span>
+    <span class="s1">}</span><span class="s3">,</span>
+  <span class="s1">]</span><span class="s3">,</span>
+  <span class="s1">clean: {</span>
+    <span class="s1">dirs: [</span><span class="s2">&quot;build/test&quot;</span><span class="s1">]</span><span class="s3">,</span>
+  <span class="s1">}</span><span class="s3">,</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">const </span><span class="s1">libTasks: any = registerLibTasks(gulp</span><span class="s3">, </span><span class="s1">lib)</span><span class="s3">;</span>
+<span class="s1">registerMochaTasks(gulp</span><span class="s3">, </span><span class="s1">test)</span><span class="s3">;</span>
+<span class="s1">buildTools.projectTasks.registerAll(gulp</span><span class="s3">, </span><span class="s1">project)</span><span class="s3">;</span>
+
+<span class="s1">gulp.task(</span><span class="s2">&quot;all:tsconfig.json&quot;</span><span class="s3">, </span><span class="s1">gulp.parallel(</span><span class="s2">&quot;lib:tsconfig.json&quot;</span><span class="s3">, </span><span class="s2">&quot;test:tsconfig.json&quot;</span><span class="s1">))</span><span class="s3">;</span>
+<span class="s1">gulp.task(</span><span class="s2">&quot;dist&quot;</span><span class="s3">, </span><span class="s1">libTasks.dist)</span><span class="s3">;</span>
+<span class="s1">gulp.task(</span><span class="s2">&quot;default&quot;</span><span class="s3">, </span><span class="s1">libTasks.dist)</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

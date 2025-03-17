@@ -1,0 +1,227 @@
+<html>
+<head>
+<title>README.ru.md</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #287bde;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #a782bb; font-style: italic;}
+.s5 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+README.ru.md</font>
+</center></td></tr></table>
+<pre><span class="s0">[</span><span class="s1">english</span><span class="s0">](</span><span class="s2">https://github.com/svg/svgo/blob/master/README.md</span><span class="s0">) </span><span class="s1">| </span><span class="s0">**</span><span class="s1">русский</span><span class="s0">**</span>
+<span class="s3">- - -</span>
+
+<span class="s0">&lt;img src=&quot;https://svg.github.io/svgo-logo.svg&quot; width=&quot;200&quot; height=&quot;200&quot; alt=&quot;logo&quot;/&gt;</span>
+
+<span class="s3">## </span><span class="s1">SVGO </span><span class="s0">[![</span><span class="s1">NPM version</span><span class="s0">](</span><span class="s2">https://badge.fury.io/js/svgo.svg</span><span class="s0">)](</span><span class="s2">https://npmjs.org/package/svgo</span><span class="s0">) [![</span><span class="s1">Build Status</span><span class="s0">](</span><span class="s2">https://secure.travis-ci.org/svg/svgo.svg</span><span class="s0">)](</span><span class="s2">https://travis-ci.org/svg/svgo</span><span class="s0">) [![</span><span class="s1">Coverage Status</span><span class="s0">](</span><span class="s2">https://img.shields.io/coveralls/svg/svgo.svg</span><span class="s0">)](</span><span class="s2">https://coveralls.io/r/svg/svgo?branch=master</span><span class="s0">)</span>
+
+<span class="s0">**</span><span class="s1">SVG</span><span class="s0">** **</span><span class="s1">O</span><span class="s0">**</span><span class="s1">ptimizer – это инструмент для оптимизации векторной графики в формате SVG, написанный на Node.js.</span>
+<span class="s0">![](</span><span class="s2">https://mc.yandex.ru/watch/18431326</span><span class="s0">)</span>
+
+<span class="s3">## </span><span class="s1">Зачем?</span>
+
+<span class="s1">SVG-файлы, особенно экспортированные из редакторов, содержат много избыточной и бесполезной информации, комментариев, скрытых элементов, неоптимальные или стандартные значения и другой мусор, удаление которого безопасно и не влияет на конечный вид изображения.</span>
+
+<span class="s3">## </span><span class="s1">Возможности</span>
+
+<span class="s1">SVGO имеет расширяемую архитектуру, в которой почти каждая оптимизация является отдельным расширением.</span>
+
+<span class="s1">Что у нас есть</span><span class="s0">:</span>
+
+<span class="s3">| </span><span class="s0">Plugin </span><span class="s3">| </span><span class="s0">Description </span><span class="s3">| </span><span class="s0">Default </span><span class="s3">|</span>
+<span class="s3">| ------ | ----------- | ------- |</span>
+<span class="s3">| </span><span class="s0">[cleanupAttrs](https://github.com/svg/svgo/blob/master/plugins/cleanupAttrs.js) </span><span class="s3">| </span><span class="s0">удаление переносов строк и лишних пробелов </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[inlineStyles](https://github.com/svg/svgo/blob/master/plugins/inlineStyles.js) </span><span class="s3">| </span><span class="s0">перенос стилей из элементов `&lt;style&gt;` в атрибуты `style` </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeDoctype](https://github.com/svg/svgo/blob/master/plugins/removeDoctype.js) </span><span class="s3">| </span><span class="s0">удаление doctype </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeXMLProcInst](https://github.com/svg/svgo/blob/master/plugins/removeXMLProcInst.js) </span><span class="s3">| </span><span class="s0">удаление XML-инструкций </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeComments](https://github.com/svg/svgo/blob/master/plugins/removeComments.js) </span><span class="s3">| </span><span class="s0">удаление комментариев </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeMetadata](https://github.com/svg/svgo/blob/master/plugins/removeMetadata.js) </span><span class="s3">| </span><span class="s0">удаление `&lt;metadata&gt;` </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeTitle](https://github.com/svg/svgo/blob/master/plugins/removeTitle.js) </span><span class="s3">| </span><span class="s0">удаление `&lt;title&gt;` </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeDesc](https://github.com/svg/svgo/blob/master/plugins/removeDesc.js) </span><span class="s3">| </span><span class="s0">удаление `&lt;desc&gt;` </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeUselessDefs](https://github.com/svg/svgo/blob/master/plugins/removeUselessDefs.js) </span><span class="s3">| </span><span class="s0">удаление элементов в `&lt;defs&gt;` без `id` </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeXMLNS](https://github.com/svg/svgo/blob/master/plugins/removeXMLNS.js) </span><span class="s3">| </span><span class="s0">удаление атрибута xmlns (для заинлайненных svg) </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeEditorsNSData](https://github.com/svg/svgo/blob/master/plugins/removeEditorsNSData.js) </span><span class="s3">| </span><span class="s0">удаление пространств имён различных редакторов, их элементов и атрибутов </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeEmptyAttrs](https://github.com/svg/svgo/blob/master/plugins/removeEmptyAttrs.js) </span><span class="s3">| </span><span class="s0">удаление пустых атрибутов </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeHiddenElems](https://github.com/svg/svgo/blob/master/plugins/removeHiddenElems.js) </span><span class="s3">| </span><span class="s0">удаление скрытых элементов </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeEmptyText](https://github.com/svg/svgo/blob/master/plugins/removeEmptyText.js) </span><span class="s3">| </span><span class="s0">удаление пустых текстовых элементов </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeEmptyContainers](https://github.com/svg/svgo/blob/master/plugins/removeEmptyContainers.js) </span><span class="s3">| </span><span class="s0">удаление пустых элементов-контейнеров </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeViewBox](https://github.com/svg/svgo/blob/master/plugins/removeViewBox.js) </span><span class="s3">| </span><span class="s0">удаление атрибута `viewBox`, когда это возможно </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[cleanupEnableBackground](https://github.com/svg/svgo/blob/master/plugins/cleanupEnableBackground.js) </span><span class="s3">| </span><span class="s0">удаление или оптимизация атрибута `enable-background`, когда это возможно </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[minifyStyles](https://github.com/svg/svgo/blob/master/plugins/minifyStyles.js) </span><span class="s3">| </span><span class="s0">уменьшает содержимое элементов `&lt;style&gt;` с помощью [CSSO](https://github.com/css/csso). </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[convertStyleToAttrs](https://github.com/svg/svgo/blob/master/plugins/convertStyleToAttrs.js) </span><span class="s3">| </span><span class="s0">конвертирование стилей в атрибуте `style` в отдельные svg-атрибуты </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[convertColors](https://github.com/svg/svgo/blob/master/plugins/convertColors.js) </span><span class="s3">| </span><span class="s0">конвертирование цветовых значений: из `rgb()` в `#rrggbb`, из `#rrggbb` в `#rgb` </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[convertPathData](https://github.com/svg/svgo/blob/master/plugins/convertPathData.js) </span><span class="s3">| </span><span class="s0">конвертирование данных Path в относительные или абсолютные координаты, смотря что  \|короче; конвертирование одних типов сегментов в другие; удаление ненужных разделителей; умное округление и тому подобное </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[convertTransform](https://github.com/svg/svgo/blob/master/plugins/convertTransform.js) </span><span class="s3">| </span><span class="s0">схлопывание нескольких трансформаций в одну, конвертирование матриц в короткие алиасы  \|и многое другое </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeUnknownsAndDefaults](https://github.com/svg/svgo/blob/master/plugins/removeUnknownsAndDefaults.js) </span><span class="s3">| </span><span class="s0">удаление неизвестных элементов, контента и атрибутов </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeNonInheritableGroupAttrs](https://github.com/svg/svgo/blob/master/plugins/removeNonInheritableGroupAttrs.js) </span><span class="s3">| </span><span class="s0">удаление ненаследуемых &quot;презентационных&quot; атрибутов групп </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeUselessStrokeAndFill](https://github.com/svg/svgo/blob/master/plugins/removeUselessStrokeAndFill.js) </span><span class="s3">| </span><span class="s0">удаление неиспользуемых атрибутов stroke-* и fill-* </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeUnusedNS](https://github.com/svg/svgo/blob/master/plugins/removeUnusedNS.js) </span><span class="s3">| </span><span class="s0">удаление  деклараций неиспользуемых пространств имён </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[prefixIds](https://github.com/svg/svgo/blob/master/plugins/prefixIds.js) </span><span class="s3">| </span><span class="s0">добавляет префикс в ID или классы в виде имени файла или произвольной строки </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[cleanupIDs](https://github.com/svg/svgo/blob/master/plugins/cleanupIDs.js) </span><span class="s3">| </span><span class="s0">удаление неиспользуемых и сокращение используемых ID </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[cleanupNumericValues](https://github.com/svg/svgo/blob/master/plugins/cleanupNumericValues.js) </span><span class="s3">| </span><span class="s0">округление дробных чисел до заданной точности, удаление `px` как единицы  \|измерения по-умолчанию </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[cleanupListOfValues](https://github.com/svg/svgo/blob/master/plugins/cleanupListOfValues.js) </span><span class="s3">| </span><span class="s0">округление числовых значений в атрибутах со списком чисел, таких как `viewBox` \|или `enableBackground` </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[moveElemsAttrsToGroup](https://github.com/svg/svgo/blob/master/plugins/moveElemsAttrsToGroup.js) </span><span class="s3">| </span><span class="s0">перемещение совпадающих атрибутов у всех элементов внутри группы `&lt;g&gt;` </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[moveGroupAttrsToElems](https://github.com/svg/svgo/blob/master/plugins/moveGroupAttrsToElems.js) </span><span class="s3">| </span><span class="s0">перемещение некоторых атрибутов группы на элементы внутри </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[collapseGroups](https://github.com/svg/svgo/blob/master/plugins/collapseGroups.js) </span><span class="s3">| </span><span class="s0">схлопывание бесполезных групп `&lt;g&gt;` </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeRasterImages](https://github.com/svg/svgo/blob/master/plugins/removeRasterImages.js) </span><span class="s3">| </span><span class="s0">удаление растровых изображений </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[mergePaths](https://github.com/svg/svgo/blob/master/plugins/mergePaths.js) </span><span class="s3">| </span><span class="s0">склеивание нескольких Path в одну кривую </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[convertShapeToPath](https://github.com/svg/svgo/blob/master/plugins/convertShapeToPath.js) </span><span class="s3">| </span><span class="s0">конвертирование простых форм в Path </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[convertEllipseToCircle](https://github.com/svg/svgo/blob/master/plugins/convertEllipseToCircle.js) </span><span class="s3">| </span><span class="s0">конвертирование вырожденного эллипса `&lt;ellipse&gt;` в круг `&lt;circle&gt;` </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[sortAttrs](https://github.com/svg/svgo/blob/master/plugins/sortAttrs.js) </span><span class="s3">| </span><span class="s0">сортировка атрибутов элементов для удобочитаемости </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[sortDefsChildren](https://github.com/svg/svgo/blob/master/plugins/sortDefsChildren.js) </span><span class="s3">| </span><span class="s0">сортировка детей `&lt;defs&gt;` для лучшей компрессии </span><span class="s3">| </span><span class="s0">`включен` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeDimensions](https://github.com/svg/svgo/blob/master/plugins/removeDimensions.js) </span><span class="s3">| </span><span class="s0">удаляет атрибуты width/height при наличии viewBox (противоречит removeViewBox — плагин должен быть выключен) </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeAttrs](https://github.com/svg/svgo/blob/master/plugins/removeAttrs.js) </span><span class="s3">| </span><span class="s0">удаляет атрибуты по указанному паттерну </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeAttributesBySelector](https://github.com/svg/svgo/blob/master/plugins/removeAttributesBySelector.js) </span><span class="s3">| </span><span class="s0">удаляет атрибуты по CSS-селектору </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeElementsByAttr](https://github.com/svg/svgo/blob/master/plugins/removeElementsByAttr.js) </span><span class="s3">| </span><span class="s0">удаляет элементы по указанным ID или классам </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[addClassesToSVGElement](https://github.com/svg/svgo/blob/master/plugins/addClassesToSVGElement.js) </span><span class="s3">| </span><span class="s0">добавляет имена классов корневому элементу `&lt;svg&gt;` </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[addAttributesToSVGElement](https://github.com/svg/svgo/blob/master/plugins/addAttributesToSVGElement.js) </span><span class="s3">| </span><span class="s0">добавляет атрибуты корневому элементу `&lt;svg&gt;` </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeOffCanvasPaths](https://github.com/svg/svgo/blob/master/plugins/removeOffCanvasPaths.js) </span><span class="s3">| </span><span class="s0">удаляет элементы вне отрисовываемой области </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeStyleElement](https://github.com/svg/svgo/blob/master/plugins/removeStyleElement.js) </span><span class="s3">| </span><span class="s0">удаляет элементы `&lt;style&gt;` </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[removeScriptElement](https://github.com/svg/svgo/blob/master/plugins/removeScriptElement.js) </span><span class="s3">| </span><span class="s0">удаляет элементы `&lt;script&gt;` </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+<span class="s3">| </span><span class="s0">[reusePaths](https://github.com/svg/svgo/blob/master/plugins/reusePaths.js) </span><span class="s3">| </span><span class="s0">Заменяет дублирующиеся элементы &lt;path&gt; ссылками &lt;use&gt; </span><span class="s3">| </span><span class="s0">`выключено` </span><span class="s3">|</span>
+
+<span class="s1">Хотите узнать принципы работы и как написать свой плагин? </span><span class="s0">[</span><span class="s1">Конечно же, да</span><span class="s0">!](</span><span class="s2">https://github.com/svg/svgo/blob/master/docs/how-it-works/ru.md</span><span class="s0">)</span>
+
+
+<span class="s3">## </span><span class="s1">Как использовать</span>
+
+<span class="s3">```</span><span class="s4">sh</span>
+<span class="s5">$ [sudo] npm install -g svgo</span>
+<span class="s3">```</span>
+
+<span class="s3">## </span><span class="s1">Выполнение</span><span class="s0">:</span>
+
+<span class="s3">### </span><span class="s1">Командная строка</span>
+
+<span class="s3">```</span>
+<span class="s5">Запуск:</span>
+  <span class="s5">svgo [OPTIONS] [ARGS]</span>
+
+<span class="s5">Параметры:</span>
+  <span class="s5">-h, --help : Помощь</span>
+  <span class="s5">-v, --version : Версия программы</span>
+  <span class="s5">-i INPUT, --input=INPUT : Входной файл, &quot;-&quot; для STDIN</span>
+  <span class="s5">-s STRING, --string=STRING : Входная строка SVG</span>
+  <span class="s5">-f FOLDER, --folder=FOLDER : Входная папка, оптимизирует и перезаписывает все файлы *.svg</span>
+  <span class="s5">-o OUTPUT, --output=OUTPUT : Выходной файл или папка (совпадает с входным по умолчанию), &quot;-&quot; для STDOUT</span>
+  <span class="s5">-p PRECISION, --precision=PRECISION : Число цифр после запятой, переопределяет параметры плагинов</span>
+  <span class="s5">--config=CONFIG : Файл конфигурации (или строка JSON) для расширения и замены настроек</span>
+  <span class="s5">--disable=PLUGIN : Выключение плагина по имени, &quot;--disable=PLUGIN1,PLUGIN2&quot; для отключения нескольких плагинов</span>
+  <span class="s5">--enable=PLUGIN : Включение плагина по имени, &quot;--enable=PLUGIN3,PLUGIN4&quot; для отключения нескольких плагинов</span>
+  <span class="s5">--datauri=DATAURI : Результат в виде строки Data URI (base64, URI encoded или unencoded)</span>
+  <span class="s5">--multipass : Оптимизация в несколько проходов для применения всех возможных оптимизаций</span>
+  <span class="s5">--pretty : Удобочитаемое форматирование SVG</span>
+  <span class="s5">--indent=INDENT : Размер отступа для удобочитаемого форматирования</span>
+  <span class="s5">-r, --recursive : Совместно с '-f'. Рекурсивно обрабатывать *.svg файлы в папках.</span>
+  <span class="s5">-q, --quiet : Подавляет вывод информации, выводятся только сообщения об ошибках</span>
+  <span class="s5">--show-plugins : Доступные плагины</span>
+
+<span class="s5">Аргументы:</span>
+  <span class="s5">INPUT : Аналогично --input</span>
+<span class="s3">```</span>
+
+<span class="s3">* </span><span class="s1">с файлами</span><span class="s0">:</span>
+
+    <span class="s3">```</span><span class="s4">sh</span>
+    <span class="s5">$ svgo test.svg</span>
+    <span class="s3">```</span>
+
+    <span class="s1">или</span><span class="s0">:</span>
+
+    <span class="s3">```</span><span class="s4">sh</span>
+    <span class="s5">$ svgo *.svg</span>
+    <span class="s3">```</span>
+
+    <span class="s3">```</span><span class="s4">sh</span>
+    <span class="s5">$ svgo test.svg -o test.min.svg</span>
+    <span class="s3">```</span>
+
+    <span class="s3">```</span><span class="s4">sh</span>
+    <span class="s5">$ svgo test.svg other.svg third.svg</span>
+    <span class="s3">```</span>
+
+    <span class="s3">```</span><span class="s4">sh</span>
+    <span class="s5">$ svgo test.svg other.svg third.svg -o test.min.svg -o other.min.svg -o third.min.svg</span>
+    <span class="s3">```</span>
+
+<span class="s3">* </span><span class="s1">со STDIN / STDOUT</span><span class="s0">:</span>
+
+    <span class="s3">```</span><span class="s4">sh</span>
+    <span class="s5">$ cat test.svg | svgo -i - -o - &gt; test.min.svg</span>
+    <span class="s3">```</span>
+
+<span class="s3">* </span><span class="s1">с папками</span>
+
+    <span class="s3">```</span><span class="s4">sh</span>
+    <span class="s5">$ svgo -f ../path/to/folder/with/svg/files</span>
+    <span class="s3">```</span>
+
+    <span class="s1">или</span><span class="s0">:</span>
+
+    <span class="s3">```</span><span class="s4">sh</span>
+    <span class="s5">$ svgo -f ../path/to/folder/with/svg/files -o ../path/to/folder/with/svg/output</span>
+    <span class="s3">```</span>
+
+    <span class="s3">```</span><span class="s4">sh</span>
+    <span class="s5">$ svgo *.svg -o ../path/to/folder/with/svg/output</span>
+    <span class="s3">```</span>
+
+<span class="s3">* </span><span class="s1">со строками</span><span class="s0">:</span>
+
+    <span class="s3">```</span><span class="s4">sh</span>
+    <span class="s5">$ svgo -s '&lt;svg version=&quot;1.1&quot;&gt;test&lt;/svg&gt;' -o test.min.svg</span>
+    <span class="s3">```</span>
+
+    <span class="s1">или даже с Data URI base64</span><span class="s0">:</span>
+
+    <span class="s3">```</span><span class="s4">sh</span>
+    <span class="s5">$ svgo -s 'data:image/svg+xml;base64,…' -o test.min.svg</span>
+    <span class="s3">```</span>
+
+<span class="s3">* </span><span class="s1">с SVGZ</span><span class="s0">:</span>
+
+    <span class="s1">из `.svgz` в `.svg`</span><span class="s0">:</span>
+
+    <span class="s3">```</span><span class="s4">sh</span>
+    <span class="s5">$ gunzip -c test.svgz | svgo -i - -o test.min.svg</span>
+    <span class="s3">```</span>
+
+    <span class="s1">из `.svg` в `.svgz`</span><span class="s0">:</span>
+
+    <span class="s3">```</span><span class="s4">sh</span>
+    <span class="s5">$ svgo test.svg -o - | gzip -cfq9 &gt; test.svgz</span>
+    <span class="s3">```</span>
+
+<span class="s3">### </span><span class="s1">Другие способы использования SVGO</span>
+
+<span class="s3">* </span><span class="s1">в виде веб-приложения - </span><span class="s0">[</span><span class="s1">SVGOMG</span><span class="s0">](</span><span class="s2">https://jakearchibald.github.io/svgomg/</span><span class="s0">)</span>
+<span class="s3">* </span><span class="s1">как модуль Node.js – </span><span class="s0">[</span><span class="s1">examples</span><span class="s0">](</span><span class="s2">https://github.com/svg/svgo/tree/master/examples</span><span class="s0">)</span>
+<span class="s3">* </span><span class="s1">как таск для Grunt – </span><span class="s0">[</span><span class="s1">grunt-svgmin</span><span class="s0">](</span><span class="s2">https://github.com/sindresorhus/grunt-svgmin</span><span class="s0">)</span>
+<span class="s3">* </span><span class="s1">как таск для Gulp – </span><span class="s0">[</span><span class="s1">gulp-svgmin</span><span class="s0">](</span><span class="s2">https://github.com/ben-eb/gulp-svgmin</span><span class="s0">)</span>
+<span class="s3">* </span><span class="s1">как таск для Mimosa – </span><span class="s0">[</span><span class="s1">mimosa-minify-svg</span><span class="s0">](</span><span class="s2">https://github.com/dbashford/mimosa-minify-svg</span><span class="s0">)</span>
+<span class="s3">* </span><span class="s1">как действие папки в OSX – </span><span class="s0">[</span><span class="s1">svgo-osx-folder-action</span><span class="s0">](</span><span class="s2">https://github.com/svg/svgo-osx-folder-action</span><span class="s0">)</span>
+<span class="s3">* </span><span class="s1">через загрузчик webpack – </span><span class="s0">[</span><span class="s1">image-webpack-loader</span><span class="s0">](</span><span class="s2">https://github.com/tcoopman/image-webpack-loader</span><span class="s0">)</span>
+<span class="s3">* </span><span class="s1">с помощью бота в Telegram – </span><span class="s0">[</span><span class="s1">svgo_bot</span><span class="s0">](</span><span class="s2">https://github.com/maksugr/svgo_bot</span><span class="s0">)</span>
+<span class="s3">* </span><span class="s1">как плагин PostCSS - </span><span class="s0">[</span><span class="s1">postcss-svgo</span><span class="s0">](</span><span class="s2">https://github.com/ben-eb/postcss-svgo</span><span class="s0">)</span>
+<span class="s3">* </span><span class="s1">как плагин для Inkscape – </span><span class="s0">[</span><span class="s1">inkscape-svgo</span><span class="s0">](</span><span class="s2">https://github.com/konsumer/inkscape-svgo</span><span class="s0">)</span>
+<span class="s3">* </span><span class="s1">как плагин для Sketch - </span><span class="s0">[</span><span class="s1">svgo-compressor</span><span class="s0">](</span><span class="s2">https://github.com/BohemianCoding/svgo-compressor</span><span class="s0">)</span>
+<span class="s3">* </span><span class="s1">в виде приложения macOS - </span><span class="s0">[</span><span class="s1">Image Shrinker</span><span class="s0">](</span><span class="s2">https://image-shrinker.com</span><span class="s0">)</span>
+<span class="s3">* </span><span class="s1">как плагин для Rollup - </span><span class="s0">[</span><span class="s1">rollup-plugin-svgo</span><span class="s0">](</span><span class="s2">https://github.com/porsager/rollup-plugin-svgo</span><span class="s0">)</span>
+
+<span class="s3">## </span><span class="s1">Лицензия и копирайты</span>
+
+<span class="s1">Данное программное обеспечение выпускается под </span><span class="s0">[</span><span class="s1">лицензией MIT</span><span class="s0">](</span><span class="s2">https://github.com/svg/svgo/blob/master/LICENSE</span><span class="s0">)</span><span class="s1">.</span>
+
+<span class="s1">Логотип – </span><span class="s0">[</span><span class="s1">Егор Большаков</span><span class="s0">](</span><span class="s2">http://xizzzy.ru/</span><span class="s0">)</span><span class="s1">.</span>
+</pre>
+</body>
+</html>

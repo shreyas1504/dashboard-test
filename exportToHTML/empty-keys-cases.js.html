@@ -1,0 +1,287 @@
+<html>
+<head>
+<title>empty-keys-cases.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+empty-keys-cases.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">module.exports = {</span>
+    <span class="s2">emptyTestCases: [</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'&amp;'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: {}</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">''</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">''</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">''</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: {}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'&amp;&amp;'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: {}</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">''</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">''</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">''</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: {}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'&amp;='</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">'' </span><span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'='</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'='</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'='</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: {}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'&amp;=&amp;'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">'' </span><span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'='</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'='</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'='</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: {}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'&amp;=&amp;='</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: [</span><span class="s0">''</span><span class="s1">, </span><span class="s0">''</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'[]=&amp;[]='</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'[0]=&amp;[1]='</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=&amp;='</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: {}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'&amp;=&amp;=&amp;'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: [</span><span class="s0">''</span><span class="s1">, </span><span class="s0">''</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'[]=&amp;[]='</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'[0]=&amp;[1]='</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=&amp;='</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: {}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'='</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">'' </span><span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: {}</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'='</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'='</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'='</span>
+            <span class="s2">}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'=&amp;'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">'' </span><span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'='</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'='</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'='</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: {}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'=&amp;&amp;&amp;'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">'' </span><span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'='</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'='</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'='</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: {}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'=&amp;=&amp;=&amp;'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: [</span><span class="s0">''</span><span class="s1">, </span><span class="s0">''</span><span class="s1">, </span><span class="s0">''</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'[]=&amp;[]=&amp;[]='</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'[0]=&amp;[1]=&amp;[2]='</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=&amp;=&amp;='</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: {}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'=&amp;a[]=b&amp;a[1]=c'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">''</span><span class="s1">, </span><span class="s2">a: [</span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">'c'</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'=&amp;a[]=b&amp;a[]=c'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'=&amp;a[0]=b&amp;a[1]=c'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=&amp;a=b&amp;a=c'</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: { a: [</span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">'c'</span><span class="s2">] }</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'=a'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">'a' </span><span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: {}</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'=a'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'=a'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=a'</span>
+            <span class="s2">}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'a==a'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { a: </span><span class="s0">'=a' </span><span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: { a: </span><span class="s0">'=a' </span><span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'a==a'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'a==a'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'a==a'</span>
+            <span class="s2">}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'=&amp;a[]=b'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">''</span><span class="s1">, </span><span class="s2">a: [</span><span class="s0">'b'</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'=&amp;a[]=b'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'=&amp;a[0]=b'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=&amp;a=b'</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: { a: [</span><span class="s0">'b'</span><span class="s2">] }</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'=&amp;a[]=b&amp;a[]=c&amp;a[2]=d'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">''</span><span class="s1">, </span><span class="s2">a: [</span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">'c'</span><span class="s1">, </span><span class="s0">'d'</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'=&amp;a[]=b&amp;a[]=c&amp;a[]=d'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'=&amp;a[0]=b&amp;a[1]=c&amp;a[2]=d'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=&amp;a=b&amp;a=c&amp;a=d'</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: { a: [</span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">'c'</span><span class="s1">, </span><span class="s0">'d'</span><span class="s2">] }</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'=a&amp;=b'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: [</span><span class="s0">'a'</span><span class="s1">, </span><span class="s0">'b'</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'[]=a&amp;[]=b'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'[0]=a&amp;[1]=b'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=a&amp;=b'</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: {}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'=a&amp;foo=b'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">'a'</span><span class="s1">, </span><span class="s2">foo: </span><span class="s0">'b' </span><span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: { foo: </span><span class="s0">'b' </span><span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'=a&amp;foo=b'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'=a&amp;foo=b'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=a&amp;foo=b'</span>
+            <span class="s2">}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'a[]=b&amp;a=c&amp;='</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">''</span><span class="s1">, </span><span class="s2">a: [</span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">'c'</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'=&amp;a[]=b&amp;a[]=c'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'=&amp;a[0]=b&amp;a[1]=c'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=&amp;a=b&amp;a=c'</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: { a: [</span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">'c'</span><span class="s2">] }</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'a[]=b&amp;a=c&amp;='</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">''</span><span class="s1">, </span><span class="s2">a: [</span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">'c'</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'=&amp;a[]=b&amp;a[]=c'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'=&amp;a[0]=b&amp;a[1]=c'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=&amp;a=b&amp;a=c'</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: { a: [</span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">'c'</span><span class="s2">] }</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'a[0]=b&amp;a=c&amp;='</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">''</span><span class="s1">, </span><span class="s2">a: [</span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">'c'</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'=&amp;a[]=b&amp;a[]=c'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'=&amp;a[0]=b&amp;a[1]=c'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=&amp;a=b&amp;a=c'</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: { a: [</span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">'c'</span><span class="s2">] }</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'a=b&amp;a[]=c&amp;='</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">''</span><span class="s1">, </span><span class="s2">a: [</span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">'c'</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'=&amp;a[]=b&amp;a[]=c'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'=&amp;a[0]=b&amp;a[1]=c'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=&amp;a=b&amp;a=c'</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: { a: [</span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">'c'</span><span class="s2">] }</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'a=b&amp;a[0]=c&amp;='</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: </span><span class="s0">''</span><span class="s1">, </span><span class="s2">a: [</span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">'c'</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'=&amp;a[]=b&amp;a[]=c'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'=&amp;a[0]=b&amp;a[1]=c'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=&amp;a=b&amp;a=c'</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: { a: [</span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">'c'</span><span class="s2">] }</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'[]=a&amp;[]=b&amp; []=1'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: [</span><span class="s0">'a'</span><span class="s1">, </span><span class="s0">'b'</span><span class="s2">]</span><span class="s1">, </span><span class="s0">' '</span><span class="s2">: [</span><span class="s0">'1'</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'[]=a&amp;[]=b&amp; []=1'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'[0]=a&amp;[1]=b&amp; [0]=1'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=a&amp;=b&amp; =1'</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: { </span><span class="s3">0</span><span class="s2">: </span><span class="s0">'a'</span><span class="s1">, </span><span class="s3">1</span><span class="s2">: </span><span class="s0">'b'</span><span class="s1">, </span><span class="s0">' '</span><span class="s2">: [</span><span class="s0">'1'</span><span class="s2">] }</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'[0]=a&amp;[1]=b&amp;a[0]=1&amp;a[1]=2'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: [</span><span class="s0">'a'</span><span class="s1">, </span><span class="s0">'b'</span><span class="s2">]</span><span class="s1">, </span><span class="s2">a: [</span><span class="s0">'1'</span><span class="s1">, </span><span class="s0">'2'</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: { </span><span class="s3">0</span><span class="s2">: </span><span class="s0">'a'</span><span class="s1">, </span><span class="s3">1</span><span class="s2">: </span><span class="s0">'b'</span><span class="s1">, </span><span class="s2">a: [</span><span class="s0">'1'</span><span class="s1">, </span><span class="s0">'2'</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'[]=a&amp;[]=b&amp;a[]=1&amp;a[]=2'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'[0]=a&amp;[1]=b&amp;a[0]=1&amp;a[1]=2'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=a&amp;=b&amp;a=1&amp;a=2'</span>
+            <span class="s2">}</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'[deep]=a&amp;[deep]=2'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: { deep: [</span><span class="s0">'a'</span><span class="s1">, </span><span class="s0">'2'</span><span class="s2">] }</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'[deep][]=a&amp;[deep][]=2'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'[deep][0]=a&amp;[deep][1]=2'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'[deep]=a&amp;[deep]=2'</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: { deep: [</span><span class="s0">'a'</span><span class="s1">, </span><span class="s0">'2'</span><span class="s2">] }</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">{</span>
+            <span class="s2">input: </span><span class="s0">'%5B0%5D=a&amp;%5B1%5D=b'</span><span class="s1">,</span>
+            <span class="s2">withEmptyKeys: { </span><span class="s0">''</span><span class="s2">: [</span><span class="s0">'a'</span><span class="s1">, </span><span class="s0">'b'</span><span class="s2">] }</span><span class="s1">,</span>
+            <span class="s2">stringifyOutput: {</span>
+                <span class="s2">brackets: </span><span class="s0">'[]=a&amp;[]=b'</span><span class="s1">,</span>
+                <span class="s2">indices: </span><span class="s0">'[0]=a&amp;[1]=b'</span><span class="s1">,</span>
+                <span class="s2">repeat: </span><span class="s0">'=a&amp;=b'</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">noEmptyKeys: { </span><span class="s3">0</span><span class="s2">: </span><span class="s0">'a'</span><span class="s1">, </span><span class="s3">1</span><span class="s2">: </span><span class="s0">'b' </span><span class="s2">}</span>
+        <span class="s2">}</span>
+    <span class="s2">]</span>
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

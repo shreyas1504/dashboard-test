@@ -1,0 +1,132 @@
+<html>
+<head>
+<title>mime.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s7 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+mime.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">path = require(</span><span class="s2">'path'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">fs = require(</span><span class="s2">'fs'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">Mime() {</span>
+  <span class="s4">// Map of extension -&gt; mime type</span>
+  <span class="s0">this</span><span class="s1">.types = Object.create(</span><span class="s0">null</span><span class="s1">)</span><span class="s3">;</span>
+
+  <span class="s4">// Map of mime type -&gt; extension</span>
+  <span class="s0">this</span><span class="s1">.extensions = Object.create(</span><span class="s0">null</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Define mimetype -&gt; extension mappings.  Each key is a mime-type that maps</span>
+ <span class="s5">* to an array of extensions associated with the type.  The first extension is</span>
+ <span class="s5">* used as the default extension for the type.</span>
+ <span class="s5">*</span>
+ <span class="s5">* e.g. mime.define({'audio/ogg', ['oga', 'ogg', 'spx']});</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">map (Object) type definitions</span>
+ <span class="s5">*/</span>
+<span class="s1">Mime.prototype.define = </span><span class="s0">function </span><span class="s1">(map) {</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">type </span><span class="s0">in </span><span class="s1">map) {</span>
+    <span class="s0">var </span><span class="s1">exts = map[type]</span><span class="s3">;</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s7">0</span><span class="s3">; </span><span class="s1">i &lt; exts.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+      <span class="s0">if </span><span class="s1">(process.env.DEBUG_MIME &amp;&amp; </span><span class="s0">this</span><span class="s1">.types[exts[i]]) {</span>
+        <span class="s1">console.warn((</span><span class="s0">this</span><span class="s1">._loading || </span><span class="s2">&quot;define()&quot;</span><span class="s1">).replace(</span><span class="s7">/.*\//</span><span class="s3">, </span><span class="s2">''</span><span class="s1">)</span><span class="s3">, </span><span class="s2">'changes &quot;' </span><span class="s1">+ exts[i] + </span><span class="s2">'&quot; extension type from ' </span><span class="s1">+</span>
+          <span class="s0">this</span><span class="s1">.types[exts[i]] + </span><span class="s2">' to ' </span><span class="s1">+ type)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">this</span><span class="s1">.types[exts[i]] = type</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">// Default extension is the first one we encounter</span>
+    <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.extensions[type]) {</span>
+      <span class="s0">this</span><span class="s1">.extensions[type] = exts[</span><span class="s7">0</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Load an Apache2-style &quot;.types&quot; file</span>
+ <span class="s5">*</span>
+ <span class="s5">* This may be called multiple times (it's expected).  Where files declare</span>
+ <span class="s5">* overlapping types/extensions, the last file wins.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">file (String) path of file to load.</span>
+ <span class="s5">*/</span>
+<span class="s1">Mime.prototype.load = </span><span class="s0">function</span><span class="s1">(file) {</span>
+  <span class="s0">this</span><span class="s1">._loading = file</span><span class="s3">;</span>
+  <span class="s4">// Read file and split into lines</span>
+  <span class="s0">var </span><span class="s1">map = {}</span><span class="s3">,</span>
+      <span class="s1">content = fs.readFileSync(file</span><span class="s3">, </span><span class="s2">'ascii'</span><span class="s1">)</span><span class="s3">,</span>
+      <span class="s1">lines = content.split(</span><span class="s7">/[\r\n]+/</span><span class="s1">)</span><span class="s3">;</span>
+
+  <span class="s1">lines.forEach(</span><span class="s0">function</span><span class="s1">(line) {</span>
+    <span class="s4">// Clean up whitespace/comments, and split into fields</span>
+    <span class="s0">var </span><span class="s1">fields = line.replace(</span><span class="s7">/\s*#.*|^\s*|\s*$/g</span><span class="s3">, </span><span class="s2">''</span><span class="s1">).split(</span><span class="s7">/\s+/</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">map[fields.shift()] = fields</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s0">this</span><span class="s1">.define(map)</span><span class="s3">;</span>
+
+  <span class="s0">this</span><span class="s1">._loading = </span><span class="s0">null</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Lookup a mime type based on extension</span>
+ <span class="s5">*/</span>
+<span class="s1">Mime.prototype.lookup = </span><span class="s0">function</span><span class="s1">(path</span><span class="s3">, </span><span class="s1">fallback) {</span>
+  <span class="s0">var </span><span class="s1">ext = path.replace(</span><span class="s7">/^.*[\.\/\\]/</span><span class="s3">, </span><span class="s2">''</span><span class="s1">).toLowerCase()</span><span class="s3">;</span>
+
+  <span class="s0">return this</span><span class="s1">.types[ext] || fallback || </span><span class="s0">this</span><span class="s1">.default_type</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Return file extension associated with a mime type</span>
+ <span class="s5">*/</span>
+<span class="s1">Mime.prototype.extension = </span><span class="s0">function</span><span class="s1">(mimeType) {</span>
+  <span class="s0">var </span><span class="s1">type = mimeType.match(</span><span class="s7">/^\s*([^;\s]*)(?:;|\s|$)/</span><span class="s1">)[</span><span class="s7">1</span><span class="s1">].toLowerCase()</span><span class="s3">;</span>
+  <span class="s0">return this</span><span class="s1">.extensions[type]</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s4">// Default instance</span>
+<span class="s0">var </span><span class="s1">mime = </span><span class="s0">new </span><span class="s1">Mime()</span><span class="s3">;</span>
+
+<span class="s4">// Define built-in types</span>
+<span class="s1">mime.define(require(</span><span class="s2">'./types.json'</span><span class="s1">))</span><span class="s3">;</span>
+
+<span class="s4">// Default type</span>
+<span class="s1">mime.default_type = mime.lookup(</span><span class="s2">'bin'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">//</span>
+<span class="s4">// Additional API specific to the default instance</span>
+<span class="s4">//</span>
+
+<span class="s1">mime.Mime = Mime</span><span class="s3">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Lookup a charset based on mime type.</span>
+ <span class="s5">*/</span>
+<span class="s1">mime.charsets = {</span>
+  <span class="s1">lookup: </span><span class="s0">function</span><span class="s1">(mimeType</span><span class="s3">, </span><span class="s1">fallback) {</span>
+    <span class="s4">// Assume text types are utf8</span>
+    <span class="s0">return </span><span class="s1">(</span><span class="s7">/^text\/|^application\/(javascript|json)/</span><span class="s1">).test(mimeType) ? </span><span class="s2">'UTF-8' </span><span class="s1">: fallback</span><span class="s3">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">module.exports = mime</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

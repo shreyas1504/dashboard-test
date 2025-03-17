@@ -1,0 +1,64 @@
+<html>
+<head>
+<title>exit.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #6897bb;}
+.s6 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+exit.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * exit 
+ * https://github.com/cowboy/node-exit 
+ * 
+ * Copyright (c) 2013 &quot;Cowboy&quot; Ben Alman 
+ * Licensed under the MIT license. 
+ */</span>
+
+<span class="s2">'use strict'</span><span class="s3">;</span>
+
+<span class="s1">module.exports = </span><span class="s4">function </span><span class="s1">exit(exitCode</span><span class="s3">, </span><span class="s1">streams) {</span>
+  <span class="s4">if </span><span class="s1">(!streams) { streams = [process.stdout</span><span class="s3">, </span><span class="s1">process.stderr]</span><span class="s3">; </span><span class="s1">}</span>
+  <span class="s4">var </span><span class="s1">drainCount = </span><span class="s5">0</span><span class="s3">;</span>
+  <span class="s6">// Actually exit if all streams are drained.</span>
+  <span class="s4">function </span><span class="s1">tryToExit() {</span>
+    <span class="s4">if </span><span class="s1">(drainCount === streams.length) {</span>
+      <span class="s1">process.exit(exitCode)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s1">streams.forEach(</span><span class="s4">function</span><span class="s1">(stream) {</span>
+    <span class="s6">// Count drained streams now, but monitor non-drained streams.</span>
+    <span class="s4">if </span><span class="s1">(stream.bufferSize === </span><span class="s5">0</span><span class="s1">) {</span>
+      <span class="s1">drainCount++</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+      <span class="s1">stream.write(</span><span class="s2">''</span><span class="s3">, </span><span class="s2">'utf-8'</span><span class="s3">, </span><span class="s4">function</span><span class="s1">() {</span>
+        <span class="s1">drainCount++</span><span class="s3">;</span>
+        <span class="s1">tryToExit()</span><span class="s3">;</span>
+      <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s6">// Prevent further writing.</span>
+    <span class="s1">stream.write = </span><span class="s4">function</span><span class="s1">() {}</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+  <span class="s6">// If all streams were already drained, exit now.</span>
+  <span class="s1">tryToExit()</span><span class="s3">;</span>
+  <span class="s6">// In Windows, when run as a Node.js child process, a script utilizing</span>
+  <span class="s6">// this library might just exit with a 0 exit code, regardless. This code,</span>
+  <span class="s6">// despite the fact that it looks a bit crazy, appears to fix that.</span>
+  <span class="s1">process.on(</span><span class="s2">'exit'</span><span class="s3">, </span><span class="s4">function</span><span class="s1">() {</span>
+    <span class="s1">process.exit(exitCode)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

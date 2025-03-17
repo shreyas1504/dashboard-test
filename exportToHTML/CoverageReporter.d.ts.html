@@ -1,0 +1,45 @@
+<html>
+<head>
+<title>CoverageReporter.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a; font-style: italic;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+CoverageReporter.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">/**</span>
+ <span class="s0">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s0">*</span>
+ <span class="s0">* This source code is licensed under the MIT license found in the</span>
+ <span class="s0">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s0">*/</span>
+<span class="s2">import </span><span class="s1">type { AggregatedResult</span><span class="s3">, </span><span class="s1">TestResult } from </span><span class="s4">'@jest/test-result'</span><span class="s3">;</span>
+<span class="s2">import </span><span class="s1">type { Config } from </span><span class="s4">'@jest/types'</span><span class="s3">;</span>
+<span class="s2">import </span><span class="s1">BaseReporter from </span><span class="s4">'./BaseReporter'</span><span class="s3">;</span>
+<span class="s2">import </span><span class="s1">type { Context</span><span class="s3">, </span><span class="s1">CoverageReporterOptions</span><span class="s3">, </span><span class="s1">Test } from </span><span class="s4">'./types'</span><span class="s3">;</span>
+<span class="s2">export default class </span><span class="s1">CoverageReporter </span><span class="s2">extends </span><span class="s1">BaseReporter {</span>
+    <span class="s2">private </span><span class="s1">_coverageMap</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_globalConfig</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_sourceMapStore</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_options</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_v8CoverageResults</span><span class="s3">;</span>
+    <span class="s2">static </span><span class="s1">readonly filename: string</span><span class="s3">;</span>
+    <span class="s1">constructor(globalConfig: Config.GlobalConfig</span><span class="s3">, </span><span class="s1">options?: CoverageReporterOptions)</span><span class="s3">;</span>
+    <span class="s1">onTestResult(_test: Test</span><span class="s3">, </span><span class="s1">testResult: TestResult): </span><span class="s2">void</span><span class="s3">;</span>
+    <span class="s1">onRunComplete(contexts: Set&lt;Context&gt;</span><span class="s3">, </span><span class="s1">aggregatedResults: AggregatedResult): Promise&lt;</span><span class="s2">void</span><span class="s1">&gt;</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_addUntestedFiles</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_checkThreshold</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_getCoverageResult</span><span class="s3">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

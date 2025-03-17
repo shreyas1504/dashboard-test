@@ -1,0 +1,779 @@
+<html>
+<head>
+<title>Document-9b4560a1.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Document-9b4560a1.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">PlainValue = require(</span><span class="s0">'./PlainValue-ec8e588e.js'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">resolveSeq = require(</span><span class="s0">'./resolveSeq-d03cb037.js'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">Schema = require(</span><span class="s0">'./Schema-88e323a7.js'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">defaultOptions = {</span>
+  <span class="s2">anchorPrefix: </span><span class="s0">'a'</span><span class="s1">,</span>
+  <span class="s2">customTags: </span><span class="s3">null</span><span class="s1">,</span>
+  <span class="s2">indent: </span><span class="s4">2</span><span class="s1">,</span>
+  <span class="s2">indentSeq: </span><span class="s3">true</span><span class="s1">,</span>
+  <span class="s2">keepCstNodes: </span><span class="s3">false</span><span class="s1">,</span>
+  <span class="s2">keepNodeTypes: </span><span class="s3">true</span><span class="s1">,</span>
+  <span class="s2">keepBlobsInJSON: </span><span class="s3">true</span><span class="s1">,</span>
+  <span class="s2">mapAsMap: </span><span class="s3">false</span><span class="s1">,</span>
+  <span class="s2">maxAliasCount: </span><span class="s4">100</span><span class="s1">,</span>
+  <span class="s2">prettyErrors: </span><span class="s3">false</span><span class="s1">,</span>
+  <span class="s5">// TODO Set true in v2</span>
+  <span class="s2">simpleKeys: </span><span class="s3">false</span><span class="s1">,</span>
+  <span class="s2">version: </span><span class="s0">'1.2'</span>
+<span class="s2">}</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">scalarOptions = {</span>
+  <span class="s2">get binary() {</span>
+    <span class="s3">return </span><span class="s2">resolveSeq.binaryOptions</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">,</span>
+
+  <span class="s2">set binary(opt) {</span>
+    <span class="s2">Object.assign(resolveSeq.binaryOptions</span><span class="s1">, </span><span class="s2">opt)</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">,</span>
+
+  <span class="s2">get bool() {</span>
+    <span class="s3">return </span><span class="s2">resolveSeq.boolOptions</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">,</span>
+
+  <span class="s2">set bool(opt) {</span>
+    <span class="s2">Object.assign(resolveSeq.boolOptions</span><span class="s1">, </span><span class="s2">opt)</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">,</span>
+
+  <span class="s2">get int() {</span>
+    <span class="s3">return </span><span class="s2">resolveSeq.intOptions</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">,</span>
+
+  <span class="s2">set int(opt) {</span>
+    <span class="s2">Object.assign(resolveSeq.intOptions</span><span class="s1">, </span><span class="s2">opt)</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">,</span>
+
+  <span class="s2">get </span><span class="s3">null</span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">resolveSeq.nullOptions</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">,</span>
+
+  <span class="s2">set </span><span class="s3">null</span><span class="s2">(opt) {</span>
+    <span class="s2">Object.assign(resolveSeq.nullOptions</span><span class="s1">, </span><span class="s2">opt)</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">,</span>
+
+  <span class="s2">get str() {</span>
+    <span class="s3">return </span><span class="s2">resolveSeq.strOptions</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">,</span>
+
+  <span class="s2">set str(opt) {</span>
+    <span class="s2">Object.assign(resolveSeq.strOptions</span><span class="s1">, </span><span class="s2">opt)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">documentOptions = {</span>
+  <span class="s0">'1.0'</span><span class="s2">: {</span>
+    <span class="s2">schema: </span><span class="s0">'yaml-1.1'</span><span class="s1">,</span>
+    <span class="s2">merge: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">tagPrefixes: [{</span>
+      <span class="s2">handle: </span><span class="s0">'!'</span><span class="s1">,</span>
+      <span class="s2">prefix: PlainValue.defaultTagPrefix</span>
+    <span class="s2">}</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">handle: </span><span class="s0">'!!'</span><span class="s1">,</span>
+      <span class="s2">prefix: </span><span class="s0">'tag:private.yaml.org,2002:'</span>
+    <span class="s2">}]</span>
+  <span class="s2">}</span><span class="s1">,</span>
+  <span class="s4">1.1</span><span class="s2">: {</span>
+    <span class="s2">schema: </span><span class="s0">'yaml-1.1'</span><span class="s1">,</span>
+    <span class="s2">merge: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">tagPrefixes: [{</span>
+      <span class="s2">handle: </span><span class="s0">'!'</span><span class="s1">,</span>
+      <span class="s2">prefix: </span><span class="s0">'!'</span>
+    <span class="s2">}</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">handle: </span><span class="s0">'!!'</span><span class="s1">,</span>
+      <span class="s2">prefix: PlainValue.defaultTagPrefix</span>
+    <span class="s2">}]</span>
+  <span class="s2">}</span><span class="s1">,</span>
+  <span class="s4">1.2</span><span class="s2">: {</span>
+    <span class="s2">schema: </span><span class="s0">'core'</span><span class="s1">,</span>
+    <span class="s2">merge: </span><span class="s3">false</span><span class="s1">,</span>
+    <span class="s2">tagPrefixes: [{</span>
+      <span class="s2">handle: </span><span class="s0">'!'</span><span class="s1">,</span>
+      <span class="s2">prefix: </span><span class="s0">'!'</span>
+    <span class="s2">}</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">handle: </span><span class="s0">'!!'</span><span class="s1">,</span>
+      <span class="s2">prefix: PlainValue.defaultTagPrefix</span>
+    <span class="s2">}]</span>
+  <span class="s2">}</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">stringifyTag(doc</span><span class="s1">, </span><span class="s2">tag) {</span>
+  <span class="s3">if </span><span class="s2">((doc.version || doc.options.version) === </span><span class="s0">'1.0'</span><span class="s2">) {</span>
+    <span class="s3">const </span><span class="s2">priv = tag.match(</span><span class="s4">/^tag:private\.yaml\.org,2002:([^:/]+)$/</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(priv) </span><span class="s3">return </span><span class="s0">'!' </span><span class="s2">+ priv[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">vocab = tag.match(</span><span class="s4">/^tag:([a-zA-Z0-9-]+)\.yaml\.org,2002:(.*)/</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">vocab ? </span><span class="s0">`!</span><span class="s2">${vocab[</span><span class="s4">1</span><span class="s2">]}</span><span class="s0">/</span><span class="s2">${vocab[</span><span class="s4">2</span><span class="s2">]}</span><span class="s0">` </span><span class="s2">: </span><span class="s0">`!</span><span class="s2">${tag.replace(</span><span class="s4">/^tag:/</span><span class="s1">, </span><span class="s0">''</span><span class="s2">)}</span><span class="s0">`</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">let </span><span class="s2">p = doc.tagPrefixes.find(p =&gt; tag.indexOf(p.prefix) === </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(!p) {</span>
+    <span class="s3">const </span><span class="s2">dtp = doc.getDefaults().tagPrefixes</span><span class="s1">;</span>
+    <span class="s2">p = dtp &amp;&amp; dtp.find(p =&gt; tag.indexOf(p.prefix) === </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(!p) </span><span class="s3">return </span><span class="s2">tag[</span><span class="s4">0</span><span class="s2">] === </span><span class="s0">'!' </span><span class="s2">? tag : </span><span class="s0">`!&lt;</span><span class="s2">${tag}</span><span class="s0">&gt;`</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">suffix = tag.substr(p.prefix.length).replace(</span><span class="s4">/[!,[\]{}]/g</span><span class="s1">, </span><span class="s2">ch =&gt; ({</span>
+    <span class="s0">'!'</span><span class="s2">: </span><span class="s0">'%21'</span><span class="s1">,</span>
+    <span class="s0">','</span><span class="s2">: </span><span class="s0">'%2C'</span><span class="s1">,</span>
+    <span class="s0">'['</span><span class="s2">: </span><span class="s0">'%5B'</span><span class="s1">,</span>
+    <span class="s0">']'</span><span class="s2">: </span><span class="s0">'%5D'</span><span class="s1">,</span>
+    <span class="s0">'{'</span><span class="s2">: </span><span class="s0">'%7B'</span><span class="s1">,</span>
+    <span class="s0">'}'</span><span class="s2">: </span><span class="s0">'%7D'</span>
+  <span class="s2">})[ch])</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">p.handle + suffix</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">getTagObject(tags</span><span class="s1">, </span><span class="s2">item) {</span>
+  <span class="s3">if </span><span class="s2">(item </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Alias) </span><span class="s3">return </span><span class="s2">resolveSeq.Alias</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(item.tag) {</span>
+    <span class="s3">const </span><span class="s2">match = tags.filter(t =&gt; t.tag === item.tag)</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(match.length &gt; </span><span class="s4">0</span><span class="s2">) </span><span class="s3">return </span><span class="s2">match.find(t =&gt; t.format === item.format) || match[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">let </span><span class="s2">tagObj</span><span class="s1">, </span><span class="s2">obj</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(item </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Scalar) {</span>
+    <span class="s2">obj = item.value</span><span class="s1">; </span><span class="s5">// TODO: deprecate/remove class check</span>
+
+    <span class="s3">const </span><span class="s2">match = tags.filter(t =&gt; t.identify &amp;&amp; t.identify(obj) || t.class &amp;&amp; obj </span><span class="s3">instanceof </span><span class="s2">t.class)</span><span class="s1">;</span>
+    <span class="s2">tagObj = match.find(t =&gt; t.format === item.format) || match.find(t =&gt; !t.format)</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s2">obj = item</span><span class="s1">;</span>
+    <span class="s2">tagObj = tags.find(t =&gt; t.nodeClass &amp;&amp; obj </span><span class="s3">instanceof </span><span class="s2">t.nodeClass)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(!tagObj) {</span>
+    <span class="s3">const </span><span class="s2">name = obj &amp;&amp; obj.constructor ? obj.constructor.name : </span><span class="s3">typeof </span><span class="s2">obj</span><span class="s1">;</span>
+    <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">`Tag not resolved for </span><span class="s2">${name} </span><span class="s0">value`</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">tagObj</span><span class="s1">;</span>
+<span class="s2">} </span><span class="s5">// needs to be called before value stringifier to allow for circular anchor refs</span>
+
+
+<span class="s3">function </span><span class="s2">stringifyProps(node</span><span class="s1">, </span><span class="s2">tagObj</span><span class="s1">, </span><span class="s2">{</span>
+  <span class="s2">anchors</span><span class="s1">,</span>
+  <span class="s2">doc</span>
+<span class="s2">}) {</span>
+  <span class="s3">const </span><span class="s2">props = []</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">anchor = doc.anchors.getName(node)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(anchor) {</span>
+    <span class="s2">anchors[anchor] = node</span><span class="s1">;</span>
+    <span class="s2">props.push(</span><span class="s0">`&amp;</span><span class="s2">${anchor}</span><span class="s0">`</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(node.tag) {</span>
+    <span class="s2">props.push(stringifyTag(doc</span><span class="s1">, </span><span class="s2">node.tag))</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else if </span><span class="s2">(!tagObj.default) {</span>
+    <span class="s2">props.push(stringifyTag(doc</span><span class="s1">, </span><span class="s2">tagObj.tag))</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">props.join(</span><span class="s0">' '</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">stringify(item</span><span class="s1">, </span><span class="s2">ctx</span><span class="s1">, </span><span class="s2">onComment</span><span class="s1">, </span><span class="s2">onChompKeep) {</span>
+  <span class="s3">const </span><span class="s2">{</span>
+    <span class="s2">anchors</span><span class="s1">,</span>
+    <span class="s2">schema</span>
+  <span class="s2">} = ctx.doc</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">tagObj</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(!(item </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Node)) {</span>
+    <span class="s3">const </span><span class="s2">createCtx = {</span>
+      <span class="s2">aliasNodes: []</span><span class="s1">,</span>
+      <span class="s2">onTagObj: o =&gt; tagObj = o</span><span class="s1">,</span>
+      <span class="s2">prevObjects: </span><span class="s3">new </span><span class="s2">Map()</span>
+    <span class="s2">}</span><span class="s1">;</span>
+    <span class="s2">item = schema.createNode(item</span><span class="s1">, </span><span class="s3">true</span><span class="s1">, </span><span class="s3">null</span><span class="s1">, </span><span class="s2">createCtx)</span><span class="s1">;</span>
+
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">alias of createCtx.aliasNodes) {</span>
+      <span class="s2">alias.source = alias.source.node</span><span class="s1">;</span>
+      <span class="s3">let </span><span class="s2">name = anchors.getName(alias.source)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(!name) {</span>
+        <span class="s2">name = anchors.newName()</span><span class="s1">;</span>
+        <span class="s2">anchors.map[name] = alias.source</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(item </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Pair) </span><span class="s3">return </span><span class="s2">item.toString(ctx</span><span class="s1">, </span><span class="s2">onComment</span><span class="s1">, </span><span class="s2">onChompKeep)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(!tagObj) tagObj = getTagObject(schema.tags</span><span class="s1">, </span><span class="s2">item)</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">props = stringifyProps(item</span><span class="s1">, </span><span class="s2">tagObj</span><span class="s1">, </span><span class="s2">ctx)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(props.length &gt; </span><span class="s4">0</span><span class="s2">) ctx.indentAtStart = (ctx.indentAtStart || </span><span class="s4">0</span><span class="s2">) + props.length + </span><span class="s4">1</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">str = </span><span class="s3">typeof </span><span class="s2">tagObj.stringify === </span><span class="s0">'function' </span><span class="s2">? tagObj.stringify(item</span><span class="s1">, </span><span class="s2">ctx</span><span class="s1">, </span><span class="s2">onComment</span><span class="s1">, </span><span class="s2">onChompKeep) : item </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Scalar ? resolveSeq.stringifyString(item</span><span class="s1">, </span><span class="s2">ctx</span><span class="s1">, </span><span class="s2">onComment</span><span class="s1">, </span><span class="s2">onChompKeep) : item.toString(ctx</span><span class="s1">, </span><span class="s2">onComment</span><span class="s1">, </span><span class="s2">onChompKeep)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(!props) </span><span class="s3">return </span><span class="s2">str</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">item </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Scalar || str[</span><span class="s4">0</span><span class="s2">] === </span><span class="s0">'{' </span><span class="s2">|| str[</span><span class="s4">0</span><span class="s2">] === </span><span class="s0">'[' </span><span class="s2">? </span><span class="s0">`</span><span class="s2">${props} ${str}</span><span class="s0">` </span><span class="s2">: </span><span class="s0">`</span><span class="s2">${props}</span><span class="s1">\n</span><span class="s2">${ctx.indent}${str}</span><span class="s0">`</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">class </span><span class="s2">Anchors {</span>
+  <span class="s3">static </span><span class="s2">validAnchorNode(node) {</span>
+    <span class="s3">return </span><span class="s2">node </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Scalar || node </span><span class="s3">instanceof </span><span class="s2">resolveSeq.YAMLSeq || node </span><span class="s3">instanceof </span><span class="s2">resolveSeq.YAMLMap</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">constructor(prefix) {</span>
+    <span class="s2">PlainValue._defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">&quot;map&quot;</span><span class="s1">, </span><span class="s2">Object.create(</span><span class="s3">null</span><span class="s2">))</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">.prefix = prefix</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">createAlias(node</span><span class="s1">, </span><span class="s2">name) {</span>
+    <span class="s3">this</span><span class="s2">.setAnchor(node</span><span class="s1">, </span><span class="s2">name)</span><span class="s1">;</span>
+    <span class="s3">return new </span><span class="s2">resolveSeq.Alias(node)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">createMergePair(...sources) {</span>
+    <span class="s3">const </span><span class="s2">merge = </span><span class="s3">new </span><span class="s2">resolveSeq.Merge()</span><span class="s1">;</span>
+    <span class="s2">merge.value.items = sources.map(s =&gt; {</span>
+      <span class="s3">if </span><span class="s2">(s </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Alias) {</span>
+        <span class="s3">if </span><span class="s2">(s.source </span><span class="s3">instanceof </span><span class="s2">resolveSeq.YAMLMap) </span><span class="s3">return </span><span class="s2">s</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else if </span><span class="s2">(s </span><span class="s3">instanceof </span><span class="s2">resolveSeq.YAMLMap) {</span>
+        <span class="s3">return this</span><span class="s2">.createAlias(s)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'Merge sources must be Map nodes or their Aliases'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">})</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">merge</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">getName(node) {</span>
+    <span class="s3">const </span><span class="s2">{</span>
+      <span class="s2">map</span>
+    <span class="s2">} = </span><span class="s3">this</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">Object.keys(map).find(a =&gt; map[a] === node)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">getNames() {</span>
+    <span class="s3">return </span><span class="s2">Object.keys(</span><span class="s3">this</span><span class="s2">.map)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">getNode(name) {</span>
+    <span class="s3">return this</span><span class="s2">.map[name]</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">newName(prefix) {</span>
+    <span class="s3">if </span><span class="s2">(!prefix) prefix = </span><span class="s3">this</span><span class="s2">.prefix</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">names = Object.keys(</span><span class="s3">this</span><span class="s2">.map)</span><span class="s1">;</span>
+
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">let </span><span class="s2">i = </span><span class="s4">1</span><span class="s1">; </span><span class="s3">true</span><span class="s1">; </span><span class="s2">++i) {</span>
+      <span class="s3">const </span><span class="s2">name = </span><span class="s0">`</span><span class="s2">${prefix}${i}</span><span class="s0">`</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(!names.includes(name)) </span><span class="s3">return </span><span class="s2">name</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">} </span><span class="s5">// During parsing, map &amp; aliases contain CST nodes</span>
+
+
+  <span class="s2">resolveNodes() {</span>
+    <span class="s3">const </span><span class="s2">{</span>
+      <span class="s2">map</span><span class="s1">,</span>
+      <span class="s2">_cstAliases</span>
+    <span class="s2">} = </span><span class="s3">this</span><span class="s1">;</span>
+    <span class="s2">Object.keys(map).forEach(a =&gt; {</span>
+      <span class="s2">map[a] = map[a].resolved</span><span class="s1">;</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s2">_cstAliases.forEach(a =&gt; {</span>
+      <span class="s2">a.source = a.source.resolved</span><span class="s1">;</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s3">delete this</span><span class="s2">._cstAliases</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">setAnchor(node</span><span class="s1">, </span><span class="s2">name) {</span>
+    <span class="s3">if </span><span class="s2">(node != </span><span class="s3">null </span><span class="s2">&amp;&amp; !Anchors.validAnchorNode(node)) {</span>
+      <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'Anchors may only be set for Scalar, Seq and Map nodes'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(name &amp;&amp; </span><span class="s4">/[\x00-\x19\s,[\]{}]/</span><span class="s2">.test(name)) {</span>
+      <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'Anchor names must not contain whitespace or control characters'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">const </span><span class="s2">{</span>
+      <span class="s2">map</span>
+    <span class="s2">} = </span><span class="s3">this</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">prev = node &amp;&amp; Object.keys(map).find(a =&gt; map[a] === node)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(prev) {</span>
+      <span class="s3">if </span><span class="s2">(!name) {</span>
+        <span class="s3">return </span><span class="s2">prev</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else if </span><span class="s2">(prev !== name) {</span>
+        <span class="s3">delete </span><span class="s2">map[prev]</span><span class="s1">;</span>
+        <span class="s2">map[name] = node</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s3">if </span><span class="s2">(!name) {</span>
+        <span class="s3">if </span><span class="s2">(!node) </span><span class="s3">return null</span><span class="s1">;</span>
+        <span class="s2">name = </span><span class="s3">this</span><span class="s2">.newName()</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">map[name] = node</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return </span><span class="s2">name</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+<span class="s2">}</span>
+
+<span class="s3">const </span><span class="s2">visit = (node</span><span class="s1">, </span><span class="s2">tags) =&gt; {</span>
+  <span class="s3">if </span><span class="s2">(node &amp;&amp; </span><span class="s3">typeof </span><span class="s2">node === </span><span class="s0">'object'</span><span class="s2">) {</span>
+    <span class="s3">const </span><span class="s2">{</span>
+      <span class="s2">tag</span>
+    <span class="s2">} = node</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(node </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Collection) {</span>
+      <span class="s3">if </span><span class="s2">(tag) tags[tag] = </span><span class="s3">true</span><span class="s1">;</span>
+      <span class="s2">node.items.forEach(n =&gt; visit(n</span><span class="s1">, </span><span class="s2">tags))</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(node </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Pair) {</span>
+      <span class="s2">visit(node.key</span><span class="s1">, </span><span class="s2">tags)</span><span class="s1">;</span>
+      <span class="s2">visit(node.value</span><span class="s1">, </span><span class="s2">tags)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(node </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Scalar) {</span>
+      <span class="s3">if </span><span class="s2">(tag) tags[tag] = </span><span class="s3">true</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">tags</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">listTagNames = node =&gt; Object.keys(visit(node</span><span class="s1">, </span><span class="s2">{}))</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">parseContents(doc</span><span class="s1">, </span><span class="s2">contents) {</span>
+  <span class="s3">const </span><span class="s2">comments = {</span>
+    <span class="s2">before: []</span><span class="s1">,</span>
+    <span class="s2">after: []</span>
+  <span class="s2">}</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">body = undefined</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">spaceBefore = </span><span class="s3">false</span><span class="s1">;</span>
+
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">node of contents) {</span>
+    <span class="s3">if </span><span class="s2">(node.valueRange) {</span>
+      <span class="s3">if </span><span class="s2">(body !== undefined) {</span>
+        <span class="s3">const </span><span class="s2">msg = </span><span class="s0">'Document contains trailing content not separated by a ... or --- line'</span><span class="s1">;</span>
+        <span class="s2">doc.errors.push(</span><span class="s3">new </span><span class="s2">PlainValue.YAMLSyntaxError(node</span><span class="s1">, </span><span class="s2">msg))</span><span class="s1">;</span>
+        <span class="s3">break</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">const </span><span class="s2">res = resolveSeq.resolveNode(doc</span><span class="s1">, </span><span class="s2">node)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(spaceBefore) {</span>
+        <span class="s2">res.spaceBefore = </span><span class="s3">true</span><span class="s1">;</span>
+        <span class="s2">spaceBefore = </span><span class="s3">false</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">body = res</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(node.comment !== </span><span class="s3">null</span><span class="s2">) {</span>
+      <span class="s3">const </span><span class="s2">cc = body === undefined ? comments.before : comments.after</span><span class="s1">;</span>
+      <span class="s2">cc.push(node.comment)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(node.type === PlainValue.Type.BLANK_LINE) {</span>
+      <span class="s2">spaceBefore = </span><span class="s3">true</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(body === undefined &amp;&amp; comments.before.length &gt; </span><span class="s4">0 </span><span class="s2">&amp;&amp; !doc.commentBefore) {</span>
+        <span class="s5">// space-separated comments at start are parsed as document comments</span>
+        <span class="s2">doc.commentBefore = comments.before.join(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">comments.before = []</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">doc.contents = body || </span><span class="s3">null</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(!body) {</span>
+    <span class="s2">doc.comment = comments.before.concat(comments.after).join(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">) || </span><span class="s3">null</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s3">const </span><span class="s2">cb = comments.before.join(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(cb) {</span>
+      <span class="s3">const </span><span class="s2">cbNode = body </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Collection &amp;&amp; body.items[</span><span class="s4">0</span><span class="s2">] ? body.items[</span><span class="s4">0</span><span class="s2">] : body</span><span class="s1">;</span>
+      <span class="s2">cbNode.commentBefore = cbNode.commentBefore ? </span><span class="s0">`</span><span class="s2">${cb}</span><span class="s1">\n</span><span class="s2">${cbNode.commentBefore}</span><span class="s0">` </span><span class="s2">: cb</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s2">doc.comment = comments.after.join(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">) || </span><span class="s3">null</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">resolveTagDirective({</span>
+  <span class="s2">tagPrefixes</span>
+<span class="s2">}</span><span class="s1">, </span><span class="s2">directive) {</span>
+  <span class="s3">const </span><span class="s2">[handle</span><span class="s1">, </span><span class="s2">prefix] = directive.parameters</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(!handle || !prefix) {</span>
+    <span class="s3">const </span><span class="s2">msg = </span><span class="s0">'Insufficient parameters given for %TAG directive'</span><span class="s1">;</span>
+    <span class="s3">throw new </span><span class="s2">PlainValue.YAMLSemanticError(directive</span><span class="s1">, </span><span class="s2">msg)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(tagPrefixes.some(p =&gt; p.handle === handle)) {</span>
+    <span class="s3">const </span><span class="s2">msg = </span><span class="s0">'The %TAG directive must only be given at most once per handle in the same document.'</span><span class="s1">;</span>
+    <span class="s3">throw new </span><span class="s2">PlainValue.YAMLSemanticError(directive</span><span class="s1">, </span><span class="s2">msg)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">{</span>
+    <span class="s2">handle</span><span class="s1">,</span>
+    <span class="s2">prefix</span>
+  <span class="s2">}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">resolveYamlDirective(doc</span><span class="s1">, </span><span class="s2">directive) {</span>
+  <span class="s3">let </span><span class="s2">[version] = directive.parameters</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(directive.name === </span><span class="s0">'YAML:1.0'</span><span class="s2">) version = </span><span class="s0">'1.0'</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(!version) {</span>
+    <span class="s3">const </span><span class="s2">msg = </span><span class="s0">'Insufficient parameters given for %YAML directive'</span><span class="s1">;</span>
+    <span class="s3">throw new </span><span class="s2">PlainValue.YAMLSemanticError(directive</span><span class="s1">, </span><span class="s2">msg)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(!documentOptions[version]) {</span>
+    <span class="s3">const </span><span class="s2">v0 = doc.version || doc.options.version</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">msg = </span><span class="s0">`Document will be parsed as YAML </span><span class="s2">${v0} </span><span class="s0">rather than YAML </span><span class="s2">${version}</span><span class="s0">`</span><span class="s1">;</span>
+    <span class="s2">doc.warnings.push(</span><span class="s3">new </span><span class="s2">PlainValue.YAMLWarning(directive</span><span class="s1">, </span><span class="s2">msg))</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">version</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">parseDirectives(doc</span><span class="s1">, </span><span class="s2">directives</span><span class="s1">, </span><span class="s2">prevDoc) {</span>
+  <span class="s3">const </span><span class="s2">directiveComments = []</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">hasDirectives = </span><span class="s3">false</span><span class="s1">;</span>
+
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">directive of directives) {</span>
+    <span class="s3">const </span><span class="s2">{</span>
+      <span class="s2">comment</span><span class="s1">,</span>
+      <span class="s2">name</span>
+    <span class="s2">} = directive</span><span class="s1">;</span>
+
+    <span class="s3">switch </span><span class="s2">(name) {</span>
+      <span class="s3">case </span><span class="s0">'TAG'</span><span class="s2">:</span>
+        <span class="s3">try </span><span class="s2">{</span>
+          <span class="s2">doc.tagPrefixes.push(resolveTagDirective(doc</span><span class="s1">, </span><span class="s2">directive))</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s3">catch </span><span class="s2">(error) {</span>
+          <span class="s2">doc.errors.push(error)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s2">hasDirectives = </span><span class="s3">true</span><span class="s1">;</span>
+        <span class="s3">break</span><span class="s1">;</span>
+
+      <span class="s3">case </span><span class="s0">'YAML'</span><span class="s2">:</span>
+      <span class="s3">case </span><span class="s0">'YAML:1.0'</span><span class="s2">:</span>
+        <span class="s3">if </span><span class="s2">(doc.version) {</span>
+          <span class="s3">const </span><span class="s2">msg = </span><span class="s0">'The %YAML directive must only be given at most once per document.'</span><span class="s1">;</span>
+          <span class="s2">doc.errors.push(</span><span class="s3">new </span><span class="s2">PlainValue.YAMLSemanticError(directive</span><span class="s1">, </span><span class="s2">msg))</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s3">try </span><span class="s2">{</span>
+          <span class="s2">doc.version = resolveYamlDirective(doc</span><span class="s1">, </span><span class="s2">directive)</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s3">catch </span><span class="s2">(error) {</span>
+          <span class="s2">doc.errors.push(error)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s2">hasDirectives = </span><span class="s3">true</span><span class="s1">;</span>
+        <span class="s3">break</span><span class="s1">;</span>
+
+      <span class="s3">default</span><span class="s2">:</span>
+        <span class="s3">if </span><span class="s2">(name) {</span>
+          <span class="s3">const </span><span class="s2">msg = </span><span class="s0">`YAML only supports %TAG and %YAML directives, and not %</span><span class="s2">${name}</span><span class="s0">`</span><span class="s1">;</span>
+          <span class="s2">doc.warnings.push(</span><span class="s3">new </span><span class="s2">PlainValue.YAMLWarning(directive</span><span class="s1">, </span><span class="s2">msg))</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(comment) directiveComments.push(comment)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(prevDoc &amp;&amp; !hasDirectives &amp;&amp; </span><span class="s0">'1.1' </span><span class="s2">=== (doc.version || prevDoc.version || doc.options.version)) {</span>
+    <span class="s3">const </span><span class="s2">copyTagPrefix = ({</span>
+      <span class="s2">handle</span><span class="s1">,</span>
+      <span class="s2">prefix</span>
+    <span class="s2">}) =&gt; ({</span>
+      <span class="s2">handle</span><span class="s1">,</span>
+      <span class="s2">prefix</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s2">doc.tagPrefixes = prevDoc.tagPrefixes.map(copyTagPrefix)</span><span class="s1">;</span>
+    <span class="s2">doc.version = prevDoc.version</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">doc.commentBefore = directiveComments.join(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">) || </span><span class="s3">null</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">assertCollection(contents) {</span>
+  <span class="s3">if </span><span class="s2">(contents </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Collection) </span><span class="s3">return true</span><span class="s1">;</span>
+  <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'Expected a YAML collection as document contents'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">class </span><span class="s2">Document {</span>
+  <span class="s2">constructor(options) {</span>
+    <span class="s3">this</span><span class="s2">.anchors = </span><span class="s3">new </span><span class="s2">Anchors(options.anchorPrefix)</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.commentBefore = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.comment = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.contents = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.directivesEndMarker = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.errors = []</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.options = options</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.schema = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.tagPrefixes = []</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.version = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.warnings = []</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">add(value) {</span>
+    <span class="s2">assertCollection(</span><span class="s3">this</span><span class="s2">.contents)</span><span class="s1">;</span>
+    <span class="s3">return this</span><span class="s2">.contents.add(value)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">addIn(path</span><span class="s1">, </span><span class="s2">value) {</span>
+    <span class="s2">assertCollection(</span><span class="s3">this</span><span class="s2">.contents)</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.contents.addIn(path</span><span class="s1">, </span><span class="s2">value)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">delete</span><span class="s2">(key) {</span>
+    <span class="s2">assertCollection(</span><span class="s3">this</span><span class="s2">.contents)</span><span class="s1">;</span>
+    <span class="s3">return this</span><span class="s2">.contents.delete(key)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">deleteIn(path) {</span>
+    <span class="s3">if </span><span class="s2">(resolveSeq.isEmptyPath(path)) {</span>
+      <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.contents == </span><span class="s3">null</span><span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+      <span class="s3">this</span><span class="s2">.contents = </span><span class="s3">null</span><span class="s1">;</span>
+      <span class="s3">return true</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s2">assertCollection(</span><span class="s3">this</span><span class="s2">.contents)</span><span class="s1">;</span>
+    <span class="s3">return this</span><span class="s2">.contents.deleteIn(path)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">getDefaults() {</span>
+    <span class="s3">return </span><span class="s2">Document.defaults[</span><span class="s3">this</span><span class="s2">.version] || Document.defaults[</span><span class="s3">this</span><span class="s2">.options.version] || {}</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">get(key</span><span class="s1">, </span><span class="s2">keepScalar) {</span>
+    <span class="s3">return this</span><span class="s2">.contents </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Collection ? </span><span class="s3">this</span><span class="s2">.contents.get(key</span><span class="s1">, </span><span class="s2">keepScalar) : undefined</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">getIn(path</span><span class="s1">, </span><span class="s2">keepScalar) {</span>
+    <span class="s3">if </span><span class="s2">(resolveSeq.isEmptyPath(path)) </span><span class="s3">return </span><span class="s2">!keepScalar &amp;&amp; </span><span class="s3">this</span><span class="s2">.contents </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Scalar ? </span><span class="s3">this</span><span class="s2">.contents.value : </span><span class="s3">this</span><span class="s2">.contents</span><span class="s1">;</span>
+    <span class="s3">return this</span><span class="s2">.contents </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Collection ? </span><span class="s3">this</span><span class="s2">.contents.getIn(path</span><span class="s1">, </span><span class="s2">keepScalar) : undefined</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">has(key) {</span>
+    <span class="s3">return this</span><span class="s2">.contents </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Collection ? </span><span class="s3">this</span><span class="s2">.contents.has(key) : </span><span class="s3">false</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">hasIn(path) {</span>
+    <span class="s3">if </span><span class="s2">(resolveSeq.isEmptyPath(path)) </span><span class="s3">return this</span><span class="s2">.contents !== undefined</span><span class="s1">;</span>
+    <span class="s3">return this</span><span class="s2">.contents </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Collection ? </span><span class="s3">this</span><span class="s2">.contents.hasIn(path) : </span><span class="s3">false</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">set(key</span><span class="s1">, </span><span class="s2">value) {</span>
+    <span class="s2">assertCollection(</span><span class="s3">this</span><span class="s2">.contents)</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.contents.set(key</span><span class="s1">, </span><span class="s2">value)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">setIn(path</span><span class="s1">, </span><span class="s2">value) {</span>
+    <span class="s3">if </span><span class="s2">(resolveSeq.isEmptyPath(path)) </span><span class="s3">this</span><span class="s2">.contents = value</span><span class="s1">;</span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">assertCollection(</span><span class="s3">this</span><span class="s2">.contents)</span><span class="s1">;</span>
+      <span class="s3">this</span><span class="s2">.contents.setIn(path</span><span class="s1">, </span><span class="s2">value)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">setSchema(id</span><span class="s1">, </span><span class="s2">customTags) {</span>
+    <span class="s3">if </span><span class="s2">(!id &amp;&amp; !customTags &amp;&amp; </span><span class="s3">this</span><span class="s2">.schema) </span><span class="s3">return</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">id === </span><span class="s0">'number'</span><span class="s2">) id = id.toFixed(</span><span class="s4">1</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(id === </span><span class="s0">'1.0' </span><span class="s2">|| id === </span><span class="s0">'1.1' </span><span class="s2">|| id === </span><span class="s0">'1.2'</span><span class="s2">) {</span>
+      <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.version) </span><span class="s3">this</span><span class="s2">.version = id</span><span class="s1">;</span><span class="s3">else this</span><span class="s2">.options.version = id</span><span class="s1">;</span>
+      <span class="s3">delete this</span><span class="s2">.options.schema</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(id &amp;&amp; </span><span class="s3">typeof </span><span class="s2">id === </span><span class="s0">'string'</span><span class="s2">) {</span>
+      <span class="s3">this</span><span class="s2">.options.schema = id</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(Array.isArray(customTags)) </span><span class="s3">this</span><span class="s2">.options.customTags = customTags</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">opt = Object.assign({}</span><span class="s1">, </span><span class="s3">this</span><span class="s2">.getDefaults()</span><span class="s1">, </span><span class="s3">this</span><span class="s2">.options)</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.schema = </span><span class="s3">new </span><span class="s2">Schema.Schema(opt)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">parse(node</span><span class="s1">, </span><span class="s2">prevDoc) {</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.options.keepCstNodes) </span><span class="s3">this</span><span class="s2">.cstNode = node</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.options.keepNodeTypes) </span><span class="s3">this</span><span class="s2">.type = </span><span class="s0">'DOCUMENT'</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">{</span>
+      <span class="s2">directives = []</span><span class="s1">,</span>
+      <span class="s2">contents = []</span><span class="s1">,</span>
+      <span class="s2">directivesEndMarker</span><span class="s1">,</span>
+      <span class="s2">error</span><span class="s1">,</span>
+      <span class="s2">valueRange</span>
+    <span class="s2">} = node</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(error) {</span>
+      <span class="s3">if </span><span class="s2">(!error.source) error.source = </span><span class="s3">this</span><span class="s1">;</span>
+      <span class="s3">this</span><span class="s2">.errors.push(error)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s2">parseDirectives(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">directives</span><span class="s1">, </span><span class="s2">prevDoc)</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(directivesEndMarker) </span><span class="s3">this</span><span class="s2">.directivesEndMarker = </span><span class="s3">true</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.range = valueRange ? [valueRange.start</span><span class="s1">, </span><span class="s2">valueRange.end] : </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.setSchema()</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.anchors._cstAliases = []</span><span class="s1">;</span>
+    <span class="s2">parseContents(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">contents)</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.anchors.resolveNodes()</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.options.prettyErrors) {</span>
+      <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">error of </span><span class="s3">this</span><span class="s2">.errors) </span><span class="s3">if </span><span class="s2">(error </span><span class="s3">instanceof </span><span class="s2">PlainValue.YAMLError) error.makePretty()</span><span class="s1">;</span>
+
+      <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">warn of </span><span class="s3">this</span><span class="s2">.warnings) </span><span class="s3">if </span><span class="s2">(warn </span><span class="s3">instanceof </span><span class="s2">PlainValue.YAMLError) warn.makePretty()</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return this</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">listNonDefaultTags() {</span>
+    <span class="s3">return </span><span class="s2">listTagNames(</span><span class="s3">this</span><span class="s2">.contents).filter(t =&gt; t.indexOf(Schema.Schema.defaultPrefix) !== </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">setTagPrefix(handle</span><span class="s1">, </span><span class="s2">prefix) {</span>
+    <span class="s3">if </span><span class="s2">(handle[</span><span class="s4">0</span><span class="s2">] !== </span><span class="s0">'!' </span><span class="s2">|| handle[handle.length - </span><span class="s4">1</span><span class="s2">] !== </span><span class="s0">'!'</span><span class="s2">) </span><span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'Handle must start and end with !'</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(prefix) {</span>
+      <span class="s3">const </span><span class="s2">prev = </span><span class="s3">this</span><span class="s2">.tagPrefixes.find(p =&gt; p.handle === handle)</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(prev) prev.prefix = prefix</span><span class="s1">;</span><span class="s3">else this</span><span class="s2">.tagPrefixes.push({</span>
+        <span class="s2">handle</span><span class="s1">,</span>
+        <span class="s2">prefix</span>
+      <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s3">this</span><span class="s2">.tagPrefixes = </span><span class="s3">this</span><span class="s2">.tagPrefixes.filter(p =&gt; p.handle !== handle)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">toJSON(arg</span><span class="s1">, </span><span class="s2">onAnchor) {</span>
+    <span class="s3">const </span><span class="s2">{</span>
+      <span class="s2">keepBlobsInJSON</span><span class="s1">,</span>
+      <span class="s2">mapAsMap</span><span class="s1">,</span>
+      <span class="s2">maxAliasCount</span>
+    <span class="s2">} = </span><span class="s3">this</span><span class="s2">.options</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">keep = keepBlobsInJSON &amp;&amp; (</span><span class="s3">typeof </span><span class="s2">arg !== </span><span class="s0">'string' </span><span class="s2">|| !(</span><span class="s3">this</span><span class="s2">.contents </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Scalar))</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">ctx = {</span>
+      <span class="s2">doc: </span><span class="s3">this</span><span class="s1">,</span>
+      <span class="s2">indentStep: </span><span class="s0">'  '</span><span class="s1">,</span>
+      <span class="s2">keep</span><span class="s1">,</span>
+      <span class="s2">mapAsMap: keep &amp;&amp; !!mapAsMap</span><span class="s1">,</span>
+      <span class="s2">maxAliasCount</span><span class="s1">,</span>
+      <span class="s2">stringify </span><span class="s5">// Requiring directly in Pair would create circular dependencies</span>
+
+    <span class="s2">}</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">anchorNames = Object.keys(</span><span class="s3">this</span><span class="s2">.anchors.map)</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(anchorNames.length &gt; </span><span class="s4">0</span><span class="s2">) ctx.anchors = </span><span class="s3">new </span><span class="s2">Map(anchorNames.map(name =&gt; [</span><span class="s3">this</span><span class="s2">.anchors.map[name]</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">alias: []</span><span class="s1">,</span>
+      <span class="s2">aliasCount: </span><span class="s4">0</span><span class="s1">,</span>
+      <span class="s2">count: </span><span class="s4">1</span>
+    <span class="s2">}]))</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">res = resolveSeq.toJSON(</span><span class="s3">this</span><span class="s2">.contents</span><span class="s1">, </span><span class="s2">arg</span><span class="s1">, </span><span class="s2">ctx)</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">onAnchor === </span><span class="s0">'function' </span><span class="s2">&amp;&amp; ctx.anchors) </span><span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">{</span>
+      <span class="s2">count</span><span class="s1">,</span>
+      <span class="s2">res</span>
+    <span class="s2">} of ctx.anchors.values()) onAnchor(res</span><span class="s1">, </span><span class="s2">count)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">res</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">toString() {</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.errors.length &gt; </span><span class="s4">0</span><span class="s2">) </span><span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'Document with errors cannot be stringified'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">indentSize = </span><span class="s3">this</span><span class="s2">.options.indent</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(!Number.isInteger(indentSize) || indentSize &lt;= </span><span class="s4">0</span><span class="s2">) {</span>
+      <span class="s3">const </span><span class="s2">s = JSON.stringify(indentSize)</span><span class="s1">;</span>
+      <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">`&quot;indent&quot; option must be a positive integer, not </span><span class="s2">${s}</span><span class="s0">`</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">this</span><span class="s2">.setSchema()</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">lines = []</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">hasDirectives = </span><span class="s3">false</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.version) {</span>
+      <span class="s3">let </span><span class="s2">vd = </span><span class="s0">'%YAML 1.2'</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.schema.name === </span><span class="s0">'yaml-1.1'</span><span class="s2">) {</span>
+        <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.version === </span><span class="s0">'1.0'</span><span class="s2">) vd = </span><span class="s0">'%YAML:1.0'</span><span class="s1">;</span><span class="s3">else if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.version === </span><span class="s0">'1.1'</span><span class="s2">) vd = </span><span class="s0">'%YAML 1.1'</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">lines.push(vd)</span><span class="s1">;</span>
+      <span class="s2">hasDirectives = </span><span class="s3">true</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">const </span><span class="s2">tagNames = </span><span class="s3">this</span><span class="s2">.listNonDefaultTags()</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.tagPrefixes.forEach(({</span>
+      <span class="s2">handle</span><span class="s1">,</span>
+      <span class="s2">prefix</span>
+    <span class="s2">}) =&gt; {</span>
+      <span class="s3">if </span><span class="s2">(tagNames.some(t =&gt; t.indexOf(prefix) === </span><span class="s4">0</span><span class="s2">)) {</span>
+        <span class="s2">lines.push(</span><span class="s0">`%TAG </span><span class="s2">${handle} ${prefix}</span><span class="s0">`</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">hasDirectives = </span><span class="s3">true</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">})</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(hasDirectives || </span><span class="s3">this</span><span class="s2">.directivesEndMarker) lines.push(</span><span class="s0">'---'</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.commentBefore) {</span>
+      <span class="s3">if </span><span class="s2">(hasDirectives || !</span><span class="s3">this</span><span class="s2">.directivesEndMarker) lines.unshift(</span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">lines.unshift(</span><span class="s3">this</span><span class="s2">.commentBefore.replace(</span><span class="s4">/^/gm</span><span class="s1">, </span><span class="s0">'#'</span><span class="s2">))</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">const </span><span class="s2">ctx = {</span>
+      <span class="s2">anchors: Object.create(</span><span class="s3">null</span><span class="s2">)</span><span class="s1">,</span>
+      <span class="s2">doc: </span><span class="s3">this</span><span class="s1">,</span>
+      <span class="s2">indent: </span><span class="s0">''</span><span class="s1">,</span>
+      <span class="s2">indentStep: </span><span class="s0">' '</span><span class="s2">.repeat(indentSize)</span><span class="s1">,</span>
+      <span class="s2">stringify </span><span class="s5">// Requiring directly in nodes would create circular dependencies</span>
+
+    <span class="s2">}</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">chompKeep = </span><span class="s3">false</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">contentComment = </span><span class="s3">null</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.contents) {</span>
+      <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.contents </span><span class="s3">instanceof </span><span class="s2">resolveSeq.Node) {</span>
+        <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.contents.spaceBefore &amp;&amp; (hasDirectives || </span><span class="s3">this</span><span class="s2">.directivesEndMarker)) lines.push(</span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.contents.commentBefore) lines.push(</span><span class="s3">this</span><span class="s2">.contents.commentBefore.replace(</span><span class="s4">/^/gm</span><span class="s1">, </span><span class="s0">'#'</span><span class="s2">))</span><span class="s1">; </span><span class="s5">// top-level block scalars need to be indented if followed by a comment</span>
+
+        <span class="s2">ctx.forceBlockIndent = !!</span><span class="s3">this</span><span class="s2">.comment</span><span class="s1">;</span>
+        <span class="s2">contentComment = </span><span class="s3">this</span><span class="s2">.contents.comment</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">const </span><span class="s2">onChompKeep = contentComment ? </span><span class="s3">null </span><span class="s2">: () =&gt; chompKeep = </span><span class="s3">true</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">body = stringify(</span><span class="s3">this</span><span class="s2">.contents</span><span class="s1">, </span><span class="s2">ctx</span><span class="s1">, </span><span class="s2">() =&gt; contentComment = </span><span class="s3">null</span><span class="s1">, </span><span class="s2">onChompKeep)</span><span class="s1">;</span>
+      <span class="s2">lines.push(resolveSeq.addComment(body</span><span class="s1">, </span><span class="s0">''</span><span class="s1">, </span><span class="s2">contentComment))</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.contents !== undefined) {</span>
+      <span class="s2">lines.push(stringify(</span><span class="s3">this</span><span class="s2">.contents</span><span class="s1">, </span><span class="s2">ctx))</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.comment) {</span>
+      <span class="s3">if </span><span class="s2">((!chompKeep || contentComment) &amp;&amp; lines[lines.length - </span><span class="s4">1</span><span class="s2">] !== </span><span class="s0">''</span><span class="s2">) lines.push(</span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">lines.push(</span><span class="s3">this</span><span class="s2">.comment.replace(</span><span class="s4">/^/gm</span><span class="s1">, </span><span class="s0">'#'</span><span class="s2">))</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return </span><span class="s2">lines.join(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">) + </span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+<span class="s2">}</span>
+
+<span class="s2">PlainValue._defineProperty(Document</span><span class="s1">, </span><span class="s0">&quot;defaults&quot;</span><span class="s1">, </span><span class="s2">documentOptions)</span><span class="s1">;</span>
+
+<span class="s2">exports.Document = Document</span><span class="s1">;</span>
+<span class="s2">exports.defaultOptions = defaultOptions</span><span class="s1">;</span>
+<span class="s2">exports.scalarOptions = scalarOptions</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

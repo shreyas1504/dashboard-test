@@ -1,0 +1,374 @@
+<html>
+<head>
+<title>jakefile.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+jakefile.js</font>
+</center></td></tr></table>
+<pre><span class="s0">let </span><span class="s1">fs = require(</span><span class="s2">'fs'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">let </span><span class="s1">Q = require(</span><span class="s2">'q'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s1">desc(</span><span class="s2">'The default t.'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">task(</span><span class="s2">'default'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">console.log(</span><span class="s2">'default task'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">desc(</span><span class="s2">'No action.'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">task({</span><span class="s2">'noAction'</span><span class="s1">: [</span><span class="s2">'default'</span><span class="s1">]})</span><span class="s3">;</span>
+
+<span class="s1">desc(</span><span class="s2">'No action, no prereqs.'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">task(</span><span class="s2">'noActionNoPrereqs'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s1">desc(</span><span class="s2">'Top-level zerbofrangazoomy task'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">task(</span><span class="s2">'zerbofrangazoomy'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">console.log(</span><span class="s2">'Whaaaaaaaa? Ran the zerbofrangazoomy task!'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">desc(</span><span class="s2">'Task that throws'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">task(</span><span class="s2">'throwy'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s0">let </span><span class="s1">errorListener = </span><span class="s0">function </span><span class="s1">(err) {</span>
+    <span class="s1">console.log(</span><span class="s2">'Emitted'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">console.log(err.toString())</span><span class="s3">;</span>
+
+    <span class="s1">jake.removeListener(</span><span class="s2">'error'</span><span class="s3">, </span><span class="s1">errorListener)</span><span class="s3">;</span>
+  <span class="s1">}</span><span class="s3">;</span>
+
+  <span class="s1">jake.on(</span><span class="s2">'error'</span><span class="s3">, </span><span class="s1">errorListener)</span><span class="s3">;</span>
+
+  <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">'I am bad'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">desc(</span><span class="s2">'Task that rejects a Promise'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">task(</span><span class="s2">'promiseRejecter'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s0">const </span><span class="s1">originalOption = jake.program.opts[</span><span class="s2">'allow-rejection'</span><span class="s1">]</span><span class="s3">;</span>
+
+  <span class="s0">const </span><span class="s1">errorListener = </span><span class="s0">function </span><span class="s1">(err) {</span>
+    <span class="s1">console.log(err.toString())</span><span class="s3">;</span>
+    <span class="s1">jake.removeListener(</span><span class="s2">'error'</span><span class="s3">, </span><span class="s1">errorListener)</span><span class="s3">;</span>
+    <span class="s1">jake.program.opts[</span><span class="s2">'allow-rejection'</span><span class="s1">] = originalOption</span><span class="s3">; </span><span class="s4">// Restore original 'allow-rejection' option</span>
+  <span class="s1">}</span><span class="s3">;</span>
+  <span class="s1">jake.on(</span><span class="s2">'error'</span><span class="s3">, </span><span class="s1">errorListener)</span><span class="s3">;</span>
+
+  <span class="s1">jake.program.opts[</span><span class="s2">'allow-rejection'</span><span class="s1">] = </span><span class="s0">false</span><span class="s3">; </span><span class="s4">// Do not allow rejection so the rejection is passed to error handlers</span>
+
+  <span class="s1">Promise.reject(</span><span class="s2">'&lt;promise rejected on purpose&gt;'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">desc(</span><span class="s2">'Accepts args and env vars.'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">task(</span><span class="s2">'argsEnvVars'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s0">let </span><span class="s1">res = {</span>
+    <span class="s1">args: arguments</span>
+    <span class="s3">, </span><span class="s1">env: {</span>
+      <span class="s1">foo: process.env.foo</span>
+      <span class="s3">, </span><span class="s1">baz: process.env.baz</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">;</span>
+  <span class="s1">console.log(JSON.stringify(res))</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">namespace(</span><span class="s2">'foo'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">desc(</span><span class="s2">'The foo:bar t.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'bar'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">if </span><span class="s1">(arguments.length) {</span>
+      <span class="s1">console.log(</span><span class="s2">'foo:bar[' </span><span class="s1">+</span>
+          <span class="s1">Array.prototype.join.call(arguments</span><span class="s3">, </span><span class="s2">','</span><span class="s1">) +</span>
+          <span class="s2">'] task'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s0">else </span><span class="s1">{</span>
+      <span class="s1">console.log(</span><span class="s2">'foo:bar task'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The foo:baz task, calls foo:bar as a prerequisite.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'baz'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'foo:bar'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'foo:baz task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The foo:qux task, calls foo:bar with cmdline args as a prerequisite.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'qux'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'foo:bar[asdf,qwer]'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'foo:qux task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The foo:frang task,`invokes` foo:bar with passed args as a prerequisite.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'frang'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">t = jake.Task[</span><span class="s2">'foo:bar'</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s4">// Do args pass-through</span>
+    <span class="s1">t.invoke.apply(t</span><span class="s3">, </span><span class="s1">arguments)</span><span class="s3">;</span>
+    <span class="s1">t.on(</span><span class="s2">'complete'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">console.log(</span><span class="s2">'foo:frang task'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The foo:zerb task, `executes` foo:bar with passed args as a prerequisite.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'zerb'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">t = jake.Task[</span><span class="s2">'foo:bar'</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s4">// Do args pass-through</span>
+    <span class="s1">t.execute.apply(t</span><span class="s3">, </span><span class="s1">arguments)</span><span class="s3">;</span>
+    <span class="s1">t.on(</span><span class="s2">'complete'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">console.log(</span><span class="s2">'foo:zerb task'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The foo:zoobie task, has no prerequisites.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'zoobie'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'foo:zoobie task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The foo:voom task, run the foo:zoobie task repeatedly.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'voom'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">t = jake.Task[</span><span class="s2">'foo:bar'</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s1">t.on(</span><span class="s2">'complete'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+      <span class="s1">console.log(</span><span class="s2">'complete'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">t.execute.apply(t)</span><span class="s3">;</span>
+    <span class="s1">t.execute.apply(t)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The foo:asdf task, has the same prereq twice.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'asdf'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'foo:bar'</span><span class="s3">, </span><span class="s2">'foo:baz'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'foo:asdf task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">namespace(</span><span class="s2">'bar'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">desc(</span><span class="s2">'The bar:foo task, has no prerequisites, is async, returns Promise which resolves.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'foo'</span><span class="s3">, </span><span class="s1">async </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">return new </span><span class="s1">Promise((resolve</span><span class="s3">, </span><span class="s1">reject) =&gt; {</span>
+      <span class="s1">console.log(</span><span class="s2">'bar:foo task'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">resolve()</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The bar:promise task has no prerequisites, is async, returns Q-based promise.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'promise'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">return </span><span class="s1">Q()</span>
+      <span class="s1">.then(</span><span class="s0">function </span><span class="s1">() {</span>
+        <span class="s1">console.log(</span><span class="s2">'bar:promise task'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">return </span><span class="s5">123654</span><span class="s3">;</span>
+      <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The bar:dependOnpromise task waits for a promise based async test'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'dependOnpromise'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'promise'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'bar:dependOnpromise task saw value'</span><span class="s3">, </span><span class="s1">jake.Task[</span><span class="s2">&quot;bar:promise&quot;</span><span class="s1">].value)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The bar:brokenPromise task is a failing Q-promise based async task.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'brokenPromise'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">return </span><span class="s1">Q()</span>
+      <span class="s1">.then(</span><span class="s0">function </span><span class="s1">() {</span>
+        <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">&quot;nom nom nom&quot;</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The bar:bar task, has the async bar:foo task as a prerequisite.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'bar'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'bar:foo'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'bar:bar task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">namespace(</span><span class="s2">'hoge'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">desc(</span><span class="s2">'The hoge:hoge task, has no prerequisites.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'hoge'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'hoge:hoge task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The hoge:piyo task, has no prerequisites.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'piyo'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'hoge:piyo task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The hoge:fuga task, has hoge:hoge and hoge:piyo as prerequisites.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'fuga'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'hoge:hoge'</span><span class="s3">, </span><span class="s2">'hoge:piyo'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'hoge:fuga task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The hoge:charan task, has hoge:fuga as a prerequisite.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'charan'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'hoge:fuga'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'hoge:charan task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The hoge:gero task, has hoge:fuga as a prerequisite.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'gero'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'hoge:fuga'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'hoge:gero task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'The hoge:kira task, has hoge:charan and hoge:gero as prerequisites.'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'kira'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'hoge:charan'</span><span class="s3">, </span><span class="s2">'hoge:gero'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'hoge:kira task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">namespace(</span><span class="s2">'fileTest'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">directory(</span><span class="s2">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'File task, concatenating two files together'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">file(</span><span class="s2">'foo/concat.txt'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'fileTest:foo'</span><span class="s3">, </span><span class="s2">'fileTest:foo/src1.txt'</span><span class="s3">, </span><span class="s2">'fileTest:foo/src2.txt'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'fileTest:foo/concat.txt task'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">data1 = fs.readFileSync(</span><span class="s2">'foo/src1.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">data2 = fs.readFileSync(</span><span class="s2">'foo/src2.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s2">'foo/concat.txt'</span><span class="s3">, </span><span class="s1">data1 + data2)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'File task, async creation with writeFile'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">file(</span><span class="s2">'foo/src1.txt'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">return new </span><span class="s1">Promise(</span><span class="s0">function </span><span class="s1">(resolve</span><span class="s3">, </span><span class="s1">reject) {</span>
+      <span class="s1">fs.writeFile(</span><span class="s2">'foo/src1.txt'</span><span class="s3">, </span><span class="s2">'src1'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">(err) {</span>
+        <span class="s0">if </span><span class="s1">(err) {</span>
+          <span class="s1">reject(err)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s0">else </span><span class="s1">{</span>
+          <span class="s1">console.log(</span><span class="s2">'fileTest:foo/src1.txt task'</span><span class="s1">)</span><span class="s3">;</span>
+          <span class="s1">resolve()</span><span class="s3">;</span>
+        <span class="s1">}</span>
+      <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'File task, sync creation with writeFileSync'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">file(</span><span class="s2">'foo/src2.txt'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'default'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s2">'foo/src2.txt'</span><span class="s3">, </span><span class="s2">'src2'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">console.log(</span><span class="s2">'fileTest:foo/src2.txt task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'File task, do not run unless the prereq file changes'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">file(</span><span class="s2">'foo/from-src1.txt'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'fileTest:foo'</span><span class="s3">, </span><span class="s2">'fileTest:foo/src1.txt'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">data = fs.readFileSync(</span><span class="s2">'foo/src1.txt'</span><span class="s1">).toString()</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s2">'foo/from-src1.txt'</span><span class="s3">, </span><span class="s1">data)</span><span class="s3">;</span>
+    <span class="s1">console.log(</span><span class="s2">'fileTest:foo/from-src1.txt task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'File task, run if the prereq file changes'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'touch-prereq'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s2">'foo/prereq.txt'</span><span class="s3">, </span><span class="s2">'UPDATED'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'File task, has a preexisting file (with no associated task) as a prereq'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">file(</span><span class="s2">'foo/from-prereq.txt'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'fileTest:foo'</span><span class="s3">, </span><span class="s2">'foo/prereq.txt'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">data = fs.readFileSync(</span><span class="s2">'foo/prereq.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s2">'foo/from-prereq.txt'</span><span class="s3">, </span><span class="s1">data)</span><span class="s3">;</span>
+    <span class="s1">console.log(</span><span class="s2">'fileTest:foo/from-prereq.txt task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">directory(</span><span class="s2">'foo/bar/baz'</span><span class="s1">)</span><span class="s3">;</span>
+
+  <span class="s1">desc(</span><span class="s2">'Write a file in a nested subdirectory'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">file(</span><span class="s2">'foo/bar/baz/bamf.txt'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'foo/bar/baz'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s2">'foo/bar/baz/bamf.txt'</span><span class="s3">, </span><span class="s2">'w00t'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">file(</span><span class="s2">'foo/output1.txt'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'foo'</span><span class="s1">]</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s2">'foo/output1.txt'</span><span class="s3">, </span><span class="s2">'Contents of foo/output1.txt'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">file(</span><span class="s2">'foo/output2a.txt'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'foo/output1.txt'</span><span class="s1">]</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s2">'foo/output2a.txt'</span><span class="s3">, </span><span class="s2">'Contents of foo/output2a.txt'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">file(</span><span class="s2">'foo/output2b.txt'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'foo/output1.txt'</span><span class="s1">]</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s2">'foo/output2b.txt'</span><span class="s3">, </span><span class="s2">'Contents of foo/output2b.txt'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">file(</span><span class="s2">'foo/output3.txt'</span><span class="s3">, </span><span class="s1">[ </span><span class="s2">'foo/output2a.txt'</span><span class="s3">, </span><span class="s2">'foo/output2b.txt'</span><span class="s1">]</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s2">'foo/output3.txt'</span><span class="s3">, </span><span class="s2">'w00t'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">task(</span><span class="s2">'blammo'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">// Define task</span>
+<span class="s1">task(</span><span class="s2">'voom'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'blammo'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">console.log(</span><span class="s0">this</span><span class="s1">.prereqs.length)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s4">// Modify, add a prereq</span>
+<span class="s1">task(</span><span class="s2">'voom'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'noActionNoPrereqs'</span><span class="s1">])</span><span class="s3">;</span>
+
+<span class="s1">namespace(</span><span class="s2">'vronk'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">task(</span><span class="s2">'groo'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">t = jake.Task[</span><span class="s2">'vronk:zong'</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s1">t.addListener(</span><span class="s2">'error'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">(e) {</span>
+      <span class="s1">console.log(e.message)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">t.invoke()</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'zong'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">'OMFGZONG'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s4">// define namespace</span>
+<span class="s1">namespace(</span><span class="s2">'one'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">task(</span><span class="s2">'one'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'one:one'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s4">// modify namespace (add task)</span>
+<span class="s1">namespace(</span><span class="s2">'one'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">task(</span><span class="s2">'two'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'one:one'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">'one:two'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">task(</span><span class="s2">'selfdepconst'</span><span class="s3">, </span><span class="s1">[]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">task(</span><span class="s2">'selfdep'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'selfdep'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">&quot;I made a task that depends on itself&quot;</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+<span class="s1">task(</span><span class="s2">'selfdepdyn'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">task(</span><span class="s2">'selfdeppar'</span><span class="s3">, </span><span class="s1">[]</span><span class="s3">, </span><span class="s1">{concurrency: </span><span class="s5">2</span><span class="s1">}</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">&quot;I will depend on myself and will fail at runtime&quot;</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">'selfdeppar'</span><span class="s3">, </span><span class="s1">[</span><span class="s2">'selfdeppar'</span><span class="s1">])</span><span class="s3">;</span>
+  <span class="s1">jake.Task[</span><span class="s2">'selfdeppar'</span><span class="s1">].invoke()</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">namespace(</span><span class="s2">&quot;large&quot;</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">task(</span><span class="s2">&quot;leaf&quot;</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">&quot;large:leaf&quot;</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s0">const </span><span class="s1">same = []</span><span class="s3">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">let </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s5">2000</span><span class="s3">; </span><span class="s1">i++) {</span>
+    <span class="s1">same.push(</span><span class="s2">&quot;leaf&quot;</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">desc(</span><span class="s2">&quot;Task with a large number of same prereqs&quot;</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">&quot;same&quot;</span><span class="s3">, </span><span class="s1">same</span><span class="s3">, </span><span class="s1">{ concurrency: </span><span class="s5">2 </span><span class="s1">}</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">&quot;large:same&quot;</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s0">const </span><span class="s1">different = []</span><span class="s3">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">let </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s5">2000</span><span class="s3">; </span><span class="s1">i++) {</span>
+    <span class="s0">const </span><span class="s1">name = </span><span class="s2">&quot;leaf-&quot; </span><span class="s1">+ i</span><span class="s3">;</span>
+    <span class="s1">task(name</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+      <span class="s0">if </span><span class="s1">(name === </span><span class="s2">&quot;leaf-12&quot; </span><span class="s1">|| name === </span><span class="s2">&quot;leaf-123&quot;</span><span class="s1">) {</span>
+        <span class="s1">console.log(name)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">different.push(name)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">desc(</span><span class="s2">&quot;Task with a large number of different prereqs&quot;</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">task(</span><span class="s2">&quot;different&quot;</span><span class="s3">, </span><span class="s1">different</span><span class="s3">, </span><span class="s1">{ concurrency: </span><span class="s5">2 </span><span class="s1">} </span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s2">&quot;large:different&quot;</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

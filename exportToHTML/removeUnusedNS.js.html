@@ -1,0 +1,133 @@
+<html>
+<head>
+<title>removeUnusedNS.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #808080;}
+.s7 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+removeUnusedNS.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">exports.type = </span><span class="s0">'full'</span><span class="s1">;</span>
+
+<span class="s2">exports.active = </span><span class="s3">true</span><span class="s1">;</span>
+
+<span class="s2">exports.description = </span><span class="s0">'removes unused namespaces declaration'</span><span class="s1">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Remove unused namespaces declaration.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} item current iteration item</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Boolean} if false, item will be filtered out</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@author </span><span class="s4">Kir Belevich</span>
+ <span class="s4">*/</span>
+<span class="s2">exports.fn = </span><span class="s3">function</span><span class="s2">(data) {</span>
+
+    <span class="s3">var </span><span class="s2">svgElem</span><span class="s1">,</span>
+        <span class="s2">xmlnsCollection = []</span><span class="s1">;</span>
+
+    <span class="s4">/**</span>
+     <span class="s4">* Remove namespace from collection.</span>
+     <span class="s4">*</span>
+     <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String} ns namescape name</span>
+     <span class="s4">*/</span>
+    <span class="s3">function </span><span class="s2">removeNSfromCollection(ns) {</span>
+
+        <span class="s3">var </span><span class="s2">pos = xmlnsCollection.indexOf(ns)</span><span class="s1">;</span>
+
+        <span class="s6">// if found - remove ns from the namespaces collection</span>
+        <span class="s3">if </span><span class="s2">(pos &gt; -</span><span class="s7">1</span><span class="s2">) {</span>
+            <span class="s2">xmlnsCollection.splice(pos</span><span class="s1">, </span><span class="s7">1</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+    <span class="s2">}</span>
+
+    <span class="s4">/**</span>
+     <span class="s4">* Bananas!</span>
+     <span class="s4">*</span>
+     <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Array} items input items</span>
+     <span class="s4">*</span>
+     <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Array} output items</span>
+     <span class="s4">*/</span>
+    <span class="s3">function </span><span class="s2">monkeys(items) {</span>
+
+        <span class="s3">var </span><span class="s2">i = </span><span class="s7">0</span><span class="s1">,</span>
+            <span class="s2">length = items.content.length</span><span class="s1">;</span>
+
+        <span class="s3">while</span><span class="s2">(i &lt; length) {</span>
+
+            <span class="s3">var </span><span class="s2">item = items.content[i]</span><span class="s1">;</span>
+
+            <span class="s3">if </span><span class="s2">(item.isElem(</span><span class="s0">'svg'</span><span class="s2">)) {</span>
+
+                <span class="s2">item.eachAttr(</span><span class="s3">function</span><span class="s2">(attr) {</span>
+                    <span class="s6">// collect namespaces</span>
+                    <span class="s3">if </span><span class="s2">(attr.prefix === </span><span class="s0">'xmlns' </span><span class="s2">&amp;&amp; attr.local) {</span>
+                        <span class="s2">xmlnsCollection.push(attr.local)</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+                <span class="s2">})</span><span class="s1">;</span>
+
+                <span class="s6">// if svg element has ns-attr</span>
+                <span class="s3">if </span><span class="s2">(xmlnsCollection.length) {</span>
+                    <span class="s6">// save svg element</span>
+                    <span class="s2">svgElem = item</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+            <span class="s2">}</span>
+
+            <span class="s3">if </span><span class="s2">(xmlnsCollection.length) {</span>
+
+                <span class="s6">// check item for the ns-attrs</span>
+                <span class="s3">if </span><span class="s2">(item.prefix) {</span>
+                    <span class="s2">removeNSfromCollection(item.prefix)</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+                <span class="s6">// check each attr for the ns-attrs</span>
+                <span class="s2">item.eachAttr(</span><span class="s3">function</span><span class="s2">(attr) {</span>
+                    <span class="s2">removeNSfromCollection(attr.prefix)</span><span class="s1">;</span>
+                <span class="s2">})</span><span class="s1">;</span>
+
+            <span class="s2">}</span>
+
+            <span class="s6">// if nothing is found - go deeper</span>
+            <span class="s3">if </span><span class="s2">(xmlnsCollection.length &amp;&amp; item.content) {</span>
+                <span class="s2">monkeys(item)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+
+            <span class="s2">i++</span><span class="s1">;</span>
+
+        <span class="s2">}</span>
+
+        <span class="s3">return </span><span class="s2">items</span><span class="s1">;</span>
+
+    <span class="s2">}</span>
+
+    <span class="s2">data = monkeys(data)</span><span class="s1">;</span>
+
+    <span class="s6">// remove svg element ns-attributes if they are not used even once</span>
+    <span class="s3">if </span><span class="s2">(xmlnsCollection.length) {</span>
+        <span class="s2">xmlnsCollection.forEach(</span><span class="s3">function</span><span class="s2">(name) {</span>
+            <span class="s2">svgElem.removeAttr(</span><span class="s0">'xmlns:' </span><span class="s2">+ name)</span><span class="s1">;</span>
+        <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

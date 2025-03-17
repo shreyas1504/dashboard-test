@@ -1,0 +1,83 @@
+<html>
+<head>
+<title>performance.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #cc7832;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+performance.js</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+
+<span class="s2">'use strict'</span>
+
+<span class="s3">const </span><span class="s1">fs = require(</span><span class="s2">'fs'</span><span class="s1">)</span>
+<span class="s3">const </span><span class="s1">path = require(</span><span class="s2">'path'</span><span class="s1">)</span>
+<span class="s3">const </span><span class="s1">check = require(</span><span class="s2">'check-types'</span><span class="s1">)</span>
+<span class="s3">const </span><span class="s1">bfj = require(</span><span class="s2">'../src'</span><span class="s1">)</span>
+
+<span class="s3">const </span><span class="s1">inPath = getDataPath(</span><span class="s2">'.json'</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s3">let </span><span class="s1">time = process.hrtime()</span>
+
+<span class="s3">if </span><span class="s1">(process.argv.length === </span><span class="s5">4</span><span class="s1">) {</span>
+  <span class="s3">const </span><span class="s1">stuff = []</span>
+  <span class="s3">const </span><span class="s1">stream = bfj.match(fs.createReadStream(inPath)</span><span class="s4">, </span><span class="s1">process.argv[</span><span class="s5">3</span><span class="s1">])</span>
+  <span class="s1">stream.on(</span><span class="s2">'data'</span><span class="s4">, </span><span class="s1">thing =&gt; stuff.push(thing))</span>
+  <span class="s1">stream.on(</span><span class="s2">'end'</span><span class="s4">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">reportTime()</span>
+    <span class="s1">console.log(</span><span class="s2">'hooray!'</span><span class="s4">, </span><span class="s1">stuff.length)</span>
+    <span class="s1">fs.writeFileSync(getDataPath(</span><span class="s2">'-result.ndjson'</span><span class="s1">)</span><span class="s4">, </span><span class="s1">stuff.map(s =&gt; JSON.stringify(s)).join(</span><span class="s2">'</span><span class="s4">\n</span><span class="s2">'</span><span class="s1">)</span><span class="s4">, </span><span class="s1">{</span>
+      <span class="s1">encoding: </span><span class="s2">'utf8'</span><span class="s4">,</span>
+    <span class="s1">})</span>
+    <span class="s1">process.exit(</span><span class="s5">0</span><span class="s1">)</span>
+  <span class="s1">})</span>
+  <span class="s1">stream.on(</span><span class="s2">'error'</span><span class="s4">, </span><span class="s1">error =&gt; {</span>
+    <span class="s1">console.error(</span><span class="s2">'error!'</span><span class="s4">, </span><span class="s1">error.stack)</span>
+    <span class="s1">process.exit(</span><span class="s5">1</span><span class="s1">)</span>
+  <span class="s1">})</span>
+  <span class="s1">stream.on(</span><span class="s2">'dataError'</span><span class="s4">, </span><span class="s1">error =&gt; {</span>
+    <span class="s1">console.error(</span><span class="s2">'dataError!'</span><span class="s4">, </span><span class="s1">error.stack)</span>
+    <span class="s1">process.exit(</span><span class="s5">2</span><span class="s1">)</span>
+  <span class="s1">})</span>
+<span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+  <span class="s1">console.log(</span><span class="s2">'reading json'</span><span class="s1">)</span>
+  <span class="s1">bfj.read(inPath)</span>
+    <span class="s1">.then(data =&gt; {</span>
+      <span class="s1">reportTime()</span>
+      <span class="s1">console.log(</span><span class="s2">'writing json'</span><span class="s1">)</span>
+      <span class="s3">return </span><span class="s1">bfj.write(getDataPath(</span><span class="s2">'-result.json'</span><span class="s1">)</span><span class="s4">, </span><span class="s1">data)</span>
+    <span class="s1">})</span>
+    <span class="s1">.then(() =&gt; done(</span><span class="s2">'succeeded'</span><span class="s1">))</span>
+    <span class="s1">.catch(error =&gt; done(error.stack</span><span class="s4">, </span><span class="s5">1</span><span class="s1">))</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">getDataPath (suffix) {</span>
+  <span class="s3">return </span><span class="s1">path.resolve(__dirname</span><span class="s4">, </span><span class="s1">process.argv[</span><span class="s5">2</span><span class="s1">] + suffix)</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">reportTime () {</span>
+  <span class="s3">let </span><span class="s1">interimTime = process.hrtime(time)</span>
+  <span class="s1">console.log(</span><span class="s2">'%d seconds and %d nanoseconds'</span><span class="s4">, </span><span class="s1">interimTime[</span><span class="s5">0</span><span class="s1">]</span><span class="s4">, </span><span class="s1">interimTime[</span><span class="s5">1</span><span class="s1">])</span>
+  <span class="s1">time = process.hrtime()</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">done (message</span><span class="s4">, </span><span class="s1">code) {</span>
+  <span class="s1">reportTime()</span>
+  <span class="s1">console.log(message)</span>
+  <span class="s1">process.exit(code)</span>
+<span class="s1">}</span>
+
+</pre>
+</body>
+</html>

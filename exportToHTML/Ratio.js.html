@@ -1,0 +1,88 @@
+<html>
+<head>
+<title>Ratio.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Ratio.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">isDigit = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).isDigit</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).TYPE</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">NUMBER = TYPE.Number</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">DELIM = TYPE.Delim</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">SOLIDUS = </span><span class="s4">0x002F</span><span class="s3">;  </span><span class="s5">// U+002F SOLIDUS (/)</span>
+<span class="s0">var </span><span class="s1">FULLSTOP = </span><span class="s4">0x002E</span><span class="s3">; </span><span class="s5">// U+002E FULL STOP (.)</span>
+
+<span class="s5">// Terms of &lt;ratio&gt; should be a positive numbers (not zero or negative)</span>
+<span class="s5">// (see https://drafts.csswg.org/mediaqueries-3/#values)</span>
+<span class="s5">// However, -o-min-device-pixel-ratio takes fractional values as a ratio's term</span>
+<span class="s5">// and this is using by various sites. Therefore we relax checking on parse</span>
+<span class="s5">// to test a term is unsigned number without an exponent part.</span>
+<span class="s5">// Additional checking may be applied on lexer validation.</span>
+<span class="s0">function </span><span class="s1">consumeNumber() {</span>
+    <span class="s0">this</span><span class="s1">.scanner.skipWS()</span><span class="s3">;</span>
+
+    <span class="s0">var </span><span class="s1">value = </span><span class="s0">this</span><span class="s1">.consume(NUMBER)</span><span class="s3">;</span>
+
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; value.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+        <span class="s0">var </span><span class="s1">code = value.charCodeAt(i)</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(!isDigit(code) &amp;&amp; code !== FULLSTOP) {</span>
+            <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Unsigned number is expected'</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart - value.length + i)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(Number(value) === </span><span class="s4">0</span><span class="s1">) {</span>
+        <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Zero number is not allowed'</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart - value.length)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">value</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s5">// &lt;positive-integer&gt; S* '/' S* &lt;positive-integer&gt;</span>
+<span class="s1">module.exports = {</span>
+    <span class="s1">name: </span><span class="s2">'Ratio'</span><span class="s3">,</span>
+    <span class="s1">structure: {</span>
+        <span class="s1">left: String</span><span class="s3">,</span>
+        <span class="s1">right: String</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">parse: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">var </span><span class="s1">start = </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">left = consumeNumber.call(</span><span class="s0">this</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">right</span><span class="s3">;</span>
+
+        <span class="s0">this</span><span class="s1">.scanner.skipWS()</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.scanner.isDelim(SOLIDUS)) {</span>
+            <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Solidus is expected'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s0">this</span><span class="s1">.eat(DELIM)</span><span class="s3">;</span>
+        <span class="s1">right = consumeNumber.call(</span><span class="s0">this</span><span class="s1">)</span><span class="s3">;</span>
+
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">type: </span><span class="s2">'Ratio'</span><span class="s3">,</span>
+            <span class="s1">loc: </span><span class="s0">this</span><span class="s1">.getLocation(start</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart)</span><span class="s3">,</span>
+            <span class="s1">left: left</span><span class="s3">,</span>
+            <span class="s1">right: right</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">generate: </span><span class="s0">function</span><span class="s1">(node) {</span>
+        <span class="s0">this</span><span class="s1">.chunk(node.left)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">'/'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.chunk(node.right)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

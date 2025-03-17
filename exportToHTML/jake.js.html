@@ -1,0 +1,354 @@
+<html>
+<head>
+<title>jake.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #808080;}
+.s6 { color: #6897bb;}
+.s7 { color: #8a8a8a; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+jake.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * Jake JavaScript build tool 
+ * Copyright 2112 Matthew Eernisse (mde@fleegix.org) 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *         http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+*/</span>
+
+<span class="s2">if </span><span class="s1">(!global.jake) {</span>
+
+  <span class="s2">let </span><span class="s1">EventEmitter = require(</span><span class="s3">'events'</span><span class="s1">).EventEmitter</span><span class="s4">;</span>
+  <span class="s5">// And so it begins</span>
+  <span class="s1">global.jake = </span><span class="s2">new </span><span class="s1">EventEmitter()</span><span class="s4">;</span>
+
+  <span class="s2">let </span><span class="s1">fs = require(</span><span class="s3">'fs'</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">chalk = require(</span><span class="s3">'chalk'</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">taskNs = require(</span><span class="s3">'./task'</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">Task = taskNs.Task</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">FileTask = taskNs.FileTask</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">DirectoryTask = taskNs.DirectoryTask</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">Rule = require(</span><span class="s3">'./rule'</span><span class="s1">).Rule</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">Namespace = require(</span><span class="s3">'./namespace'</span><span class="s1">).Namespace</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">RootNamespace = require(</span><span class="s3">'./namespace'</span><span class="s1">).RootNamespace</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">api = require(</span><span class="s3">'./api'</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">utils = require(</span><span class="s3">'./utils'</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">Program = require(</span><span class="s3">'./program'</span><span class="s1">).Program</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">loader = require(</span><span class="s3">'./loader'</span><span class="s1">)()</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">pkg = JSON.parse(fs.readFileSync(__dirname + </span><span class="s3">'/../package.json'</span><span class="s1">).toString())</span><span class="s4">;</span>
+
+  <span class="s2">const </span><span class="s1">MAX_RULE_RECURSION_LEVEL = </span><span class="s6">16</span><span class="s4">;</span>
+
+  <span class="s5">// Globalize jake and top-level API methods (e.g., `task`, `desc`)</span>
+  <span class="s1">Object.assign(global</span><span class="s4">, </span><span class="s1">api)</span><span class="s4">;</span>
+
+  <span class="s5">// Copy utils onto base jake</span>
+  <span class="s1">jake.logger = utils.logger</span><span class="s4">;</span>
+  <span class="s1">jake.exec = utils.exec</span><span class="s4">;</span>
+
+  <span class="s5">// File utils should be aliased directly on base jake as well</span>
+  <span class="s1">Object.assign(jake</span><span class="s4">, </span><span class="s1">utils.file)</span><span class="s4">;</span>
+
+  <span class="s5">// Also add top-level API methods to exported object for those who don't want to</span>
+  <span class="s5">// use the globals (`file` here will overwrite the 'file' utils namespace)</span>
+  <span class="s1">Object.assign(jake</span><span class="s4">, </span><span class="s1">api)</span><span class="s4">;</span>
+
+  <span class="s1">Object.assign(jake</span><span class="s4">, </span><span class="s2">new </span><span class="s1">(</span><span class="s2">function </span><span class="s1">() {</span>
+
+    <span class="s2">this</span><span class="s1">._invocationChain = []</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">._taskTimeout = </span><span class="s6">30000</span><span class="s4">;</span>
+
+    <span class="s5">// Public properties</span>
+    <span class="s5">// =================</span>
+    <span class="s2">this</span><span class="s1">.version = pkg.version</span><span class="s4">;</span>
+    <span class="s5">// Used when Jake exits with a specific error-code</span>
+    <span class="s2">this</span><span class="s1">.errorCode = </span><span class="s2">null</span><span class="s4">;</span>
+    <span class="s5">// Loads Jakefiles/jakelibdirs</span>
+    <span class="s2">this</span><span class="s1">.loader = loader</span><span class="s4">;</span>
+    <span class="s5">// The root of all ... namespaces</span>
+    <span class="s2">this</span><span class="s1">.rootNamespace = </span><span class="s2">new </span><span class="s1">RootNamespace()</span><span class="s4">;</span>
+    <span class="s5">// Non-namespaced tasks are placed into the default</span>
+    <span class="s2">this</span><span class="s1">.defaultNamespace = </span><span class="s2">this</span><span class="s1">.rootNamespace</span><span class="s4">;</span>
+    <span class="s5">// Start in the default</span>
+    <span class="s2">this</span><span class="s1">.currentNamespace = </span><span class="s2">this</span><span class="s1">.defaultNamespace</span><span class="s4">;</span>
+    <span class="s5">// Saves the description created by a 'desc' call that prefaces a</span>
+    <span class="s5">// 'task' call that defines a task.</span>
+    <span class="s2">this</span><span class="s1">.currentTaskDescription = </span><span class="s2">null</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">.program = </span><span class="s2">new </span><span class="s1">Program()</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">.FileList = require(</span><span class="s3">'filelist'</span><span class="s1">).FileList</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">.PackageTask = require(</span><span class="s3">'./package_task'</span><span class="s1">).PackageTask</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">.PublishTask = require(</span><span class="s3">'./publish_task'</span><span class="s1">).PublishTask</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">.TestTask = require(</span><span class="s3">'./test_task'</span><span class="s1">).TestTask</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">.Task = Task</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">.FileTask = FileTask</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">.DirectoryTask = DirectoryTask</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">.Namespace = Namespace</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">.Rule = Rule</span><span class="s4">;</span>
+
+    <span class="s2">this</span><span class="s1">.parseAllTasks = </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s2">let </span><span class="s1">_parseNs = </span><span class="s2">function </span><span class="s1">(ns) {</span>
+        <span class="s2">let </span><span class="s1">nsTasks = ns.tasks</span><span class="s4">;</span>
+        <span class="s2">let </span><span class="s1">nsNamespaces = ns.childNamespaces</span><span class="s4">;</span>
+        <span class="s2">for </span><span class="s1">(</span><span class="s2">let </span><span class="s1">q </span><span class="s2">in </span><span class="s1">nsTasks) {</span>
+          <span class="s2">let </span><span class="s1">nsTask = nsTasks[q]</span><span class="s4">;</span>
+          <span class="s1">jake.Task[nsTask.fullName] = nsTask</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s2">for </span><span class="s1">(</span><span class="s2">let </span><span class="s1">p </span><span class="s2">in </span><span class="s1">nsNamespaces) {</span>
+          <span class="s2">let </span><span class="s1">nsNamespace = nsNamespaces[p]</span><span class="s4">;</span>
+          <span class="s1">_parseNs(nsNamespace)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span><span class="s4">;</span>
+      <span class="s1">_parseNs(jake.defaultNamespace)</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">;</span>
+
+    <span class="s7">/**</span>
+     <span class="s7">* Displays the list of descriptions available for tasks defined in</span>
+     <span class="s7">* a Jakefile</span>
+     <span class="s7">*/</span>
+    <span class="s2">this</span><span class="s1">.showAllTaskDescriptions = </span><span class="s2">function </span><span class="s1">(f) {</span>
+      <span class="s2">let </span><span class="s1">p</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">maxTaskNameLength = </span><span class="s6">0</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">task</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">padding</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">name</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">descr</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">filter = </span><span class="s2">typeof </span><span class="s1">f == </span><span class="s3">'string' </span><span class="s1">? f : </span><span class="s2">null</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">taskParams</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">len</span><span class="s4">;</span>
+
+      <span class="s2">for </span><span class="s1">(p </span><span class="s2">in </span><span class="s1">jake.Task) {</span>
+        <span class="s2">if </span><span class="s1">(!Object.prototype.hasOwnProperty.call(jake.Task</span><span class="s4">, </span><span class="s1">p)) {</span>
+          <span class="s2">continue</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s2">if </span><span class="s1">(filter &amp;&amp; p.indexOf(filter) == -</span><span class="s6">1</span><span class="s1">) {</span>
+          <span class="s2">continue</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s1">task = jake.Task[p]</span><span class="s4">;</span>
+        <span class="s1">taskParams = task.params</span><span class="s4">;</span>
+
+        <span class="s5">// Record the length of the longest task name -- used for</span>
+        <span class="s5">// pretty alignment of the task descriptions</span>
+        <span class="s2">if </span><span class="s1">(task.description) {</span>
+          <span class="s1">len = p.length + taskParams.length</span><span class="s4">;</span>
+          <span class="s1">maxTaskNameLength = len &gt; maxTaskNameLength ?</span>
+            <span class="s1">len : maxTaskNameLength</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s5">// Print out each entry with descriptions neatly aligned</span>
+      <span class="s2">for </span><span class="s1">(p </span><span class="s2">in </span><span class="s1">jake.Task) {</span>
+        <span class="s2">if </span><span class="s1">(!Object.prototype.hasOwnProperty.call(jake.Task</span><span class="s4">, </span><span class="s1">p)) {</span>
+          <span class="s2">continue</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s2">if </span><span class="s1">(filter &amp;&amp; p.indexOf(filter) == -</span><span class="s6">1</span><span class="s1">) {</span>
+          <span class="s2">continue</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s1">task = jake.Task[p]</span><span class="s4">;</span>
+
+        <span class="s1">taskParams = </span><span class="s3">&quot;&quot;</span><span class="s4">;</span>
+        <span class="s2">if </span><span class="s1">(task.params != </span><span class="s3">&quot;&quot;</span><span class="s1">) {</span>
+          <span class="s1">taskParams = </span><span class="s3">&quot;[&quot; </span><span class="s1">+ task.params + </span><span class="s3">&quot;]&quot;</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s5">//name = '\033[32m' + p + '\033[39m ';</span>
+        <span class="s1">name = chalk.green(p)</span><span class="s4">;</span>
+
+        <span class="s1">descr = task.description</span><span class="s4">;</span>
+        <span class="s2">if </span><span class="s1">(descr) {</span>
+          <span class="s1">descr = chalk.gray(</span><span class="s3">'# ' </span><span class="s1">+ descr)</span><span class="s4">;</span>
+
+          <span class="s5">// Create padding-string with calculated length</span>
+          <span class="s1">padding = (</span><span class="s2">new </span><span class="s1">Array(maxTaskNameLength - p.length - taskParams.length + </span><span class="s6">4</span><span class="s1">)).join(</span><span class="s3">' '</span><span class="s1">)</span><span class="s4">;</span>
+
+          <span class="s1">console.log(</span><span class="s3">'jake ' </span><span class="s1">+ name + taskParams + padding + descr)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span><span class="s4">;</span>
+
+    <span class="s2">this</span><span class="s1">.createTask = </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s2">let </span><span class="s1">args = Array.prototype.slice.call(arguments)</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">arg</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">obj</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">task</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">type</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">name</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">action</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">opts = {}</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">prereqs = []</span><span class="s4">;</span>
+
+      <span class="s1">type = args.shift()</span><span class="s4">;</span>
+
+      <span class="s5">// name, [deps], [action]</span>
+      <span class="s5">// Name (string) + deps (array) format</span>
+      <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">args[</span><span class="s6">0</span><span class="s1">] == </span><span class="s3">'string'</span><span class="s1">) {</span>
+        <span class="s1">name = args.shift()</span><span class="s4">;</span>
+        <span class="s2">if </span><span class="s1">(Array.isArray(args[</span><span class="s6">0</span><span class="s1">])) {</span>
+          <span class="s1">prereqs = args.shift()</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+      <span class="s5">// name:deps, [action]</span>
+      <span class="s5">// Legacy object-literal syntax, e.g.: {'name': ['depA', 'depB']}</span>
+      <span class="s2">else </span><span class="s1">{</span>
+        <span class="s1">obj = args.shift()</span><span class="s4">;</span>
+        <span class="s2">for </span><span class="s1">(</span><span class="s2">let </span><span class="s1">p </span><span class="s2">in </span><span class="s1">obj) {</span>
+          <span class="s1">prereqs = prereqs.concat(obj[p])</span><span class="s4">;</span>
+          <span class="s1">name = p</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s5">// Optional opts/callback or callback/opts</span>
+      <span class="s2">while </span><span class="s1">((arg = args.shift())) {</span>
+        <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">arg == </span><span class="s3">'function'</span><span class="s1">) {</span>
+          <span class="s1">action = arg</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s2">else </span><span class="s1">{</span>
+          <span class="s1">opts = Object.assign(Object.create(</span><span class="s2">null</span><span class="s1">)</span><span class="s4">, </span><span class="s1">arg)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s1">task = jake.currentNamespace.resolveTask(name)</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(task &amp;&amp; !action) {</span>
+        <span class="s5">// Task already exists and no action, just update prereqs, and return it.</span>
+        <span class="s1">task.prereqs = task.prereqs.concat(prereqs)</span><span class="s4">;</span>
+        <span class="s2">return </span><span class="s1">task</span><span class="s4">;</span>
+      <span class="s1">}</span>
+
+      <span class="s2">switch </span><span class="s1">(type) {</span>
+      <span class="s2">case </span><span class="s3">'directory'</span><span class="s1">:</span>
+        <span class="s1">action = </span><span class="s2">function </span><span class="s1">action() {</span>
+          <span class="s1">jake.mkdirP(name)</span><span class="s4">;</span>
+        <span class="s1">}</span><span class="s4">;</span>
+        <span class="s1">task = </span><span class="s2">new </span><span class="s1">DirectoryTask(name</span><span class="s4">, </span><span class="s1">prereqs</span><span class="s4">, </span><span class="s1">action</span><span class="s4">, </span><span class="s1">opts)</span><span class="s4">;</span>
+        <span class="s2">break</span><span class="s4">;</span>
+      <span class="s2">case </span><span class="s3">'file'</span><span class="s1">:</span>
+        <span class="s1">task = </span><span class="s2">new </span><span class="s1">FileTask(name</span><span class="s4">, </span><span class="s1">prereqs</span><span class="s4">, </span><span class="s1">action</span><span class="s4">, </span><span class="s1">opts)</span><span class="s4">;</span>
+        <span class="s2">break</span><span class="s4">;</span>
+      <span class="s2">default</span><span class="s1">:</span>
+        <span class="s1">task = </span><span class="s2">new </span><span class="s1">Task(name</span><span class="s4">, </span><span class="s1">prereqs</span><span class="s4">, </span><span class="s1">action</span><span class="s4">, </span><span class="s1">opts)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+
+      <span class="s1">jake.currentNamespace.addTask(task)</span><span class="s4">;</span>
+
+      <span class="s2">if </span><span class="s1">(jake.currentTaskDescription) {</span>
+        <span class="s1">task.description = jake.currentTaskDescription</span><span class="s4">;</span>
+        <span class="s1">jake.currentTaskDescription = </span><span class="s2">null</span><span class="s4">;</span>
+      <span class="s1">}</span>
+
+      <span class="s5">// FIXME: Should only need to add a new entry for the current</span>
+      <span class="s5">// task-definition, not reparse the entire structure</span>
+      <span class="s1">jake.parseAllTasks()</span><span class="s4">;</span>
+
+      <span class="s2">return </span><span class="s1">task</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">;</span>
+
+    <span class="s2">this</span><span class="s1">.attemptRule = </span><span class="s2">function </span><span class="s1">(name</span><span class="s4">, </span><span class="s1">ns</span><span class="s4">, </span><span class="s1">level) {</span>
+      <span class="s2">let </span><span class="s1">prereqRule</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">prereq</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(level &gt; MAX_RULE_RECURSION_LEVEL) {</span>
+        <span class="s2">return null</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s5">// Check Rule</span>
+      <span class="s1">prereqRule = ns.matchRule(name)</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(prereqRule) {</span>
+        <span class="s1">prereq = prereqRule.createTask(name</span><span class="s4">, </span><span class="s1">level)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s2">return </span><span class="s1">prereq || </span><span class="s2">null</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">;</span>
+
+    <span class="s2">this</span><span class="s1">.createPlaceholderFileTask = </span><span class="s2">function </span><span class="s1">(name</span><span class="s4">, </span><span class="s1">namespace) {</span>
+      <span class="s2">let </span><span class="s1">parsed = name.split(</span><span class="s3">':'</span><span class="s1">)</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">filePath = parsed.pop()</span><span class="s4">; </span><span class="s5">// Strip any namespace</span>
+      <span class="s2">let </span><span class="s1">task</span><span class="s4">;</span>
+
+      <span class="s1">task = namespace.resolveTask(name)</span><span class="s4">;</span>
+
+      <span class="s5">// If there's not already an existing dummy FileTask for it,</span>
+      <span class="s5">// create one</span>
+      <span class="s2">if </span><span class="s1">(!task) {</span>
+        <span class="s5">// Create a dummy FileTask only if file actually exists</span>
+        <span class="s2">if </span><span class="s1">(fs.existsSync(filePath)) {</span>
+          <span class="s1">task = </span><span class="s2">new </span><span class="s1">jake.FileTask(filePath)</span><span class="s4">;</span>
+          <span class="s1">task.dummy = </span><span class="s2">true</span><span class="s4">;</span>
+          <span class="s2">let </span><span class="s1">ns</span><span class="s4">;</span>
+          <span class="s2">if </span><span class="s1">(parsed.length) {</span>
+            <span class="s1">ns = namespace.resolveNamespace(parsed.join(</span><span class="s3">':'</span><span class="s1">))</span><span class="s4">;</span>
+          <span class="s1">}</span>
+          <span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">ns = namespace</span><span class="s4">;</span>
+          <span class="s1">}</span>
+          <span class="s2">if </span><span class="s1">(!namespace) {</span>
+            <span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">'Invalid namespace, cannot add FileTask'</span><span class="s1">)</span><span class="s4">;</span>
+          <span class="s1">}</span>
+          <span class="s1">ns.addTask(task)</span><span class="s4">;</span>
+          <span class="s5">// Put this dummy Task in the global Tasks list so</span>
+          <span class="s5">// modTime will be eval'd correctly</span>
+          <span class="s1">jake.Task[</span><span class="s3">`</span><span class="s1">${ns.path}</span><span class="s3">:</span><span class="s1">${filePath}</span><span class="s3">`</span><span class="s1">] = task</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s2">return </span><span class="s1">task || </span><span class="s2">null</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">;</span>
+
+
+    <span class="s2">this</span><span class="s1">.run = </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s2">let </span><span class="s1">args = Array.prototype.slice.call(arguments)</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">program = </span><span class="s2">this</span><span class="s1">.program</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">loader = </span><span class="s2">this</span><span class="s1">.loader</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">preempt</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">opts</span><span class="s4">;</span>
+
+      <span class="s1">program.parseArgs(args)</span><span class="s4">;</span>
+      <span class="s1">program.init()</span><span class="s4">;</span>
+
+      <span class="s1">preempt = program.firstPreemptiveOption()</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(preempt) {</span>
+        <span class="s1">preempt()</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s2">else </span><span class="s1">{</span>
+        <span class="s1">opts = program.opts</span><span class="s4">;</span>
+        <span class="s5">// jakefile flag set but no jakefile yet</span>
+        <span class="s2">if </span><span class="s1">(opts.autocomplete &amp;&amp; opts.jakefile === </span><span class="s2">true</span><span class="s1">) {</span>
+          <span class="s1">process.stdout.write(</span><span class="s3">'no-complete'</span><span class="s1">)</span><span class="s4">;</span>
+          <span class="s2">return</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s5">// Load Jakefile and jakelibdir files</span>
+        <span class="s2">let </span><span class="s1">jakefileLoaded = loader.loadFile(opts.jakefile)</span><span class="s4">;</span>
+        <span class="s2">let </span><span class="s1">jakelibdirLoaded = loader.loadDirectory(opts.jakelibdir)</span><span class="s4">;</span>
+
+        <span class="s2">if</span><span class="s1">(!jakefileLoaded &amp;&amp; !jakelibdirLoaded &amp;&amp; !opts.autocomplete) {</span>
+          <span class="s1">fail(</span><span class="s3">'No Jakefile. Specify a valid path with -f/--jakefile, ' </span><span class="s1">+</span>
+              <span class="s3">'or place one in the current directory.'</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">program.run()</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s1">})())</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = jake</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<html>
+<head>
+<title>dependencies.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+dependencies.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.missing }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+<span class="s0">{{# def.setupNextLevel }}</span>
+
+
+<span class="s0">{{## def.propertyInData:</span>
+  <span class="s0">{{=$data}}{{= it.util.getProperty($property) }} !== undefined</span>
+  <span class="s0">{{? $ownProperties }}</span>
+    <span class="s0">&amp;&amp; Object.prototype.hasOwnProperty.call({{=$data}}, '{{=it.util.escapeQuotes($property)}}')</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{</span>
+  <span class="s0">var $schemaDeps = {}</span>
+    <span class="s0">, $propertyDeps = {}</span>
+    <span class="s0">, $ownProperties = it.opts.ownProperties;</span>
+
+  <span class="s0">for ($property in $schema) {</span>
+    <span class="s0">if ($property == '__proto__') continue;</span>
+    <span class="s0">var $sch = $schema[$property];</span>
+    <span class="s0">var $deps = Array.isArray($sch) ? $propertyDeps : $schemaDeps;</span>
+    <span class="s0">$deps[$property] = $sch;</span>
+  <span class="s0">}</span>
+<span class="s0">}}</span>
+
+<span class="s0">var {{=$errs}} = errors;</span>
+
+<span class="s0">{{ var $currentErrorPath = it.errorPath; }}</span>
+
+<span class="s0">var missing{{=$lvl}};</span>
+<span class="s0">{{ for (var $property in $propertyDeps) { }}</span>
+  <span class="s0">{{ $deps = $propertyDeps[$property]; }}</span>
+  <span class="s0">{{? $deps.length }}</span>
+    <span class="s0">if ({{# def.propertyInData }}</span>
+      <span class="s0">{{? $breakOnError }}</span>
+          <span class="s0">&amp;&amp; ({{# def.checkMissingProperty:$deps }})) {</span>
+          <span class="s0">{{# def.errorMissingProperty:'dependencies' }}</span>
+      <span class="s0">{{??}}</span>
+        <span class="s0">) {</span>
+          <span class="s0">{{~ $deps:$propertyKey }}</span>
+            <span class="s0">{{# def.allErrorsMissingProperty:'dependencies' }}</span>
+          <span class="s0">{{~}}</span>
+      <span class="s0">{{?}}</span>
+    <span class="s0">} {{# def.elseIfValid }}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{ } }}</span>
+
+<span class="s0">{{</span>
+  <span class="s0">it.errorPath = $currentErrorPath;</span>
+  <span class="s0">var $currentBaseId = $it.baseId;</span>
+<span class="s0">}}</span>
+
+
+<span class="s0">{{ for (var $property in $schemaDeps) { }}</span>
+  <span class="s0">{{ var $sch = $schemaDeps[$property]; }}</span>
+  <span class="s0">{{? {{# def.nonEmptySchema:$sch }} }}</span>
+    <span class="s0">{{=$nextValid}} = true;</span>
+
+    <span class="s0">if ({{# def.propertyInData }}) {</span>
+      <span class="s0">{{ </span>
+        <span class="s0">$it.schema = $sch;</span>
+        <span class="s0">$it.schemaPath = $schemaPath + it.util.getProperty($property);</span>
+        <span class="s0">$it.errSchemaPath = $errSchemaPath + '/' + it.util.escapeFragment($property);</span>
+      <span class="s0">}}</span>
+
+      <span class="s0">{{# def.insertSubschemaCode }}</span>
+    <span class="s0">}</span>
+
+    <span class="s0">{{# def.ifResultValid }}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{ } }}</span>
+
+<span class="s0">{{? $breakOnError }} </span>
+  <span class="s0">{{= $closingBraces }}</span>
+  <span class="s0">if ({{=$errs}} == errors) {</span>
+<span class="s0">{{?}}</span>
+</pre>
+</body>
+</html>

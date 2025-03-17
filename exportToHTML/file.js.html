@@ -1,0 +1,251 @@
+<html>
+<head>
+<title>file.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #8ea765;}
+.s5 { color: #6897bb;}
+.s6 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+file.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * Jake JavaScript build tool 
+ * Copyright 2112 Matthew Eernisse (mde@fleegix.org) 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *         http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+*/</span>
+
+<span class="s2">const </span><span class="s1">PROJECT_DIR = process.env.PROJECT_DIR</span><span class="s3">;</span>
+
+<span class="s2">let </span><span class="s1">assert = require(</span><span class="s4">'assert'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">fs = require(</span><span class="s4">'fs'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">path = require(</span><span class="s4">'path'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">file = require(</span><span class="s4">`</span><span class="s1">${PROJECT_DIR}</span><span class="s4">/lib/utils/file`</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">existsSync = fs.existsSync || path.existsSync</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">exec = require(</span><span class="s4">'child_process'</span><span class="s1">).execSync</span><span class="s3">;</span>
+
+<span class="s1">suite(</span><span class="s4">'fileUtils'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+
+  <span class="s1">test(</span><span class="s4">'mkdirP'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">expected = [</span>
+      <span class="s1">[</span><span class="s4">'foo'</span><span class="s1">]</span><span class="s3">,</span>
+      <span class="s1">[</span><span class="s4">'foo'</span><span class="s3">, </span><span class="s4">'bar'</span><span class="s1">]</span><span class="s3">,</span>
+      <span class="s1">[</span><span class="s4">'foo'</span><span class="s3">, </span><span class="s4">'bar'</span><span class="s3">, </span><span class="s4">'baz'</span><span class="s1">]</span><span class="s3">,</span>
+      <span class="s1">[</span><span class="s4">'foo'</span><span class="s3">, </span><span class="s4">'bar'</span><span class="s3">, </span><span class="s4">'baz'</span><span class="s3">, </span><span class="s4">'qux'</span><span class="s1">]</span>
+    <span class="s1">]</span><span class="s3">;</span>
+    <span class="s1">file.mkdirP(</span><span class="s4">'foo/bar/baz/qux'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">res = exec(</span><span class="s4">'find foo'</span><span class="s1">).toString().trim().split(</span><span class="s4">'</span><span class="s3">\n</span><span class="s4">'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">let </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">, </span><span class="s1">ii = res.length</span><span class="s3">; </span><span class="s1">i &lt; ii</span><span class="s3">; </span><span class="s1">i++) {</span>
+      <span class="s1">assert.equal(path.join.apply(path</span><span class="s3">, </span><span class="s1">expected[i])</span><span class="s3">, </span><span class="s1">res[i])</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'rmRf'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">file.mkdirP(</span><span class="s4">'foo/bar/baz/qux'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'foo/bar'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">res = exec(</span><span class="s4">'find foo'</span><span class="s1">).toString().trim().split(</span><span class="s4">'</span><span class="s3">\n</span><span class="s4">'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s5">1</span><span class="s3">, </span><span class="s1">res.length)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'foo'</span><span class="s3">, </span><span class="s1">res[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">;</span>
+    <span class="s1">fs.rmdirSync(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'rmRf with symlink subdir'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">file.mkdirP(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.mkdirP(</span><span class="s4">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'foo/hello.txt'</span><span class="s3">, </span><span class="s4">'hello, it</span><span class="s3">\'</span><span class="s4">s me'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.symlinkSync(</span><span class="s4">'../foo'</span><span class="s3">, </span><span class="s4">'bar/foo'</span><span class="s1">)</span><span class="s3">; </span><span class="s1">file.rmRf(</span><span class="s4">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s6">// Make sure the bar directory was successfully deleted</span>
+    <span class="s2">let </span><span class="s1">barDeleted = </span><span class="s2">false</span><span class="s3">;</span>
+    <span class="s2">try </span><span class="s1">{</span>
+      <span class="s1">fs.statSync(</span><span class="s4">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s2">catch</span><span class="s1">(err) {</span>
+      <span class="s2">if</span><span class="s1">(err.code == </span><span class="s4">'ENOENT'</span><span class="s1">) {</span>
+        <span class="s1">barDeleted = </span><span class="s2">true</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s1">assert.equal(</span><span class="s2">true</span><span class="s3">, </span><span class="s1">barDeleted)</span><span class="s3">;</span>
+
+    <span class="s6">// Make sure that the file inside the linked folder wasn't deleted</span>
+    <span class="s2">let </span><span class="s1">res = fs.readdirSync(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s5">1</span><span class="s3">, </span><span class="s1">res.length)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'hello.txt'</span><span class="s3">, </span><span class="s1">res[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">;</span>
+
+    <span class="s6">// Cleanup</span>
+    <span class="s1">fs.unlinkSync(</span><span class="s4">'foo/hello.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.rmdirSync(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'rmRf with symlinked dir'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">file.mkdirP(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'foo/hello.txt'</span><span class="s3">, </span><span class="s4">'hello!'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.symlinkSync(</span><span class="s4">'foo'</span><span class="s3">, </span><span class="s4">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s6">// Make sure the bar directory was successfully deleted</span>
+    <span class="s2">let </span><span class="s1">barDeleted = </span><span class="s2">false</span><span class="s3">;</span>
+    <span class="s2">try </span><span class="s1">{</span>
+      <span class="s1">fs.statSync(</span><span class="s4">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s2">catch</span><span class="s1">(err) {</span>
+      <span class="s2">if</span><span class="s1">(err.code == </span><span class="s4">'ENOENT'</span><span class="s1">) {</span>
+        <span class="s1">barDeleted = </span><span class="s2">true</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s1">assert.equal(</span><span class="s2">true</span><span class="s3">, </span><span class="s1">barDeleted)</span><span class="s3">;</span>
+
+    <span class="s6">// Make sure that the file inside the linked folder wasn't deleted</span>
+    <span class="s2">let </span><span class="s1">res = fs.readdirSync(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s5">1</span><span class="s3">, </span><span class="s1">res.length)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'hello.txt'</span><span class="s3">, </span><span class="s1">res[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">;</span>
+
+    <span class="s6">// Cleanup</span>
+    <span class="s1">fs.unlinkSync(</span><span class="s4">'foo/hello.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.rmdirSync(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'cpR with same name and different directory'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">file.mkdirP(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'foo/bar.txt'</span><span class="s3">, </span><span class="s4">'w00t'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.cpR(</span><span class="s4">'foo'</span><span class="s3">, </span><span class="s4">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.ok(existsSync(</span><span class="s4">'bar/bar.txt'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'cpR with same to and from will throw'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">assert.throws(</span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s1">file.cpR(</span><span class="s4">'foo.txt'</span><span class="s3">, </span><span class="s4">'foo.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'cpR rename via copy in directory'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">file.mkdirP(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'foo/bar.txt'</span><span class="s3">, </span><span class="s4">'w00t'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.cpR(</span><span class="s4">'foo/bar.txt'</span><span class="s3">, </span><span class="s4">'foo/baz.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.ok(existsSync(</span><span class="s4">'foo/baz.txt'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'cpR rename via copy in base'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'bar.txt'</span><span class="s3">, </span><span class="s4">'w00t'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.cpR(</span><span class="s4">'bar.txt'</span><span class="s3">, </span><span class="s4">'baz.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.ok(existsSync(</span><span class="s4">'baz.txt'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'bar.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'baz.txt'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'cpR keeps file mode'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'bar.txt'</span><span class="s3">, </span><span class="s4">'w00t'</span><span class="s3">, </span><span class="s1">{mode: </span><span class="s5">0o750</span><span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'bar1.txt'</span><span class="s3">, </span><span class="s4">'w00t!'</span><span class="s3">, </span><span class="s1">{mode: </span><span class="s5">0o744</span><span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">file.cpR(</span><span class="s4">'bar.txt'</span><span class="s3">, </span><span class="s4">'baz.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.cpR(</span><span class="s4">'bar1.txt'</span><span class="s3">, </span><span class="s4">'baz1.txt'</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s1">assert.ok(existsSync(</span><span class="s4">'baz.txt'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.ok(existsSync(</span><span class="s4">'baz1.txt'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">bazStat = fs.statSync(</span><span class="s4">'baz.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">bazStat1 = fs.statSync(</span><span class="s4">'baz1.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s5">0o750</span><span class="s3">, </span><span class="s1">bazStat.mode &amp; </span><span class="s5">0o7777</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s5">0o744</span><span class="s3">, </span><span class="s1">bazStat1.mode &amp; </span><span class="s5">0o7777</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s1">file.rmRf(</span><span class="s4">'bar.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'baz.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'bar1.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'baz1.txt'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'cpR keeps file mode when overwriting with preserveMode'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'bar.txt'</span><span class="s3">, </span><span class="s4">'w00t'</span><span class="s3">, </span><span class="s1">{mode: </span><span class="s5">0o755</span><span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'baz.txt'</span><span class="s3">, </span><span class="s4">'w00t!'</span><span class="s3">, </span><span class="s1">{mode: </span><span class="s5">0o744</span><span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">file.cpR(</span><span class="s4">'bar.txt'</span><span class="s3">, </span><span class="s4">'baz.txt'</span><span class="s3">, </span><span class="s1">{silent: </span><span class="s2">true</span><span class="s3">, </span><span class="s1">preserveMode: </span><span class="s2">true</span><span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">assert.ok(existsSync(</span><span class="s4">'baz.txt'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">bazStat = fs.statSync(</span><span class="s4">'baz.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s5">0o755</span><span class="s3">, </span><span class="s1">bazStat.mode &amp; </span><span class="s5">0o777</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s1">file.rmRf(</span><span class="s4">'bar.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'baz.txt'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'cpR does not keep file mode when overwriting'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'bar.txt'</span><span class="s3">, </span><span class="s4">'w00t'</span><span class="s3">, </span><span class="s1">{mode: </span><span class="s5">0o766</span><span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'baz.txt'</span><span class="s3">, </span><span class="s4">'w00t!'</span><span class="s3">, </span><span class="s1">{mode: </span><span class="s5">0o744</span><span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">file.cpR(</span><span class="s4">'bar.txt'</span><span class="s3">, </span><span class="s4">'baz.txt'</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s1">assert.ok(existsSync(</span><span class="s4">'baz.txt'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">bazStat = fs.statSync(</span><span class="s4">'baz.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s5">0o744</span><span class="s3">, </span><span class="s1">bazStat.mode &amp; </span><span class="s5">0o777</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s1">file.rmRf(</span><span class="s4">'bar.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'baz.txt'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'cpR copies file mode recursively'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">fs.mkdirSync(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'foo/bar.txt'</span><span class="s3">, </span><span class="s4">'w00t'</span><span class="s3">, </span><span class="s1">{mode: </span><span class="s5">0o740</span><span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">file.cpR(</span><span class="s4">'foo'</span><span class="s3">, </span><span class="s4">'baz'</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s1">assert.ok(existsSync(</span><span class="s4">'baz'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">barStat = fs.statSync(</span><span class="s4">'baz/bar.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s5">0o740</span><span class="s3">, </span><span class="s1">barStat.mode &amp; </span><span class="s5">0o777</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s1">file.rmRf(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'baz'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'cpR keeps file mode recursively'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">fs.mkdirSync(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'foo/bar.txt'</span><span class="s3">, </span><span class="s4">'w00t'</span><span class="s3">, </span><span class="s1">{mode: </span><span class="s5">0o740</span><span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">fs.mkdirSync(</span><span class="s4">'baz'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.mkdirSync(</span><span class="s4">'baz/foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'baz/foo/bar.txt'</span><span class="s3">, </span><span class="s4">'w00t!'</span><span class="s3">, </span><span class="s1">{mode: </span><span class="s5">0o755</span><span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">file.cpR(</span><span class="s4">'foo'</span><span class="s3">, </span><span class="s4">'baz'</span><span class="s3">, </span><span class="s1">{silent: </span><span class="s2">true</span><span class="s3">, </span><span class="s1">preserveMode: </span><span class="s2">true</span><span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">assert.ok(existsSync(</span><span class="s4">'baz'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">barStat = fs.statSync(</span><span class="s4">'baz/foo/bar.txt'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s5">0o740</span><span class="s3">, </span><span class="s1">barStat.mode &amp; </span><span class="s5">0o777</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s1">file.rmRf(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'baz'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'cpR copies directory mode recursively'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">fs.mkdirSync(</span><span class="s4">'foo'</span><span class="s3">, </span><span class="s5">0o755</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.mkdirSync(</span><span class="s4">'foo/bar'</span><span class="s3">, </span><span class="s5">0o700</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.cpR(</span><span class="s4">'foo'</span><span class="s3">, </span><span class="s4">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s1">assert.ok(existsSync(</span><span class="s4">'foo'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">fooBarStat = fs.statSync(</span><span class="s4">'bar/bar'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s5">0o700</span><span class="s3">, </span><span class="s1">fooBarStat.mode &amp; </span><span class="s5">0o777</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s1">file.rmRf(</span><span class="s4">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">file.rmRf(</span><span class="s4">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">})</span><span class="s3">;</span>
+
+
+</pre>
+</body>
+</html>

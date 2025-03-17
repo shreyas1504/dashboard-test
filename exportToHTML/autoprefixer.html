@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>autoprefixer</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #6897bb;}
+.s4 { color: #8ea765;}
+.s5 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+autoprefixer</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+
+<span class="s2">let </span><span class="s1">mode = process.argv[</span><span class="s3">2</span><span class="s1">]</span>
+<span class="s2">if </span><span class="s1">(mode === </span><span class="s4">'--info'</span><span class="s1">) {</span>
+  <span class="s1">process.stdout.write(require(</span><span class="s4">'../'</span><span class="s1">)().info() + </span><span class="s4">'</span><span class="s5">\n</span><span class="s4">'</span><span class="s1">)</span>
+<span class="s1">} </span><span class="s2">else if </span><span class="s1">(mode === </span><span class="s4">'--version'</span><span class="s1">) {</span>
+  <span class="s1">process.stdout.write(</span>
+    <span class="s4">'autoprefixer ' </span><span class="s1">+ require(</span><span class="s4">'../package.json'</span><span class="s1">).version + </span><span class="s4">'</span><span class="s5">\n</span><span class="s4">'</span>
+  <span class="s1">)</span>
+<span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+  <span class="s1">process.stdout.write(</span>
+    <span class="s4">'autoprefix</span><span class="s5">\n</span><span class="s4">' </span><span class="s1">+</span>
+      <span class="s4">'</span><span class="s5">\n</span><span class="s4">' </span><span class="s1">+</span>
+      <span class="s4">'Options:</span><span class="s5">\n</span><span class="s4">' </span><span class="s1">+</span>
+      <span class="s4">'  --info    Show target browsers and used prefixes</span><span class="s5">\n</span><span class="s4">' </span><span class="s1">+</span>
+      <span class="s4">'  --version Show version number</span><span class="s5">\n</span><span class="s4">' </span><span class="s1">+</span>
+      <span class="s4">'  --help    Show help</span><span class="s5">\n</span><span class="s4">' </span><span class="s1">+</span>
+      <span class="s4">'</span><span class="s5">\n</span><span class="s4">' </span><span class="s1">+</span>
+      <span class="s4">'Usage:</span><span class="s5">\n</span><span class="s4">' </span><span class="s1">+</span>
+      <span class="s4">'  autoprefixer --info</span><span class="s5">\n</span><span class="s4">'</span>
+  <span class="s1">)</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

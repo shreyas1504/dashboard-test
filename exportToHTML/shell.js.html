@@ -1,0 +1,35 @@
+<html>
+<head>
+<title>shell.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #cc7832;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #6897bb;}
+.s4 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+shell.js</font>
+</center></td></tr></table>
+<pre><span class="s0">module.exports = { escape</span><span class="s1">, </span><span class="s0">unescape }</span><span class="s1">;</span>
+
+<span class="s2">function </span><span class="s0">unescape(w) {</span>
+    <span class="s0">w = w.charAt(</span><span class="s3">0</span><span class="s0">) === </span><span class="s4">'&quot;'</span>
+        <span class="s0">? w.replace(</span><span class="s3">/^&quot;|([^\\])&quot;$/g</span><span class="s1">, </span><span class="s4">'$1'</span><span class="s0">)</span>
+        <span class="s0">: w.replace(</span><span class="s3">/\\ /g</span><span class="s1">, </span><span class="s4">' '</span><span class="s0">)</span><span class="s1">;</span>
+
+    <span class="s2">return </span><span class="s0">w.replace(</span><span class="s3">/\\(&quot;|'|\$|`|\\)/g</span><span class="s1">, </span><span class="s4">'$1'</span><span class="s0">)</span><span class="s1">;</span>
+<span class="s0">}</span>
+
+<span class="s2">function </span><span class="s0">escape(w) {</span>
+    <span class="s0">w = w.replace(</span><span class="s3">/([&quot;'$`\\])/g</span><span class="s1">,</span><span class="s4">'</span><span class="s1">\\</span><span class="s4">$1'</span><span class="s0">)</span><span class="s1">;</span>
+    <span class="s2">return </span><span class="s0">w.match(</span><span class="s3">/\s+/</span><span class="s0">) ? </span><span class="s4">`&quot;</span><span class="s0">${w}</span><span class="s4">&quot;` </span><span class="s0">: w</span><span class="s1">;</span>
+<span class="s0">}</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<html>
+<head>
+<title>test_task.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s7 { color: #6897bb;}
+.s8 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_task.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * Jake JavaScript build tool 
+ * Copyright 2112 Matthew Eernisse (mde@fleegix.org) 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *         http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+*/</span>
+
+<span class="s2">let </span><span class="s1">path = require(</span><span class="s3">'path'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">let </span><span class="s1">currDir = process.cwd()</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+  <span class="s6">@name </span><span class="s5">jake</span>
+  <span class="s6">@namespace </span><span class="s5">jake</span>
+<span class="s5">*/</span>
+<span class="s5">/**</span>
+  <span class="s6">@name </span><span class="s5">jake.TestTask</span>
+  <span class="s6">@constructor</span>
+  <span class="s6">@description </span><span class="s5">Instantiating a TestTask creates a number of Jake</span>
+  <span class="s5">Tasks that make running tests for your software easy.</span>
+
+  <span class="s6">@param </span><span class="s5">{String} name The name of the project</span>
+  <span class="s6">@param </span><span class="s5">{Function} definition Defines the list of files containing the tests,</span>
+  <span class="s5">and the name of the namespace/task for running them. Will be executed on the</span>
+  <span class="s5">instantiated TestTask (i.e., 'this', will be the TestTask instance), to set</span>
+  <span class="s5">the various instance-propertiess.</span>
+
+  <span class="s6">@example</span>
+  <span class="s5">let t = new jake.TestTask('bij-js', function () {</span>
+    <span class="s5">this.testName = 'testSpecial';</span>
+    <span class="s5">this.testFiles.include('test/**');</span>
+  <span class="s5">});</span>
+
+ <span class="s5">*/</span>
+<span class="s2">let </span><span class="s1">TestTask = </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s2">let </span><span class="s1">self = </span><span class="s2">this</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">args = Array.prototype.slice.call(arguments)</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">name = args.shift()</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">definition = args.pop()</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">prereqs = args.pop() || []</span><span class="s4">;</span>
+
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.TestTask#testNam</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{String}</span>
+    <span class="s6">@description </span><span class="s5">The name of the namespace to place the tests in, and</span>
+    <span class="s5">the top-level task for running tests. Defaults to &quot;test&quot;</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.testName = </span><span class="s3">'test'</span><span class="s4">;</span>
+
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.TestTask#testFiles</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{jake.FileList}</span>
+    <span class="s6">@description </span><span class="s5">The list of files containing tests to load</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.testFiles = </span><span class="s2">new </span><span class="s1">jake.FileList()</span><span class="s4">;</span>
+
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.TestTask#showDescription</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{Boolean}</span>
+    <span class="s6">@description </span><span class="s5">Show the created task when doing Jake -T</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.showDescription = </span><span class="s2">true</span><span class="s4">;</span>
+
+  <span class="s0">/* 
+    @name jake.TestTask#totalTests 
+    @public 
+    @type {Number} 
+    @description The total number of tests to run 
+  */</span>
+  <span class="s2">this</span><span class="s1">.totalTests = </span><span class="s7">0</span><span class="s4">;</span>
+
+  <span class="s0">/* 
+    @name jake.TestTask#executedTests 
+    @public 
+    @type {Number} 
+    @description The number of tests successfully run 
+  */</span>
+  <span class="s2">this</span><span class="s1">.executedTests = </span><span class="s7">0</span><span class="s4">;</span>
+
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">definition == </span><span class="s3">'function'</span><span class="s1">) {</span>
+    <span class="s1">definition.call(</span><span class="s2">this</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.showDescription) {</span>
+    <span class="s1">desc(</span><span class="s3">'Run the tests for ' </span><span class="s1">+ name)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">task(</span><span class="s2">this</span><span class="s1">.testName</span><span class="s4">, </span><span class="s1">prereqs</span><span class="s4">, </span><span class="s1">{async: </span><span class="s2">true</span><span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">t = jake.Task[</span><span class="s2">this</span><span class="s1">.fullName + </span><span class="s3">':run'</span><span class="s1">]</span><span class="s4">;</span>
+    <span class="s1">t.on(</span><span class="s3">'complete'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s1">complete()</span><span class="s4">;</span>
+    <span class="s1">})</span><span class="s4">;</span>
+    <span class="s8">// Pass args to the namespaced test</span>
+    <span class="s1">t.invoke.apply(t</span><span class="s4">, </span><span class="s1">arguments)</span><span class="s4">;</span>
+  <span class="s1">})</span><span class="s4">;</span>
+
+  <span class="s1">namespace(self.testName</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+
+    <span class="s2">let </span><span class="s1">runTask = task(</span><span class="s3">'run'</span><span class="s4">, </span><span class="s1">{async: </span><span class="s2">true</span><span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(pat) {</span>
+      <span class="s2">let </span><span class="s1">re</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">testFiles</span><span class="s4">;</span>
+
+      <span class="s8">// Don't nest; make a top-level namespace. Don't want</span>
+      <span class="s8">// re-calling from inside to nest infinitely</span>
+      <span class="s1">jake.currentNamespace = jake.defaultNamespace</span><span class="s4">;</span>
+
+      <span class="s1">re = </span><span class="s2">new </span><span class="s1">RegExp(pat)</span><span class="s4">;</span>
+      <span class="s8">// Get test files that match the passed-in pattern</span>
+      <span class="s1">testFiles = self.testFiles.toArray()</span>
+        <span class="s1">.filter(</span><span class="s2">function </span><span class="s1">(f) {</span>
+          <span class="s2">return </span><span class="s1">(re).test(f)</span><span class="s4">;</span>
+        <span class="s1">}) </span><span class="s8">// Don't load the same file multiple times -- should this be in FileList?</span>
+        <span class="s1">.reduce(</span><span class="s2">function </span><span class="s1">(p</span><span class="s4">, </span><span class="s1">c) {</span>
+          <span class="s2">if </span><span class="s1">(p.indexOf(c) &lt; </span><span class="s7">0</span><span class="s1">) {</span>
+            <span class="s1">p.push(c)</span><span class="s4">;</span>
+          <span class="s1">}</span>
+          <span class="s2">return </span><span class="s1">p</span><span class="s4">;</span>
+        <span class="s1">}</span><span class="s4">, </span><span class="s1">[])</span><span class="s4">;</span>
+
+      <span class="s8">// Create a namespace for all the testing tasks to live in</span>
+      <span class="s1">namespace(self.testName + </span><span class="s3">'Exec'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+        <span class="s8">// Each test will be a prereq for the dummy top-level task</span>
+        <span class="s2">let </span><span class="s1">prereqs = []</span><span class="s4">;</span>
+        <span class="s8">// Continuation to pass to the async tests, wrapping `continune`</span>
+        <span class="s2">let </span><span class="s1">next = </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">complete()</span><span class="s4">;</span>
+        <span class="s1">}</span><span class="s4">;</span>
+        <span class="s8">// Create the task for this test-function</span>
+        <span class="s2">let </span><span class="s1">createTask = </span><span class="s2">function </span><span class="s1">(name</span><span class="s4">, </span><span class="s1">action) {</span>
+          <span class="s8">// If the test-function is defined with a continuation</span>
+          <span class="s8">// param, flag the task as async</span>
+          <span class="s2">let </span><span class="s1">t</span><span class="s4">;</span>
+          <span class="s2">let </span><span class="s1">isAsync = !!action.length</span><span class="s4">;</span>
+
+          <span class="s8">// Define the actual namespaced task with the name, the</span>
+          <span class="s8">// wrapped action, and the correc async-flag</span>
+          <span class="s1">t = task(name</span><span class="s4">, </span><span class="s1">createAction(name</span><span class="s4">, </span><span class="s1">action)</span><span class="s4">, </span><span class="s1">{</span>
+            <span class="s1">async: isAsync</span>
+          <span class="s1">})</span><span class="s4">;</span>
+          <span class="s1">t.once(</span><span class="s3">'complete'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+            <span class="s1">self.executedTests++</span><span class="s4">;</span>
+          <span class="s1">})</span><span class="s4">;</span>
+          <span class="s1">t._internal = </span><span class="s2">true</span><span class="s4">;</span>
+          <span class="s2">return </span><span class="s1">t</span><span class="s4">;</span>
+        <span class="s1">}</span><span class="s4">;</span>
+        <span class="s8">// Used as the action for the defined task for each test.</span>
+        <span class="s2">let </span><span class="s1">createAction = </span><span class="s2">function </span><span class="s1">(n</span><span class="s4">, </span><span class="s1">a) {</span>
+          <span class="s8">// A wrapped function that passes in the `next` function</span>
+          <span class="s8">// for any tasks that run asynchronously</span>
+          <span class="s2">return function </span><span class="s1">() {</span>
+            <span class="s2">let </span><span class="s1">cb</span><span class="s4">;</span>
+            <span class="s2">if </span><span class="s1">(a.length) {</span>
+              <span class="s1">cb = next</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s2">if </span><span class="s1">(!(n == </span><span class="s3">'before' </span><span class="s1">|| n == </span><span class="s3">'after' </span><span class="s1">||</span>
+                    <span class="s7">/_beforeEach$/</span><span class="s1">.test(n) || </span><span class="s7">/_afterEach$/</span><span class="s1">.test(n))) {</span>
+              <span class="s1">jake.logger.log(n)</span><span class="s4">;</span>
+            <span class="s1">}</span>
+            <span class="s8">// 'this' will be the task when action is run</span>
+            <span class="s2">return </span><span class="s1">a.call(</span><span class="s2">this</span><span class="s4">, </span><span class="s1">cb)</span><span class="s4">;</span>
+          <span class="s1">}</span><span class="s4">;</span>
+        <span class="s1">}</span><span class="s4">;</span>
+          <span class="s8">// Dummy top-level task for everything to be prereqs for</span>
+        <span class="s2">let </span><span class="s1">topLevel</span><span class="s4">;</span>
+
+        <span class="s8">// Pull in each test-file, and iterate over any exported</span>
+        <span class="s8">// test-functions. Register each test-function as a prereq task</span>
+        <span class="s1">testFiles.forEach(</span><span class="s2">function </span><span class="s1">(file) {</span>
+          <span class="s2">let </span><span class="s1">exp = require(path.join(currDir</span><span class="s4">, </span><span class="s1">file))</span><span class="s4">;</span>
+
+          <span class="s8">// Create a namespace for each filename, so test-name collisions</span>
+          <span class="s8">// won't be a problem</span>
+          <span class="s1">namespace(file</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+            <span class="s2">let </span><span class="s1">testPrefix = self.testName + </span><span class="s3">'Exec:' </span><span class="s1">+ file + </span><span class="s3">':'</span><span class="s4">;</span>
+            <span class="s2">let </span><span class="s1">testName</span><span class="s4">;</span>
+            <span class="s8">// Dummy task for displaying file banner</span>
+            <span class="s1">testName = </span><span class="s3">'*** Running ' </span><span class="s1">+ file + </span><span class="s3">' ***'</span><span class="s4">;</span>
+            <span class="s1">prereqs.push(testPrefix + testName)</span><span class="s4">;</span>
+            <span class="s1">createTask(testName</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {})</span><span class="s4">;</span>
+
+            <span class="s8">// 'before' setup</span>
+            <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">exp.before == </span><span class="s3">'function'</span><span class="s1">) {</span>
+              <span class="s1">prereqs.push(testPrefix + </span><span class="s3">'before'</span><span class="s1">)</span><span class="s4">;</span>
+              <span class="s8">// Create the task</span>
+              <span class="s1">createTask(</span><span class="s3">'before'</span><span class="s4">, </span><span class="s1">exp.before)</span><span class="s4">;</span>
+            <span class="s1">}</span>
+
+            <span class="s8">// Walk each exported function, and create a task for each</span>
+            <span class="s2">for </span><span class="s1">(</span><span class="s2">let </span><span class="s1">p </span><span class="s2">in </span><span class="s1">exp) {</span>
+              <span class="s2">if </span><span class="s1">(p == </span><span class="s3">'before' </span><span class="s1">|| p == </span><span class="s3">'after' </span><span class="s1">||</span>
+                  <span class="s1">p == </span><span class="s3">'beforeEach' </span><span class="s1">|| p == </span><span class="s3">'afterEach'</span><span class="s1">) {</span>
+                <span class="s2">continue</span><span class="s4">;</span>
+              <span class="s1">}</span>
+
+              <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">exp.beforeEach == </span><span class="s3">'function'</span><span class="s1">) {</span>
+                <span class="s1">prereqs.push(testPrefix + p + </span><span class="s3">'_beforeEach'</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s8">// Create the task</span>
+                <span class="s1">createTask(p + </span><span class="s3">'_beforeEach'</span><span class="s4">, </span><span class="s1">exp.beforeEach)</span><span class="s4">;</span>
+              <span class="s1">}</span>
+
+              <span class="s8">// Add the namespace:name of this test to the list of prereqs</span>
+              <span class="s8">// for the dummy top-level task</span>
+              <span class="s1">prereqs.push(testPrefix + p)</span><span class="s4">;</span>
+              <span class="s8">// Create the task</span>
+              <span class="s1">createTask(p</span><span class="s4">, </span><span class="s1">exp[p])</span><span class="s4">;</span>
+
+              <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">exp.afterEach == </span><span class="s3">'function'</span><span class="s1">) {</span>
+                <span class="s1">prereqs.push(testPrefix + p + </span><span class="s3">'_afterEach'</span><span class="s1">)</span><span class="s4">;</span>
+                <span class="s8">// Create the task</span>
+                <span class="s1">createTask(p + </span><span class="s3">'_afterEach'</span><span class="s4">, </span><span class="s1">exp.afterEach)</span><span class="s4">;</span>
+              <span class="s1">}</span>
+            <span class="s1">}</span>
+
+            <span class="s8">// 'after' teardown</span>
+            <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">exp.after == </span><span class="s3">'function'</span><span class="s1">) {</span>
+              <span class="s1">prereqs.push(testPrefix + </span><span class="s3">'after'</span><span class="s1">)</span><span class="s4">;</span>
+              <span class="s8">// Create the task</span>
+              <span class="s2">let </span><span class="s1">afterTask = createTask(</span><span class="s3">'after'</span><span class="s4">, </span><span class="s1">exp.after)</span><span class="s4">;</span>
+              <span class="s1">afterTask._internal = </span><span class="s2">true</span><span class="s4">;</span>
+            <span class="s1">}</span>
+
+          <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+
+        <span class="s1">self.totalTests = prereqs.length</span><span class="s4">;</span>
+        <span class="s1">process.on(</span><span class="s3">'exit'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s8">// Throw in the case where the process exits without</span>
+          <span class="s8">// finishing tests, but no error was thrown</span>
+          <span class="s2">if </span><span class="s1">(!jake.errorCode &amp;&amp; (self.totalTests &gt; self.executedTests)) {</span>
+            <span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">'Process exited without all tests completing.'</span><span class="s1">)</span><span class="s4">;</span>
+          <span class="s1">}</span>
+        <span class="s1">})</span><span class="s4">;</span>
+
+        <span class="s8">// Create the dummy top-level task. When calling a task internally</span>
+        <span class="s8">// with `invoke` that is async (or has async prereqs), have to listen</span>
+        <span class="s8">// for the 'complete' event to know when it's done</span>
+        <span class="s1">topLevel = task(</span><span class="s3">'__top__'</span><span class="s4">, </span><span class="s1">prereqs)</span><span class="s4">;</span>
+        <span class="s1">topLevel._internal = </span><span class="s2">true</span><span class="s4">;</span>
+        <span class="s1">topLevel.addListener(</span><span class="s3">'complete'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">jake.logger.log(</span><span class="s3">'All tests ran successfully'</span><span class="s1">)</span><span class="s4">;</span>
+          <span class="s1">complete()</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+
+        <span class="s1">topLevel.invoke()</span><span class="s4">; </span><span class="s8">// Do the thing!</span>
+      <span class="s1">})</span><span class="s4">;</span>
+
+    <span class="s1">})</span><span class="s4">;</span>
+    <span class="s1">runTask._internal = </span><span class="s2">true</span><span class="s4">;</span>
+
+  <span class="s1">})</span><span class="s4">;</span>
+
+
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">jake.TestTask = TestTask</span><span class="s4">;</span>
+<span class="s1">exports.TestTask = TestTask</span><span class="s4">;</span>
+
+</pre>
+</body>
+</html>

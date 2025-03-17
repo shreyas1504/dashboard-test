@@ -1,0 +1,89 @@
+<html>
+<head>
+<title>browser-asap.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #808080;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+browser-asap.js</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;use strict&quot;</span><span class="s1">;</span>
+
+<span class="s3">// rawAsap provides everything we need except exception management.</span>
+<span class="s4">var </span><span class="s2">rawAsap = require(</span><span class="s0">&quot;./raw&quot;</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">// RawTasks are recycled to reduce GC churn.</span>
+<span class="s4">var </span><span class="s2">freeTasks = []</span><span class="s1">;</span>
+<span class="s3">// We queue errors to ensure they are thrown in right order (FIFO).</span>
+<span class="s3">// Array-as-queue is good enough here, since we are just dealing with exceptions.</span>
+<span class="s4">var </span><span class="s2">pendingErrors = []</span><span class="s1">;</span>
+<span class="s4">var </span><span class="s2">requestErrorThrow = rawAsap.makeRequestCallFromTimer(throwFirstError)</span><span class="s1">;</span>
+
+<span class="s4">function </span><span class="s2">throwFirstError() {</span>
+    <span class="s4">if </span><span class="s2">(pendingErrors.length) {</span>
+        <span class="s4">throw </span><span class="s2">pendingErrors.shift()</span><span class="s1">;</span>
+    <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Calls a task as soon as possible after returning, in its own event, with priority</span>
+ <span class="s5">* over other events like animation, reflow, and repaint. An error thrown from an</span>
+ <span class="s5">* event will not interrupt, nor even substantially slow down the processing of</span>
+ <span class="s5">* other events, but will be rather postponed to a lower priority event.</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{{call}} task A callable object, typically a function that takes no</span>
+ <span class="s5">* arguments.</span>
+ <span class="s5">*/</span>
+<span class="s2">module.exports = asap</span><span class="s1">;</span>
+<span class="s4">function </span><span class="s2">asap(task) {</span>
+    <span class="s4">var </span><span class="s2">rawTask</span><span class="s1">;</span>
+    <span class="s4">if </span><span class="s2">(freeTasks.length) {</span>
+        <span class="s2">rawTask = freeTasks.pop()</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s4">else </span><span class="s2">{</span>
+        <span class="s2">rawTask = </span><span class="s4">new </span><span class="s2">RawTask()</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">rawTask.task = task</span><span class="s1">;</span>
+    <span class="s2">rawAsap(rawTask)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">// We wrap tasks with recyclable task objects.  A task object implements</span>
+<span class="s3">// `call`, just like a function.</span>
+<span class="s4">function </span><span class="s2">RawTask() {</span>
+    <span class="s4">this</span><span class="s2">.task = </span><span class="s4">null</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">// The sole purpose of wrapping the task is to catch the exception and recycle</span>
+<span class="s3">// the task object after its single use.</span>
+<span class="s2">RawTask.prototype.call = </span><span class="s4">function </span><span class="s2">() {</span>
+    <span class="s4">try </span><span class="s2">{</span>
+        <span class="s4">this</span><span class="s2">.task.call()</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s4">catch </span><span class="s2">(error) {</span>
+        <span class="s4">if </span><span class="s2">(asap.onerror) {</span>
+            <span class="s3">// This hook exists purely for testing purposes.</span>
+            <span class="s3">// Its name will be periodically randomized to break any code that</span>
+            <span class="s3">// depends on its existence.</span>
+            <span class="s2">asap.onerror(error)</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s4">else </span><span class="s2">{</span>
+            <span class="s3">// In a web browser, exceptions are not fatal. However, to avoid</span>
+            <span class="s3">// slowing down the queue of pending tasks, we rethrow the error in a</span>
+            <span class="s3">// lower priority turn.</span>
+            <span class="s2">pendingErrors.push(error)</span><span class="s1">;</span>
+            <span class="s2">requestErrorThrow()</span><span class="s1">;</span>
+        <span class="s2">}</span>
+    <span class="s2">} </span><span class="s4">finally </span><span class="s2">{</span>
+        <span class="s4">this</span><span class="s2">.task = </span><span class="s4">null</span><span class="s1">;</span>
+        <span class="s2">freeTasks[freeTasks.length] = </span><span class="s4">this</span><span class="s1">;</span>
+    <span class="s2">}</span>
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

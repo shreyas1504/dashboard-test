@@ -1,0 +1,246 @@
+<html>
+<head>
+<title>css-tools.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #6897bb;}
+.s7 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+css-tools.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">csstree     = require(</span><span class="s0">'css-tree'</span><span class="s2">)</span><span class="s1">,</span>
+    <span class="s2">List        = csstree.List</span><span class="s1">,</span>
+    <span class="s2">stable      = require(</span><span class="s0">'stable'</span><span class="s2">)</span><span class="s1">,</span>
+    <span class="s2">specificity = require(</span><span class="s0">'csso/lib/restructure/prepare/specificity'</span><span class="s2">)</span><span class="s1">;</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Flatten a CSS AST to a selectors list.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} cssAst css-tree AST to flatten</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Array} selectors</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">flattenToSelectors(cssAst) {</span>
+    <span class="s3">var </span><span class="s2">selectors = []</span><span class="s1">;</span>
+
+    <span class="s2">csstree.walk(cssAst</span><span class="s1">, </span><span class="s2">{visit: </span><span class="s0">'Rule'</span><span class="s1">, </span><span class="s2">enter: </span><span class="s3">function</span><span class="s2">(node) {</span>
+        <span class="s3">if </span><span class="s2">(node.type !== </span><span class="s0">'Rule'</span><span class="s2">) {</span>
+            <span class="s3">return</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s3">var </span><span class="s2">atrule = </span><span class="s3">this</span><span class="s2">.atrule</span><span class="s1">;</span>
+        <span class="s3">var </span><span class="s2">rule = node</span><span class="s1">;</span>
+
+        <span class="s2">node.prelude.children.each(</span><span class="s3">function</span><span class="s2">(selectorNode</span><span class="s1">, </span><span class="s2">selectorItem) {</span>
+            <span class="s3">var </span><span class="s2">selector = {</span>
+                <span class="s2">item: selectorItem</span><span class="s1">,</span>
+                <span class="s2">atrule: atrule</span><span class="s1">,</span>
+                <span class="s2">rule: rule</span><span class="s1">,</span>
+                <span class="s2">pseudos: []</span>
+            <span class="s2">}</span><span class="s1">;</span>
+
+            <span class="s2">selectorNode.children.each(</span><span class="s3">function</span><span class="s2">(selectorChildNode</span><span class="s1">, </span><span class="s2">selectorChildItem</span><span class="s1">, </span><span class="s2">selectorChildList) {</span>
+                <span class="s3">if </span><span class="s2">(selectorChildNode.type === </span><span class="s0">'PseudoClassSelector' </span><span class="s2">||</span>
+                    <span class="s2">selectorChildNode.type === </span><span class="s0">'PseudoElementSelector'</span><span class="s2">) {</span>
+                    <span class="s2">selector.pseudos.push({</span>
+                        <span class="s2">item: selectorChildItem</span><span class="s1">,</span>
+                        <span class="s2">list: selectorChildList</span>
+                    <span class="s2">})</span><span class="s1">;</span>
+                <span class="s2">}</span>
+            <span class="s2">})</span><span class="s1">;</span>
+
+            <span class="s2">selectors.push(selector)</span><span class="s1">;</span>
+        <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">}})</span><span class="s1">;</span>
+
+    <span class="s3">return </span><span class="s2">selectors</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Filter selectors by Media Query.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Array} selectors to filter</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Array} useMqs Array with strings of media queries that should pass (&lt;name&gt; &lt;expression&gt;)</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Array} Filtered selectors that match the passed media queries</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">filterByMqs(selectors</span><span class="s1">, </span><span class="s2">useMqs) {</span>
+    <span class="s3">return </span><span class="s2">selectors.filter(</span><span class="s3">function</span><span class="s2">(selector) {</span>
+        <span class="s3">if </span><span class="s2">(selector.atrule === </span><span class="s3">null</span><span class="s2">) {</span>
+            <span class="s3">return </span><span class="s2">~useMqs.indexOf(</span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s3">var </span><span class="s2">mqName = selector.atrule.name</span><span class="s1">;</span>
+        <span class="s3">var </span><span class="s2">mqStr = mqName</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(selector.atrule.expression &amp;&amp;</span>
+            <span class="s2">selector.atrule.expression.children.first().type === </span><span class="s0">'MediaQueryList'</span><span class="s2">) {</span>
+            <span class="s3">var </span><span class="s2">mqExpr = csstree.generate(selector.atrule.expression)</span><span class="s1">;</span>
+            <span class="s2">mqStr = [mqName</span><span class="s1">, </span><span class="s2">mqExpr].join(</span><span class="s0">' '</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s3">return </span><span class="s2">~useMqs.indexOf(mqStr)</span><span class="s1">;</span>
+    <span class="s2">})</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Filter selectors by the pseudo-elements and/or -classes they contain.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Array} selectors to filter</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Array} usePseudos Array with strings of single or sequence of pseudo-elements and/or -classes that should pass</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Array} Filtered selectors that match the passed pseudo-elements and/or -classes</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">filterByPseudos(selectors</span><span class="s1">, </span><span class="s2">usePseudos) {</span>
+    <span class="s3">return </span><span class="s2">selectors.filter(</span><span class="s3">function</span><span class="s2">(selector) {</span>
+        <span class="s3">var </span><span class="s2">pseudoSelectorsStr = csstree.generate({</span>
+            <span class="s2">type: </span><span class="s0">'Selector'</span><span class="s1">,</span>
+            <span class="s2">children: </span><span class="s3">new </span><span class="s2">List().fromArray(selector.pseudos.map(</span><span class="s3">function</span><span class="s2">(pseudo) {</span>
+                <span class="s3">return </span><span class="s2">pseudo.item.data</span><span class="s1">;</span>
+            <span class="s2">}))</span>
+        <span class="s2">})</span><span class="s1">;</span>
+        <span class="s3">return </span><span class="s2">~usePseudos.indexOf(pseudoSelectorsStr)</span><span class="s1">;</span>
+    <span class="s2">})</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Remove pseudo-elements and/or -classes from the selectors for proper matching.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Array} selectors to clean</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Array} Selectors without pseudo-elements and/or -classes</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">cleanPseudos(selectors) {</span>
+    <span class="s2">selectors.forEach(</span><span class="s3">function</span><span class="s2">(selector) {</span>
+        <span class="s2">selector.pseudos.forEach(</span><span class="s3">function</span><span class="s2">(pseudo) {</span>
+            <span class="s2">pseudo.list.remove(pseudo.item)</span><span class="s1">;</span>
+        <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">})</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Compares two selector specificities.</span>
+ <span class="s4">* extracted from https://github.com/keeganstreet/specificity/blob/master/specificity.js#L211</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Array} aSpecificity Specificity of selector A</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Array} bSpecificity Specificity of selector B</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Number} Score of selector specificity A compared to selector specificity B</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">compareSpecificity(aSpecificity</span><span class="s1">, </span><span class="s2">bSpecificity) {</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i = </span><span class="s6">0</span><span class="s1">; </span><span class="s2">i &lt; </span><span class="s6">4</span><span class="s1">; </span><span class="s2">i += </span><span class="s6">1</span><span class="s2">) {</span>
+        <span class="s3">if </span><span class="s2">(aSpecificity[i] &lt; bSpecificity[i]) {</span>
+            <span class="s3">return </span><span class="s2">-</span><span class="s6">1</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s3">else if </span><span class="s2">(aSpecificity[i] &gt; bSpecificity[i]) {</span>
+            <span class="s3">return </span><span class="s6">1</span><span class="s1">;</span>
+        <span class="s2">}</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return </span><span class="s6">0</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Compare two simple selectors.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} aSimpleSelectorNode Simple selector A</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} bSimpleSelectorNode Simple selector B</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Number} Score of selector A compared to selector B</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">compareSimpleSelectorNode(aSimpleSelectorNode</span><span class="s1">, </span><span class="s2">bSimpleSelectorNode) {</span>
+    <span class="s3">var </span><span class="s2">aSpecificity = specificity(aSimpleSelectorNode)</span><span class="s1">,</span>
+        <span class="s2">bSpecificity = specificity(bSimpleSelectorNode)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">compareSpecificity(aSpecificity</span><span class="s1">, </span><span class="s2">bSpecificity)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_bySelectorSpecificity(selectorA</span><span class="s1">, </span><span class="s2">selectorB) {</span>
+    <span class="s3">return </span><span class="s2">compareSimpleSelectorNode(selectorA.item.data</span><span class="s1">, </span><span class="s2">selectorB.item.data)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Sort selectors stably by their specificity.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Array} selectors to be sorted</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Array} Stable sorted selectors</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">sortSelectors(selectors) {</span>
+    <span class="s3">return </span><span class="s2">stable(selectors</span><span class="s1">, </span><span class="s2">_bySelectorSpecificity)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Convert a css-tree AST style declaration to CSSStyleDeclaration property.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} declaration css-tree style declaration</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Object} CSSStyleDeclaration property</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">csstreeToStyleDeclaration(declaration) {</span>
+    <span class="s3">var </span><span class="s2">propertyName = declaration.property</span><span class="s1">,</span>
+        <span class="s2">propertyValue = csstree.generate(declaration.value)</span><span class="s1">,</span>
+        <span class="s2">propertyPriority = (declaration.important ? </span><span class="s0">'important' </span><span class="s2">: </span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">name: propertyName</span><span class="s1">,</span>
+        <span class="s2">value: propertyValue</span><span class="s1">,</span>
+        <span class="s2">priority: propertyPriority</span>
+    <span class="s2">}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Gets the CSS string of a style element</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} element style element</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{String|Array} CSS string or empty array if no styles are set</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">getCssStr(elem) {</span>
+    <span class="s3">return </span><span class="s2">elem.content[</span><span class="s6">0</span><span class="s2">].text || elem.content[</span><span class="s6">0</span><span class="s2">].cdata || []</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Sets the CSS string of a style element</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} element style element</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String} CSS string to be set</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Object} reference to field with CSS</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">setCssStr(elem</span><span class="s1">, </span><span class="s2">css) {</span>
+    <span class="s7">// in case of cdata field</span>
+    <span class="s3">if</span><span class="s2">(elem.content[</span><span class="s6">0</span><span class="s2">].cdata) {</span>
+        <span class="s2">elem.content[</span><span class="s6">0</span><span class="s2">].cdata = css</span><span class="s1">;</span>
+        <span class="s3">return </span><span class="s2">elem.content[</span><span class="s6">0</span><span class="s2">].cdata</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s7">// in case of text field + if nothing was set yet</span>
+    <span class="s2">elem.content[</span><span class="s6">0</span><span class="s2">].text  = css</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">elem.content[</span><span class="s6">0</span><span class="s2">].text</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s2">module.exports.flattenToSelectors = flattenToSelectors</span><span class="s1">;</span>
+
+<span class="s2">module.exports.filterByMqs = filterByMqs</span><span class="s1">;</span>
+<span class="s2">module.exports.filterByPseudos = filterByPseudos</span><span class="s1">;</span>
+<span class="s2">module.exports.cleanPseudos = cleanPseudos</span><span class="s1">;</span>
+
+<span class="s2">module.exports.compareSpecificity = compareSpecificity</span><span class="s1">;</span>
+<span class="s2">module.exports.compareSimpleSelectorNode = compareSimpleSelectorNode</span><span class="s1">;</span>
+
+<span class="s2">module.exports.sortSelectors = sortSelectors</span><span class="s1">;</span>
+
+<span class="s2">module.exports.csstreeToStyleDeclaration = csstreeToStyleDeclaration</span><span class="s1">;</span>
+
+<span class="s2">module.exports.getCssStr = getCssStr</span><span class="s1">;</span>
+<span class="s2">module.exports.setCssStr = setCssStr</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

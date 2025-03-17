@@ -1,0 +1,123 @@
+<html>
+<head>
+<title>read.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+read.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span>
+
+<span class="s2">const </span><span class="s1">assert = require(</span><span class="s0">'chai'</span><span class="s1">).assert</span>
+<span class="s2">const </span><span class="s1">proxyquire = require(</span><span class="s0">'proxyquire'</span><span class="s1">)</span>
+<span class="s2">const </span><span class="s1">spooks = require(</span><span class="s0">'spooks'</span><span class="s1">)</span>
+
+<span class="s2">const </span><span class="s1">modulePath = </span><span class="s0">'../../src/read'</span>
+
+<span class="s1">suite(</span><span class="s0">'read:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+  <span class="s1">test(</span><span class="s0">'require does not throw'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">assert.doesNotThrow(() =&gt; {</span>
+      <span class="s1">require(modulePath)</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+
+  <span class="s1">test(</span><span class="s0">'require returns function'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">assert.isFunction(require(modulePath))</span>
+  <span class="s1">})</span>
+
+  <span class="s1">suite(</span><span class="s0">'require:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s2">let </span><span class="s1">log</span><span class="s3">, </span><span class="s1">results</span><span class="s3">, </span><span class="s1">read</span>
+
+    <span class="s1">setup(() =&gt; {</span>
+      <span class="s1">log = {}</span>
+      <span class="s1">results = {</span>
+        <span class="s1">parse: [ {} ]</span><span class="s3">,</span>
+        <span class="s1">createReadStream: [ {} ]</span>
+      <span class="s1">}</span>
+      <span class="s1">read = proxyquire(modulePath</span><span class="s3">, </span><span class="s1">{</span>
+        <span class="s1">fs: {</span>
+          <span class="s1">createReadStream: spooks.fn({</span>
+            <span class="s1">name: </span><span class="s0">'createReadStream'</span><span class="s3">,</span>
+            <span class="s1">log: log</span><span class="s3">,</span>
+            <span class="s1">results: results.createReadStream</span>
+          <span class="s1">})</span>
+        <span class="s1">}</span><span class="s3">,</span>
+        <span class="s0">'./parse'</span><span class="s1">: spooks.fn({</span>
+          <span class="s1">name: </span><span class="s0">'parse'</span><span class="s3">,</span>
+          <span class="s1">log: log</span><span class="s3">,</span>
+          <span class="s1">results: results.parse</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'read expects two arguments'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.lengthOf(read</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'read does not throw'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.doesNotThrow(() =&gt; {</span>
+        <span class="s1">read()</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'parse was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.strictEqual(log.counts.parse</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'fs.createReadStream was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.strictEqual(log.counts.createReadStream</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'read:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">path</span><span class="s3">, </span><span class="s1">options</span><span class="s3">, </span><span class="s1">result</span>
+
+      <span class="s1">setup(() =&gt; {</span>
+        <span class="s1">path = {}</span>
+        <span class="s1">options = { foo: </span><span class="s0">'bar'</span><span class="s3">, </span><span class="s1">ndjson: </span><span class="s2">true </span><span class="s1">}</span>
+        <span class="s1">result = read(path</span><span class="s3">, </span><span class="s1">options)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'fs.createReadStream was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.createReadStream</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'fs.createReadStream was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.createReadStream[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.createReadStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">path)</span>
+        <span class="s1">assert.lengthOf(Object.keys(log.args.createReadStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.createReadStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">options)</span>
+        <span class="s1">assert.lengthOf(Object.keys(log.args.createReadStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'parse was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.parse</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'parse was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isUndefined(log.these.parse[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">assert.lengthOf(log.args.parse[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.parse[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">results.createReadStream[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">assert.lengthOf(Object.keys(log.args.parse[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+        <span class="s1">assert.notStrictEqual(log.args.parse[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">options)</span>
+        <span class="s1">assert.deepEqual(log.args.parse[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">{ foo: </span><span class="s0">'bar'</span><span class="s3">, </span><span class="s1">ndjson: </span><span class="s2">false </span><span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'parse result was returned'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(result</span><span class="s3">, </span><span class="s1">results.parse[</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+<span class="s1">})</span>
+</pre>
+</body>
+</html>

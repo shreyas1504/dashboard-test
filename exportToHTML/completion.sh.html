@@ -1,0 +1,67 @@
+<html>
+<head>
+<title>completion.sh</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #808080;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8ea765;}
+.s5 { color: #cfd2d5;}
+.s6 { color: #6897bb;}
+.s7 { color: #c57633;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+completion.sh</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env bash</span>
+<span class="s2">###-begin-{{cmd}}-completion-###</span>
+<span class="s2">#</span>
+<span class="s2"># {{cmd}} command completion script</span>
+<span class="s2">#</span>
+<span class="s2"># Installation: {{cmd}} completion &gt;&gt; ~/.bashrc  (or ~/.zshrc)</span>
+<span class="s2"># Or, maybe: {{cmd}} completion &gt; /usr/local/etc/bash_completion.d/{{cmd}}</span>
+<span class="s2">#</span>
+
+<span class="s1">COMP_WORDBREAKS=</span><span class="s3">$</span><span class="s1">{COMP_WORDBREAKS/=/}</span>
+<span class="s1">COMP_WORDBREAKS=</span><span class="s3">$</span><span class="s1">{COMP_WORDBREAKS/@/}</span>
+<span class="s1">export COMP_WORDBREAKS</span>
+
+<span class="s3">if </span><span class="s1">complete &amp;&gt;/dev/null; </span><span class="s3">then</span>
+  <span class="s1">_{{cmd}}_completion () {</span>
+    <span class="s1">local si=</span><span class="s4">&quot;</span><span class="s5">$IFS</span><span class="s4">&quot;</span>
+    <span class="s1">IFS=</span><span class="s4">$'\n' </span><span class="s1">COMPREPLY=(</span><span class="s3">$</span><span class="s1">(COMP_CWORD=</span><span class="s4">&quot;</span><span class="s5">$COMP_CWORD</span><span class="s4">&quot; </span><span class="s1">\ 
+                           COMP_LINE=</span><span class="s4">&quot;</span><span class="s5">$COMP_LINE</span><span class="s4">&quot; </span><span class="s1">\ 
+                           COMP_POINT=</span><span class="s4">&quot;</span><span class="s5">$COMP_POINT</span><span class="s4">&quot; </span><span class="s1">\ 
+                           {{cmd}} completion -- </span><span class="s4">&quot;</span><span class="s3">$</span><span class="s1">{COMP_WORDS[@]}</span><span class="s4">&quot; </span><span class="s1">\ 
+                           </span><span class="s6">2</span><span class="s3">&gt;</span><span class="s1">/dev/null)) </span><span class="s3">|| </span><span class="s1">return </span><span class="s5">$?</span>
+    <span class="s1">IFS=</span><span class="s4">&quot;</span><span class="s5">$si</span><span class="s4">&quot;</span>
+  <span class="s1">}</span>
+  <span class="s1">complete -F _{{cmd}}_completion {{cmd}}</span>
+<span class="s3">elif </span><span class="s1">compctl &amp;&gt;/dev/null; </span><span class="s3">then</span>
+  <span class="s1">_{{cmd}}_completion () {</span>
+    <span class="s1">local cword line point words si</span>
+    <span class="s1">read -Ac words</span>
+    <span class="s1">read -cn cword</span>
+    <span class="s7">let </span><span class="s1">cword-=</span><span class="s6">1</span>
+    <span class="s1">read -l line</span>
+    <span class="s1">read -ln point</span>
+    <span class="s1">si=</span><span class="s4">&quot;</span><span class="s5">$IFS</span><span class="s4">&quot;</span>
+    <span class="s1">IFS=</span><span class="s4">$'\n' </span><span class="s1">reply=(</span><span class="s3">$</span><span class="s1">(COMP_CWORD=</span><span class="s4">&quot;</span><span class="s5">$cword</span><span class="s4">&quot; </span><span class="s1">\ 
+                       COMP_LINE=</span><span class="s4">&quot;</span><span class="s5">$line</span><span class="s4">&quot; </span><span class="s1">\ 
+                       COMP_POINT=</span><span class="s4">&quot;</span><span class="s5">$point</span><span class="s4">&quot; </span><span class="s1">\ 
+                       {{cmd}} completion -- </span><span class="s4">&quot;</span><span class="s3">$</span><span class="s1">{words[@]}</span><span class="s4">&quot; </span><span class="s1">\ 
+                       </span><span class="s6">2</span><span class="s3">&gt;</span><span class="s1">/dev/null)) </span><span class="s3">|| </span><span class="s1">return </span><span class="s5">$?</span>
+    <span class="s1">IFS=</span><span class="s4">&quot;</span><span class="s5">$si</span><span class="s4">&quot;</span>
+  <span class="s1">}</span>
+  <span class="s1">compctl -K _{{cmd}}_completion {{cmd}}</span>
+<span class="s3">fi</span>
+<span class="s2">###-end-{{cmd}}-completion-###</span>
+</pre>
+</body>
+</html>

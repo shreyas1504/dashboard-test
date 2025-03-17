@@ -1,0 +1,169 @@
+<html>
+<head>
+<title>ascii.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ascii.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">{ compareRangeCovs } from </span><span class="s2">&quot;./compare&quot;</span><span class="s3">;</span>
+<span class="s0">import </span><span class="s1">{ RangeCov } from </span><span class="s2">&quot;./types&quot;</span><span class="s3">;</span>
+
+<span class="s0">interface </span><span class="s1">ReadonlyRangeTree {</span>
+  <span class="s1">readonly start: number</span><span class="s3">;</span>
+  <span class="s1">readonly end: number</span><span class="s3">;</span>
+  <span class="s1">readonly count: number</span><span class="s3">;</span>
+  <span class="s1">readonly children: ReadonlyRangeTree[]</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export function </span><span class="s1">emitForest(trees: ReadonlyArray&lt;ReadonlyRangeTree&gt;): string {</span>
+  <span class="s0">return </span><span class="s1">emitForestLines(trees).join(</span><span class="s2">&quot;</span><span class="s3">\n</span><span class="s2">&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export function </span><span class="s1">emitForestLines(trees: ReadonlyArray&lt;ReadonlyRangeTree&gt;): string[] {</span>
+  <span class="s0">const </span><span class="s1">colMap: Map&lt;number</span><span class="s3">, </span><span class="s1">number&gt; = getColMap(trees)</span><span class="s3">;</span>
+  <span class="s0">const </span><span class="s1">header: string = emitOffsets(colMap)</span><span class="s3">;</span>
+  <span class="s0">return </span><span class="s1">[header</span><span class="s3">, </span><span class="s1">...trees.map(tree =&gt; emitTree(tree</span><span class="s3">, </span><span class="s1">colMap).join(</span><span class="s2">&quot;</span><span class="s3">\n</span><span class="s2">&quot;</span><span class="s1">))]</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">getColMap(trees: Iterable&lt;ReadonlyRangeTree&gt;): Map&lt;number</span><span class="s3">, </span><span class="s1">number&gt; {</span>
+  <span class="s0">const </span><span class="s1">eventSet: Set&lt;number&gt; = </span><span class="s0">new </span><span class="s1">Set()</span><span class="s3">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">tree of trees) {</span>
+    <span class="s0">const </span><span class="s1">stack: ReadonlyRangeTree[] = [tree]</span><span class="s3">;</span>
+    <span class="s0">while </span><span class="s1">(stack.length &gt; </span><span class="s4">0</span><span class="s1">) {</span>
+      <span class="s0">const </span><span class="s1">cur: ReadonlyRangeTree = stack.pop()!</span><span class="s3">;</span>
+      <span class="s1">eventSet.add(cur.start)</span><span class="s3">;</span>
+      <span class="s1">eventSet.add(cur.end)</span><span class="s3">;</span>
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">child of cur.children) {</span>
+        <span class="s1">stack.push(child)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s0">const </span><span class="s1">events: number[] = [...eventSet]</span><span class="s3">;</span>
+  <span class="s1">events.sort((a</span><span class="s3">, </span><span class="s1">b) =&gt; a - b)</span><span class="s3">;</span>
+  <span class="s0">let </span><span class="s1">maxDigits: number = </span><span class="s4">1</span><span class="s3">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">event of events) {</span>
+    <span class="s1">maxDigits = Math.max(maxDigits</span><span class="s3">, </span><span class="s1">event.toString(</span><span class="s4">10</span><span class="s1">).length)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+  <span class="s0">const </span><span class="s1">colWidth: number = maxDigits + </span><span class="s4">3</span><span class="s3">;</span>
+  <span class="s0">const </span><span class="s1">colMap: Map&lt;number</span><span class="s3">, </span><span class="s1">number&gt; = </span><span class="s0">new </span><span class="s1">Map()</span><span class="s3">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">[i</span><span class="s3">, </span><span class="s1">event] of events.entries()) {</span>
+    <span class="s1">colMap.set(event</span><span class="s3">, </span><span class="s1">i * colWidth)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+  <span class="s0">return </span><span class="s1">colMap</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">emitTree(tree: ReadonlyRangeTree</span><span class="s3">, </span><span class="s1">colMap: Map&lt;number</span><span class="s3">, </span><span class="s1">number&gt;): string[] {</span>
+  <span class="s0">const </span><span class="s1">layers: ReadonlyRangeTree[][] = []</span><span class="s3">;</span>
+  <span class="s0">let </span><span class="s1">nextLayer: ReadonlyRangeTree[] = [tree]</span><span class="s3">;</span>
+  <span class="s0">while </span><span class="s1">(nextLayer.length &gt; </span><span class="s4">0</span><span class="s1">) {</span>
+    <span class="s0">const </span><span class="s1">layer: ReadonlyRangeTree[] = nextLayer</span><span class="s3">;</span>
+    <span class="s1">layers.push(layer)</span><span class="s3">;</span>
+    <span class="s1">nextLayer = []</span><span class="s3">;</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">node of layer) {</span>
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">child of node.children) {</span>
+        <span class="s1">nextLayer.push(child)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s0">return </span><span class="s1">layers.map(layer =&gt; emitTreeLayer(layer</span><span class="s3">, </span><span class="s1">colMap))</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export function </span><span class="s1">parseFunctionRanges(text: string</span><span class="s3">, </span><span class="s1">offsetMap: Map&lt;number</span><span class="s3">, </span><span class="s1">number&gt;): RangeCov[] {</span>
+  <span class="s0">const </span><span class="s1">result: RangeCov[] = []</span><span class="s3">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">line of text.split(</span><span class="s2">&quot;</span><span class="s3">\n</span><span class="s2">&quot;</span><span class="s1">)) {</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">range of parseTreeLayer(line</span><span class="s3">, </span><span class="s1">offsetMap)) {</span>
+      <span class="s1">result.push(range)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s1">result.sort(compareRangeCovs)</span><span class="s3">;</span>
+  <span class="s0">return </span><span class="s1">result</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s5">/**</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">layer Sorted list of disjoint trees.</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">colMap</span>
+ <span class="s5">*/</span>
+<span class="s0">function </span><span class="s1">emitTreeLayer(layer: ReadonlyRangeTree[]</span><span class="s3">, </span><span class="s1">colMap: Map&lt;number</span><span class="s3">, </span><span class="s1">number&gt;): string {</span>
+  <span class="s0">const </span><span class="s1">line: string[] = []</span><span class="s3">;</span>
+  <span class="s0">let </span><span class="s1">curIdx: number = </span><span class="s4">0</span><span class="s3">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">{start</span><span class="s3">, </span><span class="s1">end</span><span class="s3">, </span><span class="s1">count} of layer) {</span>
+    <span class="s0">const </span><span class="s1">startIdx: number = colMap.get(start)!</span><span class="s3">;</span>
+    <span class="s0">const </span><span class="s1">endIdx: number = colMap.get(end)!</span><span class="s3">;</span>
+    <span class="s0">if </span><span class="s1">(startIdx &gt; curIdx) {</span>
+      <span class="s1">line.push(</span><span class="s2">&quot; &quot;</span><span class="s1">.repeat(startIdx - curIdx))</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s1">line.push(emitRange(count</span><span class="s3">, </span><span class="s1">endIdx - startIdx))</span><span class="s3">;</span>
+    <span class="s1">curIdx = endIdx</span><span class="s3">;</span>
+  <span class="s1">}</span>
+  <span class="s0">return </span><span class="s1">line.join(</span><span class="s2">&quot;&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">parseTreeLayer(text: string</span><span class="s3">, </span><span class="s1">offsetMap: Map&lt;number</span><span class="s3">, </span><span class="s1">number&gt;): RangeCov[] {</span>
+  <span class="s0">const </span><span class="s1">result: RangeCov[] = []</span><span class="s3">;</span>
+  <span class="s0">const </span><span class="s1">regex: RegExp = </span><span class="s4">/\[(\d+)-*\)/gs</span><span class="s3">;</span>
+  <span class="s0">while </span><span class="s1">(</span><span class="s0">true</span><span class="s1">) {</span>
+    <span class="s0">const </span><span class="s1">match: RegExpMatchArray | </span><span class="s0">null </span><span class="s1">= regex.exec(text)</span><span class="s3">;</span>
+    <span class="s0">if </span><span class="s1">(match === </span><span class="s0">null</span><span class="s1">) {</span>
+      <span class="s0">break</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s0">const </span><span class="s1">startIdx: number = match.index!</span><span class="s3">;</span>
+    <span class="s0">const </span><span class="s1">endIdx: number = startIdx + match[</span><span class="s4">0</span><span class="s1">].length</span><span class="s3">;</span>
+    <span class="s0">const </span><span class="s1">count: number = parseInt(match[</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s4">10</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s0">const </span><span class="s1">startOffset: number | undefined = offsetMap.get(startIdx)</span><span class="s3">;</span>
+    <span class="s0">const </span><span class="s1">endOffset: number | undefined = offsetMap.get(endIdx)</span><span class="s3">;</span>
+    <span class="s0">if </span><span class="s1">(startOffset === undefined || endOffset === undefined) {</span>
+      <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">`Invalid offsets for: </span><span class="s1">${JSON.stringify(text)}</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s1">result.push({startOffset</span><span class="s3">, </span><span class="s1">endOffset</span><span class="s3">, </span><span class="s1">count})</span><span class="s3">;</span>
+  <span class="s1">}</span>
+  <span class="s0">return </span><span class="s1">result</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">emitRange(count: number</span><span class="s3">, </span><span class="s1">len: number): string {</span>
+  <span class="s0">const </span><span class="s1">rangeStart: string = </span><span class="s2">`[</span><span class="s1">${count.toString(</span><span class="s4">10</span><span class="s1">)}</span><span class="s2">`</span><span class="s3">;</span>
+  <span class="s0">const </span><span class="s1">rangeEnd: string = </span><span class="s2">&quot;)&quot;</span><span class="s3">;</span>
+  <span class="s0">const </span><span class="s1">hyphensLen: number = len - (rangeStart.length + rangeEnd.length)</span><span class="s3">;</span>
+  <span class="s0">const </span><span class="s1">hyphens: string = </span><span class="s2">&quot;-&quot;</span><span class="s1">.repeat(Math.max(</span><span class="s4">0</span><span class="s3">, </span><span class="s1">hyphensLen))</span><span class="s3">;</span>
+  <span class="s0">return </span><span class="s2">`</span><span class="s1">${rangeStart}${hyphens}${rangeEnd}</span><span class="s2">`</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">emitOffsets(colMap: Map&lt;number</span><span class="s3">, </span><span class="s1">number&gt;): string {</span>
+  <span class="s0">let </span><span class="s1">line: string = </span><span class="s2">&quot;&quot;</span><span class="s3">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">[event</span><span class="s3">, </span><span class="s1">col] of colMap) {</span>
+    <span class="s0">if </span><span class="s1">(line.length &lt; col) {</span>
+      <span class="s1">line += </span><span class="s2">&quot; &quot;</span><span class="s1">.repeat(col - line.length)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s1">line += event.toString(</span><span class="s4">10</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+  <span class="s0">return </span><span class="s1">line</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export function </span><span class="s1">parseOffsets(text: string): Map&lt;number</span><span class="s3">, </span><span class="s1">number&gt; {</span>
+  <span class="s0">const </span><span class="s1">result: Map&lt;number</span><span class="s3">, </span><span class="s1">number&gt; = </span><span class="s0">new </span><span class="s1">Map()</span><span class="s3">;</span>
+  <span class="s0">const </span><span class="s1">regex: RegExp = </span><span class="s4">/\d+/gs</span><span class="s3">;</span>
+  <span class="s0">while </span><span class="s1">(</span><span class="s0">true</span><span class="s1">) {</span>
+    <span class="s0">const </span><span class="s1">match: RegExpExecArray | </span><span class="s0">null </span><span class="s1">= regex.exec(text)</span><span class="s3">;</span>
+    <span class="s0">if </span><span class="s1">(match === </span><span class="s0">null</span><span class="s1">) {</span>
+      <span class="s0">break</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s1">result.set(match.index</span><span class="s3">, </span><span class="s1">parseInt(match[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">10</span><span class="s1">))</span><span class="s3">;</span>
+  <span class="s1">}</span>
+  <span class="s0">return </span><span class="s1">result</span><span class="s3">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

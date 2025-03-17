@@ -1,0 +1,110 @@
+<html>
+<head>
+<title>helpers.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+helpers.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">makeDom = require(</span><span class="s2">&quot;../utils&quot;</span><span class="s1">).makeDom</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">helpers = require(</span><span class="s2">&quot;../..&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">assert = require(</span><span class="s2">&quot;assert&quot;</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s1">describe(</span><span class="s2">&quot;helpers&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+	<span class="s1">describe(</span><span class="s2">&quot;removeSubsets&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+		<span class="s0">var </span><span class="s1">removeSubsets = helpers.removeSubsets</span><span class="s3">;</span>
+		<span class="s0">var </span><span class="s1">dom = makeDom(</span><span class="s2">&quot;&lt;div&gt;&lt;p&gt;&lt;span&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;/p&gt;&lt;/div&gt;&quot;</span><span class="s1">)[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">;</span>
+
+		<span class="s1">it(</span><span class="s2">&quot;removes identical trees&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s0">var </span><span class="s1">matches = removeSubsets([dom</span><span class="s3">, </span><span class="s1">dom])</span><span class="s3">;</span>
+			<span class="s1">assert.equal(matches.length</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+
+		<span class="s1">it(</span><span class="s2">&quot;Removes subsets found first&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s0">var </span><span class="s1">matches = removeSubsets([dom</span><span class="s3">, </span><span class="s1">dom.children[</span><span class="s4">0</span><span class="s1">].children[</span><span class="s4">0</span><span class="s1">]])</span><span class="s3">;</span>
+			<span class="s1">assert.equal(matches.length</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+
+		<span class="s1">it(</span><span class="s2">&quot;Removes subsets found last&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s0">var </span><span class="s1">matches = removeSubsets([dom.children[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">dom])</span><span class="s3">;</span>
+			<span class="s1">assert.equal(matches.length</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+
+		<span class="s1">it(</span><span class="s2">&quot;Does not remove unique trees&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s0">var </span><span class="s1">matches = removeSubsets([dom.children[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">dom.children[</span><span class="s4">1</span><span class="s1">]])</span><span class="s3">;</span>
+			<span class="s1">assert.equal(matches.length</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+	<span class="s1">})</span><span class="s3">;</span>
+
+	<span class="s1">describe(</span><span class="s2">&quot;compareDocumentPosition&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+		<span class="s0">var </span><span class="s1">compareDocumentPosition = helpers.compareDocumentPosition</span><span class="s3">;</span>
+		<span class="s0">var </span><span class="s1">markup = </span><span class="s2">&quot;&lt;div&gt;&lt;p&gt;&lt;span&gt;&lt;/span&gt;&lt;/p&gt;&lt;a&gt;&lt;/a&gt;&lt;/div&gt;&quot;</span><span class="s3">;</span>
+		<span class="s0">var </span><span class="s1">dom = makeDom(markup)[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">;</span>
+		<span class="s0">var </span><span class="s1">p = dom.children[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">;</span>
+		<span class="s0">var </span><span class="s1">span = p.children[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">;</span>
+		<span class="s0">var </span><span class="s1">a = dom.children[</span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+
+		<span class="s1">it(</span><span class="s2">&quot;reports when the first node occurs before the second indirectly&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.equal(compareDocumentPosition(span</span><span class="s3">, </span><span class="s1">a)</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+
+		<span class="s1">it(</span><span class="s2">&quot;reports when the first node contains the second&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.equal(compareDocumentPosition(p</span><span class="s3">, </span><span class="s1">span)</span><span class="s3">, </span><span class="s4">10</span><span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+
+		<span class="s1">it(</span><span class="s2">&quot;reports when the first node occurs after the second indirectly&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.equal(compareDocumentPosition(a</span><span class="s3">, </span><span class="s1">span)</span><span class="s3">, </span><span class="s4">4</span><span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+
+		<span class="s1">it(</span><span class="s2">&quot;reports when the first node is contained by the second&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.equal(compareDocumentPosition(span</span><span class="s3">, </span><span class="s1">p)</span><span class="s3">, </span><span class="s4">20</span><span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+
+		<span class="s1">it(</span><span class="s2">&quot;reports when the nodes belong to separate documents&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s0">var </span><span class="s1">other = makeDom(markup)[</span><span class="s4">0</span><span class="s1">].children[</span><span class="s4">0</span><span class="s1">].children[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">;</span>
+
+			<span class="s1">assert.equal(compareDocumentPosition(span</span><span class="s3">, </span><span class="s1">other)</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+
+		<span class="s1">it(</span><span class="s2">&quot;reports when the nodes are identical&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.equal(compareDocumentPosition(span</span><span class="s3">, </span><span class="s1">span)</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+	<span class="s1">})</span><span class="s3">;</span>
+
+	<span class="s1">describe(</span><span class="s2">&quot;uniqueSort&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+		<span class="s0">var </span><span class="s1">uniqueSort = helpers.uniqueSort</span><span class="s3">;</span>
+		<span class="s0">var </span><span class="s1">dom</span><span class="s3">, </span><span class="s1">p</span><span class="s3">, </span><span class="s1">span</span><span class="s3">, </span><span class="s1">a</span><span class="s3">;</span>
+
+		<span class="s1">beforeEach(</span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">dom = makeDom(</span><span class="s2">&quot;&lt;div&gt;&lt;p&gt;&lt;span&gt;&lt;/span&gt;&lt;/p&gt;&lt;a&gt;&lt;/a&gt;&lt;/div&gt;&quot;</span><span class="s1">)[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">;</span>
+			<span class="s1">p = dom.children[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">;</span>
+			<span class="s1">span = p.children[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">;</span>
+			<span class="s1">a = dom.children[</span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+
+		<span class="s1">it(</span><span class="s2">&quot;leaves unique elements untouched&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.deepEqual(uniqueSort([p</span><span class="s3">, </span><span class="s1">a])</span><span class="s3">, </span><span class="s1">[p</span><span class="s3">, </span><span class="s1">a])</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+
+		<span class="s1">it(</span><span class="s2">&quot;removes duplicate elements&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.deepEqual(uniqueSort([p</span><span class="s3">, </span><span class="s1">a</span><span class="s3">, </span><span class="s1">p])</span><span class="s3">, </span><span class="s1">[p</span><span class="s3">, </span><span class="s1">a])</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+
+		<span class="s1">it(</span><span class="s2">&quot;sorts nodes in document order&quot;</span><span class="s3">, </span><span class="s0">function</span><span class="s1">() {</span>
+			<span class="s1">assert.deepEqual(uniqueSort([a</span><span class="s3">, </span><span class="s1">dom</span><span class="s3">, </span><span class="s1">span</span><span class="s3">, </span><span class="s1">p])</span><span class="s3">, </span><span class="s1">[dom</span><span class="s3">, </span><span class="s1">p</span><span class="s3">, </span><span class="s1">span</span><span class="s3">, </span><span class="s1">a])</span><span class="s3">;</span>
+		<span class="s1">})</span><span class="s3">;</span>
+	<span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

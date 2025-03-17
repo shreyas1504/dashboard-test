@@ -1,0 +1,117 @@
+<html>
+<head>
+<title>sourceMap.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+sourceMap.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">SourceMapGenerator = require(</span><span class="s2">'source-map/lib/source-map-generator'</span><span class="s1">).SourceMapGenerator</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">trackNodes = {</span>
+    <span class="s1">Atrule: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s1">Selector: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s1">Declaration: </span><span class="s0">true</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">generateSourceMap(handlers) {</span>
+    <span class="s0">var </span><span class="s1">map = </span><span class="s0">new </span><span class="s1">SourceMapGenerator()</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">line = </span><span class="s4">1</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">column = </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">generated = {</span>
+        <span class="s1">line: </span><span class="s4">1</span><span class="s3">,</span>
+        <span class="s1">column: </span><span class="s4">0</span>
+    <span class="s1">}</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">original = {</span>
+        <span class="s1">line: </span><span class="s4">0</span><span class="s3">, </span><span class="s5">// should be zero to add first mapping</span>
+        <span class="s1">column: </span><span class="s4">0</span>
+    <span class="s1">}</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">sourceMappingActive = </span><span class="s0">false</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">activatedGenerated = {</span>
+        <span class="s1">line: </span><span class="s4">1</span><span class="s3">,</span>
+        <span class="s1">column: </span><span class="s4">0</span>
+    <span class="s1">}</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">activatedMapping = {</span>
+        <span class="s1">generated: activatedGenerated</span>
+    <span class="s1">}</span><span class="s3">;</span>
+
+    <span class="s0">var </span><span class="s1">handlersNode = handlers.node</span><span class="s3">;</span>
+    <span class="s1">handlers.node = </span><span class="s0">function</span><span class="s1">(node) {</span>
+        <span class="s0">if </span><span class="s1">(node.loc &amp;&amp; node.loc.start &amp;&amp; trackNodes.hasOwnProperty(node.type)) {</span>
+            <span class="s0">var </span><span class="s1">nodeLine = node.loc.start.line</span><span class="s3">;</span>
+            <span class="s0">var </span><span class="s1">nodeColumn = node.loc.start.column - </span><span class="s4">1</span><span class="s3">;</span>
+
+            <span class="s0">if </span><span class="s1">(original.line !== nodeLine ||</span>
+                <span class="s1">original.column !== nodeColumn) {</span>
+                <span class="s1">original.line = nodeLine</span><span class="s3">;</span>
+                <span class="s1">original.column = nodeColumn</span><span class="s3">;</span>
+
+                <span class="s1">generated.line = line</span><span class="s3">;</span>
+                <span class="s1">generated.column = column</span><span class="s3">;</span>
+
+                <span class="s0">if </span><span class="s1">(sourceMappingActive) {</span>
+                    <span class="s1">sourceMappingActive = </span><span class="s0">false</span><span class="s3">;</span>
+                    <span class="s0">if </span><span class="s1">(generated.line !== activatedGenerated.line ||</span>
+                        <span class="s1">generated.column !== activatedGenerated.column) {</span>
+                        <span class="s1">map.addMapping(activatedMapping)</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+
+                <span class="s1">sourceMappingActive = </span><span class="s0">true</span><span class="s3">;</span>
+                <span class="s1">map.addMapping({</span>
+                    <span class="s1">source: node.loc.source</span><span class="s3">,</span>
+                    <span class="s1">original: original</span><span class="s3">,</span>
+                    <span class="s1">generated: generated</span>
+                <span class="s1">})</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s1">handlersNode.call(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">node)</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(sourceMappingActive &amp;&amp; trackNodes.hasOwnProperty(node.type)) {</span>
+            <span class="s1">activatedGenerated.line = line</span><span class="s3">;</span>
+            <span class="s1">activatedGenerated.column = column</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s3">;</span>
+
+    <span class="s0">var </span><span class="s1">handlersChunk = handlers.chunk</span><span class="s3">;</span>
+    <span class="s1">handlers.chunk = </span><span class="s0">function</span><span class="s1">(chunk) {</span>
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; chunk.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+            <span class="s0">if </span><span class="s1">(chunk.charCodeAt(i) === </span><span class="s4">10</span><span class="s1">) { </span><span class="s5">// \n</span>
+                <span class="s1">line++</span><span class="s3">;</span>
+                <span class="s1">column = </span><span class="s4">0</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                <span class="s1">column++</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s1">handlersChunk(chunk)</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">;</span>
+
+    <span class="s0">var </span><span class="s1">handlersResult = handlers.result</span><span class="s3">;</span>
+    <span class="s1">handlers.result = </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">if </span><span class="s1">(sourceMappingActive) {</span>
+            <span class="s1">map.addMapping(activatedMapping)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">css: handlersResult()</span><span class="s3">,</span>
+            <span class="s1">map: map</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">;</span>
+
+    <span class="s0">return </span><span class="s1">handlers</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

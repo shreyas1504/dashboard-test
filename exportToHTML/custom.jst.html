@@ -1,0 +1,208 @@
+<html>
+<head>
+<title>custom.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+custom.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+<span class="s0">{{# def.$data }}</span>
+
+<span class="s0">{{</span>
+  <span class="s0">var $rule = this</span>
+    <span class="s0">, $definition = 'definition' + $lvl</span>
+    <span class="s0">, $rDef = $rule.definition</span>
+    <span class="s0">, $closingBraces = '';</span>
+  <span class="s0">var $validate = $rDef.validate;</span>
+  <span class="s0">var $compile, $inline, $macro, $ruleValidate, $validateCode;</span>
+<span class="s0">}}</span>
+
+<span class="s0">{{? $isData &amp;&amp; $rDef.$data }}</span>
+  <span class="s0">{{</span>
+    <span class="s0">$validateCode = 'keywordValidate' + $lvl;</span>
+    <span class="s0">var $validateSchema = $rDef.validateSchema;</span>
+  <span class="s0">}}</span>
+  <span class="s0">var {{=$definition}} = RULES.custom['{{=$keyword}}'].definition;</span>
+  <span class="s0">var {{=$validateCode}} = {{=$definition}}.validate;</span>
+<span class="s0">{{??}}</span>
+  <span class="s0">{{</span>
+    <span class="s0">$ruleValidate = it.useCustomRule($rule, $schema, it.schema, it);</span>
+    <span class="s0">if (!$ruleValidate) return;</span>
+    <span class="s0">$schemaValue = 'validate.schema' + $schemaPath;</span>
+    <span class="s0">$validateCode = $ruleValidate.code;</span>
+    <span class="s0">$compile = $rDef.compile;</span>
+    <span class="s0">$inline = $rDef.inline;</span>
+    <span class="s0">$macro = $rDef.macro;</span>
+  <span class="s0">}}</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{</span>
+  <span class="s0">var $ruleErrs = $validateCode + '.errors'</span>
+    <span class="s0">, $i = 'i' + $lvl</span>
+    <span class="s0">, $ruleErr = 'ruleErr' + $lvl</span>
+    <span class="s0">, $asyncKeyword = $rDef.async;</span>
+
+  <span class="s0">if ($asyncKeyword &amp;&amp; !it.async)</span>
+    <span class="s0">throw new Error('async keyword in sync schema');</span>
+<span class="s0">}}</span>
+
+
+<span class="s0">{{? !($inline || $macro) }}{{=$ruleErrs}} = null;{{?}}</span>
+<span class="s0">var {{=$errs}} = errors;</span>
+<span class="s0">var {{=$valid}};</span>
+
+<span class="s0">{{## def.callRuleValidate:</span>
+  <span class="s0">{{=$validateCode}}.call(</span>
+    <span class="s0">{{? it.opts.passContext }}this{{??}}self{{?}}</span>
+    <span class="s0">{{? $compile || $rDef.schema === false }}</span>
+      <span class="s0">, {{=$data}}</span>
+    <span class="s0">{{??}}</span>
+      <span class="s0">, {{=$schemaValue}}</span>
+      <span class="s0">, {{=$data}}</span>
+      <span class="s0">, validate.schema{{=it.schemaPath}}</span>
+    <span class="s0">{{?}}</span>
+    <span class="s0">, {{# def.dataPath }}</span>
+    <span class="s0">{{# def.passParentData }}</span>
+    <span class="s0">, rootData</span>
+  <span class="s0">)</span>
+<span class="s0">#}}</span>
+
+<span class="s0">{{## def.extendErrors:_inline:</span>
+  <span class="s0">for (var {{=$i}}={{=$errs}}; {{=$i}}&lt;errors; {{=$i}}++) {</span>
+    <span class="s0">var {{=$ruleErr}} = vErrors[{{=$i}}];</span>
+    <span class="s0">if ({{=$ruleErr}}.dataPath === undefined)</span>
+      <span class="s0">{{=$ruleErr}}.dataPath = (dataPath || '') + {{= it.errorPath }};</span>
+    <span class="s0">{{# _inline ? 'if (\{\{=$ruleErr\}\}.schemaPath === undefined) {' : '' }}</span>
+      <span class="s0">{{=$ruleErr}}.schemaPath = &quot;{{=$errSchemaPath}}&quot;;</span>
+    <span class="s0">{{# _inline ? '}' : '' }}</span>
+    <span class="s0">{{? it.opts.verbose }}</span>
+      <span class="s0">{{=$ruleErr}}.schema = {{=$schemaValue}};</span>
+      <span class="s0">{{=$ruleErr}}.data = {{=$data}};</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{? $isData &amp;&amp; $rDef.$data }}</span>
+  <span class="s0">{{ $closingBraces += '}'; }}</span>
+  <span class="s0">if ({{=$schemaValue}} === undefined) {</span>
+    <span class="s0">{{=$valid}} = true;</span>
+  <span class="s0">} else {</span>
+  <span class="s0">{{? $validateSchema }}</span>
+    <span class="s0">{{ $closingBraces += '}'; }}</span>
+    <span class="s0">{{=$valid}} = {{=$definition}}.validateSchema({{=$schemaValue}});</span>
+    <span class="s0">if ({{=$valid}}) {</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{? $inline }}</span>
+  <span class="s0">{{? $rDef.statements }}</span>
+    <span class="s0">{{= $ruleValidate.validate }}</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">{{=$valid}} = {{= $ruleValidate.validate }};</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{?? $macro }}</span>
+  <span class="s0">{{# def.setupNextLevel }}</span>
+  <span class="s0">{{</span>
+    <span class="s0">$it.schema = $ruleValidate.validate;</span>
+    <span class="s0">$it.schemaPath = '';</span>
+  <span class="s0">}}</span>
+  <span class="s0">{{# def.setCompositeRule }}</span>
+  <span class="s0">{{ var $code = it.validate($it).replace(/validate\.schema/g, $validateCode); }}</span>
+  <span class="s0">{{# def.resetCompositeRule }}</span>
+  <span class="s0">{{= $code }}</span>
+<span class="s0">{{??}}</span>
+  <span class="s0">{{# def.beginDefOut}}</span>
+    <span class="s0">{{# def.callRuleValidate }}</span>
+  <span class="s0">{{# def.storeDefOut:def_callRuleValidate }}</span>
+
+  <span class="s0">{{? $rDef.errors === false }}</span>
+    <span class="s0">{{=$valid}} = {{? $asyncKeyword }}await {{?}}{{= def_callRuleValidate }};</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">{{? $asyncKeyword }}</span>
+      <span class="s0">{{ $ruleErrs = 'customErrors' + $lvl; }}</span>
+      <span class="s0">var {{=$ruleErrs}} = null;</span>
+      <span class="s0">try {</span>
+        <span class="s0">{{=$valid}} = await {{= def_callRuleValidate }};</span>
+      <span class="s0">} catch (e) {</span>
+        <span class="s0">{{=$valid}} = false;</span>
+        <span class="s0">if (e instanceof ValidationError) {{=$ruleErrs}} = e.errors;</span>
+        <span class="s0">else throw e;</span>
+      <span class="s0">}</span>
+    <span class="s0">{{??}}</span>
+      <span class="s0">{{=$ruleErrs}} = null;</span>
+      <span class="s0">{{=$valid}} = {{= def_callRuleValidate }};</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{? $rDef.modifying }}</span>
+  <span class="s0">if ({{=$parentData}}) {{=$data}} = {{=$parentData}}[{{=$parentDataProperty}}];</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{= $closingBraces }}</span>
+
+<span class="s0">{{## def.notValidationResult:</span>
+  <span class="s0">{{? $rDef.valid === undefined }}</span>
+    <span class="s0">!{{? $macro }}{{=$nextValid}}{{??}}{{=$valid}}{{?}}</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">{{= !$rDef.valid }}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+<span class="s0">{{? $rDef.valid }}</span>
+  <span class="s0">{{? $breakOnError }} if (true) { {{?}}</span>
+<span class="s0">{{??}}</span>
+  <span class="s0">if ({{# def.notValidationResult }}) {</span>
+    <span class="s0">{{ $errorKeyword = $rule.keyword; }}</span>
+    <span class="s0">{{# def.beginDefOut}}</span>
+      <span class="s0">{{# def.error:'custom' }}</span>
+    <span class="s0">{{# def.storeDefOut:def_customError }}</span>
+
+    <span class="s0">{{? $inline }}</span>
+      <span class="s0">{{? $rDef.errors }}</span>
+        <span class="s0">{{? $rDef.errors != 'full' }}</span>
+          <span class="s0">{{# def.extendErrors:true }}</span>
+        <span class="s0">{{?}}</span>
+      <span class="s0">{{??}}</span>
+        <span class="s0">{{? $rDef.errors === false}}</span>
+          <span class="s0">{{= def_customError }}</span>
+        <span class="s0">{{??}}</span>
+          <span class="s0">if ({{=$errs}} == errors) {</span>
+            <span class="s0">{{= def_customError }}</span>
+          <span class="s0">} else {</span>
+            <span class="s0">{{# def.extendErrors:true }}</span>
+          <span class="s0">}</span>
+        <span class="s0">{{?}}</span>
+      <span class="s0">{{?}}</span>
+    <span class="s0">{{?? $macro }}</span>
+      <span class="s0">{{# def.extraError:'custom' }}</span>
+    <span class="s0">{{??}}</span>
+      <span class="s0">{{? $rDef.errors === false}}</span>
+        <span class="s0">{{= def_customError }}</span>
+      <span class="s0">{{??}}</span>
+        <span class="s0">if (Array.isArray({{=$ruleErrs}})) {</span>
+          <span class="s0">if (vErrors === null) vErrors = {{=$ruleErrs}};</span>
+          <span class="s0">else vErrors = vErrors.concat({{=$ruleErrs}});</span>
+          <span class="s0">errors = vErrors.length;</span>
+          <span class="s0">{{# def.extendErrors:false }}</span>
+        <span class="s0">} else {</span>
+          <span class="s0">{{= def_customError }}</span>
+        <span class="s0">}</span>
+      <span class="s0">{{?}}</span>
+    <span class="s0">{{?}}</span>
+
+  <span class="s0">} {{? $breakOnError }} else { {{?}}</span>
+<span class="s0">{{?}}</span>
+</pre>
+</body>
+</html>

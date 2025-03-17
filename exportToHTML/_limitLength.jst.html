@@ -1,0 +1,29 @@
+<html>
+<head>
+<title>_limitLength.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_limitLength.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+<span class="s0">{{# def.$data }}</span>
+
+<span class="s0">{{# def.numberKeyword }}</span>
+
+<span class="s0">{{ var $op = $keyword == 'maxLength' ? '&gt;' : '&lt;'; }}</span>
+<span class="s0">if ({{# def.$dataNotType:'number' }} {{# def.strLength }} {{=$op}} {{=$schemaValue}}) {</span>
+  <span class="s0">{{ var $errorKeyword = $keyword; }}</span>
+  <span class="s0">{{# def.error:'_limitLength' }}</span>
+<span class="s0">} {{? $breakOnError }} else { {{?}}</span>
+</pre>
+</body>
+</html>

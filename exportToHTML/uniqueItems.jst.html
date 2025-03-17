@@ -1,0 +1,79 @@
+<html>
+<head>
+<title>uniqueItems.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+uniqueItems.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+<span class="s0">{{# def.$data }}</span>
+
+
+<span class="s0">{{? ($schema || $isData) &amp;&amp; it.opts.uniqueItems !== false }}</span>
+  <span class="s0">{{? $isData }}</span>
+    <span class="s0">var {{=$valid}};</span>
+    <span class="s0">if ({{=$schemaValue}} === false || {{=$schemaValue}} === undefined)</span>
+      <span class="s0">{{=$valid}} = true;</span>
+    <span class="s0">else if (typeof {{=$schemaValue}} != 'boolean')</span>
+      <span class="s0">{{=$valid}} = false;</span>
+    <span class="s0">else {</span>
+  <span class="s0">{{?}}</span>
+
+  <span class="s0">var i = {{=$data}}.length</span>
+    <span class="s0">, {{=$valid}} = true</span>
+    <span class="s0">, j;</span>
+  <span class="s0">if (i &gt; 1) {</span>
+    <span class="s0">{{</span>
+      <span class="s0">var $itemType = it.schema.items &amp;&amp; it.schema.items.type</span>
+        <span class="s0">, $typeIsArray = Array.isArray($itemType);</span>
+    <span class="s0">}}</span>
+    <span class="s0">{{? !$itemType || $itemType == 'object' || $itemType == 'array' ||</span>
+        <span class="s0">($typeIsArray &amp;&amp; ($itemType.indexOf('object') &gt;= 0 || $itemType.indexOf('array') &gt;= 0)) }}</span>
+      <span class="s0">outer:</span>
+      <span class="s0">for (;i--;) {</span>
+        <span class="s0">for (j = i; j--;) {</span>
+          <span class="s0">if (equal({{=$data}}[i], {{=$data}}[j])) {</span>
+            <span class="s0">{{=$valid}} = false;</span>
+            <span class="s0">break outer;</span>
+          <span class="s0">}</span>
+        <span class="s0">}</span>
+      <span class="s0">}</span>
+    <span class="s0">{{??}}</span>
+      <span class="s0">var itemIndices = {}, item;</span>
+      <span class="s0">for (;i--;) {</span>
+        <span class="s0">var item = {{=$data}}[i];</span>
+        <span class="s0">{{ var $method = 'checkDataType' + ($typeIsArray ? 's' : ''); }}</span>
+        <span class="s0">if ({{= it.util[$method]($itemType, 'item', it.opts.strictNumbers, true) }}) continue;</span>
+        <span class="s0">{{? $typeIsArray}}</span>
+          <span class="s0">if (typeof item == 'string') item = '&quot;' + item;</span>
+        <span class="s0">{{?}}</span>
+        <span class="s0">if (typeof itemIndices[item] == 'number') {</span>
+          <span class="s0">{{=$valid}} = false;</span>
+          <span class="s0">j = itemIndices[item];</span>
+          <span class="s0">break;</span>
+        <span class="s0">}</span>
+        <span class="s0">itemIndices[item] = i;</span>
+      <span class="s0">}</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">}</span>
+
+  <span class="s0">{{? $isData }}  }  {{?}}</span>
+
+  <span class="s0">if (!{{=$valid}}) {</span>
+    <span class="s0">{{# def.error:'uniqueItems' }}</span>
+  <span class="s0">} {{? $breakOnError }} else { {{?}}</span>
+<span class="s0">{{??}}</span>
+  <span class="s0">{{? $breakOnError }} if (true) { {{?}}</span>
+<span class="s0">{{?}}</span>
+</pre>
+</body>
+</html>

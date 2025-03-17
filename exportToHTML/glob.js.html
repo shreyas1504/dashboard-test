@@ -1,0 +1,812 @@
+<html>
+<head>
+<title>glob.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+glob.js</font>
+</center></td></tr></table>
+<pre><span class="s0">// Approach:</span>
+<span class="s0">//</span>
+<span class="s0">// 1. Get the minimatch set</span>
+<span class="s0">// 2. For each pattern in the set, PROCESS(pattern, false)</span>
+<span class="s0">// 3. Store matches per-set, then uniq them</span>
+<span class="s0">//</span>
+<span class="s0">// PROCESS(pattern, inGlobStar)</span>
+<span class="s0">// Get the first [n] items from pattern that are all strings</span>
+<span class="s0">// Join these together.  This is PREFIX.</span>
+<span class="s0">//   If there is no more remaining, then stat(PREFIX) and</span>
+<span class="s0">//   add to matches if it succeeds.  END.</span>
+<span class="s0">//</span>
+<span class="s0">// If inGlobStar and PREFIX is symlink and points to dir</span>
+<span class="s0">//   set ENTRIES = []</span>
+<span class="s0">// else readdir(PREFIX) as ENTRIES</span>
+<span class="s0">//   If fail, END</span>
+<span class="s0">//</span>
+<span class="s0">// with ENTRIES</span>
+<span class="s0">//   If pattern[n] is GLOBSTAR</span>
+<span class="s0">//     // handle the case where the globstar match is empty</span>
+<span class="s0">//     // by pruning it out, and testing the resulting pattern</span>
+<span class="s0">//     PROCESS(pattern[0..n] + pattern[n+1 .. $], false)</span>
+<span class="s0">//     // handle other cases.</span>
+<span class="s0">//     for ENTRY in ENTRIES (not dotfiles)</span>
+<span class="s0">//       // attach globstar + tail onto the entry</span>
+<span class="s0">//       // Mark that this entry is a globstar match</span>
+<span class="s0">//       PROCESS(pattern[0..n] + ENTRY + pattern[n .. $], true)</span>
+<span class="s0">//</span>
+<span class="s0">//   else // not globstar</span>
+<span class="s0">//     for ENTRY in ENTRIES (not dotfiles, unless pattern[n] is dot)</span>
+<span class="s0">//       Test ENTRY against pattern[n]</span>
+<span class="s0">//       If fails, continue</span>
+<span class="s0">//       If passes, PROCESS(pattern[0..n] + item + pattern[n+1 .. $])</span>
+<span class="s0">//</span>
+<span class="s0">// Caveat:</span>
+<span class="s0">//   Cache all stats and readdirs results to minimize syscall.  Since all</span>
+<span class="s0">//   we ever care about is existence and directory-ness, we can just keep</span>
+<span class="s0">//   `true` for files, and [children,...] for directories, or `false` for</span>
+<span class="s0">//   things that don't exist.</span>
+
+<span class="s1">module.exports = glob</span>
+
+<span class="s2">var </span><span class="s1">rp = require(</span><span class="s3">'fs.realpath'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">minimatch = require(</span><span class="s3">'minimatch'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">Minimatch = minimatch.Minimatch</span>
+<span class="s2">var </span><span class="s1">inherits = require(</span><span class="s3">'inherits'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">EE = require(</span><span class="s3">'events'</span><span class="s1">).EventEmitter</span>
+<span class="s2">var </span><span class="s1">path = require(</span><span class="s3">'path'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">assert = require(</span><span class="s3">'assert'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">isAbsolute = require(</span><span class="s3">'path-is-absolute'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">globSync = require(</span><span class="s3">'./sync.js'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">common = require(</span><span class="s3">'./common.js'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">setopts = common.setopts</span>
+<span class="s2">var </span><span class="s1">ownProp = common.ownProp</span>
+<span class="s2">var </span><span class="s1">inflight = require(</span><span class="s3">'inflight'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">util = require(</span><span class="s3">'util'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">childrenIgnored = common.childrenIgnored</span>
+<span class="s2">var </span><span class="s1">isIgnored = common.isIgnored</span>
+
+<span class="s2">var </span><span class="s1">once = require(</span><span class="s3">'once'</span><span class="s1">)</span>
+
+<span class="s2">function </span><span class="s1">glob (pattern</span><span class="s4">, </span><span class="s1">options</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">options === </span><span class="s3">'function'</span><span class="s1">) cb = options</span><span class="s4">, </span><span class="s1">options = {}</span>
+  <span class="s2">if </span><span class="s1">(!options) options = {}</span>
+
+  <span class="s2">if </span><span class="s1">(options.sync) {</span>
+    <span class="s2">if </span><span class="s1">(cb)</span>
+      <span class="s2">throw new </span><span class="s1">TypeError(</span><span class="s3">'callback provided to sync glob'</span><span class="s1">)</span>
+    <span class="s2">return </span><span class="s1">globSync(pattern</span><span class="s4">, </span><span class="s1">options)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">return new </span><span class="s1">Glob(pattern</span><span class="s4">, </span><span class="s1">options</span><span class="s4">, </span><span class="s1">cb)</span>
+<span class="s1">}</span>
+
+<span class="s1">glob.sync = globSync</span>
+<span class="s2">var </span><span class="s1">GlobSync = glob.GlobSync = globSync.GlobSync</span>
+
+<span class="s0">// old api surface</span>
+<span class="s1">glob.glob = glob</span>
+
+<span class="s2">function </span><span class="s1">extend (origin</span><span class="s4">, </span><span class="s1">add) {</span>
+  <span class="s2">if </span><span class="s1">(add === </span><span class="s2">null </span><span class="s1">|| </span><span class="s2">typeof </span><span class="s1">add !== </span><span class="s3">'object'</span><span class="s1">) {</span>
+    <span class="s2">return </span><span class="s1">origin</span>
+  <span class="s1">}</span>
+
+  <span class="s2">var </span><span class="s1">keys = Object.keys(add)</span>
+  <span class="s2">var </span><span class="s1">i = keys.length</span>
+  <span class="s2">while </span><span class="s1">(i--) {</span>
+    <span class="s1">origin[keys[i]] = add[keys[i]]</span>
+  <span class="s1">}</span>
+  <span class="s2">return </span><span class="s1">origin</span>
+<span class="s1">}</span>
+
+<span class="s1">glob.hasMagic = </span><span class="s2">function </span><span class="s1">(pattern</span><span class="s4">, </span><span class="s1">options_) {</span>
+  <span class="s2">var </span><span class="s1">options = extend({}</span><span class="s4">, </span><span class="s1">options_)</span>
+  <span class="s1">options.noprocess = </span><span class="s2">true</span>
+
+  <span class="s2">var </span><span class="s1">g = </span><span class="s2">new </span><span class="s1">Glob(pattern</span><span class="s4">, </span><span class="s1">options)</span>
+  <span class="s2">var </span><span class="s1">set = g.minimatch.set</span>
+
+  <span class="s2">if </span><span class="s1">(!pattern)</span>
+    <span class="s2">return false</span>
+
+  <span class="s2">if </span><span class="s1">(set.length &gt; </span><span class="s5">1</span><span class="s1">)</span>
+    <span class="s2">return true</span>
+
+  <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">j = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">j &lt; set[</span><span class="s5">0</span><span class="s1">].length</span><span class="s4">; </span><span class="s1">j++) {</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">set[</span><span class="s5">0</span><span class="s1">][j] !== </span><span class="s3">'string'</span><span class="s1">)</span>
+      <span class="s2">return true</span>
+  <span class="s1">}</span>
+
+  <span class="s2">return false</span>
+<span class="s1">}</span>
+
+<span class="s1">glob.Glob = Glob</span>
+<span class="s1">inherits(Glob</span><span class="s4">, </span><span class="s1">EE)</span>
+<span class="s2">function </span><span class="s1">Glob (pattern</span><span class="s4">, </span><span class="s1">options</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">options === </span><span class="s3">'function'</span><span class="s1">) {</span>
+    <span class="s1">cb = options</span>
+    <span class="s1">options = </span><span class="s2">null</span>
+  <span class="s1">}</span>
+
+  <span class="s2">if </span><span class="s1">(options &amp;&amp; options.sync) {</span>
+    <span class="s2">if </span><span class="s1">(cb)</span>
+      <span class="s2">throw new </span><span class="s1">TypeError(</span><span class="s3">'callback provided to sync glob'</span><span class="s1">)</span>
+    <span class="s2">return new </span><span class="s1">GlobSync(pattern</span><span class="s4">, </span><span class="s1">options)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">if </span><span class="s1">(!(</span><span class="s2">this instanceof </span><span class="s1">Glob))</span>
+    <span class="s2">return new </span><span class="s1">Glob(pattern</span><span class="s4">, </span><span class="s1">options</span><span class="s4">, </span><span class="s1">cb)</span>
+
+  <span class="s1">setopts(</span><span class="s2">this</span><span class="s4">, </span><span class="s1">pattern</span><span class="s4">, </span><span class="s1">options)</span>
+  <span class="s2">this</span><span class="s1">._didRealPath = </span><span class="s2">false</span>
+
+  <span class="s0">// process each pattern in the minimatch set</span>
+  <span class="s2">var </span><span class="s1">n = </span><span class="s2">this</span><span class="s1">.minimatch.set.length</span>
+
+  <span class="s0">// The matches are stored as {&lt;filename&gt;: true,...} so that</span>
+  <span class="s0">// duplicates are automagically pruned.</span>
+  <span class="s0">// Later, we do an Object.keys() on these.</span>
+  <span class="s0">// Keep them as a list so we can fill in when nonull is set.</span>
+  <span class="s2">this</span><span class="s1">.matches = </span><span class="s2">new </span><span class="s1">Array(n)</span>
+
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">cb === </span><span class="s3">'function'</span><span class="s1">) {</span>
+    <span class="s1">cb = once(cb)</span>
+    <span class="s2">this</span><span class="s1">.on(</span><span class="s3">'error'</span><span class="s4">, </span><span class="s1">cb)</span>
+    <span class="s2">this</span><span class="s1">.on(</span><span class="s3">'end'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(matches) {</span>
+      <span class="s1">cb(</span><span class="s2">null</span><span class="s4">, </span><span class="s1">matches)</span>
+    <span class="s1">})</span>
+  <span class="s1">}</span>
+
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+  <span class="s2">this</span><span class="s1">._processing = </span><span class="s5">0</span>
+
+  <span class="s2">this</span><span class="s1">._emitQueue = []</span>
+  <span class="s2">this</span><span class="s1">._processQueue = []</span>
+  <span class="s2">this</span><span class="s1">.paused = </span><span class="s2">false</span>
+
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.noprocess)</span>
+    <span class="s2">return this</span>
+
+  <span class="s2">if </span><span class="s1">(n === </span><span class="s5">0</span><span class="s1">)</span>
+    <span class="s2">return </span><span class="s1">done()</span>
+
+  <span class="s2">var </span><span class="s1">sync = </span><span class="s2">true</span>
+  <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; n</span><span class="s4">; </span><span class="s1">i ++) {</span>
+    <span class="s2">this</span><span class="s1">._process(</span><span class="s2">this</span><span class="s1">.minimatch.set[i]</span><span class="s4">, </span><span class="s1">i</span><span class="s4">, </span><span class="s2">false</span><span class="s4">, </span><span class="s1">done)</span>
+  <span class="s1">}</span>
+  <span class="s1">sync = </span><span class="s2">false</span>
+
+  <span class="s2">function </span><span class="s1">done () {</span>
+    <span class="s1">--self._processing</span>
+    <span class="s2">if </span><span class="s1">(self._processing &lt;= </span><span class="s5">0</span><span class="s1">) {</span>
+      <span class="s2">if </span><span class="s1">(sync) {</span>
+        <span class="s1">process.nextTick(</span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">self._finish()</span>
+        <span class="s1">})</span>
+      <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s1">self._finish()</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._finish = </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s1">assert(</span><span class="s2">this instanceof </span><span class="s1">Glob)</span>
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.aborted)</span>
+    <span class="s2">return</span>
+
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.realpath &amp;&amp; !</span><span class="s2">this</span><span class="s1">._didRealpath)</span>
+    <span class="s2">return this</span><span class="s1">._realpath()</span>
+
+  <span class="s1">common.finish(</span><span class="s2">this</span><span class="s1">)</span>
+  <span class="s2">this</span><span class="s1">.emit(</span><span class="s3">'end'</span><span class="s4">, </span><span class="s2">this</span><span class="s1">.found)</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._realpath = </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">._didRealpath)</span>
+    <span class="s2">return</span>
+
+  <span class="s2">this</span><span class="s1">._didRealpath = </span><span class="s2">true</span>
+
+  <span class="s2">var </span><span class="s1">n = </span><span class="s2">this</span><span class="s1">.matches.length</span>
+  <span class="s2">if </span><span class="s1">(n === </span><span class="s5">0</span><span class="s1">)</span>
+    <span class="s2">return this</span><span class="s1">._finish()</span>
+
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+  <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; </span><span class="s2">this</span><span class="s1">.matches.length</span><span class="s4">; </span><span class="s1">i++)</span>
+    <span class="s2">this</span><span class="s1">._realpathSet(i</span><span class="s4">, </span><span class="s1">next)</span>
+
+  <span class="s2">function </span><span class="s1">next () {</span>
+    <span class="s2">if </span><span class="s1">(--n === </span><span class="s5">0</span><span class="s1">)</span>
+      <span class="s1">self._finish()</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._realpathSet = </span><span class="s2">function </span><span class="s1">(index</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s2">var </span><span class="s1">matchset = </span><span class="s2">this</span><span class="s1">.matches[index]</span>
+  <span class="s2">if </span><span class="s1">(!matchset)</span>
+    <span class="s2">return </span><span class="s1">cb()</span>
+
+  <span class="s2">var </span><span class="s1">found = Object.keys(matchset)</span>
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+  <span class="s2">var </span><span class="s1">n = found.length</span>
+
+  <span class="s2">if </span><span class="s1">(n === </span><span class="s5">0</span><span class="s1">)</span>
+    <span class="s2">return </span><span class="s1">cb()</span>
+
+  <span class="s2">var </span><span class="s1">set = </span><span class="s2">this</span><span class="s1">.matches[index] = Object.create(</span><span class="s2">null</span><span class="s1">)</span>
+  <span class="s1">found.forEach(</span><span class="s2">function </span><span class="s1">(p</span><span class="s4">, </span><span class="s1">i) {</span>
+    <span class="s0">// If there's a problem with the stat, then it means that</span>
+    <span class="s0">// one or more of the links in the realpath couldn't be</span>
+    <span class="s0">// resolved.  just return the abs value in that case.</span>
+    <span class="s1">p = self._makeAbs(p)</span>
+    <span class="s1">rp.realpath(p</span><span class="s4">, </span><span class="s1">self.realpathCache</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(er</span><span class="s4">, </span><span class="s1">real) {</span>
+      <span class="s2">if </span><span class="s1">(!er)</span>
+        <span class="s1">set[real] = </span><span class="s2">true</span>
+      <span class="s2">else if </span><span class="s1">(er.syscall === </span><span class="s3">'stat'</span><span class="s1">)</span>
+        <span class="s1">set[p] = </span><span class="s2">true</span>
+      <span class="s2">else</span>
+        <span class="s1">self.emit(</span><span class="s3">'error'</span><span class="s4">, </span><span class="s1">er) </span><span class="s0">// srsly wtf right here</span>
+
+      <span class="s2">if </span><span class="s1">(--n === </span><span class="s5">0</span><span class="s1">) {</span>
+        <span class="s1">self.matches[index] = set</span>
+        <span class="s1">cb()</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._mark = </span><span class="s2">function </span><span class="s1">(p) {</span>
+  <span class="s2">return </span><span class="s1">common.mark(</span><span class="s2">this</span><span class="s4">, </span><span class="s1">p)</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._makeAbs = </span><span class="s2">function </span><span class="s1">(f) {</span>
+  <span class="s2">return </span><span class="s1">common.makeAbs(</span><span class="s2">this</span><span class="s4">, </span><span class="s1">f)</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype.abort = </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s2">this</span><span class="s1">.aborted = </span><span class="s2">true</span>
+  <span class="s2">this</span><span class="s1">.emit(</span><span class="s3">'abort'</span><span class="s1">)</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype.pause = </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s2">if </span><span class="s1">(!</span><span class="s2">this</span><span class="s1">.paused) {</span>
+    <span class="s2">this</span><span class="s1">.paused = </span><span class="s2">true</span>
+    <span class="s2">this</span><span class="s1">.emit(</span><span class="s3">'pause'</span><span class="s1">)</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype.resume = </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.paused) {</span>
+    <span class="s2">this</span><span class="s1">.emit(</span><span class="s3">'resume'</span><span class="s1">)</span>
+    <span class="s2">this</span><span class="s1">.paused = </span><span class="s2">false</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">._emitQueue.length) {</span>
+      <span class="s2">var </span><span class="s1">eq = </span><span class="s2">this</span><span class="s1">._emitQueue.slice(</span><span class="s5">0</span><span class="s1">)</span>
+      <span class="s2">this</span><span class="s1">._emitQueue.length = </span><span class="s5">0</span>
+      <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; eq.length</span><span class="s4">; </span><span class="s1">i ++) {</span>
+        <span class="s2">var </span><span class="s1">e = eq[i]</span>
+        <span class="s2">this</span><span class="s1">._emitMatch(e[</span><span class="s5">0</span><span class="s1">]</span><span class="s4">, </span><span class="s1">e[</span><span class="s5">1</span><span class="s1">])</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">._processQueue.length) {</span>
+      <span class="s2">var </span><span class="s1">pq = </span><span class="s2">this</span><span class="s1">._processQueue.slice(</span><span class="s5">0</span><span class="s1">)</span>
+      <span class="s2">this</span><span class="s1">._processQueue.length = </span><span class="s5">0</span>
+      <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; pq.length</span><span class="s4">; </span><span class="s1">i ++) {</span>
+        <span class="s2">var </span><span class="s1">p = pq[i]</span>
+        <span class="s2">this</span><span class="s1">._processing--</span>
+        <span class="s2">this</span><span class="s1">._process(p[</span><span class="s5">0</span><span class="s1">]</span><span class="s4">, </span><span class="s1">p[</span><span class="s5">1</span><span class="s1">]</span><span class="s4">, </span><span class="s1">p[</span><span class="s5">2</span><span class="s1">]</span><span class="s4">, </span><span class="s1">p[</span><span class="s5">3</span><span class="s1">])</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._process = </span><span class="s2">function </span><span class="s1">(pattern</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">inGlobStar</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s1">assert(</span><span class="s2">this instanceof </span><span class="s1">Glob)</span>
+  <span class="s1">assert(</span><span class="s2">typeof </span><span class="s1">cb === </span><span class="s3">'function'</span><span class="s1">)</span>
+
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.aborted)</span>
+    <span class="s2">return</span>
+
+  <span class="s2">this</span><span class="s1">._processing++</span>
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.paused) {</span>
+    <span class="s2">this</span><span class="s1">._processQueue.push([pattern</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">inGlobStar</span><span class="s4">, </span><span class="s1">cb])</span>
+    <span class="s2">return</span>
+  <span class="s1">}</span>
+
+  <span class="s0">//console.error('PROCESS %d', this._processing, pattern)</span>
+
+  <span class="s0">// Get the first [n] parts of pattern that are all strings.</span>
+  <span class="s2">var </span><span class="s1">n = </span><span class="s5">0</span>
+  <span class="s2">while </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">pattern[n] === </span><span class="s3">'string'</span><span class="s1">) {</span>
+    <span class="s1">n ++</span>
+  <span class="s1">}</span>
+  <span class="s0">// now n is the index of the first one that is *not* a string.</span>
+
+  <span class="s0">// see if there's anything else</span>
+  <span class="s2">var </span><span class="s1">prefix</span>
+  <span class="s2">switch </span><span class="s1">(n) {</span>
+    <span class="s0">// if not, then this is rather simple</span>
+    <span class="s2">case </span><span class="s1">pattern.length:</span>
+      <span class="s2">this</span><span class="s1">._processSimple(pattern.join(</span><span class="s3">'/'</span><span class="s1">)</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">cb)</span>
+      <span class="s2">return</span>
+
+    <span class="s2">case </span><span class="s5">0</span><span class="s1">:</span>
+      <span class="s0">// pattern *starts* with some non-trivial item.</span>
+      <span class="s0">// going to readdir(cwd), but not include the prefix in matches.</span>
+      <span class="s1">prefix = </span><span class="s2">null</span>
+      <span class="s2">break</span>
+
+    <span class="s2">default</span><span class="s1">:</span>
+      <span class="s0">// pattern has some string bits in the front.</span>
+      <span class="s0">// whatever it starts with, whether that's 'absolute' like /foo/bar,</span>
+      <span class="s0">// or 'relative' like '../baz'</span>
+      <span class="s1">prefix = pattern.slice(</span><span class="s5">0</span><span class="s4">, </span><span class="s1">n).join(</span><span class="s3">'/'</span><span class="s1">)</span>
+      <span class="s2">break</span>
+  <span class="s1">}</span>
+
+  <span class="s2">var </span><span class="s1">remain = pattern.slice(n)</span>
+
+  <span class="s0">// get the list of entries.</span>
+  <span class="s2">var </span><span class="s1">read</span>
+  <span class="s2">if </span><span class="s1">(prefix === </span><span class="s2">null</span><span class="s1">)</span>
+    <span class="s1">read = </span><span class="s3">'.'</span>
+  <span class="s2">else if </span><span class="s1">(isAbsolute(prefix) ||</span>
+      <span class="s1">isAbsolute(pattern.map(</span><span class="s2">function </span><span class="s1">(p) {</span>
+        <span class="s2">return typeof </span><span class="s1">p === </span><span class="s3">'string' </span><span class="s1">? p : </span><span class="s3">'[*]'</span>
+      <span class="s1">}).join(</span><span class="s3">'/'</span><span class="s1">))) {</span>
+    <span class="s2">if </span><span class="s1">(!prefix || !isAbsolute(prefix))</span>
+      <span class="s1">prefix = </span><span class="s3">'/' </span><span class="s1">+ prefix</span>
+    <span class="s1">read = prefix</span>
+  <span class="s1">} </span><span class="s2">else</span>
+    <span class="s1">read = prefix</span>
+
+  <span class="s2">var </span><span class="s1">abs = </span><span class="s2">this</span><span class="s1">._makeAbs(read)</span>
+
+  <span class="s0">//if ignored, skip _processing</span>
+  <span class="s2">if </span><span class="s1">(childrenIgnored(</span><span class="s2">this</span><span class="s4">, </span><span class="s1">read))</span>
+    <span class="s2">return </span><span class="s1">cb()</span>
+
+  <span class="s2">var </span><span class="s1">isGlobStar = remain[</span><span class="s5">0</span><span class="s1">] === minimatch.GLOBSTAR</span>
+  <span class="s2">if </span><span class="s1">(isGlobStar)</span>
+    <span class="s2">this</span><span class="s1">._processGlobStar(prefix</span><span class="s4">, </span><span class="s1">read</span><span class="s4">, </span><span class="s1">abs</span><span class="s4">, </span><span class="s1">remain</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">inGlobStar</span><span class="s4">, </span><span class="s1">cb)</span>
+  <span class="s2">else</span>
+    <span class="s2">this</span><span class="s1">._processReaddir(prefix</span><span class="s4">, </span><span class="s1">read</span><span class="s4">, </span><span class="s1">abs</span><span class="s4">, </span><span class="s1">remain</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">inGlobStar</span><span class="s4">, </span><span class="s1">cb)</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._processReaddir = </span><span class="s2">function </span><span class="s1">(prefix</span><span class="s4">, </span><span class="s1">read</span><span class="s4">, </span><span class="s1">abs</span><span class="s4">, </span><span class="s1">remain</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">inGlobStar</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+  <span class="s2">this</span><span class="s1">._readdir(abs</span><span class="s4">, </span><span class="s1">inGlobStar</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(er</span><span class="s4">, </span><span class="s1">entries) {</span>
+    <span class="s2">return </span><span class="s1">self._processReaddir2(prefix</span><span class="s4">, </span><span class="s1">read</span><span class="s4">, </span><span class="s1">abs</span><span class="s4">, </span><span class="s1">remain</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">inGlobStar</span><span class="s4">, </span><span class="s1">entries</span><span class="s4">, </span><span class="s1">cb)</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._processReaddir2 = </span><span class="s2">function </span><span class="s1">(prefix</span><span class="s4">, </span><span class="s1">read</span><span class="s4">, </span><span class="s1">abs</span><span class="s4">, </span><span class="s1">remain</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">inGlobStar</span><span class="s4">, </span><span class="s1">entries</span><span class="s4">, </span><span class="s1">cb) {</span>
+
+  <span class="s0">// if the abs isn't a dir, then nothing can match!</span>
+  <span class="s2">if </span><span class="s1">(!entries)</span>
+    <span class="s2">return </span><span class="s1">cb()</span>
+
+  <span class="s0">// It will only match dot entries if it starts with a dot, or if</span>
+  <span class="s0">// dot is set.  Stuff like @(.foo|.bar) isn't allowed.</span>
+  <span class="s2">var </span><span class="s1">pn = remain[</span><span class="s5">0</span><span class="s1">]</span>
+  <span class="s2">var </span><span class="s1">negate = !!</span><span class="s2">this</span><span class="s1">.minimatch.negate</span>
+  <span class="s2">var </span><span class="s1">rawGlob = pn._glob</span>
+  <span class="s2">var </span><span class="s1">dotOk = </span><span class="s2">this</span><span class="s1">.dot || rawGlob.charAt(</span><span class="s5">0</span><span class="s1">) === </span><span class="s3">'.'</span>
+
+  <span class="s2">var </span><span class="s1">matchedEntries = []</span>
+  <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; entries.length</span><span class="s4">; </span><span class="s1">i++) {</span>
+    <span class="s2">var </span><span class="s1">e = entries[i]</span>
+    <span class="s2">if </span><span class="s1">(e.charAt(</span><span class="s5">0</span><span class="s1">) !== </span><span class="s3">'.' </span><span class="s1">|| dotOk) {</span>
+      <span class="s2">var </span><span class="s1">m</span>
+      <span class="s2">if </span><span class="s1">(negate &amp;&amp; !prefix) {</span>
+        <span class="s1">m = !e.match(pn)</span>
+      <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s1">m = e.match(pn)</span>
+      <span class="s1">}</span>
+      <span class="s2">if </span><span class="s1">(m)</span>
+        <span class="s1">matchedEntries.push(e)</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s0">//console.error('prd2', prefix, entries, remain[0]._glob, matchedEntries)</span>
+
+  <span class="s2">var </span><span class="s1">len = matchedEntries.length</span>
+  <span class="s0">// If there are no matched entries, then nothing matches.</span>
+  <span class="s2">if </span><span class="s1">(len === </span><span class="s5">0</span><span class="s1">)</span>
+    <span class="s2">return </span><span class="s1">cb()</span>
+
+  <span class="s0">// if this is the last remaining pattern bit, then no need for</span>
+  <span class="s0">// an additional stat *unless* the user has specified mark or</span>
+  <span class="s0">// stat explicitly.  We know they exist, since readdir returned</span>
+  <span class="s0">// them.</span>
+
+  <span class="s2">if </span><span class="s1">(remain.length === </span><span class="s5">1 </span><span class="s1">&amp;&amp; !</span><span class="s2">this</span><span class="s1">.mark &amp;&amp; !</span><span class="s2">this</span><span class="s1">.stat) {</span>
+    <span class="s2">if </span><span class="s1">(!</span><span class="s2">this</span><span class="s1">.matches[index])</span>
+      <span class="s2">this</span><span class="s1">.matches[index] = Object.create(</span><span class="s2">null</span><span class="s1">)</span>
+
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; len</span><span class="s4">; </span><span class="s1">i ++) {</span>
+      <span class="s2">var </span><span class="s1">e = matchedEntries[i]</span>
+      <span class="s2">if </span><span class="s1">(prefix) {</span>
+        <span class="s2">if </span><span class="s1">(prefix !== </span><span class="s3">'/'</span><span class="s1">)</span>
+          <span class="s1">e = prefix + </span><span class="s3">'/' </span><span class="s1">+ e</span>
+        <span class="s2">else</span>
+          <span class="s1">e = prefix + e</span>
+      <span class="s1">}</span>
+
+      <span class="s2">if </span><span class="s1">(e.charAt(</span><span class="s5">0</span><span class="s1">) === </span><span class="s3">'/' </span><span class="s1">&amp;&amp; !</span><span class="s2">this</span><span class="s1">.nomount) {</span>
+        <span class="s1">e = path.join(</span><span class="s2">this</span><span class="s1">.root</span><span class="s4">, </span><span class="s1">e)</span>
+      <span class="s1">}</span>
+      <span class="s2">this</span><span class="s1">._emitMatch(index</span><span class="s4">, </span><span class="s1">e)</span>
+    <span class="s1">}</span>
+    <span class="s0">// This was the last one, and no stats were needed</span>
+    <span class="s2">return </span><span class="s1">cb()</span>
+  <span class="s1">}</span>
+
+  <span class="s0">// now test all matched entries as stand-ins for that part</span>
+  <span class="s0">// of the pattern.</span>
+  <span class="s1">remain.shift()</span>
+  <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; len</span><span class="s4">; </span><span class="s1">i ++) {</span>
+    <span class="s2">var </span><span class="s1">e = matchedEntries[i]</span>
+    <span class="s2">var </span><span class="s1">newPattern</span>
+    <span class="s2">if </span><span class="s1">(prefix) {</span>
+      <span class="s2">if </span><span class="s1">(prefix !== </span><span class="s3">'/'</span><span class="s1">)</span>
+        <span class="s1">e = prefix + </span><span class="s3">'/' </span><span class="s1">+ e</span>
+      <span class="s2">else</span>
+        <span class="s1">e = prefix + e</span>
+    <span class="s1">}</span>
+    <span class="s2">this</span><span class="s1">._process([e].concat(remain)</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">inGlobStar</span><span class="s4">, </span><span class="s1">cb)</span>
+  <span class="s1">}</span>
+  <span class="s1">cb()</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._emitMatch = </span><span class="s2">function </span><span class="s1">(index</span><span class="s4">, </span><span class="s1">e) {</span>
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.aborted)</span>
+    <span class="s2">return</span>
+
+  <span class="s2">if </span><span class="s1">(isIgnored(</span><span class="s2">this</span><span class="s4">, </span><span class="s1">e))</span>
+    <span class="s2">return</span>
+
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.paused) {</span>
+    <span class="s2">this</span><span class="s1">._emitQueue.push([index</span><span class="s4">, </span><span class="s1">e])</span>
+    <span class="s2">return</span>
+  <span class="s1">}</span>
+
+  <span class="s2">var </span><span class="s1">abs = isAbsolute(e) ? e : </span><span class="s2">this</span><span class="s1">._makeAbs(e)</span>
+
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.mark)</span>
+    <span class="s1">e = </span><span class="s2">this</span><span class="s1">._mark(e)</span>
+
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.absolute)</span>
+    <span class="s1">e = abs</span>
+
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.matches[index][e])</span>
+    <span class="s2">return</span>
+
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.nodir) {</span>
+    <span class="s2">var </span><span class="s1">c = </span><span class="s2">this</span><span class="s1">.cache[abs]</span>
+    <span class="s2">if </span><span class="s1">(c === </span><span class="s3">'DIR' </span><span class="s1">|| Array.isArray(c))</span>
+      <span class="s2">return</span>
+  <span class="s1">}</span>
+
+  <span class="s2">this</span><span class="s1">.matches[index][e] = </span><span class="s2">true</span>
+
+  <span class="s2">var </span><span class="s1">st = </span><span class="s2">this</span><span class="s1">.statCache[abs]</span>
+  <span class="s2">if </span><span class="s1">(st)</span>
+    <span class="s2">this</span><span class="s1">.emit(</span><span class="s3">'stat'</span><span class="s4">, </span><span class="s1">e</span><span class="s4">, </span><span class="s1">st)</span>
+
+  <span class="s2">this</span><span class="s1">.emit(</span><span class="s3">'match'</span><span class="s4">, </span><span class="s1">e)</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._readdirInGlobStar = </span><span class="s2">function </span><span class="s1">(abs</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.aborted)</span>
+    <span class="s2">return</span>
+
+  <span class="s0">// follow all symlinked directories forever</span>
+  <span class="s0">// just proceed as if this is a non-globstar situation</span>
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.follow)</span>
+    <span class="s2">return this</span><span class="s1">._readdir(abs</span><span class="s4">, </span><span class="s2">false</span><span class="s4">, </span><span class="s1">cb)</span>
+
+  <span class="s2">var </span><span class="s1">lstatkey = </span><span class="s3">'lstat</span><span class="s4">\0</span><span class="s3">' </span><span class="s1">+ abs</span>
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+  <span class="s2">var </span><span class="s1">lstatcb = inflight(lstatkey</span><span class="s4">, </span><span class="s1">lstatcb_)</span>
+
+  <span class="s2">if </span><span class="s1">(lstatcb)</span>
+    <span class="s1">self.fs.lstat(abs</span><span class="s4">, </span><span class="s1">lstatcb)</span>
+
+  <span class="s2">function </span><span class="s1">lstatcb_ (er</span><span class="s4">, </span><span class="s1">lstat) {</span>
+    <span class="s2">if </span><span class="s1">(er &amp;&amp; er.code === </span><span class="s3">'ENOENT'</span><span class="s1">)</span>
+      <span class="s2">return </span><span class="s1">cb()</span>
+
+    <span class="s2">var </span><span class="s1">isSym = lstat &amp;&amp; lstat.isSymbolicLink()</span>
+    <span class="s1">self.symlinks[abs] = isSym</span>
+
+    <span class="s0">// If it's not a symlink or a dir, then it's definitely a regular file.</span>
+    <span class="s0">// don't bother doing a readdir in that case.</span>
+    <span class="s2">if </span><span class="s1">(!isSym &amp;&amp; lstat &amp;&amp; !lstat.isDirectory()) {</span>
+      <span class="s1">self.cache[abs] = </span><span class="s3">'FILE'</span>
+      <span class="s1">cb()</span>
+    <span class="s1">} </span><span class="s2">else</span>
+      <span class="s1">self._readdir(abs</span><span class="s4">, </span><span class="s2">false</span><span class="s4">, </span><span class="s1">cb)</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._readdir = </span><span class="s2">function </span><span class="s1">(abs</span><span class="s4">, </span><span class="s1">inGlobStar</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.aborted)</span>
+    <span class="s2">return</span>
+
+  <span class="s1">cb = inflight(</span><span class="s3">'readdir</span><span class="s4">\0</span><span class="s3">'</span><span class="s1">+abs+</span><span class="s3">'</span><span class="s4">\0</span><span class="s3">'</span><span class="s1">+inGlobStar</span><span class="s4">, </span><span class="s1">cb)</span>
+  <span class="s2">if </span><span class="s1">(!cb)</span>
+    <span class="s2">return</span>
+
+  <span class="s0">//console.error('RD %j %j', +inGlobStar, abs)</span>
+  <span class="s2">if </span><span class="s1">(inGlobStar &amp;&amp; !ownProp(</span><span class="s2">this</span><span class="s1">.symlinks</span><span class="s4">, </span><span class="s1">abs))</span>
+    <span class="s2">return this</span><span class="s1">._readdirInGlobStar(abs</span><span class="s4">, </span><span class="s1">cb)</span>
+
+  <span class="s2">if </span><span class="s1">(ownProp(</span><span class="s2">this</span><span class="s1">.cache</span><span class="s4">, </span><span class="s1">abs)) {</span>
+    <span class="s2">var </span><span class="s1">c = </span><span class="s2">this</span><span class="s1">.cache[abs]</span>
+    <span class="s2">if </span><span class="s1">(!c || c === </span><span class="s3">'FILE'</span><span class="s1">)</span>
+      <span class="s2">return </span><span class="s1">cb()</span>
+
+    <span class="s2">if </span><span class="s1">(Array.isArray(c))</span>
+      <span class="s2">return </span><span class="s1">cb(</span><span class="s2">null</span><span class="s4">, </span><span class="s1">c)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+  <span class="s1">self.fs.readdir(abs</span><span class="s4">, </span><span class="s1">readdirCb(</span><span class="s2">this</span><span class="s4">, </span><span class="s1">abs</span><span class="s4">, </span><span class="s1">cb))</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">readdirCb (self</span><span class="s4">, </span><span class="s1">abs</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s2">return function </span><span class="s1">(er</span><span class="s4">, </span><span class="s1">entries) {</span>
+    <span class="s2">if </span><span class="s1">(er)</span>
+      <span class="s1">self._readdirError(abs</span><span class="s4">, </span><span class="s1">er</span><span class="s4">, </span><span class="s1">cb)</span>
+    <span class="s2">else</span>
+      <span class="s1">self._readdirEntries(abs</span><span class="s4">, </span><span class="s1">entries</span><span class="s4">, </span><span class="s1">cb)</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._readdirEntries = </span><span class="s2">function </span><span class="s1">(abs</span><span class="s4">, </span><span class="s1">entries</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.aborted)</span>
+    <span class="s2">return</span>
+
+  <span class="s0">// if we haven't asked to stat everything, then just</span>
+  <span class="s0">// assume that everything in there exists, so we can avoid</span>
+  <span class="s0">// having to stat it a second time.</span>
+  <span class="s2">if </span><span class="s1">(!</span><span class="s2">this</span><span class="s1">.mark &amp;&amp; !</span><span class="s2">this</span><span class="s1">.stat) {</span>
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; entries.length</span><span class="s4">; </span><span class="s1">i ++) {</span>
+      <span class="s2">var </span><span class="s1">e = entries[i]</span>
+      <span class="s2">if </span><span class="s1">(abs === </span><span class="s3">'/'</span><span class="s1">)</span>
+        <span class="s1">e = abs + e</span>
+      <span class="s2">else</span>
+        <span class="s1">e = abs + </span><span class="s3">'/' </span><span class="s1">+ e</span>
+      <span class="s2">this</span><span class="s1">.cache[e] = </span><span class="s2">true</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s2">this</span><span class="s1">.cache[abs] = entries</span>
+  <span class="s2">return </span><span class="s1">cb(</span><span class="s2">null</span><span class="s4">, </span><span class="s1">entries)</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._readdirError = </span><span class="s2">function </span><span class="s1">(f</span><span class="s4">, </span><span class="s1">er</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.aborted)</span>
+    <span class="s2">return</span>
+
+  <span class="s0">// handle errors, and cache the information</span>
+  <span class="s2">switch </span><span class="s1">(er.code) {</span>
+    <span class="s2">case </span><span class="s3">'ENOTSUP'</span><span class="s1">: </span><span class="s0">// https://github.com/isaacs/node-glob/issues/205</span>
+    <span class="s2">case </span><span class="s3">'ENOTDIR'</span><span class="s1">: </span><span class="s0">// totally normal. means it *does* exist.</span>
+      <span class="s2">var </span><span class="s1">abs = </span><span class="s2">this</span><span class="s1">._makeAbs(f)</span>
+      <span class="s2">this</span><span class="s1">.cache[abs] = </span><span class="s3">'FILE'</span>
+      <span class="s2">if </span><span class="s1">(abs === </span><span class="s2">this</span><span class="s1">.cwdAbs) {</span>
+        <span class="s2">var </span><span class="s1">error = </span><span class="s2">new </span><span class="s1">Error(er.code + </span><span class="s3">' invalid cwd ' </span><span class="s1">+ </span><span class="s2">this</span><span class="s1">.cwd)</span>
+        <span class="s1">error.path = </span><span class="s2">this</span><span class="s1">.cwd</span>
+        <span class="s1">error.code = er.code</span>
+        <span class="s2">this</span><span class="s1">.emit(</span><span class="s3">'error'</span><span class="s4">, </span><span class="s1">error)</span>
+        <span class="s2">this</span><span class="s1">.abort()</span>
+      <span class="s1">}</span>
+      <span class="s2">break</span>
+
+    <span class="s2">case </span><span class="s3">'ENOENT'</span><span class="s1">: </span><span class="s0">// not terribly unusual</span>
+    <span class="s2">case </span><span class="s3">'ELOOP'</span><span class="s1">:</span>
+    <span class="s2">case </span><span class="s3">'ENAMETOOLONG'</span><span class="s1">:</span>
+    <span class="s2">case </span><span class="s3">'UNKNOWN'</span><span class="s1">:</span>
+      <span class="s2">this</span><span class="s1">.cache[</span><span class="s2">this</span><span class="s1">._makeAbs(f)] = </span><span class="s2">false</span>
+      <span class="s2">break</span>
+
+    <span class="s2">default</span><span class="s1">: </span><span class="s0">// some unusual error.  Treat as failure.</span>
+      <span class="s2">this</span><span class="s1">.cache[</span><span class="s2">this</span><span class="s1">._makeAbs(f)] = </span><span class="s2">false</span>
+      <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.strict) {</span>
+        <span class="s2">this</span><span class="s1">.emit(</span><span class="s3">'error'</span><span class="s4">, </span><span class="s1">er)</span>
+        <span class="s0">// If the error is handled, then we abort</span>
+        <span class="s0">// if not, we threw out of here</span>
+        <span class="s2">this</span><span class="s1">.abort()</span>
+      <span class="s1">}</span>
+      <span class="s2">if </span><span class="s1">(!</span><span class="s2">this</span><span class="s1">.silent)</span>
+        <span class="s1">console.error(</span><span class="s3">'glob error'</span><span class="s4">, </span><span class="s1">er)</span>
+      <span class="s2">break</span>
+  <span class="s1">}</span>
+
+  <span class="s2">return </span><span class="s1">cb()</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._processGlobStar = </span><span class="s2">function </span><span class="s1">(prefix</span><span class="s4">, </span><span class="s1">read</span><span class="s4">, </span><span class="s1">abs</span><span class="s4">, </span><span class="s1">remain</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">inGlobStar</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+  <span class="s2">this</span><span class="s1">._readdir(abs</span><span class="s4">, </span><span class="s1">inGlobStar</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(er</span><span class="s4">, </span><span class="s1">entries) {</span>
+    <span class="s1">self._processGlobStar2(prefix</span><span class="s4">, </span><span class="s1">read</span><span class="s4">, </span><span class="s1">abs</span><span class="s4">, </span><span class="s1">remain</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">inGlobStar</span><span class="s4">, </span><span class="s1">entries</span><span class="s4">, </span><span class="s1">cb)</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+
+<span class="s1">Glob.prototype._processGlobStar2 = </span><span class="s2">function </span><span class="s1">(prefix</span><span class="s4">, </span><span class="s1">read</span><span class="s4">, </span><span class="s1">abs</span><span class="s4">, </span><span class="s1">remain</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">inGlobStar</span><span class="s4">, </span><span class="s1">entries</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s0">//console.error('pgs2', prefix, remain[0], entries)</span>
+
+  <span class="s0">// no entries means not a dir, so it can never have matches</span>
+  <span class="s0">// foo.txt/** doesn't match foo.txt</span>
+  <span class="s2">if </span><span class="s1">(!entries)</span>
+    <span class="s2">return </span><span class="s1">cb()</span>
+
+  <span class="s0">// test without the globstar, and with every child both below</span>
+  <span class="s0">// and replacing the globstar.</span>
+  <span class="s2">var </span><span class="s1">remainWithoutGlobStar = remain.slice(</span><span class="s5">1</span><span class="s1">)</span>
+  <span class="s2">var </span><span class="s1">gspref = prefix ? [ prefix ] : []</span>
+  <span class="s2">var </span><span class="s1">noGlobStar = gspref.concat(remainWithoutGlobStar)</span>
+
+  <span class="s0">// the noGlobStar pattern exits the inGlobStar state</span>
+  <span class="s2">this</span><span class="s1">._process(noGlobStar</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s2">false</span><span class="s4">, </span><span class="s1">cb)</span>
+
+  <span class="s2">var </span><span class="s1">isSym = </span><span class="s2">this</span><span class="s1">.symlinks[abs]</span>
+  <span class="s2">var </span><span class="s1">len = entries.length</span>
+
+  <span class="s0">// If it's a symlink, and we're in a globstar, then stop</span>
+  <span class="s2">if </span><span class="s1">(isSym &amp;&amp; inGlobStar)</span>
+    <span class="s2">return </span><span class="s1">cb()</span>
+
+  <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; len</span><span class="s4">; </span><span class="s1">i++) {</span>
+    <span class="s2">var </span><span class="s1">e = entries[i]</span>
+    <span class="s2">if </span><span class="s1">(e.charAt(</span><span class="s5">0</span><span class="s1">) === </span><span class="s3">'.' </span><span class="s1">&amp;&amp; !</span><span class="s2">this</span><span class="s1">.dot)</span>
+      <span class="s2">continue</span>
+
+    <span class="s0">// these two cases enter the inGlobStar state</span>
+    <span class="s2">var </span><span class="s1">instead = gspref.concat(entries[i]</span><span class="s4">, </span><span class="s1">remainWithoutGlobStar)</span>
+    <span class="s2">this</span><span class="s1">._process(instead</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s2">true</span><span class="s4">, </span><span class="s1">cb)</span>
+
+    <span class="s2">var </span><span class="s1">below = gspref.concat(entries[i]</span><span class="s4">, </span><span class="s1">remain)</span>
+    <span class="s2">this</span><span class="s1">._process(below</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s2">true</span><span class="s4">, </span><span class="s1">cb)</span>
+  <span class="s1">}</span>
+
+  <span class="s1">cb()</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._processSimple = </span><span class="s2">function </span><span class="s1">(prefix</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s0">// XXX review this.  Shouldn't it be doing the mounting etc</span>
+  <span class="s0">// before doing stat?  kinda weird?</span>
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+  <span class="s2">this</span><span class="s1">._stat(prefix</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(er</span><span class="s4">, </span><span class="s1">exists) {</span>
+    <span class="s1">self._processSimple2(prefix</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">er</span><span class="s4">, </span><span class="s1">exists</span><span class="s4">, </span><span class="s1">cb)</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+<span class="s1">Glob.prototype._processSimple2 = </span><span class="s2">function </span><span class="s1">(prefix</span><span class="s4">, </span><span class="s1">index</span><span class="s4">, </span><span class="s1">er</span><span class="s4">, </span><span class="s1">exists</span><span class="s4">, </span><span class="s1">cb) {</span>
+
+  <span class="s0">//console.error('ps2', prefix, exists)</span>
+
+  <span class="s2">if </span><span class="s1">(!</span><span class="s2">this</span><span class="s1">.matches[index])</span>
+    <span class="s2">this</span><span class="s1">.matches[index] = Object.create(</span><span class="s2">null</span><span class="s1">)</span>
+
+  <span class="s0">// If it doesn't exist, then just mark the lack of results</span>
+  <span class="s2">if </span><span class="s1">(!exists)</span>
+    <span class="s2">return </span><span class="s1">cb()</span>
+
+  <span class="s2">if </span><span class="s1">(prefix &amp;&amp; isAbsolute(prefix) &amp;&amp; !</span><span class="s2">this</span><span class="s1">.nomount) {</span>
+    <span class="s2">var </span><span class="s1">trail = </span><span class="s5">/[\/\\]$/</span><span class="s1">.test(prefix)</span>
+    <span class="s2">if </span><span class="s1">(prefix.charAt(</span><span class="s5">0</span><span class="s1">) === </span><span class="s3">'/'</span><span class="s1">) {</span>
+      <span class="s1">prefix = path.join(</span><span class="s2">this</span><span class="s1">.root</span><span class="s4">, </span><span class="s1">prefix)</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+      <span class="s1">prefix = path.resolve(</span><span class="s2">this</span><span class="s1">.root</span><span class="s4">, </span><span class="s1">prefix)</span>
+      <span class="s2">if </span><span class="s1">(trail)</span>
+        <span class="s1">prefix += </span><span class="s3">'/'</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s2">if </span><span class="s1">(process.platform === </span><span class="s3">'win32'</span><span class="s1">)</span>
+    <span class="s1">prefix = prefix.replace(</span><span class="s5">/\\/g</span><span class="s4">, </span><span class="s3">'/'</span><span class="s1">)</span>
+
+  <span class="s0">// Mark this as a match</span>
+  <span class="s2">this</span><span class="s1">._emitMatch(index</span><span class="s4">, </span><span class="s1">prefix)</span>
+  <span class="s1">cb()</span>
+<span class="s1">}</span>
+
+<span class="s0">// Returns either 'DIR', 'FILE', or false</span>
+<span class="s1">Glob.prototype._stat = </span><span class="s2">function </span><span class="s1">(f</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s2">var </span><span class="s1">abs = </span><span class="s2">this</span><span class="s1">._makeAbs(f)</span>
+  <span class="s2">var </span><span class="s1">needDir = f.slice(-</span><span class="s5">1</span><span class="s1">) === </span><span class="s3">'/'</span>
+
+  <span class="s2">if </span><span class="s1">(f.length &gt; </span><span class="s2">this</span><span class="s1">.maxLength)</span>
+    <span class="s2">return </span><span class="s1">cb()</span>
+
+  <span class="s2">if </span><span class="s1">(!</span><span class="s2">this</span><span class="s1">.stat &amp;&amp; ownProp(</span><span class="s2">this</span><span class="s1">.cache</span><span class="s4">, </span><span class="s1">abs)) {</span>
+    <span class="s2">var </span><span class="s1">c = </span><span class="s2">this</span><span class="s1">.cache[abs]</span>
+
+    <span class="s2">if </span><span class="s1">(Array.isArray(c))</span>
+      <span class="s1">c = </span><span class="s3">'DIR'</span>
+
+    <span class="s0">// It exists, but maybe not how we need it</span>
+    <span class="s2">if </span><span class="s1">(!needDir || c === </span><span class="s3">'DIR'</span><span class="s1">)</span>
+      <span class="s2">return </span><span class="s1">cb(</span><span class="s2">null</span><span class="s4">, </span><span class="s1">c)</span>
+
+    <span class="s2">if </span><span class="s1">(needDir &amp;&amp; c === </span><span class="s3">'FILE'</span><span class="s1">)</span>
+      <span class="s2">return </span><span class="s1">cb()</span>
+
+    <span class="s0">// otherwise we have to stat, because maybe c=true</span>
+    <span class="s0">// if we know it exists, but not what it is.</span>
+  <span class="s1">}</span>
+
+  <span class="s2">var </span><span class="s1">exists</span>
+  <span class="s2">var </span><span class="s1">stat = </span><span class="s2">this</span><span class="s1">.statCache[abs]</span>
+  <span class="s2">if </span><span class="s1">(stat !== undefined) {</span>
+    <span class="s2">if </span><span class="s1">(stat === </span><span class="s2">false</span><span class="s1">)</span>
+      <span class="s2">return </span><span class="s1">cb(</span><span class="s2">null</span><span class="s4">, </span><span class="s1">stat)</span>
+    <span class="s2">else </span><span class="s1">{</span>
+      <span class="s2">var </span><span class="s1">type = stat.isDirectory() ? </span><span class="s3">'DIR' </span><span class="s1">: </span><span class="s3">'FILE'</span>
+      <span class="s2">if </span><span class="s1">(needDir &amp;&amp; type === </span><span class="s3">'FILE'</span><span class="s1">)</span>
+        <span class="s2">return </span><span class="s1">cb()</span>
+      <span class="s2">else</span>
+        <span class="s2">return </span><span class="s1">cb(</span><span class="s2">null</span><span class="s4">, </span><span class="s1">type</span><span class="s4">, </span><span class="s1">stat)</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+  <span class="s2">var </span><span class="s1">statcb = inflight(</span><span class="s3">'stat</span><span class="s4">\0</span><span class="s3">' </span><span class="s1">+ abs</span><span class="s4">, </span><span class="s1">lstatcb_)</span>
+  <span class="s2">if </span><span class="s1">(statcb)</span>
+    <span class="s1">self.fs.lstat(abs</span><span class="s4">, </span><span class="s1">statcb)</span>
+
+  <span class="s2">function </span><span class="s1">lstatcb_ (er</span><span class="s4">, </span><span class="s1">lstat) {</span>
+    <span class="s2">if </span><span class="s1">(lstat &amp;&amp; lstat.isSymbolicLink()) {</span>
+      <span class="s0">// If it's a symlink, then treat it as the target, unless</span>
+      <span class="s0">// the target does not exist, then treat it as a file.</span>
+      <span class="s2">return </span><span class="s1">self.fs.stat(abs</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(er</span><span class="s4">, </span><span class="s1">stat) {</span>
+        <span class="s2">if </span><span class="s1">(er)</span>
+          <span class="s1">self._stat2(f</span><span class="s4">, </span><span class="s1">abs</span><span class="s4">, </span><span class="s2">null</span><span class="s4">, </span><span class="s1">lstat</span><span class="s4">, </span><span class="s1">cb)</span>
+        <span class="s2">else</span>
+          <span class="s1">self._stat2(f</span><span class="s4">, </span><span class="s1">abs</span><span class="s4">, </span><span class="s1">er</span><span class="s4">, </span><span class="s1">stat</span><span class="s4">, </span><span class="s1">cb)</span>
+      <span class="s1">})</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+      <span class="s1">self._stat2(f</span><span class="s4">, </span><span class="s1">abs</span><span class="s4">, </span><span class="s1">er</span><span class="s4">, </span><span class="s1">lstat</span><span class="s4">, </span><span class="s1">cb)</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">Glob.prototype._stat2 = </span><span class="s2">function </span><span class="s1">(f</span><span class="s4">, </span><span class="s1">abs</span><span class="s4">, </span><span class="s1">er</span><span class="s4">, </span><span class="s1">stat</span><span class="s4">, </span><span class="s1">cb) {</span>
+  <span class="s2">if </span><span class="s1">(er &amp;&amp; (er.code === </span><span class="s3">'ENOENT' </span><span class="s1">|| er.code === </span><span class="s3">'ENOTDIR'</span><span class="s1">)) {</span>
+    <span class="s2">this</span><span class="s1">.statCache[abs] = </span><span class="s2">false</span>
+    <span class="s2">return </span><span class="s1">cb()</span>
+  <span class="s1">}</span>
+
+  <span class="s2">var </span><span class="s1">needDir = f.slice(-</span><span class="s5">1</span><span class="s1">) === </span><span class="s3">'/'</span>
+  <span class="s2">this</span><span class="s1">.statCache[abs] = stat</span>
+
+  <span class="s2">if </span><span class="s1">(abs.slice(-</span><span class="s5">1</span><span class="s1">) === </span><span class="s3">'/' </span><span class="s1">&amp;&amp; stat &amp;&amp; !stat.isDirectory())</span>
+    <span class="s2">return </span><span class="s1">cb(</span><span class="s2">null</span><span class="s4">, </span><span class="s2">false</span><span class="s4">, </span><span class="s1">stat)</span>
+
+  <span class="s2">var </span><span class="s1">c = </span><span class="s2">true</span>
+  <span class="s2">if </span><span class="s1">(stat)</span>
+    <span class="s1">c = stat.isDirectory() ? </span><span class="s3">'DIR' </span><span class="s1">: </span><span class="s3">'FILE'</span>
+  <span class="s2">this</span><span class="s1">.cache[abs] = </span><span class="s2">this</span><span class="s1">.cache[abs] || c</span>
+
+  <span class="s2">if </span><span class="s1">(needDir &amp;&amp; c === </span><span class="s3">'FILE'</span><span class="s1">)</span>
+    <span class="s2">return </span><span class="s1">cb()</span>
+
+  <span class="s2">return </span><span class="s1">cb(</span><span class="s2">null</span><span class="s4">, </span><span class="s1">c</span><span class="s4">, </span><span class="s1">stat)</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<html>
+<head>
+<title>formats.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+formats.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">util = require(</span><span class="s0">'./util'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">DATE = </span><span class="s4">/^(\d\d\d\d)-(\d\d)-(\d\d)$/</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">DAYS = [</span><span class="s4">0</span><span class="s1">,</span><span class="s4">31</span><span class="s1">,</span><span class="s4">28</span><span class="s1">,</span><span class="s4">31</span><span class="s1">,</span><span class="s4">30</span><span class="s1">,</span><span class="s4">31</span><span class="s1">,</span><span class="s4">30</span><span class="s1">,</span><span class="s4">31</span><span class="s1">,</span><span class="s4">31</span><span class="s1">,</span><span class="s4">30</span><span class="s1">,</span><span class="s4">31</span><span class="s1">,</span><span class="s4">30</span><span class="s1">,</span><span class="s4">31</span><span class="s2">]</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">TIME = </span><span class="s4">/^(\d\d):(\d\d):(\d\d)(\.\d+)?(z|[+-]\d\d(?::?\d\d)?)?$/i</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">HOSTNAME = </span><span class="s4">/^(?=.{1,253}\.?$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*\.?$/i</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">URI = </span><span class="s4">/^(?:[a-z][a-z0-9+\-.]*:)(?:\/?\/(?:(?:[a-z0-9\-._~!$&amp;'()*+,;=:]|%[0-9a-f]{2})*@)?(?:\[(?:(?:(?:(?:[0-9a-f]{1,4}:){6}|::(?:[0-9a-f]{1,4}:){5}|(?:[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){4}|(?:(?:[0-9a-f]{1,4}:){0,1}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){3}|(?:(?:[0-9a-f]{1,4}:){0,2}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){2}|(?:(?:[0-9a-f]{1,4}:){0,3}[0-9a-f]{1,4})?::[0-9a-f]{1,4}:|(?:(?:[0-9a-f]{1,4}:){0,4}[0-9a-f]{1,4})?::)(?:[0-9a-f]{1,4}:[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?))|(?:(?:[0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})?::[0-9a-f]{1,4}|(?:(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4})?::)|[Vv][0-9a-f]+\.[a-z0-9\-._~!$&amp;'()*+,;=:]+)\]|(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)|(?:[a-z0-9\-._~!$&amp;'()*+,;=]|%[0-9a-f]{2})*)(?::\d*)?(?:\/(?:[a-z0-9\-._~!$&amp;'()*+,;=:@]|%[0-9a-f]{2})*)*|\/(?:(?:[a-z0-9\-._~!$&amp;'()*+,;=:@]|%[0-9a-f]{2})+(?:\/(?:[a-z0-9\-._~!$&amp;'()*+,;=:@]|%[0-9a-f]{2})*)*)?|(?:[a-z0-9\-._~!$&amp;'()*+,;=:@]|%[0-9a-f]{2})+(?:\/(?:[a-z0-9\-._~!$&amp;'()*+,;=:@]|%[0-9a-f]{2})*)*)(?:\?(?:[a-z0-9\-._~!$&amp;'()*+,;=:@/?]|%[0-9a-f]{2})*)?(?:#(?:[a-z0-9\-._~!$&amp;'()*+,;=:@/?]|%[0-9a-f]{2})*)?$/i</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">URIREF = </span><span class="s4">/^(?:[a-z][a-z0-9+\-.]*:)?(?:\/?\/(?:(?:[a-z0-9\-._~!$&amp;'()*+,;=:]|%[0-9a-f]{2})*@)?(?:\[(?:(?:(?:(?:[0-9a-f]{1,4}:){6}|::(?:[0-9a-f]{1,4}:){5}|(?:[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){4}|(?:(?:[0-9a-f]{1,4}:){0,1}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){3}|(?:(?:[0-9a-f]{1,4}:){0,2}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){2}|(?:(?:[0-9a-f]{1,4}:){0,3}[0-9a-f]{1,4})?::[0-9a-f]{1,4}:|(?:(?:[0-9a-f]{1,4}:){0,4}[0-9a-f]{1,4})?::)(?:[0-9a-f]{1,4}:[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?))|(?:(?:[0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})?::[0-9a-f]{1,4}|(?:(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4})?::)|[Vv][0-9a-f]+\.[a-z0-9\-._~!$&amp;'()*+,;=:]+)\]|(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)|(?:[a-z0-9\-._~!$&amp;'&quot;()*+,;=]|%[0-9a-f]{2})*)(?::\d*)?(?:\/(?:[a-z0-9\-._~!$&amp;'&quot;()*+,;=:@]|%[0-9a-f]{2})*)*|\/(?:(?:[a-z0-9\-._~!$&amp;'&quot;()*+,;=:@]|%[0-9a-f]{2})+(?:\/(?:[a-z0-9\-._~!$&amp;'&quot;()*+,;=:@]|%[0-9a-f]{2})*)*)?|(?:[a-z0-9\-._~!$&amp;'&quot;()*+,;=:@]|%[0-9a-f]{2})+(?:\/(?:[a-z0-9\-._~!$&amp;'&quot;()*+,;=:@]|%[0-9a-f]{2})*)*)?(?:\?(?:[a-z0-9\-._~!$&amp;'&quot;()*+,;=:@/?]|%[0-9a-f]{2})*)?(?:#(?:[a-z0-9\-._~!$&amp;'&quot;()*+,;=:@/?]|%[0-9a-f]{2})*)?$/i</span><span class="s1">;</span>
+<span class="s5">// uri-template: https://tools.ietf.org/html/rfc6570</span>
+<span class="s3">var </span><span class="s2">URITEMPLATE = </span><span class="s4">/^(?:(?:[^\x00-\x20&quot;'&lt;&gt;%\\^`{|}]|%[0-9a-f]{2})|\{[+#./;?&amp;=,!@|]?(?:[a-z0-9_]|%[0-9a-f]{2})+(?::[1-9][0-9]{0,3}|\*)?(?:,(?:[a-z0-9_]|%[0-9a-f]{2})+(?::[1-9][0-9]{0,3}|\*)?)*\})*$/i</span><span class="s1">;</span>
+<span class="s5">// For the source: https://gist.github.com/dperini/729294</span>
+<span class="s5">// For test cases: https://mathiasbynens.be/demo/url-regex</span>
+<span class="s5">// @todo Delete current URL in favour of the commented out URL rule when this issue is fixed https://github.com/eslint/eslint/issues/7983.</span>
+<span class="s5">// var URL = /^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u{00a1}-\u{ffff}0-9]+-)*[a-z\u{00a1}-\u{ffff}0-9]+)(?:\.(?:[a-z\u{00a1}-\u{ffff}0-9]+-)*[a-z\u{00a1}-\u{ffff}0-9]+)*(?:\.(?:[a-z\u{00a1}-\u{ffff}]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/iu;</span>
+<span class="s3">var </span><span class="s2">URL = </span><span class="s4">/^(?:(?:http[s\u017F]?|ftp):\/\/)(?:(?:[\0-\x08\x0E-\x1F!-\x9F\xA1-\u167F\u1681-\u1FFF\u200B-\u2027\u202A-\u202E\u2030-\u205E\u2060-\u2FFF\u3001-\uD7FF\uE000-\uFEFE\uFF00-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])+(?::(?:[\0-\x08\x0E-\x1F!-\x9F\xA1-\u167F\u1681-\u1FFF\u200B-\u2027\u202A-\u202E\u2030-\u205E\u2060-\u2FFF\u3001-\uD7FF\uE000-\uFEFE\uFF00-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])*)?@)?(?:(?!10(?:\.[0-9]{1,3}){3})(?!127(?:\.[0-9]{1,3}){3})(?!169\.254(?:\.[0-9]{1,3}){2})(?!192\.168(?:\.[0-9]{1,3}){2})(?!172\.(?:1[6-9]|2[0-9]|3[01])(?:\.[0-9]{1,3}){2})(?:[1-9][0-9]?|1[0-9][0-9]|2[01][0-9]|22[0-3])(?:\.(?:1?[0-9]{1,2}|2[0-4][0-9]|25[0-5])){2}(?:\.(?:[1-9][0-9]?|1[0-9][0-9]|2[0-4][0-9]|25[0-4]))|(?:(?:(?:[0-9a-z\xA1-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])+-)*(?:[0-9a-z\xA1-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])+)(?:\.(?:(?:[0-9a-z\xA1-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])+-)*(?:[0-9a-z\xA1-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])+)*(?:\.(?:(?:[a-z\xA1-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]){2,})))(?::[0-9]{2,5})?(?:\/(?:[\0-\x08\x0E-\x1F!-\x9F\xA1-\u167F\u1681-\u1FFF\u200B-\u2027\u202A-\u202E\u2030-\u205E\u2060-\u2FFF\u3001-\uD7FF\uE000-\uFEFE\uFF00-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])*)?$/i</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">UUID = </span><span class="s4">/^(?:urn:uuid:)?[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">JSON_POINTER = </span><span class="s4">/^(?:\/(?:[^~/]|~0|~1)*)*$/</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">JSON_POINTER_URI_FRAGMENT = </span><span class="s4">/^#(?:\/(?:[a-z0-9_\-.!$&amp;'()*+,;:=@]|%[0-9a-f]{2}|~0|~1)*)*$/i</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">RELATIVE_JSON_POINTER = </span><span class="s4">/^(?:0|[1-9][0-9]*)(?:#|(?:\/(?:[^~/]|~0|~1)*)*)$/</span><span class="s1">;</span>
+
+
+<span class="s2">module.exports = formats</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">formats(mode) {</span>
+  <span class="s2">mode = mode == </span><span class="s0">'full' </span><span class="s2">? </span><span class="s0">'full' </span><span class="s2">: </span><span class="s0">'fast'</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">util.copy(formats[mode])</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s2">formats.fast = {</span>
+  <span class="s5">// date: http://tools.ietf.org/html/rfc3339#section-5.6</span>
+  <span class="s2">date: </span><span class="s4">/^\d\d\d\d-[0-1]\d-[0-3]\d$/</span><span class="s1">,</span>
+  <span class="s5">// date-time: http://tools.ietf.org/html/rfc3339#section-5.6</span>
+  <span class="s2">time: </span><span class="s4">/^(?:[0-2]\d:[0-5]\d:[0-5]\d|23:59:60)(?:\.\d+)?(?:z|[+-]\d\d(?::?\d\d)?)?$/i</span><span class="s1">,</span>
+  <span class="s0">'date-time'</span><span class="s2">: </span><span class="s4">/^\d\d\d\d-[0-1]\d-[0-3]\d[t\s](?:[0-2]\d:[0-5]\d:[0-5]\d|23:59:60)(?:\.\d+)?(?:z|[+-]\d\d(?::?\d\d)?)$/i</span><span class="s1">,</span>
+  <span class="s5">// uri: https://github.com/mafintosh/is-my-json-valid/blob/master/formats.js</span>
+  <span class="s2">uri: </span><span class="s4">/^(?:[a-z][a-z0-9+\-.]*:)(?:\/?\/)?[^\s]*$/i</span><span class="s1">,</span>
+  <span class="s0">'uri-reference'</span><span class="s2">: </span><span class="s4">/^(?:(?:[a-z][a-z0-9+\-.]*:)?\/?\/)?(?:[^\\\s#][^\s#]*)?(?:#[^\\\s]*)?$/i</span><span class="s1">,</span>
+  <span class="s0">'uri-template'</span><span class="s2">: URITEMPLATE</span><span class="s1">,</span>
+  <span class="s2">url: URL</span><span class="s1">,</span>
+  <span class="s5">// email (sources from jsen validator):</span>
+  <span class="s5">// http://stackoverflow.com/questions/201323/using-a-regular-expression-to-validate-an-email-address#answer-8829363</span>
+  <span class="s5">// http://www.w3.org/TR/html5/forms.html#valid-e-mail-address (search for 'willful violation')</span>
+  <span class="s2">email: </span><span class="s4">/^[a-z0-9.!#$%&amp;'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/i</span><span class="s1">,</span>
+  <span class="s2">hostname: HOSTNAME</span><span class="s1">,</span>
+  <span class="s5">// optimized https://www.safaribooksonline.com/library/view/regular-expressions-cookbook/9780596802837/ch07s16.html</span>
+  <span class="s2">ipv4: </span><span class="s4">/^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/</span><span class="s1">,</span>
+  <span class="s5">// optimized http://stackoverflow.com/questions/53497/regular-expression-that-matches-valid-ipv6-addresses</span>
+  <span class="s2">ipv6: </span><span class="s4">/^\s*(?:(?:(?:[0-9a-f]{1,4}:){7}(?:[0-9a-f]{1,4}|:))|(?:(?:[0-9a-f]{1,4}:){6}(?::[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(?:(?:[0-9a-f]{1,4}:){5}(?:(?:(?::[0-9a-f]{1,4}){1,2})|:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(?:(?:[0-9a-f]{1,4}:){4}(?:(?:(?::[0-9a-f]{1,4}){1,3})|(?:(?::[0-9a-f]{1,4})?:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(?:(?:[0-9a-f]{1,4}:){3}(?:(?:(?::[0-9a-f]{1,4}){1,4})|(?:(?::[0-9a-f]{1,4}){0,2}:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(?:(?:[0-9a-f]{1,4}:){2}(?:(?:(?::[0-9a-f]{1,4}){1,5})|(?:(?::[0-9a-f]{1,4}){0,3}:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(?:(?:[0-9a-f]{1,4}:){1}(?:(?:(?::[0-9a-f]{1,4}){1,6})|(?:(?::[0-9a-f]{1,4}){0,4}:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(?::(?:(?:(?::[0-9a-f]{1,4}){1,7})|(?:(?::[0-9a-f]{1,4}){0,5}:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(?:%.+)?\s*$/i</span><span class="s1">,</span>
+  <span class="s2">regex: regex</span><span class="s1">,</span>
+  <span class="s5">// uuid: http://tools.ietf.org/html/rfc4122</span>
+  <span class="s2">uuid: UUID</span><span class="s1">,</span>
+  <span class="s5">// JSON-pointer: https://tools.ietf.org/html/rfc6901</span>
+  <span class="s5">// uri fragment: https://tools.ietf.org/html/rfc3986#appendix-A</span>
+  <span class="s0">'json-pointer'</span><span class="s2">: JSON_POINTER</span><span class="s1">,</span>
+  <span class="s0">'json-pointer-uri-fragment'</span><span class="s2">: JSON_POINTER_URI_FRAGMENT</span><span class="s1">,</span>
+  <span class="s5">// relative JSON-pointer: http://tools.ietf.org/html/draft-luff-relative-json-pointer-00</span>
+  <span class="s0">'relative-json-pointer'</span><span class="s2">: RELATIVE_JSON_POINTER</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+
+<span class="s2">formats.full = {</span>
+  <span class="s2">date: date</span><span class="s1">,</span>
+  <span class="s2">time: time</span><span class="s1">,</span>
+  <span class="s0">'date-time'</span><span class="s2">: date_time</span><span class="s1">,</span>
+  <span class="s2">uri: uri</span><span class="s1">,</span>
+  <span class="s0">'uri-reference'</span><span class="s2">: URIREF</span><span class="s1">,</span>
+  <span class="s0">'uri-template'</span><span class="s2">: URITEMPLATE</span><span class="s1">,</span>
+  <span class="s2">url: URL</span><span class="s1">,</span>
+  <span class="s2">email: </span><span class="s4">/^[a-z0-9!#$%&amp;'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&amp;'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i</span><span class="s1">,</span>
+  <span class="s2">hostname: HOSTNAME</span><span class="s1">,</span>
+  <span class="s2">ipv4: </span><span class="s4">/^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/</span><span class="s1">,</span>
+  <span class="s2">ipv6: </span><span class="s4">/^\s*(?:(?:(?:[0-9a-f]{1,4}:){7}(?:[0-9a-f]{1,4}|:))|(?:(?:[0-9a-f]{1,4}:){6}(?::[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(?:(?:[0-9a-f]{1,4}:){5}(?:(?:(?::[0-9a-f]{1,4}){1,2})|:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(?:(?:[0-9a-f]{1,4}:){4}(?:(?:(?::[0-9a-f]{1,4}){1,3})|(?:(?::[0-9a-f]{1,4})?:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(?:(?:[0-9a-f]{1,4}:){3}(?:(?:(?::[0-9a-f]{1,4}){1,4})|(?:(?::[0-9a-f]{1,4}){0,2}:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(?:(?:[0-9a-f]{1,4}:){2}(?:(?:(?::[0-9a-f]{1,4}){1,5})|(?:(?::[0-9a-f]{1,4}){0,3}:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(?:(?:[0-9a-f]{1,4}:){1}(?:(?:(?::[0-9a-f]{1,4}){1,6})|(?:(?::[0-9a-f]{1,4}){0,4}:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(?::(?:(?:(?::[0-9a-f]{1,4}){1,7})|(?:(?::[0-9a-f]{1,4}){0,5}:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(?:%.+)?\s*$/i</span><span class="s1">,</span>
+  <span class="s2">regex: regex</span><span class="s1">,</span>
+  <span class="s2">uuid: UUID</span><span class="s1">,</span>
+  <span class="s0">'json-pointer'</span><span class="s2">: JSON_POINTER</span><span class="s1">,</span>
+  <span class="s0">'json-pointer-uri-fragment'</span><span class="s2">: JSON_POINTER_URI_FRAGMENT</span><span class="s1">,</span>
+  <span class="s0">'relative-json-pointer'</span><span class="s2">: RELATIVE_JSON_POINTER</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+
+<span class="s3">function </span><span class="s2">isLeapYear(year) {</span>
+  <span class="s5">// https://tools.ietf.org/html/rfc3339#appendix-C</span>
+  <span class="s3">return </span><span class="s2">year % </span><span class="s4">4 </span><span class="s2">=== </span><span class="s4">0 </span><span class="s2">&amp;&amp; (year % </span><span class="s4">100 </span><span class="s2">!== </span><span class="s4">0 </span><span class="s2">|| year % </span><span class="s4">400 </span><span class="s2">=== </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">date(str) {</span>
+  <span class="s5">// full-date from http://tools.ietf.org/html/rfc3339#section-5.6</span>
+  <span class="s3">var </span><span class="s2">matches = str.match(DATE)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(!matches) </span><span class="s3">return false</span><span class="s1">;</span>
+
+  <span class="s3">var </span><span class="s2">year = +matches[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">month = +matches[</span><span class="s4">2</span><span class="s2">]</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">day = +matches[</span><span class="s4">3</span><span class="s2">]</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">month &gt;= </span><span class="s4">1 </span><span class="s2">&amp;&amp; month &lt;= </span><span class="s4">12 </span><span class="s2">&amp;&amp; day &gt;= </span><span class="s4">1 </span><span class="s2">&amp;&amp;</span>
+          <span class="s2">day &lt;= (month == </span><span class="s4">2 </span><span class="s2">&amp;&amp; isLeapYear(year) ? </span><span class="s4">29 </span><span class="s2">: DAYS[month])</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">time(str</span><span class="s1">, </span><span class="s2">full) {</span>
+  <span class="s3">var </span><span class="s2">matches = str.match(TIME)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(!matches) </span><span class="s3">return false</span><span class="s1">;</span>
+
+  <span class="s3">var </span><span class="s2">hour = matches[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">minute = matches[</span><span class="s4">2</span><span class="s2">]</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">second = matches[</span><span class="s4">3</span><span class="s2">]</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">timeZone = matches[</span><span class="s4">5</span><span class="s2">]</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">((hour &lt;= </span><span class="s4">23 </span><span class="s2">&amp;&amp; minute &lt;= </span><span class="s4">59 </span><span class="s2">&amp;&amp; second &lt;= </span><span class="s4">59</span><span class="s2">) ||</span>
+          <span class="s2">(hour == </span><span class="s4">23 </span><span class="s2">&amp;&amp; minute == </span><span class="s4">59 </span><span class="s2">&amp;&amp; second == </span><span class="s4">60</span><span class="s2">)) &amp;&amp;</span>
+         <span class="s2">(!full || timeZone)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">var </span><span class="s2">DATE_TIME_SEPARATOR = </span><span class="s4">/t|\s/i</span><span class="s1">;</span>
+<span class="s3">function </span><span class="s2">date_time(str) {</span>
+  <span class="s5">// http://tools.ietf.org/html/rfc3339#section-5.6</span>
+  <span class="s3">var </span><span class="s2">dateTime = str.split(DATE_TIME_SEPARATOR)</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">dateTime.length == </span><span class="s4">2 </span><span class="s2">&amp;&amp; date(dateTime[</span><span class="s4">0</span><span class="s2">]) &amp;&amp; time(dateTime[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">, </span><span class="s3">true</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">var </span><span class="s2">NOT_URI_FRAGMENT = </span><span class="s4">/\/|:/</span><span class="s1">;</span>
+<span class="s3">function </span><span class="s2">uri(str) {</span>
+  <span class="s5">// http://jmrware.com/articles/2009/uri_regexp/URI_regex.html + optional protocol + required &quot;.&quot;</span>
+  <span class="s3">return </span><span class="s2">NOT_URI_FRAGMENT.test(str) &amp;&amp; URI.test(str)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">var </span><span class="s2">Z_ANCHOR = </span><span class="s4">/[^\\]\\Z/</span><span class="s1">;</span>
+<span class="s3">function </span><span class="s2">regex(str) {</span>
+  <span class="s3">if </span><span class="s2">(Z_ANCHOR.test(str)) </span><span class="s3">return false</span><span class="s1">;</span>
+  <span class="s3">try </span><span class="s2">{</span>
+    <span class="s3">new </span><span class="s2">RegExp(str)</span><span class="s1">;</span>
+    <span class="s3">return true</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">catch</span><span class="s2">(e) {</span>
+    <span class="s3">return false</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

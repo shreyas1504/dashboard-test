@@ -1,0 +1,476 @@
+<html>
+<head>
+<title>pseudos.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #6897bb;}
+.s6 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+pseudos.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+    pseudo selectors 
+ 
+    --- 
+ 
+    they are available in two forms: 
+    * filters called when the selector 
+      is compiled and return a function 
+      that needs to return next() 
+    * pseudos get called on execution 
+      they need to return a boolean 
+*/</span>
+
+<span class="s2">var </span><span class="s1">getNCheck = require(</span><span class="s3">&quot;nth-check&quot;</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">var </span><span class="s1">BaseFuncs = require(</span><span class="s3">&quot;boolbase&quot;</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">var </span><span class="s1">attributes = require(</span><span class="s3">&quot;./attributes.js&quot;</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">var </span><span class="s1">trueFunc = BaseFuncs.trueFunc</span><span class="s4">;</span>
+<span class="s2">var </span><span class="s1">falseFunc = BaseFuncs.falseFunc</span><span class="s4">;</span>
+
+<span class="s2">var </span><span class="s1">checkAttrib = attributes.rules.equals</span><span class="s4">;</span>
+
+<span class="s2">function </span><span class="s1">getAttribFunc(name</span><span class="s4">, </span><span class="s1">value) {</span>
+    <span class="s2">var </span><span class="s1">data = { name: name</span><span class="s4">, </span><span class="s1">value: value }</span><span class="s4">;</span>
+    <span class="s2">return function </span><span class="s1">attribFunc(next</span><span class="s4">, </span><span class="s1">rule</span><span class="s4">, </span><span class="s1">options) {</span>
+        <span class="s2">return </span><span class="s1">checkAttrib(next</span><span class="s4">, </span><span class="s1">data</span><span class="s4">, </span><span class="s1">options)</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">getChildFunc(next</span><span class="s4">, </span><span class="s1">adapter) {</span>
+    <span class="s2">return function</span><span class="s1">(elem) {</span>
+        <span class="s2">return </span><span class="s1">!!adapter.getParent(elem) &amp;&amp; next(elem)</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s2">var </span><span class="s1">filters = {</span>
+    <span class="s1">contains: </span><span class="s2">function</span><span class="s1">(next</span><span class="s4">, </span><span class="s1">text</span><span class="s4">, </span><span class="s1">options) {</span>
+        <span class="s2">var </span><span class="s1">adapter = options.adapter</span><span class="s4">;</span>
+
+        <span class="s2">return function </span><span class="s1">contains(elem) {</span>
+            <span class="s2">return </span><span class="s1">next(elem) &amp;&amp; adapter.getText(elem).indexOf(text) &gt;= </span><span class="s5">0</span><span class="s4">;</span>
+        <span class="s1">}</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s1">icontains: </span><span class="s2">function</span><span class="s1">(next</span><span class="s4">, </span><span class="s1">text</span><span class="s4">, </span><span class="s1">options) {</span>
+        <span class="s2">var </span><span class="s1">itext = text.toLowerCase()</span><span class="s4">;</span>
+        <span class="s2">var </span><span class="s1">adapter = options.adapter</span><span class="s4">;</span>
+
+        <span class="s2">return function </span><span class="s1">icontains(elem) {</span>
+            <span class="s2">return </span><span class="s1">(</span>
+                <span class="s1">next(elem) &amp;&amp;</span>
+                <span class="s1">adapter</span>
+                    <span class="s1">.getText(elem)</span>
+                    <span class="s1">.toLowerCase()</span>
+                    <span class="s1">.indexOf(itext) &gt;= </span><span class="s5">0</span>
+            <span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">}</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+
+    <span class="s6">//location specific methods</span>
+    <span class="s3">&quot;nth-child&quot;</span><span class="s1">: </span><span class="s2">function</span><span class="s1">(next</span><span class="s4">, </span><span class="s1">rule</span><span class="s4">, </span><span class="s1">options) {</span>
+        <span class="s2">var </span><span class="s1">func = getNCheck(rule)</span><span class="s4">;</span>
+        <span class="s2">var </span><span class="s1">adapter = options.adapter</span><span class="s4">;</span>
+
+        <span class="s2">if </span><span class="s1">(func === falseFunc) </span><span class="s2">return </span><span class="s1">func</span><span class="s4">;</span>
+        <span class="s2">if </span><span class="s1">(func === trueFunc) </span><span class="s2">return </span><span class="s1">getChildFunc(next</span><span class="s4">, </span><span class="s1">adapter)</span><span class="s4">;</span>
+
+        <span class="s2">return function </span><span class="s1">nthChild(elem) {</span>
+            <span class="s2">var </span><span class="s1">siblings = adapter.getSiblings(elem)</span><span class="s4">;</span>
+
+            <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">, </span><span class="s1">pos = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; siblings.length</span><span class="s4">; </span><span class="s1">i++) {</span>
+                <span class="s2">if </span><span class="s1">(adapter.isTag(siblings[i])) {</span>
+                    <span class="s2">if </span><span class="s1">(siblings[i] === elem) </span><span class="s2">break</span><span class="s4">;</span>
+                    <span class="s2">else </span><span class="s1">pos++</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+
+            <span class="s2">return </span><span class="s1">func(pos) &amp;&amp; next(elem)</span><span class="s4">;</span>
+        <span class="s1">}</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s3">&quot;nth-last-child&quot;</span><span class="s1">: </span><span class="s2">function</span><span class="s1">(next</span><span class="s4">, </span><span class="s1">rule</span><span class="s4">, </span><span class="s1">options) {</span>
+        <span class="s2">var </span><span class="s1">func = getNCheck(rule)</span><span class="s4">;</span>
+        <span class="s2">var </span><span class="s1">adapter = options.adapter</span><span class="s4">;</span>
+
+        <span class="s2">if </span><span class="s1">(func === falseFunc) </span><span class="s2">return </span><span class="s1">func</span><span class="s4">;</span>
+        <span class="s2">if </span><span class="s1">(func === trueFunc) </span><span class="s2">return </span><span class="s1">getChildFunc(next</span><span class="s4">, </span><span class="s1">adapter)</span><span class="s4">;</span>
+
+        <span class="s2">return function </span><span class="s1">nthLastChild(elem) {</span>
+            <span class="s2">var </span><span class="s1">siblings = adapter.getSiblings(elem)</span><span class="s4">;</span>
+
+            <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">pos = </span><span class="s5">0</span><span class="s4">, </span><span class="s1">i = siblings.length - </span><span class="s5">1</span><span class="s4">; </span><span class="s1">i &gt;= </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i--) {</span>
+                <span class="s2">if </span><span class="s1">(adapter.isTag(siblings[i])) {</span>
+                    <span class="s2">if </span><span class="s1">(siblings[i] === elem) </span><span class="s2">break</span><span class="s4">;</span>
+                    <span class="s2">else </span><span class="s1">pos++</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+
+            <span class="s2">return </span><span class="s1">func(pos) &amp;&amp; next(elem)</span><span class="s4">;</span>
+        <span class="s1">}</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s3">&quot;nth-of-type&quot;</span><span class="s1">: </span><span class="s2">function</span><span class="s1">(next</span><span class="s4">, </span><span class="s1">rule</span><span class="s4">, </span><span class="s1">options) {</span>
+        <span class="s2">var </span><span class="s1">func = getNCheck(rule)</span><span class="s4">;</span>
+        <span class="s2">var </span><span class="s1">adapter = options.adapter</span><span class="s4">;</span>
+
+        <span class="s2">if </span><span class="s1">(func === falseFunc) </span><span class="s2">return </span><span class="s1">func</span><span class="s4">;</span>
+        <span class="s2">if </span><span class="s1">(func === trueFunc) </span><span class="s2">return </span><span class="s1">getChildFunc(next</span><span class="s4">, </span><span class="s1">adapter)</span><span class="s4">;</span>
+
+        <span class="s2">return function </span><span class="s1">nthOfType(elem) {</span>
+            <span class="s2">var </span><span class="s1">siblings = adapter.getSiblings(elem)</span><span class="s4">;</span>
+
+            <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">pos = </span><span class="s5">0</span><span class="s4">, </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; siblings.length</span><span class="s4">; </span><span class="s1">i++) {</span>
+                <span class="s2">if </span><span class="s1">(adapter.isTag(siblings[i])) {</span>
+                    <span class="s2">if </span><span class="s1">(siblings[i] === elem) </span><span class="s2">break</span><span class="s4">;</span>
+                    <span class="s2">if </span><span class="s1">(adapter.getName(siblings[i]) === adapter.getName(elem)) pos++</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+
+            <span class="s2">return </span><span class="s1">func(pos) &amp;&amp; next(elem)</span><span class="s4">;</span>
+        <span class="s1">}</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s3">&quot;nth-last-of-type&quot;</span><span class="s1">: </span><span class="s2">function</span><span class="s1">(next</span><span class="s4">, </span><span class="s1">rule</span><span class="s4">, </span><span class="s1">options) {</span>
+        <span class="s2">var </span><span class="s1">func = getNCheck(rule)</span><span class="s4">;</span>
+        <span class="s2">var </span><span class="s1">adapter = options.adapter</span><span class="s4">;</span>
+
+        <span class="s2">if </span><span class="s1">(func === falseFunc) </span><span class="s2">return </span><span class="s1">func</span><span class="s4">;</span>
+        <span class="s2">if </span><span class="s1">(func === trueFunc) </span><span class="s2">return </span><span class="s1">getChildFunc(next</span><span class="s4">, </span><span class="s1">adapter)</span><span class="s4">;</span>
+
+        <span class="s2">return function </span><span class="s1">nthLastOfType(elem) {</span>
+            <span class="s2">var </span><span class="s1">siblings = adapter.getSiblings(elem)</span><span class="s4">;</span>
+
+            <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">pos = </span><span class="s5">0</span><span class="s4">, </span><span class="s1">i = siblings.length - </span><span class="s5">1</span><span class="s4">; </span><span class="s1">i &gt;= </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i--) {</span>
+                <span class="s2">if </span><span class="s1">(adapter.isTag(siblings[i])) {</span>
+                    <span class="s2">if </span><span class="s1">(siblings[i] === elem) </span><span class="s2">break</span><span class="s4">;</span>
+                    <span class="s2">if </span><span class="s1">(adapter.getName(siblings[i]) === adapter.getName(elem)) pos++</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+
+            <span class="s2">return </span><span class="s1">func(pos) &amp;&amp; next(elem)</span><span class="s4">;</span>
+        <span class="s1">}</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+
+    <span class="s6">//TODO determine the actual root element</span>
+    <span class="s1">root: </span><span class="s2">function</span><span class="s1">(next</span><span class="s4">, </span><span class="s1">rule</span><span class="s4">, </span><span class="s1">options) {</span>
+        <span class="s2">var </span><span class="s1">adapter = options.adapter</span><span class="s4">;</span>
+
+        <span class="s2">return function</span><span class="s1">(elem) {</span>
+            <span class="s2">return </span><span class="s1">!adapter.getParent(elem) &amp;&amp; next(elem)</span><span class="s4">;</span>
+        <span class="s1">}</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+
+    <span class="s1">scope: </span><span class="s2">function</span><span class="s1">(next</span><span class="s4">, </span><span class="s1">rule</span><span class="s4">, </span><span class="s1">options</span><span class="s4">, </span><span class="s1">context) {</span>
+        <span class="s2">var </span><span class="s1">adapter = options.adapter</span><span class="s4">;</span>
+
+        <span class="s2">if </span><span class="s1">(!context || context.length === </span><span class="s5">0</span><span class="s1">) {</span>
+            <span class="s6">//equivalent to :root</span>
+            <span class="s2">return </span><span class="s1">filters.root(next</span><span class="s4">, </span><span class="s1">rule</span><span class="s4">, </span><span class="s1">options)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s2">function </span><span class="s1">equals(a</span><span class="s4">, </span><span class="s1">b) {</span>
+            <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">adapter.equals === </span><span class="s3">&quot;function&quot;</span><span class="s1">) </span><span class="s2">return </span><span class="s1">adapter.equals(a</span><span class="s4">, </span><span class="s1">b)</span><span class="s4">;</span>
+
+            <span class="s2">return </span><span class="s1">a === b</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s2">if </span><span class="s1">(context.length === </span><span class="s5">1</span><span class="s1">) {</span>
+            <span class="s6">//NOTE: can't be unpacked, as :has uses this for side-effects</span>
+            <span class="s2">return function</span><span class="s1">(elem) {</span>
+                <span class="s2">return </span><span class="s1">equals(context[</span><span class="s5">0</span><span class="s1">]</span><span class="s4">, </span><span class="s1">elem) &amp;&amp; next(elem)</span><span class="s4">;</span>
+            <span class="s1">}</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s2">return function</span><span class="s1">(elem) {</span>
+            <span class="s2">return </span><span class="s1">context.indexOf(elem) &gt;= </span><span class="s5">0 </span><span class="s1">&amp;&amp; next(elem)</span><span class="s4">;</span>
+        <span class="s1">}</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+
+    <span class="s6">//jQuery extensions (others follow as pseudos)</span>
+    <span class="s1">checkbox: getAttribFunc(</span><span class="s3">&quot;type&quot;</span><span class="s4">, </span><span class="s3">&quot;checkbox&quot;</span><span class="s1">)</span><span class="s4">,</span>
+    <span class="s1">file: getAttribFunc(</span><span class="s3">&quot;type&quot;</span><span class="s4">, </span><span class="s3">&quot;file&quot;</span><span class="s1">)</span><span class="s4">,</span>
+    <span class="s1">password: getAttribFunc(</span><span class="s3">&quot;type&quot;</span><span class="s4">, </span><span class="s3">&quot;password&quot;</span><span class="s1">)</span><span class="s4">,</span>
+    <span class="s1">radio: getAttribFunc(</span><span class="s3">&quot;type&quot;</span><span class="s4">, </span><span class="s3">&quot;radio&quot;</span><span class="s1">)</span><span class="s4">,</span>
+    <span class="s1">reset: getAttribFunc(</span><span class="s3">&quot;type&quot;</span><span class="s4">, </span><span class="s3">&quot;reset&quot;</span><span class="s1">)</span><span class="s4">,</span>
+    <span class="s1">image: getAttribFunc(</span><span class="s3">&quot;type&quot;</span><span class="s4">, </span><span class="s3">&quot;image&quot;</span><span class="s1">)</span><span class="s4">,</span>
+    <span class="s1">submit: getAttribFunc(</span><span class="s3">&quot;type&quot;</span><span class="s4">, </span><span class="s3">&quot;submit&quot;</span><span class="s1">)</span><span class="s4">,</span>
+
+    <span class="s6">//dynamic state pseudos. These depend on optional Adapter methods.</span>
+    <span class="s1">hover: </span><span class="s2">function</span><span class="s1">(next</span><span class="s4">, </span><span class="s1">rule</span><span class="s4">, </span><span class="s1">options) {</span>
+        <span class="s2">var </span><span class="s1">adapter = options.adapter</span><span class="s4">;</span>
+
+        <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">adapter.isHovered === </span><span class="s3">'function'</span><span class="s1">) {</span>
+            <span class="s2">return function </span><span class="s1">hover(elem) {</span>
+                <span class="s2">return </span><span class="s1">next(elem) &amp;&amp; adapter.isHovered(elem)</span><span class="s4">;</span>
+            <span class="s1">}</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s2">return </span><span class="s1">falseFunc</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s1">visited: </span><span class="s2">function</span><span class="s1">(next</span><span class="s4">, </span><span class="s1">rule</span><span class="s4">, </span><span class="s1">options) {</span>
+        <span class="s2">var </span><span class="s1">adapter = options.adapter</span><span class="s4">;</span>
+
+        <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">adapter.isVisited === </span><span class="s3">'function'</span><span class="s1">) {</span>
+            <span class="s2">return function </span><span class="s1">visited(elem) {</span>
+                <span class="s2">return </span><span class="s1">next(elem) &amp;&amp; adapter.isVisited(elem)</span><span class="s4">;</span>
+            <span class="s1">}</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s2">return </span><span class="s1">falseFunc</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s1">active: </span><span class="s2">function</span><span class="s1">(next</span><span class="s4">, </span><span class="s1">rule</span><span class="s4">, </span><span class="s1">options) {</span>
+        <span class="s2">var </span><span class="s1">adapter = options.adapter</span><span class="s4">;</span>
+
+        <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">adapter.isActive === </span><span class="s3">'function'</span><span class="s1">) {</span>
+            <span class="s2">return function </span><span class="s1">active(elem) {</span>
+                <span class="s2">return </span><span class="s1">next(elem) &amp;&amp; adapter.isActive(elem)</span><span class="s4">;</span>
+            <span class="s1">}</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s2">return </span><span class="s1">falseFunc</span><span class="s4">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s6">//helper methods</span>
+<span class="s2">function </span><span class="s1">getFirstElement(elems</span><span class="s4">, </span><span class="s1">adapter) {</span>
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">elems &amp;&amp; i &lt; elems.length</span><span class="s4">; </span><span class="s1">i++) {</span>
+        <span class="s2">if </span><span class="s1">(adapter.isTag(elems[i])) </span><span class="s2">return </span><span class="s1">elems[i]</span><span class="s4">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s6">//while filters are precompiled, pseudos get called when they are needed</span>
+<span class="s2">var </span><span class="s1">pseudos = {</span>
+    <span class="s1">empty: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">return </span><span class="s1">!adapter.getChildren(elem).some(</span><span class="s2">function</span><span class="s1">(elem) {</span>
+            <span class="s2">return </span><span class="s1">adapter.isTag(elem) || elem.type === </span><span class="s3">&quot;text&quot;</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+
+    <span class="s3">&quot;first-child&quot;</span><span class="s1">: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">return </span><span class="s1">getFirstElement(adapter.getSiblings(elem)</span><span class="s4">, </span><span class="s1">adapter) === elem</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s3">&quot;last-child&quot;</span><span class="s1">: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">var </span><span class="s1">siblings = adapter.getSiblings(elem)</span><span class="s4">;</span>
+
+        <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = siblings.length - </span><span class="s5">1</span><span class="s4">; </span><span class="s1">i &gt;= </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i--) {</span>
+            <span class="s2">if </span><span class="s1">(siblings[i] === elem) </span><span class="s2">return true</span><span class="s4">;</span>
+            <span class="s2">if </span><span class="s1">(adapter.isTag(siblings[i])) </span><span class="s2">break</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s2">return false</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s3">&quot;first-of-type&quot;</span><span class="s1">: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">var </span><span class="s1">siblings = adapter.getSiblings(elem)</span><span class="s4">;</span>
+
+        <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; siblings.length</span><span class="s4">; </span><span class="s1">i++) {</span>
+            <span class="s2">if </span><span class="s1">(adapter.isTag(siblings[i])) {</span>
+                <span class="s2">if </span><span class="s1">(siblings[i] === elem) </span><span class="s2">return true</span><span class="s4">;</span>
+                <span class="s2">if </span><span class="s1">(adapter.getName(siblings[i]) === adapter.getName(elem)) </span><span class="s2">break</span><span class="s4">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s2">return false</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s3">&quot;last-of-type&quot;</span><span class="s1">: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">var </span><span class="s1">siblings = adapter.getSiblings(elem)</span><span class="s4">;</span>
+
+        <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = siblings.length - </span><span class="s5">1</span><span class="s4">; </span><span class="s1">i &gt;= </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i--) {</span>
+            <span class="s2">if </span><span class="s1">(adapter.isTag(siblings[i])) {</span>
+                <span class="s2">if </span><span class="s1">(siblings[i] === elem) </span><span class="s2">return true</span><span class="s4">;</span>
+                <span class="s2">if </span><span class="s1">(adapter.getName(siblings[i]) === adapter.getName(elem)) </span><span class="s2">break</span><span class="s4">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s2">return false</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s3">&quot;only-of-type&quot;</span><span class="s1">: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">var </span><span class="s1">siblings = adapter.getSiblings(elem)</span><span class="s4">;</span>
+
+        <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">, </span><span class="s1">j = siblings.length</span><span class="s4">; </span><span class="s1">i &lt; j</span><span class="s4">; </span><span class="s1">i++) {</span>
+            <span class="s2">if </span><span class="s1">(adapter.isTag(siblings[i])) {</span>
+                <span class="s2">if </span><span class="s1">(siblings[i] === elem) </span><span class="s2">continue</span><span class="s4">;</span>
+                <span class="s2">if </span><span class="s1">(adapter.getName(siblings[i]) === adapter.getName(elem)) {</span>
+                    <span class="s2">return false</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s2">return true</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s3">&quot;only-child&quot;</span><span class="s1">: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">var </span><span class="s1">siblings = adapter.getSiblings(elem)</span><span class="s4">;</span>
+
+        <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; siblings.length</span><span class="s4">; </span><span class="s1">i++) {</span>
+            <span class="s2">if </span><span class="s1">(adapter.isTag(siblings[i]) &amp;&amp; siblings[i] !== elem) </span><span class="s2">return false</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s2">return true</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+
+    <span class="s6">//:matches(a, area, link)[href]</span>
+    <span class="s1">link: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">return </span><span class="s1">adapter.hasAttrib(elem</span><span class="s4">, </span><span class="s3">&quot;href&quot;</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s6">//TODO: :any-link once the name is finalized (as an alias of :link)</span>
+
+    <span class="s6">//forms</span>
+    <span class="s6">//to consider: :target</span>
+
+    <span class="s6">//:matches([selected], select:not([multiple]):not(&gt; option[selected]) &gt; option:first-of-type)</span>
+    <span class="s1">selected: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">if </span><span class="s1">(adapter.hasAttrib(elem</span><span class="s4">, </span><span class="s3">&quot;selected&quot;</span><span class="s1">)) </span><span class="s2">return true</span><span class="s4">;</span>
+        <span class="s2">else if </span><span class="s1">(adapter.getName(elem) !== </span><span class="s3">&quot;option&quot;</span><span class="s1">) </span><span class="s2">return false</span><span class="s4">;</span>
+
+        <span class="s6">//the first &lt;option&gt; in a &lt;select&gt; is also selected</span>
+        <span class="s2">var </span><span class="s1">parent = adapter.getParent(elem)</span><span class="s4">;</span>
+
+        <span class="s2">if </span><span class="s1">(!parent || adapter.getName(parent) !== </span><span class="s3">&quot;select&quot; </span><span class="s1">|| adapter.hasAttrib(parent</span><span class="s4">, </span><span class="s3">&quot;multiple&quot;</span><span class="s1">)) {</span>
+            <span class="s2">return false</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s2">var </span><span class="s1">siblings = adapter.getChildren(parent)</span><span class="s4">;</span>
+        <span class="s2">var </span><span class="s1">sawElem = </span><span class="s2">false</span><span class="s4">;</span>
+
+        <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; siblings.length</span><span class="s4">; </span><span class="s1">i++) {</span>
+            <span class="s2">if </span><span class="s1">(adapter.isTag(siblings[i])) {</span>
+                <span class="s2">if </span><span class="s1">(siblings[i] === elem) {</span>
+                    <span class="s1">sawElem = </span><span class="s2">true</span><span class="s4">;</span>
+                <span class="s1">} </span><span class="s2">else if </span><span class="s1">(!sawElem) {</span>
+                    <span class="s2">return false</span><span class="s4">;</span>
+                <span class="s1">} </span><span class="s2">else if </span><span class="s1">(adapter.hasAttrib(siblings[i]</span><span class="s4">, </span><span class="s3">&quot;selected&quot;</span><span class="s1">)) {</span>
+                    <span class="s2">return false</span><span class="s4">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s2">return </span><span class="s1">sawElem</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s6">//https://html.spec.whatwg.org/multipage/scripting.html#disabled-elements</span>
+    <span class="s6">//:matches(</span>
+    <span class="s6">//  :matches(button, input, select, textarea, menuitem, optgroup, option)[disabled],</span>
+    <span class="s6">//  optgroup[disabled] &gt; option),</span>
+    <span class="s6">// fieldset[disabled] * //TODO not child of first &lt;legend&gt;</span>
+    <span class="s6">//)</span>
+    <span class="s1">disabled: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">return </span><span class="s1">adapter.hasAttrib(elem</span><span class="s4">, </span><span class="s3">&quot;disabled&quot;</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s1">enabled: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">return </span><span class="s1">!adapter.hasAttrib(elem</span><span class="s4">, </span><span class="s3">&quot;disabled&quot;</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s6">//:matches(:matches(:radio, :checkbox)[checked], :selected) (TODO menuitem)</span>
+    <span class="s1">checked: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">return </span><span class="s1">adapter.hasAttrib(elem</span><span class="s4">, </span><span class="s3">&quot;checked&quot;</span><span class="s1">) || pseudos.selected(elem</span><span class="s4">, </span><span class="s1">adapter)</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s6">//:matches(input, select, textarea)[required]</span>
+    <span class="s1">required: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">return </span><span class="s1">adapter.hasAttrib(elem</span><span class="s4">, </span><span class="s3">&quot;required&quot;</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s6">//:matches(input, select, textarea):not([required])</span>
+    <span class="s1">optional: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">return </span><span class="s1">!adapter.hasAttrib(elem</span><span class="s4">, </span><span class="s3">&quot;required&quot;</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+
+    <span class="s6">//jQuery extensions</span>
+
+    <span class="s6">//:not(:empty)</span>
+    <span class="s1">parent: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">return </span><span class="s1">!pseudos.empty(elem</span><span class="s4">, </span><span class="s1">adapter)</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s6">//:matches(h1, h2, h3, h4, h5, h6)</span>
+    <span class="s1">header: namePseudo([</span><span class="s3">&quot;h1&quot;</span><span class="s4">, </span><span class="s3">&quot;h2&quot;</span><span class="s4">, </span><span class="s3">&quot;h3&quot;</span><span class="s4">, </span><span class="s3">&quot;h4&quot;</span><span class="s4">, </span><span class="s3">&quot;h5&quot;</span><span class="s4">, </span><span class="s3">&quot;h6&quot;</span><span class="s1">])</span><span class="s4">,</span>
+
+    <span class="s6">//:matches(button, input[type=button])</span>
+    <span class="s1">button: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">var </span><span class="s1">name = adapter.getName(elem)</span><span class="s4">;</span>
+        <span class="s2">return </span><span class="s1">(</span>
+            <span class="s1">name === </span><span class="s3">&quot;button&quot; </span><span class="s1">|| (name === </span><span class="s3">&quot;input&quot; </span><span class="s1">&amp;&amp; adapter.getAttributeValue(elem</span><span class="s4">, </span><span class="s3">&quot;type&quot;</span><span class="s1">) === </span><span class="s3">&quot;button&quot;</span><span class="s1">)</span>
+        <span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s6">//:matches(input, textarea, select, button)</span>
+    <span class="s1">input: namePseudo([</span><span class="s3">&quot;input&quot;</span><span class="s4">, </span><span class="s3">&quot;textarea&quot;</span><span class="s4">, </span><span class="s3">&quot;select&quot;</span><span class="s4">, </span><span class="s3">&quot;button&quot;</span><span class="s1">])</span><span class="s4">,</span>
+    <span class="s6">//input:matches(:not([type!='']), [type='text' i])</span>
+    <span class="s1">text: </span><span class="s2">function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">var </span><span class="s1">attr</span><span class="s4">;</span>
+        <span class="s2">return </span><span class="s1">(</span>
+            <span class="s1">adapter.getName(elem) === </span><span class="s3">&quot;input&quot; </span><span class="s1">&amp;&amp;</span>
+            <span class="s1">(!(attr = adapter.getAttributeValue(elem</span><span class="s4">, </span><span class="s3">&quot;type&quot;</span><span class="s1">)) || attr.toLowerCase() === </span><span class="s3">&quot;text&quot;</span><span class="s1">)</span>
+        <span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s2">function </span><span class="s1">namePseudo(names) {</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">Set !== </span><span class="s3">&quot;undefined&quot;</span><span class="s1">) {</span>
+        <span class="s6">// eslint-disable-next-line no-undef</span>
+        <span class="s2">var </span><span class="s1">nameSet = </span><span class="s2">new </span><span class="s1">Set(names)</span><span class="s4">;</span>
+
+        <span class="s2">return function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+            <span class="s2">return </span><span class="s1">nameSet.has(adapter.getName(elem))</span><span class="s4">;</span>
+        <span class="s1">}</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return function</span><span class="s1">(elem</span><span class="s4">, </span><span class="s1">adapter) {</span>
+        <span class="s2">return </span><span class="s1">names.indexOf(adapter.getName(elem)) &gt;= </span><span class="s5">0</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">verifyArgs(func</span><span class="s4">, </span><span class="s1">name</span><span class="s4">, </span><span class="s1">subselect) {</span>
+    <span class="s2">if </span><span class="s1">(subselect === </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s2">if </span><span class="s1">(func.length &gt; </span><span class="s5">2 </span><span class="s1">&amp;&amp; name !== </span><span class="s3">&quot;scope&quot;</span><span class="s1">) {</span>
+            <span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">&quot;pseudo-selector :&quot; </span><span class="s1">+ name + </span><span class="s3">&quot; requires an argument&quot;</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s2">if </span><span class="s1">(func.length === </span><span class="s5">2</span><span class="s1">) {</span>
+            <span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">&quot;pseudo-selector :&quot; </span><span class="s1">+ name + </span><span class="s3">&quot; doesn't have any arguments&quot;</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s6">//FIXME this feels hacky</span>
+<span class="s2">var </span><span class="s1">re_CSS3 = </span><span class="s5">/^(?:(?:nth|last|first|only)-(?:child|of-type)|root|empty|(?:en|dis)abled|checked|not)$/</span><span class="s4">;</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">compile: </span><span class="s2">function</span><span class="s1">(next</span><span class="s4">, </span><span class="s1">data</span><span class="s4">, </span><span class="s1">options</span><span class="s4">, </span><span class="s1">context) {</span>
+        <span class="s2">var </span><span class="s1">name = data.name</span><span class="s4">;</span>
+        <span class="s2">var </span><span class="s1">subselect = data.data</span><span class="s4">;</span>
+        <span class="s2">var </span><span class="s1">adapter = options.adapter</span><span class="s4">;</span>
+
+        <span class="s2">if </span><span class="s1">(options &amp;&amp; options.strict &amp;&amp; !re_CSS3.test(name)) {</span>
+            <span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">&quot;:&quot; </span><span class="s1">+ name + </span><span class="s3">&quot; isn't part of CSS3&quot;</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">filters[name] === </span><span class="s3">&quot;function&quot;</span><span class="s1">) {</span>
+            <span class="s2">return </span><span class="s1">filters[name](next</span><span class="s4">, </span><span class="s1">subselect</span><span class="s4">, </span><span class="s1">options</span><span class="s4">, </span><span class="s1">context)</span><span class="s4">;</span>
+        <span class="s1">} </span><span class="s2">else if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">pseudos[name] === </span><span class="s3">&quot;function&quot;</span><span class="s1">) {</span>
+            <span class="s2">var </span><span class="s1">func = pseudos[name]</span><span class="s4">;</span>
+
+            <span class="s1">verifyArgs(func</span><span class="s4">, </span><span class="s1">name</span><span class="s4">, </span><span class="s1">subselect)</span><span class="s4">;</span>
+
+            <span class="s2">if </span><span class="s1">(func === falseFunc) {</span>
+                <span class="s2">return </span><span class="s1">func</span><span class="s4">;</span>
+            <span class="s1">}</span>
+
+            <span class="s2">if </span><span class="s1">(next === trueFunc) {</span>
+                <span class="s2">return function </span><span class="s1">pseudoRoot(elem) {</span>
+                    <span class="s2">return </span><span class="s1">func(elem</span><span class="s4">, </span><span class="s1">adapter</span><span class="s4">, </span><span class="s1">subselect)</span><span class="s4">;</span>
+                <span class="s1">}</span><span class="s4">;</span>
+            <span class="s1">}</span>
+
+            <span class="s2">return function </span><span class="s1">pseudoArgs(elem) {</span>
+                <span class="s2">return </span><span class="s1">func(elem</span><span class="s4">, </span><span class="s1">adapter</span><span class="s4">, </span><span class="s1">subselect) &amp;&amp; next(elem)</span><span class="s4">;</span>
+            <span class="s1">}</span><span class="s4">;</span>
+        <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">&quot;unmatched pseudo-class :&quot; </span><span class="s1">+ name)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s1">filters: filters</span><span class="s4">,</span>
+    <span class="s1">pseudos: pseudos</span>
+<span class="s1">}</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

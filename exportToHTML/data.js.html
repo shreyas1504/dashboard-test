@@ -1,0 +1,70 @@
+<html>
+<head>
+<title>data.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+data.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">KEYWORDS = [</span>
+  <span class="s0">'multipleOf'</span><span class="s1">,</span>
+  <span class="s0">'maximum'</span><span class="s1">,</span>
+  <span class="s0">'exclusiveMaximum'</span><span class="s1">,</span>
+  <span class="s0">'minimum'</span><span class="s1">,</span>
+  <span class="s0">'exclusiveMinimum'</span><span class="s1">,</span>
+  <span class="s0">'maxLength'</span><span class="s1">,</span>
+  <span class="s0">'minLength'</span><span class="s1">,</span>
+  <span class="s0">'pattern'</span><span class="s1">,</span>
+  <span class="s0">'additionalItems'</span><span class="s1">,</span>
+  <span class="s0">'maxItems'</span><span class="s1">,</span>
+  <span class="s0">'minItems'</span><span class="s1">,</span>
+  <span class="s0">'uniqueItems'</span><span class="s1">,</span>
+  <span class="s0">'maxProperties'</span><span class="s1">,</span>
+  <span class="s0">'minProperties'</span><span class="s1">,</span>
+  <span class="s0">'required'</span><span class="s1">,</span>
+  <span class="s0">'additionalProperties'</span><span class="s1">,</span>
+  <span class="s0">'enum'</span><span class="s1">,</span>
+  <span class="s0">'format'</span><span class="s1">,</span>
+  <span class="s0">'const'</span>
+<span class="s2">]</span><span class="s1">;</span>
+
+<span class="s2">module.exports = </span><span class="s3">function </span><span class="s2">(metaSchema</span><span class="s1">, </span><span class="s2">keywordsJsonPointers) {</span>
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i=</span><span class="s4">0</span><span class="s1">; </span><span class="s2">i&lt;keywordsJsonPointers.length</span><span class="s1">; </span><span class="s2">i++) {</span>
+    <span class="s2">metaSchema = JSON.parse(JSON.stringify(metaSchema))</span><span class="s1">;</span>
+    <span class="s3">var </span><span class="s2">segments = keywordsJsonPointers[i].split(</span><span class="s0">'/'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">var </span><span class="s2">keywords = metaSchema</span><span class="s1">;</span>
+    <span class="s3">var </span><span class="s2">j</span><span class="s1">;</span>
+    <span class="s3">for </span><span class="s2">(j=</span><span class="s4">1</span><span class="s1">; </span><span class="s2">j&lt;segments.length</span><span class="s1">; </span><span class="s2">j++)</span>
+      <span class="s2">keywords = keywords[segments[j]]</span><span class="s1">;</span>
+
+    <span class="s3">for </span><span class="s2">(j=</span><span class="s4">0</span><span class="s1">; </span><span class="s2">j&lt;KEYWORDS.length</span><span class="s1">; </span><span class="s2">j++) {</span>
+      <span class="s3">var </span><span class="s2">key = KEYWORDS[j]</span><span class="s1">;</span>
+      <span class="s3">var </span><span class="s2">schema = keywords[key]</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(schema) {</span>
+        <span class="s2">keywords[key] = {</span>
+          <span class="s2">anyOf: [</span>
+            <span class="s2">schema</span><span class="s1">,</span>
+            <span class="s2">{ $ref: </span><span class="s0">'https://raw.githubusercontent.com/ajv-validator/ajv/master/lib/refs/data.json#' </span><span class="s2">}</span>
+          <span class="s2">]</span>
+        <span class="s2">}</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">metaSchema</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

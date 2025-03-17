@@ -1,0 +1,115 @@
+<html>
+<head>
+<title>items.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+items.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+<span class="s0">{{# def.setupNextLevel }}</span>
+
+
+<span class="s0">{{## def.validateItems:startFrom:</span>
+  <span class="s0">for (var {{=$idx}} = {{=startFrom}}; {{=$idx}} &lt; {{=$data}}.length; {{=$idx}}++) {</span>
+    <span class="s0">{{</span>
+      <span class="s0">$it.errorPath = it.util.getPathExpr(it.errorPath, $idx, it.opts.jsonPointers, true);</span>
+      <span class="s0">var $passData = $data + '[' + $idx + ']';</span>
+      <span class="s0">$it.dataPathArr[$dataNxt] = $idx;</span>
+    <span class="s0">}}</span>
+
+    <span class="s0">{{# def.generateSubschemaCode }}</span>
+    <span class="s0">{{# def.optimizeValidate }}</span>
+
+    <span class="s0">{{? $breakOnError }}</span>
+      <span class="s0">if (!{{=$nextValid}}) break;</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">}</span>
+<span class="s0">#}}</span>
+
+<span class="s0">{{</span>
+  <span class="s0">var $idx = 'i' + $lvl</span>
+    <span class="s0">, $dataNxt = $it.dataLevel = it.dataLevel + 1</span>
+    <span class="s0">, $nextData = 'data' + $dataNxt</span>
+    <span class="s0">, $currentBaseId = it.baseId;</span>
+<span class="s0">}}</span>
+
+<span class="s0">var {{=$errs}} = errors;</span>
+<span class="s0">var {{=$valid}};</span>
+
+<span class="s0">{{? Array.isArray($schema) }}</span>
+  <span class="s0">{{ /* 'items' is an array of schemas */}}</span>
+  <span class="s0">{{ var $additionalItems = it.schema.additionalItems; }}</span>
+  <span class="s0">{{? $additionalItems === false }}</span>
+    <span class="s0">{{=$valid}} = {{=$data}}.length &lt;= {{= $schema.length }};</span>
+    <span class="s0">{{</span>
+      <span class="s0">var $currErrSchemaPath = $errSchemaPath;</span>
+      <span class="s0">$errSchemaPath = it.errSchemaPath + '/additionalItems';      </span>
+    <span class="s0">}}</span>
+    <span class="s0">{{# def.checkError:'additionalItems' }}</span>
+    <span class="s0">{{ $errSchemaPath = $currErrSchemaPath; }}</span>
+    <span class="s0">{{# def.elseIfValid}}</span>
+  <span class="s0">{{?}}</span>
+
+  <span class="s0">{{~ $schema:$sch:$i }}</span>
+    <span class="s0">{{? {{# def.nonEmptySchema:$sch }} }}</span>
+      <span class="s0">{{=$nextValid}} = true;</span>
+
+      <span class="s0">if ({{=$data}}.length &gt; {{=$i}}) {</span>
+        <span class="s0">{{</span>
+          <span class="s0">var $passData = $data + '[' + $i + ']';</span>
+          <span class="s0">$it.schema = $sch;</span>
+          <span class="s0">$it.schemaPath = $schemaPath + '[' + $i + ']';</span>
+          <span class="s0">$it.errSchemaPath = $errSchemaPath + '/' + $i;</span>
+          <span class="s0">$it.errorPath = it.util.getPathExpr(it.errorPath, $i, it.opts.jsonPointers, true);</span>
+          <span class="s0">$it.dataPathArr[$dataNxt] = $i;</span>
+        <span class="s0">}}</span>
+
+        <span class="s0">{{# def.generateSubschemaCode }}</span>
+        <span class="s0">{{# def.optimizeValidate }}</span>
+      <span class="s0">}</span>
+
+      <span class="s0">{{# def.ifResultValid }}</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{~}}</span>
+
+  <span class="s0">{{? typeof $additionalItems == 'object' &amp;&amp; {{# def.nonEmptySchema:$additionalItems }} }}</span>
+    <span class="s0">{{</span>
+      <span class="s0">$it.schema = $additionalItems;</span>
+      <span class="s0">$it.schemaPath = it.schemaPath + '.additionalItems';</span>
+      <span class="s0">$it.errSchemaPath = it.errSchemaPath + '/additionalItems';</span>
+    <span class="s0">}}</span>
+    <span class="s0">{{=$nextValid}} = true;</span>
+
+    <span class="s0">if ({{=$data}}.length &gt; {{= $schema.length }}) {</span>
+      <span class="s0">{{# def.validateItems: $schema.length }}</span>
+    <span class="s0">}</span>
+
+    <span class="s0">{{# def.ifResultValid }}</span>
+  <span class="s0">{{?}}</span>
+
+<span class="s0">{{?? {{# def.nonEmptySchema:$schema }} }}</span>
+  <span class="s0">{{ /* 'items' is a single schema */}}</span>
+  <span class="s0">{{</span>
+    <span class="s0">$it.schema = $schema;</span>
+    <span class="s0">$it.schemaPath = $schemaPath;</span>
+    <span class="s0">$it.errSchemaPath = $errSchemaPath;</span>
+  <span class="s0">}}</span>
+  <span class="s0">{{# def.validateItems: 0 }}</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{? $breakOnError }}</span>
+  <span class="s0">{{= $closingBraces }}</span>
+  <span class="s0">if ({{=$errs}} == errors) {</span>
+<span class="s0">{{?}}</span>
+</pre>
+</body>
+</html>

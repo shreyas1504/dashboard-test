@@ -1,0 +1,101 @@
+<html>
+<head>
+<title>trace.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+trace.js</font>
+</center></td></tr></table>
+<pre><span class="s0">function </span><span class="s1">getTrace(node) {</span>
+    <span class="s0">function </span><span class="s1">shouldPutToTrace(syntax) {</span>
+        <span class="s0">if </span><span class="s1">(syntax === </span><span class="s0">null</span><span class="s1">) {</span>
+            <span class="s0">return false</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">(</span>
+            <span class="s1">syntax.type === </span><span class="s3">'Type' </span><span class="s1">||</span>
+            <span class="s1">syntax.type === </span><span class="s3">'Property' </span><span class="s1">||</span>
+            <span class="s1">syntax.type === </span><span class="s3">'Keyword'</span>
+        <span class="s1">)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">function </span><span class="s1">hasMatch(matchNode) {</span>
+        <span class="s0">if </span><span class="s1">(Array.isArray(matchNode.match)) {</span>
+            <span class="s4">// use for-loop for better perfomance</span>
+            <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s2">; </span><span class="s1">i &lt; matchNode.match.length</span><span class="s2">; </span><span class="s1">i++) {</span>
+                <span class="s0">if </span><span class="s1">(hasMatch(matchNode.match[i])) {</span>
+                    <span class="s0">if </span><span class="s1">(shouldPutToTrace(matchNode.syntax)) {</span>
+                        <span class="s1">result.unshift(matchNode.syntax)</span><span class="s2">;</span>
+                    <span class="s1">}</span>
+
+                    <span class="s0">return true</span><span class="s2">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+        <span class="s1">} </span><span class="s0">else if </span><span class="s1">(matchNode.node === node) {</span>
+            <span class="s1">result = shouldPutToTrace(matchNode.syntax)</span>
+                <span class="s1">? [matchNode.syntax]</span>
+                <span class="s1">: []</span><span class="s2">;</span>
+
+            <span class="s0">return true</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return false</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">result = </span><span class="s0">null</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.matched !== </span><span class="s0">null</span><span class="s1">) {</span>
+        <span class="s1">hasMatch(</span><span class="s0">this</span><span class="s1">.matched)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">result</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">testNode(match</span><span class="s2">, </span><span class="s1">node</span><span class="s2">, </span><span class="s1">fn) {</span>
+    <span class="s0">var </span><span class="s1">trace = getTrace.call(match</span><span class="s2">, </span><span class="s1">node)</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(trace === </span><span class="s0">null</span><span class="s1">) {</span>
+        <span class="s0">return false</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">trace.some(fn)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">isType(node</span><span class="s2">, </span><span class="s1">type) {</span>
+    <span class="s0">return </span><span class="s1">testNode(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">node</span><span class="s2">, </span><span class="s0">function</span><span class="s1">(matchNode) {</span>
+        <span class="s0">return </span><span class="s1">matchNode.type === </span><span class="s3">'Type' </span><span class="s1">&amp;&amp; matchNode.name === type</span><span class="s2">;</span>
+    <span class="s1">})</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">isProperty(node</span><span class="s2">, </span><span class="s1">property) {</span>
+    <span class="s0">return </span><span class="s1">testNode(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">node</span><span class="s2">, </span><span class="s0">function</span><span class="s1">(matchNode) {</span>
+        <span class="s0">return </span><span class="s1">matchNode.type === </span><span class="s3">'Property' </span><span class="s1">&amp;&amp; matchNode.name === property</span><span class="s2">;</span>
+    <span class="s1">})</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">isKeyword(node) {</span>
+    <span class="s0">return </span><span class="s1">testNode(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">node</span><span class="s2">, </span><span class="s0">function</span><span class="s1">(matchNode) {</span>
+        <span class="s0">return </span><span class="s1">matchNode.type === </span><span class="s3">'Keyword'</span><span class="s2">;</span>
+    <span class="s1">})</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">getTrace: getTrace</span><span class="s2">,</span>
+    <span class="s1">isType: isType</span><span class="s2">,</span>
+    <span class="s1">isProperty: isProperty</span><span class="s2">,</span>
+    <span class="s1">isKeyword: isKeyword</span>
+<span class="s1">}</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

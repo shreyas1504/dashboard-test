@@ -1,0 +1,598 @@
+<html>
+<head>
+<title>List.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+List.js</font>
+</center></td></tr></table>
+<pre><span class="s0">//</span>
+<span class="s0">//                              list</span>
+<span class="s0">//                            ┌──────┐</span>
+<span class="s0">//             ┌──────────────┼─head │</span>
+<span class="s0">//             │              │ tail─┼──────────────┐</span>
+<span class="s0">//             │              └──────┘              │</span>
+<span class="s0">//             ▼                                    ▼</span>
+<span class="s0">//            item        item        item        item</span>
+<span class="s0">//          ┌──────┐    ┌──────┐    ┌──────┐    ┌──────┐</span>
+<span class="s0">//  null ◀──┼─prev │◀───┼─prev │◀───┼─prev │◀───┼─prev │</span>
+<span class="s0">//          │ next─┼───▶│ next─┼───▶│ next─┼───▶│ next─┼──▶ null</span>
+<span class="s0">//          ├──────┤    ├──────┤    ├──────┤    ├──────┤</span>
+<span class="s0">//          │ data │    │ data │    │ data │    │ data │</span>
+<span class="s0">//          └──────┘    └──────┘    └──────┘    └──────┘</span>
+<span class="s0">//</span>
+
+<span class="s2">function </span><span class="s1">createItem(data) {</span>
+    <span class="s2">return </span><span class="s1">{</span>
+        <span class="s1">prev: </span><span class="s2">null</span><span class="s3">,</span>
+        <span class="s1">next: </span><span class="s2">null</span><span class="s3">,</span>
+        <span class="s1">data: data</span>
+    <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">allocateCursor(node</span><span class="s3">, </span><span class="s1">prev</span><span class="s3">, </span><span class="s1">next) {</span>
+    <span class="s2">var </span><span class="s1">cursor</span><span class="s3">;</span>
+
+    <span class="s2">if </span><span class="s1">(cursors !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">cursor = cursors</span><span class="s3">;</span>
+        <span class="s1">cursors = cursors.cursor</span><span class="s3">;</span>
+        <span class="s1">cursor.prev = prev</span><span class="s3">;</span>
+        <span class="s1">cursor.next = next</span><span class="s3">;</span>
+        <span class="s1">cursor.cursor = node.cursor</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s1">cursor = {</span>
+            <span class="s1">prev: prev</span><span class="s3">,</span>
+            <span class="s1">next: next</span><span class="s3">,</span>
+            <span class="s1">cursor: node.cursor</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">node.cursor = cursor</span><span class="s3">;</span>
+
+    <span class="s2">return </span><span class="s1">cursor</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">releaseCursor(node) {</span>
+    <span class="s2">var </span><span class="s1">cursor = node.cursor</span><span class="s3">;</span>
+
+    <span class="s1">node.cursor = cursor.cursor</span><span class="s3">;</span>
+    <span class="s1">cursor.prev = </span><span class="s2">null</span><span class="s3">;</span>
+    <span class="s1">cursor.next = </span><span class="s2">null</span><span class="s3">;</span>
+    <span class="s1">cursor.cursor = cursors</span><span class="s3">;</span>
+    <span class="s1">cursors = cursor</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s2">var </span><span class="s1">cursors = </span><span class="s2">null</span><span class="s3">;</span>
+<span class="s2">var </span><span class="s1">List = </span><span class="s2">function</span><span class="s1">() {</span>
+    <span class="s2">this</span><span class="s1">.cursor = </span><span class="s2">null</span><span class="s3">;</span>
+    <span class="s2">this</span><span class="s1">.head = </span><span class="s2">null</span><span class="s3">;</span>
+    <span class="s2">this</span><span class="s1">.tail = </span><span class="s2">null</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.createItem = createItem</span><span class="s3">;</span>
+<span class="s1">List.prototype.createItem = createItem</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.updateCursors = </span><span class="s2">function</span><span class="s1">(prevOld</span><span class="s3">, </span><span class="s1">prevNew</span><span class="s3">, </span><span class="s1">nextOld</span><span class="s3">, </span><span class="s1">nextNew) {</span>
+    <span class="s2">var </span><span class="s1">cursor = </span><span class="s2">this</span><span class="s1">.cursor</span><span class="s3">;</span>
+
+    <span class="s2">while </span><span class="s1">(cursor !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s2">if </span><span class="s1">(cursor.prev === prevOld) {</span>
+            <span class="s1">cursor.prev = prevNew</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s2">if </span><span class="s1">(cursor.next === nextOld) {</span>
+            <span class="s1">cursor.next = nextNew</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">cursor = cursor.cursor</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.getSize = </span><span class="s2">function</span><span class="s1">() {</span>
+    <span class="s2">var </span><span class="s1">size = </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s2">var </span><span class="s1">cursor = </span><span class="s2">this</span><span class="s1">.head</span><span class="s3">;</span>
+
+    <span class="s2">while </span><span class="s1">(cursor) {</span>
+        <span class="s1">size++</span><span class="s3">;</span>
+        <span class="s1">cursor = cursor.next</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return </span><span class="s1">size</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.fromArray = </span><span class="s2">function</span><span class="s1">(array) {</span>
+    <span class="s2">var </span><span class="s1">cursor = </span><span class="s2">null</span><span class="s3">;</span>
+
+    <span class="s2">this</span><span class="s1">.head = </span><span class="s2">null</span><span class="s3">;</span>
+
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; array.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+        <span class="s2">var </span><span class="s1">item = createItem(array[i])</span><span class="s3">;</span>
+
+        <span class="s2">if </span><span class="s1">(cursor !== </span><span class="s2">null</span><span class="s1">) {</span>
+            <span class="s1">cursor.next = item</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s2">this</span><span class="s1">.head = item</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">item.prev = cursor</span><span class="s3">;</span>
+        <span class="s1">cursor = item</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">this</span><span class="s1">.tail = cursor</span><span class="s3">;</span>
+
+    <span class="s2">return this</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.toArray = </span><span class="s2">function</span><span class="s1">() {</span>
+    <span class="s2">var </span><span class="s1">cursor = </span><span class="s2">this</span><span class="s1">.head</span><span class="s3">;</span>
+    <span class="s2">var </span><span class="s1">result = []</span><span class="s3">;</span>
+
+    <span class="s2">while </span><span class="s1">(cursor) {</span>
+        <span class="s1">result.push(cursor.data)</span><span class="s3">;</span>
+        <span class="s1">cursor = cursor.next</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return </span><span class="s1">result</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.toJSON = List.prototype.toArray</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.isEmpty = </span><span class="s2">function</span><span class="s1">() {</span>
+    <span class="s2">return this</span><span class="s1">.head === </span><span class="s2">null</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.first = </span><span class="s2">function</span><span class="s1">() {</span>
+    <span class="s2">return this</span><span class="s1">.head &amp;&amp; </span><span class="s2">this</span><span class="s1">.head.data</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.last = </span><span class="s2">function</span><span class="s1">() {</span>
+    <span class="s2">return this</span><span class="s1">.tail &amp;&amp; </span><span class="s2">this</span><span class="s1">.tail.data</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.each = </span><span class="s2">function</span><span class="s1">(fn</span><span class="s3">, </span><span class="s1">context) {</span>
+    <span class="s2">var </span><span class="s1">item</span><span class="s3">;</span>
+
+    <span class="s2">if </span><span class="s1">(context === undefined) {</span>
+        <span class="s1">context = </span><span class="s2">this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// push cursor</span>
+    <span class="s2">var </span><span class="s1">cursor = allocateCursor(</span><span class="s2">this</span><span class="s3">, </span><span class="s2">null</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.head)</span><span class="s3">;</span>
+
+    <span class="s2">while </span><span class="s1">(cursor.next !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">item = cursor.next</span><span class="s3">;</span>
+        <span class="s1">cursor.next = item.next</span><span class="s3">;</span>
+
+        <span class="s1">fn.call(context</span><span class="s3">, </span><span class="s1">item.data</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s2">this</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// pop cursor</span>
+    <span class="s1">releaseCursor(</span><span class="s2">this</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.forEach = List.prototype.each</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.eachRight = </span><span class="s2">function</span><span class="s1">(fn</span><span class="s3">, </span><span class="s1">context) {</span>
+    <span class="s2">var </span><span class="s1">item</span><span class="s3">;</span>
+
+    <span class="s2">if </span><span class="s1">(context === undefined) {</span>
+        <span class="s1">context = </span><span class="s2">this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// push cursor</span>
+    <span class="s2">var </span><span class="s1">cursor = allocateCursor(</span><span class="s2">this</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.tail</span><span class="s3">, </span><span class="s2">null</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s2">while </span><span class="s1">(cursor.prev !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">item = cursor.prev</span><span class="s3">;</span>
+        <span class="s1">cursor.prev = item.prev</span><span class="s3">;</span>
+
+        <span class="s1">fn.call(context</span><span class="s3">, </span><span class="s1">item.data</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s2">this</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// pop cursor</span>
+    <span class="s1">releaseCursor(</span><span class="s2">this</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.forEachRight = List.prototype.eachRight</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.reduce = </span><span class="s2">function</span><span class="s1">(fn</span><span class="s3">, </span><span class="s1">initialValue</span><span class="s3">, </span><span class="s1">context) {</span>
+    <span class="s2">var </span><span class="s1">item</span><span class="s3">;</span>
+
+    <span class="s2">if </span><span class="s1">(context === undefined) {</span>
+        <span class="s1">context = </span><span class="s2">this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// push cursor</span>
+    <span class="s2">var </span><span class="s1">cursor = allocateCursor(</span><span class="s2">this</span><span class="s3">, </span><span class="s2">null</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.head)</span><span class="s3">;</span>
+    <span class="s2">var </span><span class="s1">acc = initialValue</span><span class="s3">;</span>
+
+    <span class="s2">while </span><span class="s1">(cursor.next !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">item = cursor.next</span><span class="s3">;</span>
+        <span class="s1">cursor.next = item.next</span><span class="s3">;</span>
+
+        <span class="s1">acc = fn.call(context</span><span class="s3">, </span><span class="s1">acc</span><span class="s3">, </span><span class="s1">item.data</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s2">this</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// pop cursor</span>
+    <span class="s1">releaseCursor(</span><span class="s2">this</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s2">return </span><span class="s1">acc</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.reduceRight = </span><span class="s2">function</span><span class="s1">(fn</span><span class="s3">, </span><span class="s1">initialValue</span><span class="s3">, </span><span class="s1">context) {</span>
+    <span class="s2">var </span><span class="s1">item</span><span class="s3">;</span>
+
+    <span class="s2">if </span><span class="s1">(context === undefined) {</span>
+        <span class="s1">context = </span><span class="s2">this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// push cursor</span>
+    <span class="s2">var </span><span class="s1">cursor = allocateCursor(</span><span class="s2">this</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.tail</span><span class="s3">, </span><span class="s2">null</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s2">var </span><span class="s1">acc = initialValue</span><span class="s3">;</span>
+
+    <span class="s2">while </span><span class="s1">(cursor.prev !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">item = cursor.prev</span><span class="s3">;</span>
+        <span class="s1">cursor.prev = item.prev</span><span class="s3">;</span>
+
+        <span class="s1">acc = fn.call(context</span><span class="s3">, </span><span class="s1">acc</span><span class="s3">, </span><span class="s1">item.data</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s2">this</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// pop cursor</span>
+    <span class="s1">releaseCursor(</span><span class="s2">this</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s2">return </span><span class="s1">acc</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.nextUntil = </span><span class="s2">function</span><span class="s1">(start</span><span class="s3">, </span><span class="s1">fn</span><span class="s3">, </span><span class="s1">context) {</span>
+    <span class="s2">if </span><span class="s1">(start === </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s2">return</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">var </span><span class="s1">item</span><span class="s3">;</span>
+
+    <span class="s2">if </span><span class="s1">(context === undefined) {</span>
+        <span class="s1">context = </span><span class="s2">this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// push cursor</span>
+    <span class="s2">var </span><span class="s1">cursor = allocateCursor(</span><span class="s2">this</span><span class="s3">, </span><span class="s2">null</span><span class="s3">, </span><span class="s1">start)</span><span class="s3">;</span>
+
+    <span class="s2">while </span><span class="s1">(cursor.next !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">item = cursor.next</span><span class="s3">;</span>
+        <span class="s1">cursor.next = item.next</span><span class="s3">;</span>
+
+        <span class="s2">if </span><span class="s1">(fn.call(context</span><span class="s3">, </span><span class="s1">item.data</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s2">this</span><span class="s1">)) {</span>
+            <span class="s2">break</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// pop cursor</span>
+    <span class="s1">releaseCursor(</span><span class="s2">this</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.prevUntil = </span><span class="s2">function</span><span class="s1">(start</span><span class="s3">, </span><span class="s1">fn</span><span class="s3">, </span><span class="s1">context) {</span>
+    <span class="s2">if </span><span class="s1">(start === </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s2">return</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">var </span><span class="s1">item</span><span class="s3">;</span>
+
+    <span class="s2">if </span><span class="s1">(context === undefined) {</span>
+        <span class="s1">context = </span><span class="s2">this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// push cursor</span>
+    <span class="s2">var </span><span class="s1">cursor = allocateCursor(</span><span class="s2">this</span><span class="s3">, </span><span class="s1">start</span><span class="s3">, </span><span class="s2">null</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s2">while </span><span class="s1">(cursor.prev !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">item = cursor.prev</span><span class="s3">;</span>
+        <span class="s1">cursor.prev = item.prev</span><span class="s3">;</span>
+
+        <span class="s2">if </span><span class="s1">(fn.call(context</span><span class="s3">, </span><span class="s1">item.data</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s2">this</span><span class="s1">)) {</span>
+            <span class="s2">break</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// pop cursor</span>
+    <span class="s1">releaseCursor(</span><span class="s2">this</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.some = </span><span class="s2">function</span><span class="s1">(fn</span><span class="s3">, </span><span class="s1">context) {</span>
+    <span class="s2">var </span><span class="s1">cursor = </span><span class="s2">this</span><span class="s1">.head</span><span class="s3">;</span>
+
+    <span class="s2">if </span><span class="s1">(context === undefined) {</span>
+        <span class="s1">context = </span><span class="s2">this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">while </span><span class="s1">(cursor !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s2">if </span><span class="s1">(fn.call(context</span><span class="s3">, </span><span class="s1">cursor.data</span><span class="s3">, </span><span class="s1">cursor</span><span class="s3">, </span><span class="s2">this</span><span class="s1">)) {</span>
+            <span class="s2">return true</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">cursor = cursor.next</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return false</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.map = </span><span class="s2">function</span><span class="s1">(fn</span><span class="s3">, </span><span class="s1">context) {</span>
+    <span class="s2">var </span><span class="s1">result = </span><span class="s2">new </span><span class="s1">List()</span><span class="s3">;</span>
+    <span class="s2">var </span><span class="s1">cursor = </span><span class="s2">this</span><span class="s1">.head</span><span class="s3">;</span>
+
+    <span class="s2">if </span><span class="s1">(context === undefined) {</span>
+        <span class="s1">context = </span><span class="s2">this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">while </span><span class="s1">(cursor !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">result.appendData(fn.call(context</span><span class="s3">, </span><span class="s1">cursor.data</span><span class="s3">, </span><span class="s1">cursor</span><span class="s3">, </span><span class="s2">this</span><span class="s1">))</span><span class="s3">;</span>
+        <span class="s1">cursor = cursor.next</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return </span><span class="s1">result</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.filter = </span><span class="s2">function</span><span class="s1">(fn</span><span class="s3">, </span><span class="s1">context) {</span>
+    <span class="s2">var </span><span class="s1">result = </span><span class="s2">new </span><span class="s1">List()</span><span class="s3">;</span>
+    <span class="s2">var </span><span class="s1">cursor = </span><span class="s2">this</span><span class="s1">.head</span><span class="s3">;</span>
+
+    <span class="s2">if </span><span class="s1">(context === undefined) {</span>
+        <span class="s1">context = </span><span class="s2">this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">while </span><span class="s1">(cursor !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s2">if </span><span class="s1">(fn.call(context</span><span class="s3">, </span><span class="s1">cursor.data</span><span class="s3">, </span><span class="s1">cursor</span><span class="s3">, </span><span class="s2">this</span><span class="s1">)) {</span>
+            <span class="s1">result.appendData(cursor.data)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s1">cursor = cursor.next</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return </span><span class="s1">result</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.clear = </span><span class="s2">function</span><span class="s1">() {</span>
+    <span class="s2">this</span><span class="s1">.head = </span><span class="s2">null</span><span class="s3">;</span>
+    <span class="s2">this</span><span class="s1">.tail = </span><span class="s2">null</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.copy = </span><span class="s2">function</span><span class="s1">() {</span>
+    <span class="s2">var </span><span class="s1">result = </span><span class="s2">new </span><span class="s1">List()</span><span class="s3">;</span>
+    <span class="s2">var </span><span class="s1">cursor = </span><span class="s2">this</span><span class="s1">.head</span><span class="s3">;</span>
+
+    <span class="s2">while </span><span class="s1">(cursor !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">result.insert(createItem(cursor.data))</span><span class="s3">;</span>
+        <span class="s1">cursor = cursor.next</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return </span><span class="s1">result</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.prepend = </span><span class="s2">function</span><span class="s1">(item) {</span>
+    <span class="s0">//      head</span>
+    <span class="s0">//    ^</span>
+    <span class="s0">// item</span>
+    <span class="s2">this</span><span class="s1">.updateCursors(</span><span class="s2">null</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.head</span><span class="s3">, </span><span class="s1">item)</span><span class="s3">;</span>
+
+    <span class="s0">// insert to the beginning of the list</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.head !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s0">// new item &lt;- first item</span>
+        <span class="s2">this</span><span class="s1">.head.prev = item</span><span class="s3">;</span>
+
+        <span class="s0">// new item -&gt; first item</span>
+        <span class="s1">item.next = </span><span class="s2">this</span><span class="s1">.head</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s0">// if list has no head, then it also has no tail</span>
+        <span class="s0">// in this case tail points to the new item</span>
+        <span class="s2">this</span><span class="s1">.tail = item</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// head always points to new item</span>
+    <span class="s2">this</span><span class="s1">.head = item</span><span class="s3">;</span>
+
+    <span class="s2">return this</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.prependData = </span><span class="s2">function</span><span class="s1">(data) {</span>
+    <span class="s2">return this</span><span class="s1">.prepend(createItem(data))</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.append = </span><span class="s2">function</span><span class="s1">(item) {</span>
+    <span class="s2">return this</span><span class="s1">.insert(item)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.appendData = </span><span class="s2">function</span><span class="s1">(data) {</span>
+    <span class="s2">return this</span><span class="s1">.insert(createItem(data))</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.insert = </span><span class="s2">function</span><span class="s1">(item</span><span class="s3">, </span><span class="s1">before) {</span>
+    <span class="s2">if </span><span class="s1">(before !== undefined &amp;&amp; before !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s0">// prev   before</span>
+        <span class="s0">//      ^</span>
+        <span class="s0">//     item</span>
+        <span class="s2">this</span><span class="s1">.updateCursors(before.prev</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">before</span><span class="s3">, </span><span class="s1">item)</span><span class="s3">;</span>
+
+        <span class="s2">if </span><span class="s1">(before.prev === </span><span class="s2">null</span><span class="s1">) {</span>
+            <span class="s0">// insert to the beginning of list</span>
+            <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.head !== before) {</span>
+                <span class="s2">throw new </span><span class="s1">Error(</span><span class="s5">'before doesn</span><span class="s3">\'</span><span class="s5">t belong to list'</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">// since head points to before therefore list doesn't empty</span>
+            <span class="s0">// no need to check tail</span>
+            <span class="s2">this</span><span class="s1">.head = item</span><span class="s3">;</span>
+            <span class="s1">before.prev = item</span><span class="s3">;</span>
+            <span class="s1">item.next = before</span><span class="s3">;</span>
+
+            <span class="s2">this</span><span class="s1">.updateCursors(</span><span class="s2">null</span><span class="s3">, </span><span class="s1">item)</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+
+            <span class="s0">// insert between two items</span>
+            <span class="s1">before.prev.next = item</span><span class="s3">;</span>
+            <span class="s1">item.prev = before.prev</span><span class="s3">;</span>
+
+            <span class="s1">before.prev = item</span><span class="s3">;</span>
+            <span class="s1">item.next = before</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s0">// tail</span>
+        <span class="s0">//      ^</span>
+        <span class="s0">//      item</span>
+        <span class="s2">this</span><span class="s1">.updateCursors(</span><span class="s2">this</span><span class="s1">.tail</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s2">null</span><span class="s3">, </span><span class="s1">item)</span><span class="s3">;</span>
+
+        <span class="s0">// insert to the ending of the list</span>
+        <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.tail !== </span><span class="s2">null</span><span class="s1">) {</span>
+            <span class="s0">// last item -&gt; new item</span>
+            <span class="s2">this</span><span class="s1">.tail.next = item</span><span class="s3">;</span>
+
+            <span class="s0">// last item &lt;- new item</span>
+            <span class="s1">item.prev = </span><span class="s2">this</span><span class="s1">.tail</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s0">// if list has no tail, then it also has no head</span>
+            <span class="s0">// in this case head points to new item</span>
+            <span class="s2">this</span><span class="s1">.head = item</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">// tail always points to new item</span>
+        <span class="s2">this</span><span class="s1">.tail = item</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return this</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.insertData = </span><span class="s2">function</span><span class="s1">(data</span><span class="s3">, </span><span class="s1">before) {</span>
+    <span class="s2">return this</span><span class="s1">.insert(createItem(data)</span><span class="s3">, </span><span class="s1">before)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.remove = </span><span class="s2">function</span><span class="s1">(item) {</span>
+    <span class="s0">//      item</span>
+    <span class="s0">//       ^</span>
+    <span class="s0">// prev     next</span>
+    <span class="s2">this</span><span class="s1">.updateCursors(item</span><span class="s3">, </span><span class="s1">item.prev</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">item.next)</span><span class="s3">;</span>
+
+    <span class="s2">if </span><span class="s1">(item.prev !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">item.prev.next = item.next</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.head !== item) {</span>
+            <span class="s2">throw new </span><span class="s1">Error(</span><span class="s5">'item doesn</span><span class="s3">\'</span><span class="s5">t belong to list'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s2">this</span><span class="s1">.head = item.next</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(item.next !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">item.next.prev = item.prev</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.tail !== item) {</span>
+            <span class="s2">throw new </span><span class="s1">Error(</span><span class="s5">'item doesn</span><span class="s3">\'</span><span class="s5">t belong to list'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s2">this</span><span class="s1">.tail = item.prev</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">item.prev = </span><span class="s2">null</span><span class="s3">;</span>
+    <span class="s1">item.next = </span><span class="s2">null</span><span class="s3">;</span>
+
+    <span class="s2">return </span><span class="s1">item</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.push = </span><span class="s2">function</span><span class="s1">(data) {</span>
+    <span class="s2">this</span><span class="s1">.insert(createItem(data))</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.pop = </span><span class="s2">function</span><span class="s1">() {</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.tail !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s2">return this</span><span class="s1">.remove(</span><span class="s2">this</span><span class="s1">.tail)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.unshift = </span><span class="s2">function</span><span class="s1">(data) {</span>
+    <span class="s2">this</span><span class="s1">.prepend(createItem(data))</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.shift = </span><span class="s2">function</span><span class="s1">() {</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.head !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s2">return this</span><span class="s1">.remove(</span><span class="s2">this</span><span class="s1">.head)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.prependList = </span><span class="s2">function</span><span class="s1">(list) {</span>
+    <span class="s2">return this</span><span class="s1">.insertList(list</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.head)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.appendList = </span><span class="s2">function</span><span class="s1">(list) {</span>
+    <span class="s2">return this</span><span class="s1">.insertList(list)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.insertList = </span><span class="s2">function</span><span class="s1">(list</span><span class="s3">, </span><span class="s1">before) {</span>
+    <span class="s0">// ignore empty lists</span>
+    <span class="s2">if </span><span class="s1">(list.head === </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s2">return this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(before !== undefined &amp;&amp; before !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s2">this</span><span class="s1">.updateCursors(before.prev</span><span class="s3">, </span><span class="s1">list.tail</span><span class="s3">, </span><span class="s1">before</span><span class="s3">, </span><span class="s1">list.head)</span><span class="s3">;</span>
+
+        <span class="s0">// insert in the middle of dist list</span>
+        <span class="s2">if </span><span class="s1">(before.prev !== </span><span class="s2">null</span><span class="s1">) {</span>
+            <span class="s0">// before.prev &lt;-&gt; list.head</span>
+            <span class="s1">before.prev.next = list.head</span><span class="s3">;</span>
+            <span class="s1">list.head.prev = before.prev</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s2">this</span><span class="s1">.head = list.head</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">before.prev = list.tail</span><span class="s3">;</span>
+        <span class="s1">list.tail.next = before</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s2">this</span><span class="s1">.updateCursors(</span><span class="s2">this</span><span class="s1">.tail</span><span class="s3">, </span><span class="s1">list.tail</span><span class="s3">, </span><span class="s2">null</span><span class="s3">, </span><span class="s1">list.head)</span><span class="s3">;</span>
+
+        <span class="s0">// insert to end of the list</span>
+        <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.tail !== </span><span class="s2">null</span><span class="s1">) {</span>
+            <span class="s0">// if destination list has a tail, then it also has a head,</span>
+            <span class="s0">// but head doesn't change</span>
+
+            <span class="s0">// dest tail -&gt; source head</span>
+            <span class="s2">this</span><span class="s1">.tail.next = list.head</span><span class="s3">;</span>
+
+            <span class="s0">// dest tail &lt;- source head</span>
+            <span class="s1">list.head.prev = </span><span class="s2">this</span><span class="s1">.tail</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+            <span class="s0">// if list has no a tail, then it also has no a head</span>
+            <span class="s0">// in this case points head to new item</span>
+            <span class="s2">this</span><span class="s1">.head = list.head</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">// tail always start point to new item</span>
+        <span class="s2">this</span><span class="s1">.tail = list.tail</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">list.head = </span><span class="s2">null</span><span class="s3">;</span>
+    <span class="s1">list.tail = </span><span class="s2">null</span><span class="s3">;</span>
+
+    <span class="s2">return this</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">List.prototype.replace = </span><span class="s2">function</span><span class="s1">(oldItem</span><span class="s3">, </span><span class="s1">newItemOrList) {</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s5">'head' </span><span class="s2">in </span><span class="s1">newItemOrList) {</span>
+        <span class="s2">this</span><span class="s1">.insertList(newItemOrList</span><span class="s3">, </span><span class="s1">oldItem)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+        <span class="s2">this</span><span class="s1">.insert(newItemOrList</span><span class="s3">, </span><span class="s1">oldItem)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">this</span><span class="s1">.remove(oldItem)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">module.exports = List</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

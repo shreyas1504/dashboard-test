@@ -1,0 +1,41 @@
+<html>
+<head>
+<title>sucrase-node</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #8a8a8a;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+sucrase-node</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+<span class="s2">const </span><span class="s1">Module = require(</span><span class="s3">&quot;module&quot;</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">const </span><span class="s1">{resolve} = require(</span><span class="s3">&quot;path&quot;</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s5">/* 
+ * Simple wrapper around node that first registers Sucrase with default settings. 
+ * 
+ * This is meant for simple use cases, and doesn't support custom Node/V8 args, 
+ * executing a code snippet, a REPL, or other things that you might find in 
+ * node, babel-node, or ts-node. For more advanced use cases, you can use 
+ * `node -r sucrase/register` or register a require hook programmatically from 
+ * your own code. 
+ */</span>
+<span class="s1">require(</span><span class="s3">&quot;../register&quot;</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s1">process.argv.splice(</span><span class="s6">1</span><span class="s4">, </span><span class="s6">1</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">process.argv[</span><span class="s6">1</span><span class="s1">] = resolve(process.argv[</span><span class="s6">1</span><span class="s1">])</span><span class="s4">;</span>
+<span class="s1">Module.runMain()</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

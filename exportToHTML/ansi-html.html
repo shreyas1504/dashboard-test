@@ -1,0 +1,124 @@
+<html>
+<head>
+<title>ansi-html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ansi-html</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+
+<span class="s2">var </span><span class="s1">ansiHTML = require(</span><span class="s3">'../'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">pkg = require(</span><span class="s3">'../package.json'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">l = console.log</span>
+<span class="s2">var </span><span class="s1">w = console.warn</span>
+
+<span class="s2">var </span><span class="s1">stdoutFlushed = </span><span class="s2">true</span>
+<span class="s2">var </span><span class="s1">readingStdin = </span><span class="s2">false</span>
+
+<span class="s2">function </span><span class="s1">logLine (line) {</span>
+  <span class="s2">if </span><span class="s1">(!line) {</span>
+    <span class="s2">return</span>
+  <span class="s1">}</span>
+  <span class="s1">line = ansiHTML(line)</span>
+  <span class="s2">try </span><span class="s1">{</span>
+    <span class="s1">stdoutFlushed = process.stdout.write(line)</span>
+  <span class="s1">} </span><span class="s2">catch </span><span class="s1">(e) {}</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">safeExit (code) {</span>
+  <span class="s1">l(</span><span class="s3">''</span><span class="s1">)</span>
+  <span class="s1">process.exit(code)</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">processStdin (finish) {</span>
+  <span class="s1">readingStdin = </span><span class="s2">true</span>
+  <span class="s2">var </span><span class="s1">chunks = </span><span class="s3">''</span>
+  <span class="s1">process.stdin.resume()</span>
+  <span class="s1">process.stdin.setEncoding(</span><span class="s3">'utf-8'</span><span class="s1">)</span>
+  <span class="s1">process.stdin.on(</span><span class="s3">'data'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(chunk) {</span>
+    <span class="s2">var </span><span class="s1">lines = chunk.split(</span><span class="s5">/[\r\n]+/g</span><span class="s1">).filter(</span><span class="s2">function </span><span class="s1">(line) {</span>
+      <span class="s2">return </span><span class="s1">line</span>
+    <span class="s1">})</span>
+    <span class="s2">var </span><span class="s1">length = lines.length</span>
+    <span class="s2">if </span><span class="s1">(length === </span><span class="s5">1</span><span class="s1">) {</span>
+      <span class="s1">chunks += lines[</span><span class="s5">0</span><span class="s1">]</span>
+      <span class="s2">return</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(length &gt; </span><span class="s5">1</span><span class="s1">) {</span>
+      <span class="s1">logLine(chunks + (chunks ? </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">' </span><span class="s1">: </span><span class="s3">''</span><span class="s1">) + lines[</span><span class="s5">0</span><span class="s1">] + </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">'</span><span class="s1">)</span>
+    <span class="s1">}</span>
+    <span class="s1">chunks = lines.pop()</span>
+    <span class="s1">length -= </span><span class="s5">1</span>
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">1</span><span class="s4">; </span><span class="s1">i &lt; length</span><span class="s4">; </span><span class="s1">i++) {</span>
+      <span class="s1">logLine(lines[i] + </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">'</span><span class="s1">)</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span>
+  <span class="s1">process.stdin.on(</span><span class="s3">'end'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">if </span><span class="s1">(chunks) {</span>
+      <span class="s1">logLine(chunks)</span>
+    <span class="s1">}</span>
+    <span class="s1">finish()</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">stdoutDrain (code) {</span>
+  <span class="s1">process.stdout.on(</span><span class="s3">'drain'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">safeExit(code)</span>
+  <span class="s1">})</span>
+  <span class="s2">if </span><span class="s1">(stdoutFlushed) {</span>
+    <span class="s1">safeExit(code)</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">startup (args) {</span>
+  <span class="s2">if </span><span class="s1">(args.indexOf(</span><span class="s3">'-h'</span><span class="s1">) &gt; </span><span class="s5">0 </span><span class="s1">|| args.indexOf(</span><span class="s3">'--help'</span><span class="s1">) &gt; </span><span class="s5">0</span><span class="s1">) {</span>
+    <span class="s1">l(pkg.name + </span><span class="s3">'@' </span><span class="s1">+ pkg.version)</span>
+    <span class="s1">l(</span><span class="s3">'Usage:'</span><span class="s1">)</span>
+    <span class="s1">l(</span><span class="s3">'   ansi-html [options]'</span><span class="s1">)</span>
+    <span class="s1">l(</span><span class="s3">'   ... | ansi-html [options]'</span><span class="s1">)</span>
+    <span class="s1">l(</span><span class="s3">'Options:'</span><span class="s1">)</span>
+    <span class="s1">l(</span><span class="s3">'   -h, --help print help information'</span><span class="s1">)</span>
+    <span class="s2">return</span>
+  <span class="s1">}</span>
+
+  <span class="s1">process.stdout.on(</span><span class="s3">'error'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+    <span class="s2">if </span><span class="s1">(err.code === </span><span class="s3">'EPIPE'</span><span class="s1">) {</span>
+      <span class="s1">stdoutDrain(</span><span class="s5">0</span><span class="s1">)</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+      <span class="s1">w(</span><span class="s3">'stdout error:'</span><span class="s4">, </span><span class="s1">err)</span>
+      <span class="s1">stdoutDrain(</span><span class="s5">1</span><span class="s1">)</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span>
+
+  <span class="s1">processStdin(</span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">safeExit(</span><span class="s5">0</span><span class="s1">)</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s2">if </span><span class="s1">(require.main === module) {</span>
+  <span class="s1">startup(process.argv)</span>
+<span class="s1">}</span>
+
+<span class="s1">process.on(</span><span class="s3">'SIGINT'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s2">if </span><span class="s1">(!readingStdin) {</span>
+    <span class="s1">safeExit(</span><span class="s5">1</span><span class="s1">)</span>
+  <span class="s1">}</span>
+<span class="s1">})</span>
+<span class="s1">process.on(</span><span class="s3">'SIGQUIT'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() { safeExit(</span><span class="s5">1</span><span class="s1">) })</span>
+<span class="s1">process.on(</span><span class="s3">'SIGTERM'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() { safeExit(</span><span class="s5">1</span><span class="s1">) })</span>
+<span class="s1">process.on(</span><span class="s3">'SIGHUP'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() { safeExit(</span><span class="s5">1</span><span class="s1">) })</span>
+</pre>
+</body>
+</html>

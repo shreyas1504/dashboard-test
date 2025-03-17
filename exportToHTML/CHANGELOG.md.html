@@ -1,0 +1,321 @@
+<html>
+<head>
+<title>CHANGELOG.md</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #287bde;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+CHANGELOG.md</font>
+</center></td></tr></table>
+<pre><span class="s0"># </span><span class="s2">Change Log</span>
+
+<span class="s0">## </span><span class="s2">0.5.6</span>
+
+<span class="s0">* </span><span class="s2">Fix for regression when people were using numbers as names in source maps. See</span>
+  <span class="s2">#236.</span>
+
+<span class="s0">## </span><span class="s2">0.5.5</span>
+
+<span class="s0">* </span><span class="s2">Fix </span><span class="s1">&quot;</span><span class="s2">regression</span><span class="s1">&quot; </span><span class="s2">of unsupported, implementation behavior that half the world</span>
+  <span class="s2">happens to have come to depend on. See #235.</span>
+
+<span class="s0">* </span><span class="s2">Fix regression involving function hoisting in SpiderMonkey. See #233.</span>
+
+<span class="s0">## </span><span class="s2">0.5.4</span>
+
+<span class="s0">* </span><span class="s2">Large performance improvements to source-map serialization. See #228 and #229.</span>
+
+<span class="s0">## </span><span class="s2">0.5.3</span>
+
+<span class="s0">* </span><span class="s2">Do not include unnecessary distribution files. See</span>
+  <span class="s2">commit ef7006f8d1647e0a83fdc60f04f5a7ca54886f86.</span>
+
+<span class="s0">## </span><span class="s2">0.5.2</span>
+
+<span class="s0">* </span><span class="s2">Include browser distributions of the library in package.json's `files`. See</span>
+  <span class="s2">issue #212.</span>
+
+<span class="s0">## </span><span class="s2">0.5.1</span>
+
+<span class="s0">* </span><span class="s2">Fix latent bugs in IndexedSourceMapConsumer.prototype.</span><span class="s1">_</span><span class="s2">parseMappings. See</span>
+  <span class="s2">ff05274becc9e6e1295ed60f3ea090d31d843379.</span>
+
+<span class="s0">## </span><span class="s2">0.5.0</span>
+
+<span class="s0">* </span><span class="s2">Node 0.8 is no longer supported.</span>
+
+<span class="s0">* </span><span class="s2">Use webpack instead of dryice for bundling.</span>
+
+<span class="s0">* </span><span class="s2">Big speedups serializing source maps. See pull request #203.</span>
+
+<span class="s0">* </span><span class="s2">Fix a bug with `SourceMapConsumer.prototype.sourceContentFor` and sources that</span>
+  <span class="s2">explicitly start with the source root. See issue #199.</span>
+
+<span class="s0">## </span><span class="s2">0.4.4</span>
+
+<span class="s0">* </span><span class="s2">Fix an issue where using a `SourceMapGenerator` after having created a</span>
+  <span class="s2">`SourceMapConsumer` from it via `SourceMapConsumer.fromSourceMap` failed. See</span>
+  <span class="s2">issue #191.</span>
+
+<span class="s0">* </span><span class="s2">Fix an issue with where `SourceMapGenerator` would mistakenly consider</span>
+  <span class="s2">different mappings as duplicates of each other and avoid generating them. See</span>
+  <span class="s2">issue #192.</span>
+
+<span class="s0">## </span><span class="s2">0.4.3</span>
+
+<span class="s0">* </span><span class="s2">A very large number of performance improvements, particularly when parsing</span>
+  <span class="s2">source maps. Collectively about 75% of time shaved off of the source map</span>
+  <span class="s2">parsing benchmark</span><span class="s1">!</span>
+
+<span class="s0">* </span><span class="s2">Fix a bug in `SourceMapConsumer.prototype.allGeneratedPositionsFor` and fuzzy</span>
+  <span class="s2">searching in the presence of a column option. See issue #177.</span>
+
+<span class="s0">* </span><span class="s2">Fix a bug with joining a source and its source root when the source is above</span>
+  <span class="s2">the root. See issue #182.</span>
+
+<span class="s0">* </span><span class="s2">Add the `SourceMapConsumer.prototype.hasContentsOfAllSources` method to</span>
+  <span class="s2">determine when all sources' contents are inlined into the source map. See</span>
+  <span class="s2">issue #190.</span>
+
+<span class="s0">## </span><span class="s2">0.4.2</span>
+
+<span class="s0">* </span><span class="s2">Add an `.npmignore` file so that the benchmarks aren't pulled down by</span>
+  <span class="s2">dependent projects. Issue #169.</span>
+
+<span class="s0">* </span><span class="s2">Add an optional `column` argument to</span>
+  <span class="s2">`SourceMapConsumer.prototype.allGeneratedPositionsFor` and better handle lines</span>
+  <span class="s2">with no mappings. Issues #172 and #173.</span>
+
+<span class="s0">## </span><span class="s2">0.4.1</span>
+
+<span class="s0">* </span><span class="s2">Fix accidentally defining a global variable. #170.</span>
+
+<span class="s0">## </span><span class="s2">0.4.0</span>
+
+<span class="s0">* </span><span class="s2">The default direction for fuzzy searching was changed back to its original</span>
+  <span class="s2">direction. See #164.</span>
+
+<span class="s0">* </span><span class="s2">There is now a `bias` option you can supply to `SourceMapConsumer` to control</span>
+  <span class="s2">the fuzzy searching direction. See #167.</span>
+
+<span class="s0">* </span><span class="s2">About an 8% speed up in parsing source maps. See #159.</span>
+
+<span class="s0">* </span><span class="s2">Added a benchmark for parsing and generating source maps.</span>
+
+<span class="s0">## </span><span class="s2">0.3.0</span>
+
+<span class="s0">* </span><span class="s2">Change the default direction that searching for positions fuzzes when there is</span>
+  <span class="s2">not an exact match. See #154.</span>
+
+<span class="s0">* </span><span class="s2">Support for environments using json2.js for JSON serialization. See #156.</span>
+
+<span class="s0">## </span><span class="s2">0.2.0</span>
+
+<span class="s0">* </span><span class="s2">Support for consuming </span><span class="s1">&quot;</span><span class="s2">indexed</span><span class="s1">&quot; </span><span class="s2">source maps which do not have any remote</span>
+  <span class="s2">sections. See pull request #127. This introduces a minor backwards</span>
+  <span class="s2">incompatibility if you are monkey patching `SourceMapConsumer.prototype`</span>
+  <span class="s2">methods.</span>
+
+<span class="s0">## </span><span class="s2">0.1.43</span>
+
+<span class="s0">* </span><span class="s2">Performance improvements for `SourceMapGenerator` and `SourceNode`. See issue</span>
+  <span class="s2">#148 for some discussion and issues #150, #151, and #152 for implementations.</span>
+
+<span class="s0">## </span><span class="s2">0.1.42</span>
+
+<span class="s0">* </span><span class="s2">Fix an issue where `SourceNode`s from different versions of the source-map</span>
+  <span class="s2">library couldn't be used in conjunction with each other. See issue #142.</span>
+
+<span class="s0">## </span><span class="s2">0.1.41</span>
+
+<span class="s0">* </span><span class="s2">Fix a bug with getting the source content of relative sources with a </span><span class="s1">&quot;</span><span class="s2">./</span><span class="s1">&quot;</span>
+  <span class="s2">prefix. See issue #145 and </span><span class="s1">[</span><span class="s2">Bug 1090768</span><span class="s1">](</span><span class="s2">bugzil.la/1090768</span><span class="s1">)</span><span class="s2">.</span>
+
+<span class="s0">* </span><span class="s2">Add the `SourceMapConsumer.prototype.computeColumnSpans` method to compute the</span>
+  <span class="s2">column span of each mapping.</span>
+
+<span class="s0">* </span><span class="s2">Add the `SourceMapConsumer.prototype.allGeneratedPositionsFor` method to find</span>
+  <span class="s2">all generated positions associated with a given original source and line.</span>
+
+<span class="s0">## </span><span class="s2">0.1.40</span>
+
+<span class="s0">* </span><span class="s2">Performance improvements for parsing source maps in SourceMapConsumer.</span>
+
+<span class="s0">## </span><span class="s2">0.1.39</span>
+
+<span class="s0">* </span><span class="s2">Fix a bug where setting a source's contents to null before any source content</span>
+  <span class="s2">had been set before threw a TypeError. See issue #131.</span>
+
+<span class="s0">## </span><span class="s2">0.1.38</span>
+
+<span class="s0">* </span><span class="s2">Fix a bug where finding relative paths from an empty path were creating</span>
+  <span class="s2">absolute paths. See issue #129.</span>
+
+<span class="s0">## </span><span class="s2">0.1.37</span>
+
+<span class="s0">* </span><span class="s2">Fix a bug where if the source root was an empty string, relative source paths</span>
+  <span class="s2">would turn into absolute source paths. Issue #124.</span>
+
+<span class="s0">## </span><span class="s2">0.1.36</span>
+
+<span class="s0">* </span><span class="s2">Allow the `names` mapping property to be an empty string. Issue #121.</span>
+
+<span class="s0">## </span><span class="s2">0.1.35</span>
+
+<span class="s0">* </span><span class="s2">A third optional parameter was added to `SourceNode.fromStringWithSourceMap`</span>
+  <span class="s2">to specify a path that relative sources in the second parameter should be</span>
+  <span class="s2">relative to. Issue #105.</span>
+
+<span class="s0">* </span><span class="s2">If no file property is given to a `SourceMapGenerator`, then the resulting</span>
+  <span class="s2">source map will no longer have a `null` file property. The property will</span>
+  <span class="s2">simply not exist. Issue #104.</span>
+
+<span class="s0">* </span><span class="s2">Fixed a bug where consecutive newlines were ignored in `SourceNode`s.</span>
+  <span class="s2">Issue #116.</span>
+
+<span class="s0">## </span><span class="s2">0.1.34</span>
+
+<span class="s0">* </span><span class="s2">Make `SourceNode` work with windows style </span><span class="s1">(&quot;</span><span class="s2">\r\n</span><span class="s1">&quot;) </span><span class="s2">newlines. Issue #103.</span>
+
+<span class="s0">* </span><span class="s2">Fix bug involving source contents and the</span>
+  <span class="s2">`SourceMapGenerator.prototype.applySourceMap`. Issue #100.</span>
+
+<span class="s0">## </span><span class="s2">0.1.33</span>
+
+<span class="s0">* </span><span class="s2">Fix some edge cases surrounding path joining and URL resolution.</span>
+
+<span class="s0">* </span><span class="s2">Add a third parameter for relative path to</span>
+  <span class="s2">`SourceMapGenerator.prototype.applySourceMap`.</span>
+
+<span class="s0">* </span><span class="s2">Fix issues with mappings and EOLs.</span>
+
+<span class="s0">## </span><span class="s2">0.1.32</span>
+
+<span class="s0">* </span><span class="s2">Fixed a bug where SourceMapConsumer couldn't handle negative relative columns</span>
+  <span class="s1">(</span><span class="s2">issue 92</span><span class="s1">)</span><span class="s2">.</span>
+
+<span class="s0">* </span><span class="s2">Fixed test runner to actually report number of failed tests as its process</span>
+  <span class="s2">exit code.</span>
+
+<span class="s0">* </span><span class="s2">Fixed a typo when reporting bad mappings </span><span class="s1">(</span><span class="s2">issue 87</span><span class="s1">)</span><span class="s2">.</span>
+
+<span class="s0">## </span><span class="s2">0.1.31</span>
+
+<span class="s0">* </span><span class="s2">Delay parsing the mappings in SourceMapConsumer until queried for a source</span>
+  <span class="s2">location.</span>
+
+<span class="s0">* </span><span class="s2">Support Sass source maps </span><span class="s1">(</span><span class="s2">which at the time of writing deviate from the spec</span>
+  <span class="s2">in small ways</span><span class="s1">) </span><span class="s2">in SourceMapConsumer.</span>
+
+<span class="s0">## </span><span class="s2">0.1.30</span>
+
+<span class="s0">* </span><span class="s2">Do not join source root with a source, when the source is a data URI.</span>
+
+<span class="s0">* </span><span class="s2">Extend the test runner to allow running single specific test files at a time.</span>
+
+<span class="s0">* </span><span class="s2">Performance improvements in `SourceNode.prototype.walk` and</span>
+  <span class="s2">`SourceMapConsumer.prototype.eachMapping`.</span>
+
+<span class="s0">* </span><span class="s2">Source map browser builds will now work inside Workers.</span>
+
+<span class="s0">* </span><span class="s2">Better error messages when attempting to add an invalid mapping to a</span>
+  <span class="s2">`SourceMapGenerator`.</span>
+
+<span class="s0">## </span><span class="s2">0.1.29</span>
+
+<span class="s0">* </span><span class="s2">Allow duplicate entries in the `names` and `sources` arrays of source maps</span>
+  <span class="s1">(</span><span class="s2">usually from TypeScript</span><span class="s1">) </span><span class="s2">we are parsing. Fixes github issue 72.</span>
+
+<span class="s0">## </span><span class="s2">0.1.28</span>
+
+<span class="s0">* </span><span class="s2">Skip duplicate mappings when creating source maps from SourceNode; github</span>
+  <span class="s2">issue 75.</span>
+
+<span class="s0">## </span><span class="s2">0.1.27</span>
+
+<span class="s0">* </span><span class="s2">Don't throw an error when the `file` property is missing in SourceMapConsumer,</span>
+  <span class="s2">we don't use it anyway.</span>
+
+<span class="s0">## </span><span class="s2">0.1.26</span>
+
+<span class="s0">* </span><span class="s2">Fix SourceNode.fromStringWithSourceMap for empty maps. Fixes github issue 70.</span>
+
+<span class="s0">## </span><span class="s2">0.1.25</span>
+
+<span class="s0">* </span><span class="s2">Make compatible with browserify</span>
+
+<span class="s0">## </span><span class="s2">0.1.24</span>
+
+<span class="s0">* </span><span class="s2">Fix issue with absolute paths and `file</span><span class="s1">:</span><span class="s2">//` URIs. See</span>
+  <span class="s3">https://bugzilla.mozilla.org/show_bug.cgi?id=885597</span>
+
+<span class="s0">## </span><span class="s2">0.1.23</span>
+
+<span class="s0">* </span><span class="s2">Fix issue with absolute paths and sourcesContent, github issue 64.</span>
+
+<span class="s0">## </span><span class="s2">0.1.22</span>
+
+<span class="s0">* </span><span class="s2">Ignore duplicate mappings in SourceMapGenerator. Fixes github issue 21.</span>
+
+<span class="s0">## </span><span class="s2">0.1.21</span>
+
+<span class="s0">* </span><span class="s2">Fixed handling of sources that start with a slash so that they are relative to</span>
+  <span class="s2">the source root's host.</span>
+
+<span class="s0">## </span><span class="s2">0.1.20</span>
+
+<span class="s0">* </span><span class="s2">Fixed github issue #43</span><span class="s1">: </span><span class="s2">absolute URLs aren't joined with the source root</span>
+  <span class="s2">anymore.</span>
+
+<span class="s0">## </span><span class="s2">0.1.19</span>
+
+<span class="s0">* </span><span class="s2">Using Travis CI to run tests.</span>
+
+<span class="s0">## </span><span class="s2">0.1.18</span>
+
+<span class="s0">* </span><span class="s2">Fixed a bug in the handling of sourceRoot.</span>
+
+<span class="s0">## </span><span class="s2">0.1.17</span>
+
+<span class="s0">* </span><span class="s2">Added SourceNode.fromStringWithSourceMap.</span>
+
+<span class="s0">## </span><span class="s2">0.1.16</span>
+
+<span class="s0">* </span><span class="s2">Added missing documentation.</span>
+
+<span class="s0">* </span><span class="s2">Fixed the generating of empty mappings in SourceNode.</span>
+
+<span class="s0">## </span><span class="s2">0.1.15</span>
+
+<span class="s0">* </span><span class="s2">Added SourceMapGenerator.applySourceMap.</span>
+
+<span class="s0">## </span><span class="s2">0.1.14</span>
+
+<span class="s0">* </span><span class="s2">The sourceRoot is now handled consistently.</span>
+
+<span class="s0">## </span><span class="s2">0.1.13</span>
+
+<span class="s0">* </span><span class="s2">Added SourceMapGenerator.fromSourceMap.</span>
+
+<span class="s0">## </span><span class="s2">0.1.12</span>
+
+<span class="s0">* </span><span class="s2">SourceNode now generates empty mappings too.</span>
+
+<span class="s0">## </span><span class="s2">0.1.11</span>
+
+<span class="s0">* </span><span class="s2">Added name support to SourceNode.</span>
+
+<span class="s0">## </span><span class="s2">0.1.10</span>
+
+<span class="s0">* </span><span class="s2">Added sourcesContent support to the customer and generator.</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<html>
+<head>
+<title>adopt-buffer.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #6897bb;}
+.s3 { color: #cc7832;}
+.s4 { color: #8ea765;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+adopt-buffer.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">MIN_SIZE = </span><span class="s2">16 </span><span class="s1">* </span><span class="s2">1024</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">SafeUint32Array = </span><span class="s0">typeof </span><span class="s1">Uint32Array !== </span><span class="s4">'undefined' </span><span class="s1">? Uint32Array : Array</span><span class="s3">; </span><span class="s5">// fallback on Array when TypedArray is not supported</span>
+
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">adoptBuffer(buffer</span><span class="s3">, </span><span class="s1">size) {</span>
+    <span class="s0">if </span><span class="s1">(buffer === </span><span class="s0">null </span><span class="s1">|| buffer.length &lt; size) {</span>
+        <span class="s0">return new </span><span class="s1">SafeUint32Array(Math.max(size + </span><span class="s2">1024</span><span class="s3">, </span><span class="s1">MIN_SIZE))</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">buffer</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

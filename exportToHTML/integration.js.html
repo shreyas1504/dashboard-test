@@ -1,0 +1,452 @@
+<html>
+<head>
+<title>integration.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+integration.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span>
+
+<span class="s2">const </span><span class="s1">assert = require(</span><span class="s0">'chai'</span><span class="s1">).assert</span>
+<span class="s2">const </span><span class="s1">axios = require(</span><span class="s0">'axios'</span><span class="s1">)</span>
+<span class="s2">const </span><span class="s1">fs = require(</span><span class="s0">'fs'</span><span class="s1">)</span>
+<span class="s2">const </span><span class="s1">path = require(</span><span class="s0">'path'</span><span class="s1">)</span>
+<span class="s2">const </span><span class="s1">Promise = require(</span><span class="s0">'bluebird'</span><span class="s1">)</span>
+<span class="s2">const </span><span class="s1">stream = require(</span><span class="s0">'stream'</span><span class="s1">)</span>
+
+<span class="s2">const </span><span class="s1">modulePath = </span><span class="s0">'../src'</span>
+
+<span class="s1">suite(</span><span class="s0">'integration:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+  <span class="s2">let </span><span class="s1">log</span>
+
+  <span class="s1">setup(() =&gt; {</span>
+    <span class="s1">log = {}</span>
+  <span class="s1">})</span>
+
+  <span class="s1">test(</span><span class="s0">'require does not throw'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">assert.doesNotThrow(() =&gt; {</span>
+      <span class="s1">require(modulePath)</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+
+  <span class="s1">test(</span><span class="s0">'require returns object'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">assert.isObject(require(modulePath))</span>
+  <span class="s1">})</span>
+
+  <span class="s1">suite(</span><span class="s0">'require:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s2">let </span><span class="s1">bfj</span>
+
+    <span class="s1">setup(() =&gt; {</span>
+      <span class="s1">bfj = require(modulePath)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'walk function is exported'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.isFunction(bfj.walk)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'walk expects one argument'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.lengthOf(bfj.walk</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'match function is exported'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.isFunction(bfj.match)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'match expects two arguments'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.lengthOf(bfj.match</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'parse function is exported'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.isFunction(bfj.parse)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'parse expects one argument'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.lengthOf(bfj.parse</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'read function is exported'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.isFunction(bfj.read)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'read expects two arguments'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.lengthOf(bfj.read</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'eventify function is exported'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.isFunction(bfj.eventify)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'eventify expects one argument'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.lengthOf(bfj.eventify</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'streamify function is exported'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.isFunction(bfj.streamify)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'streamify expects one argument'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.lengthOf(bfj.streamify</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'stringify function is exported'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.isFunction(bfj.stringify)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'stringify expects two arguments'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.lengthOf(bfj.stringify</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'write function is exported'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.isFunction(bfj.write)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'write expects two arguments'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.lengthOf(bfj.write</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'events are exported'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.deepEqual(bfj.events</span><span class="s3">, </span><span class="s1">require(</span><span class="s0">'../src/events'</span><span class="s1">))</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'read object:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">failed</span><span class="s3">, </span><span class="s1">file</span><span class="s3">, </span><span class="s1">result</span><span class="s3">, </span><span class="s1">error</span>
+
+      <span class="s1">setup(() =&gt; {</span>
+        <span class="s1">failed = </span><span class="s2">false</span>
+        <span class="s1">file = path.join(__dirname</span><span class="s3">, </span><span class="s0">'data.json'</span><span class="s1">)</span>
+        <span class="s1">fs.writeFileSync(file</span><span class="s3">, </span><span class="s1">JSON.stringify({</span>
+          <span class="s1">foo: [ </span><span class="s0">'b'</span><span class="s3">, </span><span class="s0">'a'</span><span class="s3">, </span><span class="s0">'r' </span><span class="s1">]</span><span class="s3">,</span>
+          <span class="s1">baz: </span><span class="s2">null</span><span class="s3">,</span>
+          <span class="s1">qux: </span><span class="s4">3.14159265359e42</span>
+        <span class="s1">}</span><span class="s3">, </span><span class="s2">null</span><span class="s3">, </span><span class="s0">'</span><span class="s3">\t</span><span class="s0">'</span><span class="s1">))</span>
+        <span class="s2">return </span><span class="s1">bfj.read(file)</span>
+          <span class="s1">.then(res =&gt; {</span>
+            <span class="s1">result = res</span>
+          <span class="s1">})</span>
+          <span class="s1">.catch(err =&gt; {</span>
+            <span class="s1">failed = </span><span class="s2">true</span>
+            <span class="s1">error = err</span>
+          <span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">teardown(() =&gt; {</span>
+        <span class="s1">fs.unlinkSync(file)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'result was correct'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isFalse(failed)</span>
+        <span class="s1">assert.isUndefined(error)</span>
+        <span class="s1">assert.isObject(result)</span>
+        <span class="s1">assert.lengthOf(Object.keys(result)</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+        <span class="s1">assert.isArray(result.foo)</span>
+        <span class="s1">assert.lengthOf(result.foo</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(result.foo[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'b'</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(result.foo[</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'a'</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(result.foo[</span><span class="s4">2</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'r'</span><span class="s1">)</span>
+        <span class="s1">assert.isNull(result.baz)</span>
+        <span class="s1">assert.strictEqual(result.qux</span><span class="s3">, </span><span class="s4">3.14159265359e42</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'read value:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">failed</span><span class="s3">, </span><span class="s1">file</span><span class="s3">, </span><span class="s1">result</span><span class="s3">, </span><span class="s1">error</span>
+
+      <span class="s1">setup(() =&gt; {</span>
+        <span class="s1">failed = </span><span class="s2">false</span>
+        <span class="s1">file = path.join(__dirname</span><span class="s3">, </span><span class="s0">'data.json'</span><span class="s1">)</span>
+        <span class="s1">fs.writeFileSync(file</span><span class="s3">, </span><span class="s0">'&quot;foo&quot;'</span><span class="s1">)</span>
+        <span class="s2">return </span><span class="s1">bfj.read(file)</span>
+          <span class="s1">.then(res =&gt; {</span>
+            <span class="s1">result = res</span>
+          <span class="s1">})</span>
+          <span class="s1">.catch(err =&gt; {</span>
+            <span class="s1">failed = </span><span class="s2">true</span>
+            <span class="s1">error = err</span>
+          <span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">teardown(() =&gt; {</span>
+        <span class="s1">fs.unlinkSync(file)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'result was correct'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isFalse(failed)</span>
+        <span class="s1">assert.isUndefined(error)</span>
+        <span class="s1">assert.strictEqual(result</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'read error:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">failed</span><span class="s3">, </span><span class="s1">file</span><span class="s3">, </span><span class="s1">result</span><span class="s3">, </span><span class="s1">error</span>
+
+      <span class="s1">setup(() =&gt; {</span>
+        <span class="s1">failed = </span><span class="s2">false</span>
+        <span class="s1">file = path.join(__dirname</span><span class="s3">, </span><span class="s0">'data.json'</span><span class="s1">)</span>
+        <span class="s1">fs.writeFileSync(file</span><span class="s3">, </span><span class="s0">'&quot;foo&quot; &quot;bar&quot;'</span><span class="s1">)</span>
+        <span class="s2">return </span><span class="s1">bfj.read(file)</span>
+          <span class="s1">.then(res =&gt; result = res)</span>
+          <span class="s1">.catch(err =&gt; {</span>
+            <span class="s1">failed = </span><span class="s2">true</span>
+            <span class="s1">error = err</span>
+          <span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">teardown(() =&gt; {</span>
+        <span class="s1">fs.unlinkSync(file)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'result was correct'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isTrue(failed)</span>
+        <span class="s1">assert.isUndefined(result)</span>
+        <span class="s1">assert.instanceOf(error</span><span class="s3">, </span><span class="s1">Error)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'read missing file:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">failed</span><span class="s3">, </span><span class="s1">file</span><span class="s3">, </span><span class="s1">result</span><span class="s3">, </span><span class="s1">error</span>
+
+      <span class="s1">setup(() =&gt; {</span>
+        <span class="s1">failed = </span><span class="s2">false</span>
+        <span class="s1">file = path.join(__dirname</span><span class="s3">, </span><span class="s0">'missing.json'</span><span class="s1">)</span>
+        <span class="s1">assert.isFalse(fs.existsSync(file))</span>
+        <span class="s2">return </span><span class="s1">bfj.read(file)</span>
+          <span class="s1">.then(res =&gt; result = res)</span>
+          <span class="s1">.catch(err =&gt; {</span>
+            <span class="s1">failed = </span><span class="s2">true</span>
+            <span class="s1">error = err</span>
+          <span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'result was correct'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isTrue(failed)</span>
+        <span class="s1">assert.isUndefined(result)</span>
+        <span class="s1">assert.instanceOf(error</span><span class="s3">, </span><span class="s1">Error)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'match predicate:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">file</span><span class="s3">, </span><span class="s1">results</span><span class="s3">, </span><span class="s1">errors</span>
+
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s1">file = path.join(__dirname</span><span class="s3">, </span><span class="s0">'data.json'</span><span class="s1">)</span>
+        <span class="s1">fs.writeFileSync(file</span><span class="s3">, </span><span class="s1">JSON.stringify({</span>
+          <span class="s1">foo: </span><span class="s0">'bar'</span><span class="s3">,</span>
+          <span class="s1">baz: </span><span class="s0">'qux'</span><span class="s3">,</span>
+          <span class="s1">wibble: </span><span class="s0">'blee'</span>
+        <span class="s1">}))</span>
+        <span class="s1">results = []</span>
+        <span class="s1">errors = []</span>
+        <span class="s2">const </span><span class="s1">datastream = bfj.match(</span>
+          <span class="s1">fs.createReadStream(file)</span><span class="s3">,</span>
+          <span class="s1">(k</span><span class="s3">, </span><span class="s1">v) =&gt; k === </span><span class="s0">'baz' </span><span class="s1">|| v === </span><span class="s0">'blee'</span><span class="s3">,</span>
+          <span class="s1">{ minDepth: </span><span class="s4">1 </span><span class="s1">}</span>
+        <span class="s1">)</span>
+        <span class="s1">datastream.on(</span><span class="s0">'data'</span><span class="s3">, </span><span class="s1">item =&gt; results.push(item))</span>
+        <span class="s1">datastream.on(</span><span class="s0">'error'</span><span class="s3">, </span><span class="s1">error =&gt; errors.push(error))</span>
+        <span class="s1">datastream.on(</span><span class="s0">'end'</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'the correct properties were matched'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.deepEqual([ </span><span class="s0">'qux'</span><span class="s3">, </span><span class="s0">'blee' </span><span class="s1">]</span><span class="s3">, </span><span class="s1">results)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'no errors occurred'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.deepEqual(errors</span><span class="s3">, </span><span class="s1">[])</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'match nested:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">file</span><span class="s3">, </span><span class="s1">results</span><span class="s3">, </span><span class="s1">errors</span>
+
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s1">file = path.join(__dirname</span><span class="s3">, </span><span class="s0">'data.json'</span><span class="s1">)</span>
+        <span class="s1">fs.writeFileSync(file</span><span class="s3">, </span><span class="s1">JSON.stringify({</span>
+          <span class="s1">foo: {</span>
+            <span class="s1">bar: </span><span class="s0">'baz'</span>
+          <span class="s1">}</span>
+        <span class="s1">}))</span>
+        <span class="s1">results = []</span>
+        <span class="s1">errors = []</span>
+        <span class="s2">const </span><span class="s1">datastream = bfj.match(fs.createReadStream(file)</span><span class="s3">, </span><span class="s1">() =&gt; </span><span class="s2">true</span><span class="s1">)</span>
+        <span class="s1">datastream.on(</span><span class="s0">'data'</span><span class="s3">, </span><span class="s1">item =&gt; results.push(item))</span>
+        <span class="s1">datastream.on(</span><span class="s0">'error'</span><span class="s3">, </span><span class="s1">error =&gt; errors.push(error))</span>
+        <span class="s1">datastream.on(</span><span class="s0">'end'</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'the correct properties were matched'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.deepEqual([ </span><span class="s0">'baz'</span><span class="s3">, </span><span class="s1">{ bar: </span><span class="s0">'baz' </span><span class="s1">}</span><span class="s3">, </span><span class="s1">{ foo: { bar: </span><span class="s0">'baz' </span><span class="s1">} } ]</span><span class="s3">, </span><span class="s1">results)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'no errors occurred'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.deepEqual(errors</span><span class="s3">, </span><span class="s1">[])</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'match ndjson:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">file</span><span class="s3">, </span><span class="s1">results</span><span class="s3">, </span><span class="s1">errors</span>
+
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s1">file = path.join(__dirname</span><span class="s3">, </span><span class="s0">'data.ndjson'</span><span class="s1">)</span>
+        <span class="s1">fs.writeFileSync(file</span><span class="s3">, </span><span class="s1">[</span>
+          <span class="s1">JSON.stringify([ </span><span class="s0">'a'</span><span class="s3">, </span><span class="s0">'b' </span><span class="s1">])</span><span class="s3">,</span>
+          <span class="s1">JSON.stringify(</span><span class="s2">null</span><span class="s1">)</span><span class="s3">,</span>
+          <span class="s0">''</span><span class="s3">,</span>
+          <span class="s0">''</span><span class="s3">,</span>
+          <span class="s1">JSON.stringify(</span><span class="s0">'wibble'</span><span class="s1">)</span>
+        <span class="s1">].join(</span><span class="s0">'</span><span class="s3">\n</span><span class="s0">'</span><span class="s1">))</span>
+        <span class="s1">results = []</span>
+        <span class="s1">errors = []</span>
+        <span class="s2">const </span><span class="s1">datastream = bfj.match(fs.createReadStream(file)</span><span class="s3">, </span><span class="s1">() =&gt; </span><span class="s2">true</span><span class="s3">, </span><span class="s1">{ ndjson: </span><span class="s2">true </span><span class="s1">})</span>
+        <span class="s1">datastream.on(</span><span class="s0">'data'</span><span class="s3">, </span><span class="s1">item =&gt; results.push(item))</span>
+        <span class="s1">datastream.on(</span><span class="s0">'error'</span><span class="s3">, </span><span class="s1">error =&gt; errors.push(error))</span>
+        <span class="s1">datastream.on(</span><span class="s0">'end'</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'the correct properties were matched'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.deepEqual([ </span><span class="s0">'a'</span><span class="s3">, </span><span class="s0">'b'</span><span class="s3">, </span><span class="s1">[ </span><span class="s0">'a'</span><span class="s3">, </span><span class="s0">'b' </span><span class="s1">]</span><span class="s3">, </span><span class="s0">'wibble' </span><span class="s1">]</span><span class="s3">, </span><span class="s1">results)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'no errors occurred'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.deepEqual(errors</span><span class="s3">, </span><span class="s1">[])</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'parse request:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">error</span><span class="s3">, </span><span class="s1">result</span>
+
+      <span class="s1">setup((done) =&gt; {</span>
+        <span class="s2">const </span><span class="s1">jsonstream = </span><span class="s2">new </span><span class="s1">stream.PassThrough()</span>
+        <span class="s1">axios({</span>
+          <span class="s1">responseType: </span><span class="s0">'stream'</span><span class="s3">,</span>
+          <span class="s1">url: </span><span class="s0">'https://gitlab.com/philbooth/bfj/raw/master/package.json'</span><span class="s3">,</span>
+        <span class="s1">}).then((response) =&gt; response.data.pipe(bfj.unpipe((err</span><span class="s3">, </span><span class="s1">res) =&gt; {</span>
+          <span class="s1">error = err</span>
+          <span class="s1">result = res</span>
+          <span class="s1">done()</span>
+        <span class="s1">})))</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'result was correct'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isNull(error)</span>
+        <span class="s1">assert.deepEqual(result</span><span class="s3">, </span><span class="s1">require(</span><span class="s0">'../package.json'</span><span class="s1">))</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'parse NDJSON:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">failed</span><span class="s3">, </span><span class="s1">file</span><span class="s3">, </span><span class="s1">results</span>
+
+      <span class="s1">setup(() =&gt; {</span>
+        <span class="s1">failed = </span><span class="s2">false</span>
+        <span class="s1">file = path.join(__dirname</span><span class="s3">, </span><span class="s0">'data.ndjson'</span><span class="s1">)</span>
+        <span class="s1">results = []</span>
+        <span class="s1">fs.writeFileSync(file</span><span class="s3">, </span><span class="s1">[</span>
+          <span class="s1">JSON.stringify([ </span><span class="s0">'b'</span><span class="s3">, </span><span class="s0">'a'</span><span class="s3">, </span><span class="s0">'r' </span><span class="s1">])</span><span class="s3">,</span>
+          <span class="s1">JSON.stringify(</span><span class="s2">null</span><span class="s1">)</span><span class="s3">,</span>
+          <span class="s0">''</span><span class="s3">,</span>
+          <span class="s0">''</span><span class="s3">,</span>
+          <span class="s1">JSON.stringify(</span><span class="s0">'wibble'</span><span class="s1">)</span>
+        <span class="s1">].join(</span><span class="s0">'</span><span class="s3">\n</span><span class="s0">'</span><span class="s1">))</span>
+        <span class="s2">const </span><span class="s1">stream = fs.createReadStream(file)</span>
+        <span class="s2">return </span><span class="s1">bfj.parse(stream</span><span class="s3">, </span><span class="s1">{ ndjson: </span><span class="s2">true </span><span class="s1">})</span>
+          <span class="s1">.then(result =&gt; {</span>
+            <span class="s1">results.push(result)</span>
+            <span class="s2">return </span><span class="s1">bfj.parse(stream</span><span class="s3">, </span><span class="s1">{ ndjson: </span><span class="s2">true </span><span class="s1">})</span>
+          <span class="s1">})</span>
+          <span class="s1">.then(result =&gt; {</span>
+            <span class="s1">results.push(result)</span>
+            <span class="s2">return </span><span class="s1">bfj.parse(stream</span><span class="s3">, </span><span class="s1">{ ndjson: </span><span class="s2">true </span><span class="s1">})</span>
+          <span class="s1">})</span>
+          <span class="s1">.then(result =&gt; {</span>
+            <span class="s1">results.push(result)</span>
+            <span class="s2">return </span><span class="s1">bfj.parse(stream</span><span class="s3">, </span><span class="s1">{ ndjson: </span><span class="s2">true </span><span class="s1">})</span>
+          <span class="s1">})</span>
+          <span class="s1">.then(result =&gt; {</span>
+            <span class="s1">results.push(result)</span>
+            <span class="s2">return </span><span class="s1">bfj.parse(stream</span><span class="s3">, </span><span class="s1">{ ndjson: </span><span class="s2">true </span><span class="s1">})</span>
+          <span class="s1">})</span>
+          <span class="s1">.then(result =&gt; results.push(result))</span>
+          <span class="s1">.catch(e =&gt; {</span>
+            <span class="s1">failed = </span><span class="s2">true</span>
+          <span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">teardown(() =&gt; {</span>
+        <span class="s1">fs.unlinkSync(file)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'results were correct'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isFalse(failed)</span>
+        <span class="s1">assert.lengthOf(results</span><span class="s3">, </span><span class="s4">5</span><span class="s1">)</span>
+        <span class="s1">assert.deepEqual(results</span><span class="s3">, </span><span class="s1">[</span>
+          <span class="s1">[ </span><span class="s0">'b'</span><span class="s3">, </span><span class="s0">'a'</span><span class="s3">, </span><span class="s0">'r' </span><span class="s1">]</span><span class="s3">,</span>
+          <span class="s2">null</span><span class="s3">,</span>
+          <span class="s0">'wibble'</span><span class="s3">,</span>
+          <span class="s1">undefined</span><span class="s3">,</span>
+          <span class="s1">undefined</span>
+        <span class="s1">])</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'stringify value:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">result</span>
+
+      <span class="s1">setup(() =&gt; {</span>
+        <span class="s2">return </span><span class="s1">bfj.stringify(</span><span class="s2">new </span><span class="s1">Promise(resolve =&gt; {</span>
+          <span class="s1">setTimeout(resolve.bind(</span><span class="s2">null</span><span class="s3">, </span><span class="s0">'foo</span><span class="s3">\t</span><span class="s0">&quot;</span><span class="s3">\n</span><span class="s0">bar'</span><span class="s1">)</span><span class="s3">, </span><span class="s4">20</span><span class="s1">)</span>
+        <span class="s1">}))</span>
+        <span class="s1">.then(res =&gt; result = res)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'result was correct'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(result</span><span class="s3">, </span><span class="s0">'&quot;foo</span><span class="s3">\\</span><span class="s0">t</span><span class="s3">\\</span><span class="s0">&quot;</span><span class="s3">\\</span><span class="s0">nbar&quot;'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'write object:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">failed</span><span class="s3">, </span><span class="s1">file</span><span class="s3">, </span><span class="s1">result</span>
+
+      <span class="s1">setup(() =&gt; {</span>
+        <span class="s1">failed = </span><span class="s2">false</span>
+        <span class="s1">file = path.join(__dirname</span><span class="s3">, </span><span class="s0">'data.json'</span><span class="s1">)</span>
+        <span class="s2">return </span><span class="s1">bfj.write(</span>
+          <span class="s1">file</span><span class="s3">,</span>
+          <span class="s1">{ foo: [ </span><span class="s0">'b'</span><span class="s3">, </span><span class="s0">'a'</span><span class="s3">, </span><span class="s0">'r' </span><span class="s1">]</span><span class="s3">, </span><span class="s1">baz: </span><span class="s2">null</span><span class="s3">, </span><span class="s1">qux: </span><span class="s4">3.14159265359e42 </span><span class="s1">}</span>
+        <span class="s1">)</span>
+        <span class="s1">.then(() =&gt; {</span>
+          <span class="s1">result = fs.readFileSync(file</span><span class="s3">, </span><span class="s1">{ encoding: </span><span class="s0">'utf8' </span><span class="s1">})</span>
+        <span class="s1">})</span>
+        <span class="s1">.catch(error =&gt; {</span>
+          <span class="s1">failed = </span><span class="s2">true</span>
+          <span class="s1">result = error</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">teardown(() =&gt; {</span>
+        <span class="s1">fs.unlinkSync(file)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'did not fail'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isFalse(failed)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'result was correct'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(result</span><span class="s3">, </span><span class="s0">'{&quot;foo&quot;:[&quot;b&quot;,&quot;a&quot;,&quot;r&quot;],&quot;baz&quot;:null,&quot;qux&quot;:3.14159265359e+42}'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+<span class="s1">})</span>
+
+</pre>
+</body>
+</html>

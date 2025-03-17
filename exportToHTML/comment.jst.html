@@ -1,0 +1,26 @@
+<html>
+<head>
+<title>comment.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+comment.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+
+<span class="s0">{{ var $comment = it.util.toQuotedString($schema); }}</span>
+<span class="s0">{{? it.opts.$comment === true }}</span>
+  <span class="s0">console.log({{=$comment}});</span>
+<span class="s0">{{?? typeof it.opts.$comment == 'function' }}</span>
+  <span class="s0">self._opts.$comment({{=$comment}}, {{=it.util.toQuotedString($errSchemaPath)}}, validate.root.schema);</span>
+<span class="s0">{{?}}</span>
+</pre>
+</body>
+</html>

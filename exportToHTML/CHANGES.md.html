@@ -1,0 +1,91 @@
+<html>
+<head>
+<title>CHANGES.md</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #cc7832; font-weight: bold;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #ffc66d; font-style: italic;}
+.s4 { color: #287bde;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+CHANGES.md</font>
+</center></td></tr></table>
+<pre>
+<span class="s1">## </span><span class="s2">2.0.6</span>
+
+<span class="s2">Version 2.0.4 adds support for React Native by clarifying in package.json that</span>
+<span class="s2">the browser environment does not support Node.js domains.</span>
+<span class="s2">Why this is necessary, we leave as an exercise for the user.</span>
+
+<span class="s1">## </span><span class="s2">2.0.3</span>
+
+<span class="s2">Version 2.0.3 fixes a bug when adjusting the capacity of the task queue.</span>
+
+<span class="s1">## </span><span class="s2">2.0.1-2.02</span>
+
+<span class="s2">Version 2.0.1 fixes a bug in the way redirects were expressed that affected the</span>
+<span class="s2">function of Browserify, but which Mr would tolerate.</span>
+
+<span class="s1">## </span><span class="s2">2.0.0</span>
+
+<span class="s2">Version 2 of ASAP is a full rewrite with a few salient changes.</span>
+<span class="s2">First, the ASAP source is CommonJS only and designed with </span><span class="s0">[</span><span class="s2">Browserify</span><span class="s0">][] </span><span class="s2">and</span>
+<span class="s0">[</span><span class="s2">Browserify-compatible</span><span class="s0">][</span><span class="s2">Mr</span><span class="s0">] </span><span class="s2">module loaders in mind.</span>
+
+<span class="s1">[Browserify]</span><span class="s0">: </span><span class="s3">https://github.com/substack/node-browserify</span>
+<span class="s1">[Mr]</span><span class="s0">: </span><span class="s3">https://github.com/montagejs/mr</span>
+
+<span class="s2">The new version has been refactored in two dimensions.</span>
+<span class="s2">Support for Node.js and browsers have been separated, using Browserify</span>
+<span class="s2">redirects and ASAP has been divided into two modules.</span>
+<span class="s2">The </span><span class="s0">&quot;</span><span class="s2">raw</span><span class="s0">&quot; </span><span class="s2">layer depends on the tasks to catch thrown exceptions and unravel</span>
+<span class="s2">Node.js domains.</span>
+
+<span class="s2">The full implementation of ASAP is loadable as `require</span><span class="s0">(&quot;</span><span class="s2">asap</span><span class="s0">&quot;)</span><span class="s2">` in both Node.js</span>
+<span class="s2">and browsers.</span>
+
+<span class="s2">The raw layer that lacks exception handling overhead is loadable as</span>
+<span class="s2">`require</span><span class="s0">(&quot;</span><span class="s2">asap/raw</span><span class="s0">&quot;)</span><span class="s2">`.</span>
+<span class="s2">The interface is the same for both layers.</span>
+
+<span class="s2">Tasks are no longer required to be functions, but can rather be any object that</span>
+<span class="s2">implements `task.call</span><span class="s0">()</span><span class="s2">`.</span>
+<span class="s2">With this feature you can recycle task objects to avoid garbage collector churn</span>
+<span class="s2">and avoid closures in general.</span>
+
+<span class="s2">The implementation has been rigorously documented so that our successors can</span>
+<span class="s2">understand the scope of the problem that this module solves and all of its</span>
+<span class="s2">nuances, ensuring that the next generation of implementations know what details</span>
+<span class="s2">are essential.</span>
+
+<span class="s1">-   </span><span class="s0">[</span><span class="s2">asap.js</span><span class="s0">](</span><span class="s4">https://github.com/kriskowal/asap/blob/master/asap.js</span><span class="s0">)</span>
+<span class="s1">-   </span><span class="s0">[</span><span class="s2">raw.js</span><span class="s0">](</span><span class="s4">https://github.com/kriskowal/asap/blob/master/raw.js</span><span class="s0">)</span>
+<span class="s1">-   </span><span class="s0">[</span><span class="s2">browser-asap.js</span><span class="s0">](</span><span class="s4">https://github.com/kriskowal/asap/blob/master/browser-asap.js</span><span class="s0">)</span>
+<span class="s1">-   </span><span class="s0">[</span><span class="s2">browser-raw.js</span><span class="s0">](</span><span class="s4">https://github.com/kriskowal/asap/blob/master/browser-raw.js</span><span class="s0">)</span>
+
+<span class="s2">The new version has also been rigorously tested across a broad spectrum of</span>
+<span class="s2">browsers, in both the window and worker context.</span>
+<span class="s2">The following charts capture the browser test results for the most recent</span>
+<span class="s2">release.</span>
+<span class="s2">The first chart shows test results for ASAP running in the main window context.</span>
+<span class="s2">The second chart shows test results for ASAP running in a web worker context.</span>
+<span class="s2">Test results are inconclusive </span><span class="s0">(</span><span class="s2">grey</span><span class="s0">) </span><span class="s2">on browsers that do not support web</span>
+<span class="s2">workers.</span>
+<span class="s2">These data are captured automatically by </span><span class="s0">[</span><span class="s2">Continuous</span>
+<span class="s2">Integration</span><span class="s0">][]</span><span class="s2">.</span>
+
+<span class="s0">![</span><span class="s2">Browser Compatibility</span><span class="s0">](</span><span class="s4">http://kriskowal-asap.s3-website-us-west-2.amazonaws.com/train/integration-2/saucelabs-results-matrix.svg</span><span class="s0">)</span>
+
+<span class="s0">![</span><span class="s2">Compatibility in Web Workers</span><span class="s0">](</span><span class="s4">http://kriskowal-asap.s3-website-us-west-2.amazonaws.com/train/integration-2/saucelabs-worker-results-matrix.svg</span><span class="s0">)</span>
+
+<span class="s1">[Continuous Integration]</span><span class="s0">: </span><span class="s3">https://github.com/kriskowal/asap/blob/master/CONTRIBUTING.md</span>
+
+</pre>
+</body>
+</html>

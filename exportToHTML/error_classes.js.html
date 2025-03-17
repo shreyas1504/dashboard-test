@@ -1,0 +1,54 @@
+<html>
+<head>
+<title>error_classes.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+error_classes.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">resolve = require(</span><span class="s0">'./resolve'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s2">module.exports = {</span>
+  <span class="s2">Validation: errorSubclass(ValidationError)</span><span class="s1">,</span>
+  <span class="s2">MissingRef: errorSubclass(MissingRefError)</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+
+<span class="s3">function </span><span class="s2">ValidationError(errors) {</span>
+  <span class="s3">this</span><span class="s2">.message = </span><span class="s0">'validation failed'</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">.errors = errors</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">.ajv = </span><span class="s3">this</span><span class="s2">.validation = </span><span class="s3">true</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s2">MissingRefError.message = </span><span class="s3">function </span><span class="s2">(baseId</span><span class="s1">, </span><span class="s2">ref) {</span>
+  <span class="s3">return </span><span class="s0">'can</span><span class="s1">\'</span><span class="s0">t resolve reference ' </span><span class="s2">+ ref + </span><span class="s0">' from id ' </span><span class="s2">+ baseId</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+
+<span class="s3">function </span><span class="s2">MissingRefError(baseId</span><span class="s1">, </span><span class="s2">ref</span><span class="s1">, </span><span class="s2">message) {</span>
+  <span class="s3">this</span><span class="s2">.message = message || MissingRefError.message(baseId</span><span class="s1">, </span><span class="s2">ref)</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">.missingRef = resolve.url(baseId</span><span class="s1">, </span><span class="s2">ref)</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">.missingSchema = resolve.normalizeId(resolve.fullPath(</span><span class="s3">this</span><span class="s2">.missingRef))</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">errorSubclass(Subclass) {</span>
+  <span class="s2">Subclass.prototype = Object.create(Error.prototype)</span><span class="s1">;</span>
+  <span class="s2">Subclass.prototype.constructor = Subclass</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">Subclass</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

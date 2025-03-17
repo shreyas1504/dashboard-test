@@ -1,0 +1,40 @@
+<html>
+<head>
+<title>rng.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+rng.js</font>
+</center></td></tr></table>
+<pre><span class="s0">// Unique ID creation requires a high quality random # generator. In the browser we therefore</span>
+<span class="s0">// require the crypto API and do not support built-in fallback to lower quality random number</span>
+<span class="s0">// generators (like Math.random()).</span>
+<span class="s2">var </span><span class="s1">getRandomValues</span><span class="s3">;</span>
+<span class="s2">var </span><span class="s1">rnds8 = </span><span class="s2">new </span><span class="s1">Uint8Array(</span><span class="s4">16</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">export default function </span><span class="s1">rng() {</span>
+  <span class="s0">// lazy load so that environments that need to polyfill have a chance to do so</span>
+  <span class="s2">if </span><span class="s1">(!getRandomValues) {</span>
+    <span class="s0">// getRandomValues needs to be invoked in a context where &quot;this&quot; is a Crypto implementation. Also,</span>
+    <span class="s0">// find the complete implementation of crypto (msCrypto) on IE11.</span>
+    <span class="s1">getRandomValues = </span><span class="s2">typeof </span><span class="s1">crypto !== </span><span class="s5">'undefined' </span><span class="s1">&amp;&amp; crypto.getRandomValues &amp;&amp; crypto.getRandomValues.bind(crypto) || </span><span class="s2">typeof </span><span class="s1">msCrypto !== </span><span class="s5">'undefined' </span><span class="s1">&amp;&amp; </span><span class="s2">typeof </span><span class="s1">msCrypto.getRandomValues === </span><span class="s5">'function' </span><span class="s1">&amp;&amp; msCrypto.getRandomValues.bind(msCrypto)</span><span class="s3">;</span>
+
+    <span class="s2">if </span><span class="s1">(!getRandomValues) {</span>
+      <span class="s2">throw new </span><span class="s1">Error(</span><span class="s5">'crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s2">return </span><span class="s1">getRandomValues(rnds8)</span><span class="s3">;</span>
+<span class="s1">}</span></pre>
+</body>
+</html>

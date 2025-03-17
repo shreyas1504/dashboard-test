@@ -1,0 +1,109 @@
+<html>
+<head>
+<title>default.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+default.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">cmpChar = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).cmpChar</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">cmpStr = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).cmpStr</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).TYPE</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">IDENT = TYPE.Ident</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">STRING = TYPE.String</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">NUMBER = TYPE.Number</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">FUNCTION = TYPE.Function</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">URL = TYPE.Url</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">HASH = TYPE.Hash</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">DIMENSION = TYPE.Dimension</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">PERCENTAGE = TYPE.Percentage</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">LEFTPARENTHESIS = TYPE.LeftParenthesis</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">LEFTSQUAREBRACKET = TYPE.LeftSquareBracket</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">COMMA = TYPE.Comma</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">DELIM = TYPE.Delim</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">NUMBERSIGN = </span><span class="s4">0x0023</span><span class="s3">;  </span><span class="s5">// U+0023 NUMBER SIGN (#)</span>
+<span class="s0">var </span><span class="s1">ASTERISK = </span><span class="s4">0x002A</span><span class="s3">;    </span><span class="s5">// U+002A ASTERISK (*)</span>
+<span class="s0">var </span><span class="s1">PLUSSIGN = </span><span class="s4">0x002B</span><span class="s3">;    </span><span class="s5">// U+002B PLUS SIGN (+)</span>
+<span class="s0">var </span><span class="s1">HYPHENMINUS = </span><span class="s4">0x002D</span><span class="s3">; </span><span class="s5">// U+002D HYPHEN-MINUS (-)</span>
+<span class="s0">var </span><span class="s1">SOLIDUS = </span><span class="s4">0x002F</span><span class="s3">;     </span><span class="s5">// U+002F SOLIDUS (/)</span>
+<span class="s0">var </span><span class="s1">U = </span><span class="s4">0x0075</span><span class="s3">;           </span><span class="s5">// U+0075 LATIN SMALL LETTER U (u)</span>
+
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">defaultRecognizer(context) {</span>
+    <span class="s0">switch </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenType) {</span>
+        <span class="s0">case </span><span class="s1">HASH:</span>
+            <span class="s0">return this</span><span class="s1">.Hash()</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">COMMA:</span>
+            <span class="s1">context.space = </span><span class="s0">null</span><span class="s3">;</span>
+            <span class="s1">context.ignoreWSAfter = </span><span class="s0">true</span><span class="s3">;</span>
+            <span class="s0">return this</span><span class="s1">.Operator()</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">LEFTPARENTHESIS:</span>
+            <span class="s0">return this</span><span class="s1">.Parentheses(</span><span class="s0">this</span><span class="s1">.readSequence</span><span class="s3">, </span><span class="s1">context.recognizer)</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">LEFTSQUAREBRACKET:</span>
+            <span class="s0">return this</span><span class="s1">.Brackets(</span><span class="s0">this</span><span class="s1">.readSequence</span><span class="s3">, </span><span class="s1">context.recognizer)</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">STRING:</span>
+            <span class="s0">return this</span><span class="s1">.String()</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">DIMENSION:</span>
+            <span class="s0">return this</span><span class="s1">.Dimension()</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">PERCENTAGE:</span>
+            <span class="s0">return this</span><span class="s1">.Percentage()</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">NUMBER:</span>
+            <span class="s0">return this</span><span class="s1">.Number()</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">FUNCTION:</span>
+            <span class="s0">return </span><span class="s1">cmpStr(</span><span class="s0">this</span><span class="s1">.scanner.source</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenEnd</span><span class="s3">, </span><span class="s2">'url('</span><span class="s1">)</span>
+                <span class="s1">? </span><span class="s0">this</span><span class="s1">.Url()</span>
+                <span class="s1">: </span><span class="s0">this</span><span class="s1">.Function(</span><span class="s0">this</span><span class="s1">.readSequence</span><span class="s3">, </span><span class="s1">context.recognizer)</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">URL:</span>
+            <span class="s0">return this</span><span class="s1">.Url()</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">IDENT:</span>
+            <span class="s5">// check for unicode range, it should start with u+ or U+</span>
+            <span class="s0">if </span><span class="s1">(cmpChar(</span><span class="s0">this</span><span class="s1">.scanner.source</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">, </span><span class="s1">U) &amp;&amp;</span>
+                <span class="s1">cmpChar(</span><span class="s0">this</span><span class="s1">.scanner.source</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart + </span><span class="s4">1</span><span class="s3">, </span><span class="s1">PLUSSIGN)) {</span>
+                <span class="s0">return this</span><span class="s1">.UnicodeRange()</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                <span class="s0">return this</span><span class="s1">.Identifier()</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+        <span class="s0">case </span><span class="s1">DELIM:</span>
+            <span class="s0">var </span><span class="s1">code = </span><span class="s0">this</span><span class="s1">.scanner.source.charCodeAt(</span><span class="s0">this</span><span class="s1">.scanner.tokenStart)</span><span class="s3">;</span>
+
+            <span class="s0">if </span><span class="s1">(code === SOLIDUS ||</span>
+                <span class="s1">code === ASTERISK ||</span>
+                <span class="s1">code === PLUSSIGN ||</span>
+                <span class="s1">code === HYPHENMINUS) {</span>
+                <span class="s0">return this</span><span class="s1">.Operator()</span><span class="s3">; </span><span class="s5">// TODO: replace with Delim</span>
+            <span class="s1">}</span>
+
+            <span class="s5">// TODO: produce a node with Delim node type</span>
+
+            <span class="s0">if </span><span class="s1">(code === NUMBERSIGN) {</span>
+                <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Hex or identifier is expected'</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart + </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">break</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

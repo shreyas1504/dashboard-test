@@ -1,0 +1,367 @@
+<html>
+<head>
+<title>merge.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #6897bb;}
+.s7 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+merge.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">{</span>
+  <span class="s1">deepNormalizeScriptCov</span><span class="s2">,</span>
+  <span class="s1">normalizeFunctionCov</span><span class="s2">,</span>
+  <span class="s1">normalizeProcessCov</span><span class="s2">,</span>
+  <span class="s1">normalizeRangeTree</span><span class="s2">,</span>
+  <span class="s1">normalizeScriptCov</span><span class="s2">,</span>
+<span class="s1">} from </span><span class="s3">&quot;./normalize&quot;</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">{ RangeTree } from </span><span class="s3">&quot;./range-tree&quot;</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">{ FunctionCov</span><span class="s2">, </span><span class="s1">ProcessCov</span><span class="s2">, </span><span class="s1">Range</span><span class="s2">, </span><span class="s1">RangeCov</span><span class="s2">, </span><span class="s1">ScriptCov } from </span><span class="s3">&quot;./types&quot;</span><span class="s2">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Merges a list of process coverages.</span>
+ <span class="s4">*</span>
+ <span class="s4">* The result is normalized.</span>
+ <span class="s4">* The input values may be mutated, it is not safe to use them after passing</span>
+ <span class="s4">* them to this function.</span>
+ <span class="s4">* The computation is synchronous.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">processCovs Process coverages to merge.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">Merged process coverage.</span>
+ <span class="s4">*/</span>
+<span class="s0">export function </span><span class="s1">mergeProcessCovs(processCovs: ReadonlyArray&lt;ProcessCov&gt;): ProcessCov {</span>
+  <span class="s0">if </span><span class="s1">(processCovs.length === </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s0">return </span><span class="s1">{result: []}</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">const </span><span class="s1">urlToScripts: Map&lt;string</span><span class="s2">, </span><span class="s1">ScriptCov[]&gt; = </span><span class="s0">new </span><span class="s1">Map()</span><span class="s2">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">processCov of processCovs) {</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">scriptCov of processCov.result) {</span>
+      <span class="s0">let </span><span class="s1">scriptCovs: ScriptCov[] | undefined = urlToScripts.get(scriptCov.url)</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(scriptCovs === undefined) {</span>
+        <span class="s1">scriptCovs = []</span><span class="s2">;</span>
+        <span class="s1">urlToScripts.set(scriptCov.url</span><span class="s2">, </span><span class="s1">scriptCovs)</span><span class="s2">;</span>
+      <span class="s1">}</span>
+      <span class="s1">scriptCovs.push(scriptCov)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s0">const </span><span class="s1">result: ScriptCov[] = []</span><span class="s2">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">scripts of urlToScripts.values()) {</span>
+    <span class="s7">// assert: `scripts.length &gt; 0`</span>
+    <span class="s1">result.push(mergeScriptCovs(scripts)!)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+  <span class="s0">const </span><span class="s1">merged: ProcessCov = {result}</span><span class="s2">;</span>
+
+  <span class="s1">normalizeProcessCov(merged)</span><span class="s2">;</span>
+  <span class="s0">return </span><span class="s1">merged</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Merges a list of matching script coverages.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Scripts are matching if they have the same `url`.</span>
+ <span class="s4">* The result is normalized.</span>
+ <span class="s4">* The input values may be mutated, it is not safe to use them after passing</span>
+ <span class="s4">* them to this function.</span>
+ <span class="s4">* The computation is synchronous.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">scriptCovs Process coverages to merge.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">Merged script coverage, or `undefined` if the input list was empty.</span>
+ <span class="s4">*/</span>
+<span class="s0">export function </span><span class="s1">mergeScriptCovs(scriptCovs: ReadonlyArray&lt;ScriptCov&gt;): ScriptCov | undefined {</span>
+  <span class="s0">if </span><span class="s1">(scriptCovs.length === </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s0">return </span><span class="s1">undefined</span><span class="s2">;</span>
+  <span class="s1">} </span><span class="s0">else if </span><span class="s1">(scriptCovs.length === </span><span class="s6">1</span><span class="s1">) {</span>
+    <span class="s0">const </span><span class="s1">merged: ScriptCov = scriptCovs[</span><span class="s6">0</span><span class="s1">]</span><span class="s2">;</span>
+    <span class="s1">deepNormalizeScriptCov(merged)</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">merged</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">const </span><span class="s1">first: ScriptCov = scriptCovs[</span><span class="s6">0</span><span class="s1">]</span><span class="s2">;</span>
+  <span class="s0">const </span><span class="s1">scriptId: string = first.scriptId</span><span class="s2">;</span>
+  <span class="s0">const </span><span class="s1">url: string = first.url</span><span class="s2">;</span>
+
+  <span class="s0">const </span><span class="s1">rangeToFuncs: Map&lt;string</span><span class="s2">, </span><span class="s1">FunctionCov[]&gt; = </span><span class="s0">new </span><span class="s1">Map()</span><span class="s2">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">scriptCov of scriptCovs) {</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">funcCov of scriptCov.functions) {</span>
+      <span class="s0">const </span><span class="s1">rootRange: string = stringifyFunctionRootRange(funcCov)</span><span class="s2">;</span>
+      <span class="s0">let </span><span class="s1">funcCovs: FunctionCov[] | undefined = rangeToFuncs.get(rootRange)</span><span class="s2">;</span>
+
+      <span class="s0">if </span><span class="s1">(funcCovs === undefined ||</span>
+        <span class="s7">// if the entry in rangeToFuncs is function-level granularity and</span>
+        <span class="s7">// the new coverage is block-level, prefer block-level.</span>
+        <span class="s1">(!funcCovs[</span><span class="s6">0</span><span class="s1">].isBlockCoverage &amp;&amp; funcCov.isBlockCoverage)) {</span>
+        <span class="s1">funcCovs = []</span><span class="s2">;</span>
+        <span class="s1">rangeToFuncs.set(rootRange</span><span class="s2">, </span><span class="s1">funcCovs)</span><span class="s2">;</span>
+      <span class="s1">} </span><span class="s0">else if </span><span class="s1">(funcCovs[</span><span class="s6">0</span><span class="s1">].isBlockCoverage &amp;&amp; !funcCov.isBlockCoverage) {</span>
+        <span class="s7">// if the entry in rangeToFuncs is block-level granularity, we should</span>
+        <span class="s7">// not append function level granularity.</span>
+        <span class="s0">continue</span><span class="s2">;</span>
+      <span class="s1">}</span>
+      <span class="s1">funcCovs.push(funcCov)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s0">const </span><span class="s1">functions: FunctionCov[] = []</span><span class="s2">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">funcCovs of rangeToFuncs.values()) {</span>
+    <span class="s7">// assert: `funcCovs.length &gt; 0`</span>
+    <span class="s1">functions.push(mergeFunctionCovs(funcCovs)!)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">const </span><span class="s1">merged: ScriptCov = {scriptId</span><span class="s2">, </span><span class="s1">url</span><span class="s2">, </span><span class="s1">functions}</span><span class="s2">;</span>
+  <span class="s1">normalizeScriptCov(merged)</span><span class="s2">;</span>
+  <span class="s0">return </span><span class="s1">merged</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Returns a string representation of the root range of the function.</span>
+ <span class="s4">*</span>
+ <span class="s4">* This string can be used to match function with same root range.</span>
+ <span class="s4">* The string is derived from the start and end offsets of the root range of</span>
+ <span class="s4">* the function.</span>
+ <span class="s4">* This assumes that `ranges` is non-empty (true for valid function coverages).</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">funcCov Function coverage with the range to stringify</span>
+ <span class="s4">* </span><span class="s5">@internal</span>
+ <span class="s4">*/</span>
+<span class="s0">function </span><span class="s1">stringifyFunctionRootRange(funcCov: Readonly&lt;FunctionCov&gt;): string {</span>
+  <span class="s0">const </span><span class="s1">rootRange: RangeCov = funcCov.ranges[</span><span class="s6">0</span><span class="s1">]</span><span class="s2">;</span>
+  <span class="s0">return </span><span class="s3">`</span><span class="s1">${rootRange.startOffset.toString(</span><span class="s6">10</span><span class="s1">)}</span><span class="s3">;</span><span class="s1">${rootRange.endOffset.toString(</span><span class="s6">10</span><span class="s1">)}</span><span class="s3">`</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Merges a list of matching function coverages.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Functions are matching if their root ranges have the same span.</span>
+ <span class="s4">* The result is normalized.</span>
+ <span class="s4">* The input values may be mutated, it is not safe to use them after passing</span>
+ <span class="s4">* them to this function.</span>
+ <span class="s4">* The computation is synchronous.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">funcCovs Function coverages to merge.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">Merged function coverage, or `undefined` if the input list was empty.</span>
+ <span class="s4">*/</span>
+<span class="s0">export function </span><span class="s1">mergeFunctionCovs(funcCovs: ReadonlyArray&lt;FunctionCov&gt;): FunctionCov | undefined {</span>
+  <span class="s0">if </span><span class="s1">(funcCovs.length === </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s0">return </span><span class="s1">undefined</span><span class="s2">;</span>
+  <span class="s1">} </span><span class="s0">else if </span><span class="s1">(funcCovs.length === </span><span class="s6">1</span><span class="s1">) {</span>
+    <span class="s0">const </span><span class="s1">merged: FunctionCov = funcCovs[</span><span class="s6">0</span><span class="s1">]</span><span class="s2">;</span>
+    <span class="s1">normalizeFunctionCov(merged)</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">merged</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">const </span><span class="s1">functionName: string = funcCovs[</span><span class="s6">0</span><span class="s1">].functionName</span><span class="s2">;</span>
+
+  <span class="s0">const </span><span class="s1">trees: RangeTree[] = []</span><span class="s2">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">funcCov of funcCovs) {</span>
+    <span class="s7">// assert: `fn.ranges.length &gt; 0`</span>
+    <span class="s7">// assert: `fn.ranges` is sorted</span>
+    <span class="s1">trees.push(RangeTree.fromSortedRanges(funcCov.ranges)!)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s7">// assert: `trees.length &gt; 0`</span>
+  <span class="s0">const </span><span class="s1">mergedTree: RangeTree = mergeRangeTrees(trees)!</span><span class="s2">;</span>
+  <span class="s1">normalizeRangeTree(mergedTree)</span><span class="s2">;</span>
+  <span class="s0">const </span><span class="s1">ranges: RangeCov[] = mergedTree.toRanges()</span><span class="s2">;</span>
+  <span class="s0">const </span><span class="s1">isBlockCoverage: boolean = !(ranges.length === </span><span class="s6">1 </span><span class="s1">&amp;&amp; ranges[</span><span class="s6">0</span><span class="s1">].count === </span><span class="s6">0</span><span class="s1">)</span><span class="s2">;</span>
+
+  <span class="s0">const </span><span class="s1">merged: FunctionCov = {functionName</span><span class="s2">, </span><span class="s1">ranges</span><span class="s2">, </span><span class="s1">isBlockCoverage}</span><span class="s2">;</span>
+  <span class="s7">// assert: `merged` is normalized</span>
+  <span class="s0">return </span><span class="s1">merged</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* </span><span class="s5">@precondition </span><span class="s4">Same `start` and `end` for all the trees</span>
+ <span class="s4">*/</span>
+<span class="s0">function </span><span class="s1">mergeRangeTrees(trees: ReadonlyArray&lt;RangeTree&gt;): RangeTree | undefined {</span>
+  <span class="s0">if </span><span class="s1">(trees.length &lt;= </span><span class="s6">1</span><span class="s1">) {</span>
+    <span class="s0">return </span><span class="s1">trees[</span><span class="s6">0</span><span class="s1">]</span><span class="s2">;</span>
+  <span class="s1">}</span>
+  <span class="s0">const </span><span class="s1">first: RangeTree = trees[</span><span class="s6">0</span><span class="s1">]</span><span class="s2">;</span>
+  <span class="s0">let </span><span class="s1">delta: number = </span><span class="s6">0</span><span class="s2">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">tree of trees) {</span>
+    <span class="s1">delta += tree.delta</span><span class="s2">;</span>
+  <span class="s1">}</span>
+  <span class="s0">const </span><span class="s1">children: RangeTree[] = mergeRangeTreeChildren(trees)</span><span class="s2">;</span>
+  <span class="s0">return new </span><span class="s1">RangeTree(first.start</span><span class="s2">, </span><span class="s1">first.end</span><span class="s2">, </span><span class="s1">delta</span><span class="s2">, </span><span class="s1">children)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">class </span><span class="s1">RangeTreeWithParent {</span>
+  <span class="s1">readonly parentIndex: number</span><span class="s2">;</span>
+  <span class="s1">readonly tree: RangeTree</span><span class="s2">;</span>
+
+  <span class="s1">constructor(parentIndex: number</span><span class="s2">, </span><span class="s1">tree: RangeTree) {</span>
+    <span class="s0">this</span><span class="s1">.parentIndex = parentIndex</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.tree = tree</span><span class="s2">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s0">class </span><span class="s1">StartEvent {</span>
+  <span class="s1">readonly offset: number</span><span class="s2">;</span>
+  <span class="s1">readonly trees: RangeTreeWithParent[]</span><span class="s2">;</span>
+
+  <span class="s1">constructor(offset: number</span><span class="s2">, </span><span class="s1">trees: RangeTreeWithParent[]) {</span>
+    <span class="s0">this</span><span class="s1">.offset = offset</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.trees = trees</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">static </span><span class="s1">compare(a: StartEvent</span><span class="s2">, </span><span class="s1">b: StartEvent): number {</span>
+    <span class="s0">return </span><span class="s1">a.offset - b.offset</span><span class="s2">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s0">class </span><span class="s1">StartEventQueue {</span>
+  <span class="s0">private </span><span class="s1">readonly queue: StartEvent[]</span><span class="s2">;</span>
+  <span class="s0">private </span><span class="s1">nextIndex: number</span><span class="s2">;</span>
+  <span class="s0">private </span><span class="s1">pendingOffset: number</span><span class="s2">;</span>
+  <span class="s0">private </span><span class="s1">pendingTrees: RangeTreeWithParent[] | undefined</span><span class="s2">;</span>
+
+  <span class="s0">private </span><span class="s1">constructor(queue: StartEvent[]) {</span>
+    <span class="s0">this</span><span class="s1">.queue = queue</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.nextIndex = </span><span class="s6">0</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.pendingOffset = </span><span class="s6">0</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.pendingTrees = undefined</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">static </span><span class="s1">fromParentTrees(parentTrees: ReadonlyArray&lt;RangeTree&gt;): StartEventQueue {</span>
+    <span class="s0">const </span><span class="s1">startToTrees: Map&lt;number</span><span class="s2">, </span><span class="s1">RangeTreeWithParent[]&gt; = </span><span class="s0">new </span><span class="s1">Map()</span><span class="s2">;</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">[parentIndex</span><span class="s2">, </span><span class="s1">parentTree] of parentTrees.entries()) {</span>
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">child of parentTree.children) {</span>
+        <span class="s0">let </span><span class="s1">trees: RangeTreeWithParent[] | undefined = startToTrees.get(child.start)</span><span class="s2">;</span>
+        <span class="s0">if </span><span class="s1">(trees === undefined) {</span>
+          <span class="s1">trees = []</span><span class="s2">;</span>
+          <span class="s1">startToTrees.set(child.start</span><span class="s2">, </span><span class="s1">trees)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+        <span class="s1">trees.push(</span><span class="s0">new </span><span class="s1">RangeTreeWithParent(parentIndex</span><span class="s2">, </span><span class="s1">child))</span><span class="s2">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s0">const </span><span class="s1">queue: StartEvent[] = []</span><span class="s2">;</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">[startOffset</span><span class="s2">, </span><span class="s1">trees] of startToTrees) {</span>
+      <span class="s1">queue.push(</span><span class="s0">new </span><span class="s1">StartEvent(startOffset</span><span class="s2">, </span><span class="s1">trees))</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s1">queue.sort(StartEvent.compare)</span><span class="s2">;</span>
+    <span class="s0">return new </span><span class="s1">StartEventQueue(queue)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">setPendingOffset(offset: number): </span><span class="s0">void </span><span class="s1">{</span>
+    <span class="s0">this</span><span class="s1">.pendingOffset = offset</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">pushPendingTree(tree: RangeTreeWithParent): </span><span class="s0">void </span><span class="s1">{</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.pendingTrees === undefined) {</span>
+      <span class="s0">this</span><span class="s1">.pendingTrees = []</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s0">this</span><span class="s1">.pendingTrees.push(tree)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">next(): StartEvent | undefined {</span>
+    <span class="s0">const </span><span class="s1">pendingTrees: RangeTreeWithParent[] | undefined = </span><span class="s0">this</span><span class="s1">.pendingTrees</span><span class="s2">;</span>
+    <span class="s0">const </span><span class="s1">nextEvent: StartEvent | undefined = </span><span class="s0">this</span><span class="s1">.queue[</span><span class="s0">this</span><span class="s1">.nextIndex]</span><span class="s2">;</span>
+    <span class="s0">if </span><span class="s1">(pendingTrees === undefined) {</span>
+      <span class="s0">this</span><span class="s1">.nextIndex++</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">nextEvent</span><span class="s2">;</span>
+    <span class="s1">} </span><span class="s0">else if </span><span class="s1">(nextEvent === undefined) {</span>
+      <span class="s0">this</span><span class="s1">.pendingTrees = undefined</span><span class="s2">;</span>
+      <span class="s0">return new </span><span class="s1">StartEvent(</span><span class="s0">this</span><span class="s1">.pendingOffset</span><span class="s2">, </span><span class="s1">pendingTrees)</span><span class="s2">;</span>
+    <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.pendingOffset &lt; nextEvent.offset) {</span>
+        <span class="s0">this</span><span class="s1">.pendingTrees = undefined</span><span class="s2">;</span>
+        <span class="s0">return new </span><span class="s1">StartEvent(</span><span class="s0">this</span><span class="s1">.pendingOffset</span><span class="s2">, </span><span class="s1">pendingTrees)</span><span class="s2">;</span>
+      <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+        <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.pendingOffset === nextEvent.offset) {</span>
+          <span class="s0">this</span><span class="s1">.pendingTrees = undefined</span><span class="s2">;</span>
+          <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">tree of pendingTrees) {</span>
+            <span class="s1">nextEvent.trees.push(tree)</span><span class="s2">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s0">this</span><span class="s1">.nextIndex++</span><span class="s2">;</span>
+        <span class="s0">return </span><span class="s1">nextEvent</span><span class="s2">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">mergeRangeTreeChildren(parentTrees: ReadonlyArray&lt;RangeTree&gt;): RangeTree[] {</span>
+  <span class="s0">const </span><span class="s1">result: RangeTree[] = []</span><span class="s2">;</span>
+  <span class="s0">const </span><span class="s1">startEventQueue: StartEventQueue = StartEventQueue.fromParentTrees(parentTrees)</span><span class="s2">;</span>
+  <span class="s0">const </span><span class="s1">parentToNested: Map&lt;number</span><span class="s2">, </span><span class="s1">RangeTree[]&gt; = </span><span class="s0">new </span><span class="s1">Map()</span><span class="s2">;</span>
+  <span class="s0">let </span><span class="s1">openRange: Range | undefined</span><span class="s2">;</span>
+
+  <span class="s0">while </span><span class="s1">(</span><span class="s0">true</span><span class="s1">) {</span>
+    <span class="s0">const </span><span class="s1">event: StartEvent | undefined = startEventQueue.next()</span><span class="s2">;</span>
+    <span class="s0">if </span><span class="s1">(event === undefined) {</span>
+      <span class="s0">break</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(openRange !== undefined &amp;&amp; openRange.end &lt;= event.offset) {</span>
+      <span class="s1">result.push(nextChild(openRange</span><span class="s2">, </span><span class="s1">parentToNested))</span><span class="s2">;</span>
+      <span class="s1">openRange = undefined</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(openRange === undefined) {</span>
+      <span class="s0">let </span><span class="s1">openRangeEnd: number = event.offset + </span><span class="s6">1</span><span class="s2">;</span>
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">{parentIndex</span><span class="s2">, </span><span class="s1">tree} of event.trees) {</span>
+        <span class="s1">openRangeEnd = Math.max(openRangeEnd</span><span class="s2">, </span><span class="s1">tree.end)</span><span class="s2">;</span>
+        <span class="s1">insertChild(parentToNested</span><span class="s2">, </span><span class="s1">parentIndex</span><span class="s2">, </span><span class="s1">tree)</span><span class="s2">;</span>
+      <span class="s1">}</span>
+      <span class="s1">startEventQueue.setPendingOffset(openRangeEnd)</span><span class="s2">;</span>
+      <span class="s1">openRange = {start: event.offset</span><span class="s2">, </span><span class="s1">end: openRangeEnd}</span><span class="s2">;</span>
+    <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">{parentIndex</span><span class="s2">, </span><span class="s1">tree} of event.trees) {</span>
+        <span class="s0">if </span><span class="s1">(tree.end &gt; openRange.end) {</span>
+          <span class="s0">const </span><span class="s1">right: RangeTree = tree.split(openRange.end)</span><span class="s2">;</span>
+          <span class="s1">startEventQueue.pushPendingTree(</span><span class="s0">new </span><span class="s1">RangeTreeWithParent(parentIndex</span><span class="s2">, </span><span class="s1">right))</span><span class="s2">;</span>
+        <span class="s1">}</span>
+        <span class="s1">insertChild(parentToNested</span><span class="s2">, </span><span class="s1">parentIndex</span><span class="s2">, </span><span class="s1">tree)</span><span class="s2">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s0">if </span><span class="s1">(openRange !== undefined) {</span>
+    <span class="s1">result.push(nextChild(openRange</span><span class="s2">, </span><span class="s1">parentToNested))</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">result</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">insertChild(parentToNested: Map&lt;number</span><span class="s2">, </span><span class="s1">RangeTree[]&gt;</span><span class="s2">, </span><span class="s1">parentIndex: number</span><span class="s2">, </span><span class="s1">tree: RangeTree): </span><span class="s0">void </span><span class="s1">{</span>
+  <span class="s0">let </span><span class="s1">nested: RangeTree[] | undefined = parentToNested.get(parentIndex)</span><span class="s2">;</span>
+  <span class="s0">if </span><span class="s1">(nested === undefined) {</span>
+    <span class="s1">nested = []</span><span class="s2">;</span>
+    <span class="s1">parentToNested.set(parentIndex</span><span class="s2">, </span><span class="s1">nested)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+  <span class="s1">nested.push(tree)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">nextChild(openRange: Range</span><span class="s2">, </span><span class="s1">parentToNested: Map&lt;number</span><span class="s2">, </span><span class="s1">RangeTree[]&gt;): RangeTree {</span>
+  <span class="s0">const </span><span class="s1">matchingTrees: RangeTree[] = []</span><span class="s2">;</span>
+
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">nested of parentToNested.values()) {</span>
+    <span class="s0">if </span><span class="s1">(nested.length === </span><span class="s6">1 </span><span class="s1">&amp;&amp; nested[</span><span class="s6">0</span><span class="s1">].start === openRange.start &amp;&amp; nested[</span><span class="s6">0</span><span class="s1">].end === openRange.end) {</span>
+      <span class="s1">matchingTrees.push(nested[</span><span class="s6">0</span><span class="s1">])</span><span class="s2">;</span>
+    <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+      <span class="s1">matchingTrees.push(</span><span class="s0">new </span><span class="s1">RangeTree(</span>
+        <span class="s1">openRange.start</span><span class="s2">,</span>
+        <span class="s1">openRange.end</span><span class="s2">,</span>
+        <span class="s6">0</span><span class="s2">,</span>
+        <span class="s1">nested</span><span class="s2">,</span>
+      <span class="s1">))</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s1">parentToNested.clear()</span><span class="s2">;</span>
+  <span class="s0">return </span><span class="s1">mergeRangeTrees(matchingTrees)!</span><span class="s2">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

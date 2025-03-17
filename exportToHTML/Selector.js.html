@@ -1,0 +1,102 @@
+<html>
+<head>
+<title>selector.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+selector.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).TYPE</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">DELIM = TYPE.Delim</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">IDENT = TYPE.Ident</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">DIMENSION = TYPE.Dimension</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">PERCENTAGE = TYPE.Percentage</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">NUMBER = TYPE.Number</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">HASH = TYPE.Hash</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">COLON = TYPE.Colon</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">LEFTSQUAREBRACKET = TYPE.LeftSquareBracket</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">NUMBERSIGN = </span><span class="s4">0x0023</span><span class="s3">;      </span><span class="s5">// U+0023 NUMBER SIGN (#)</span>
+<span class="s0">var </span><span class="s1">ASTERISK = </span><span class="s4">0x002A</span><span class="s3">;        </span><span class="s5">// U+002A ASTERISK (*)</span>
+<span class="s0">var </span><span class="s1">PLUSSIGN = </span><span class="s4">0x002B</span><span class="s3">;        </span><span class="s5">// U+002B PLUS SIGN (+)</span>
+<span class="s0">var </span><span class="s1">SOLIDUS = </span><span class="s4">0x002F</span><span class="s3">;         </span><span class="s5">// U+002F SOLIDUS (/)</span>
+<span class="s0">var </span><span class="s1">FULLSTOP = </span><span class="s4">0x002E</span><span class="s3">;        </span><span class="s5">// U+002E FULL STOP (.)</span>
+<span class="s0">var </span><span class="s1">GREATERTHANSIGN = </span><span class="s4">0x003E</span><span class="s3">; </span><span class="s5">// U+003E GREATER-THAN SIGN (&gt;)</span>
+<span class="s0">var </span><span class="s1">VERTICALLINE = </span><span class="s4">0x007C</span><span class="s3">;    </span><span class="s5">// U+007C VERTICAL LINE (|)</span>
+<span class="s0">var </span><span class="s1">TILDE = </span><span class="s4">0x007E</span><span class="s3">;           </span><span class="s5">// U+007E TILDE (~)</span>
+
+<span class="s0">function </span><span class="s1">getNode(context) {</span>
+    <span class="s0">switch </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenType) {</span>
+        <span class="s0">case </span><span class="s1">LEFTSQUAREBRACKET:</span>
+            <span class="s0">return this</span><span class="s1">.AttributeSelector()</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">HASH:</span>
+            <span class="s0">return this</span><span class="s1">.IdSelector()</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">COLON:</span>
+            <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.lookupType(</span><span class="s4">1</span><span class="s1">) === COLON) {</span>
+                <span class="s0">return this</span><span class="s1">.PseudoElementSelector()</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                <span class="s0">return this</span><span class="s1">.PseudoClassSelector()</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+        <span class="s0">case </span><span class="s1">IDENT:</span>
+            <span class="s0">return this</span><span class="s1">.TypeSelector()</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">NUMBER:</span>
+        <span class="s0">case </span><span class="s1">PERCENTAGE:</span>
+            <span class="s0">return this</span><span class="s1">.Percentage()</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">DIMENSION:</span>
+            <span class="s5">// throws when .123ident</span>
+            <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.source.charCodeAt(</span><span class="s0">this</span><span class="s1">.scanner.tokenStart) === FULLSTOP) {</span>
+                <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Identifier is expected'</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart + </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+            <span class="s0">break</span><span class="s3">;</span>
+
+        <span class="s0">case </span><span class="s1">DELIM:</span>
+            <span class="s0">var </span><span class="s1">code = </span><span class="s0">this</span><span class="s1">.scanner.source.charCodeAt(</span><span class="s0">this</span><span class="s1">.scanner.tokenStart)</span><span class="s3">;</span>
+
+            <span class="s0">switch </span><span class="s1">(code) {</span>
+                <span class="s0">case </span><span class="s1">PLUSSIGN:</span>
+                <span class="s0">case </span><span class="s1">GREATERTHANSIGN:</span>
+                <span class="s0">case </span><span class="s1">TILDE:</span>
+                    <span class="s1">context.space = </span><span class="s0">null</span><span class="s3">;</span>
+                    <span class="s1">context.ignoreWSAfter = </span><span class="s0">true</span><span class="s3">;</span>
+                    <span class="s0">return this</span><span class="s1">.Combinator()</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s1">SOLIDUS:  </span><span class="s5">// /deep/</span>
+                    <span class="s0">return this</span><span class="s1">.Combinator()</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s1">FULLSTOP:</span>
+                    <span class="s0">return this</span><span class="s1">.ClassSelector()</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s1">ASTERISK:</span>
+                <span class="s0">case </span><span class="s1">VERTICALLINE:</span>
+                    <span class="s0">return this</span><span class="s1">.TypeSelector()</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s1">NUMBERSIGN:</span>
+                    <span class="s0">return this</span><span class="s1">.IdSelector()</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">break</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">getNode: getNode</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

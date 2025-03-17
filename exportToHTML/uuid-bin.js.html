@@ -1,0 +1,105 @@
+<html>
+<head>
+<title>uuid-bin.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+uuid-bin.js</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;use strict&quot;</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_assert = _interopRequireDefault(require(</span><span class="s0">&quot;assert&quot;</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_v = _interopRequireDefault(require(</span><span class="s0">&quot;./v1.js&quot;</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_v2 = _interopRequireDefault(require(</span><span class="s0">&quot;./v3.js&quot;</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_v3 = _interopRequireDefault(require(</span><span class="s0">&quot;./v4.js&quot;</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_v4 = _interopRequireDefault(require(</span><span class="s0">&quot;./v5.js&quot;</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireDefault(obj) { </span><span class="s3">return </span><span class="s2">obj &amp;&amp; obj.__esModule ? obj : { </span><span class="s3">default</span><span class="s2">: obj }</span><span class="s1">; </span><span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">usage() {</span>
+  <span class="s2">console.log(</span><span class="s0">'Usage:'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">console.log(</span><span class="s0">'  uuid'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">console.log(</span><span class="s0">'  uuid v1'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">console.log(</span><span class="s0">'  uuid v3 &lt;name&gt; &lt;namespace uuid&gt;'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">console.log(</span><span class="s0">'  uuid v4'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">console.log(</span><span class="s0">'  uuid v5 &lt;name&gt; &lt;namespace uuid&gt;'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">console.log(</span><span class="s0">'  uuid --help'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">console.log(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">Note: &lt;namespace uuid&gt; may be &quot;URL&quot; or &quot;DNS&quot; to use the corresponding UUIDs defined by RFC4122'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">const </span><span class="s2">args = process.argv.slice(</span><span class="s4">2</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">if </span><span class="s2">(args.indexOf(</span><span class="s0">'--help'</span><span class="s2">) &gt;= </span><span class="s4">0</span><span class="s2">) {</span>
+  <span class="s2">usage()</span><span class="s1">;</span>
+  <span class="s2">process.exit(</span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">const </span><span class="s2">version = args.shift() || </span><span class="s0">'v4'</span><span class="s1">;</span>
+
+<span class="s3">switch </span><span class="s2">(version) {</span>
+  <span class="s3">case </span><span class="s0">'v1'</span><span class="s2">:</span>
+    <span class="s2">console.log((</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_v.default)())</span><span class="s1">;</span>
+    <span class="s3">break</span><span class="s1">;</span>
+
+  <span class="s3">case </span><span class="s0">'v3'</span><span class="s2">:</span>
+    <span class="s2">{</span>
+      <span class="s3">const </span><span class="s2">name = args.shift()</span><span class="s1">;</span>
+      <span class="s3">let </span><span class="s2">namespace = args.shift()</span><span class="s1">;</span>
+      <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_assert.default)(name != </span><span class="s3">null</span><span class="s1">, </span><span class="s0">'v3 name not specified'</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_assert.default)(namespace != </span><span class="s3">null</span><span class="s1">, </span><span class="s0">'v3 namespace not specified'</span><span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(namespace === </span><span class="s0">'URL'</span><span class="s2">) {</span>
+        <span class="s2">namespace = _v2.default.URL</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">if </span><span class="s2">(namespace === </span><span class="s0">'DNS'</span><span class="s2">) {</span>
+        <span class="s2">namespace = _v2.default.DNS</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">console.log((</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_v2.default)(name</span><span class="s1">, </span><span class="s2">namespace))</span><span class="s1">;</span>
+      <span class="s3">break</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+  <span class="s3">case </span><span class="s0">'v4'</span><span class="s2">:</span>
+    <span class="s2">console.log((</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_v3.default)())</span><span class="s1">;</span>
+    <span class="s3">break</span><span class="s1">;</span>
+
+  <span class="s3">case </span><span class="s0">'v5'</span><span class="s2">:</span>
+    <span class="s2">{</span>
+      <span class="s3">const </span><span class="s2">name = args.shift()</span><span class="s1">;</span>
+      <span class="s3">let </span><span class="s2">namespace = args.shift()</span><span class="s1">;</span>
+      <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_assert.default)(name != </span><span class="s3">null</span><span class="s1">, </span><span class="s0">'v5 name not specified'</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_assert.default)(namespace != </span><span class="s3">null</span><span class="s1">, </span><span class="s0">'v5 namespace not specified'</span><span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(namespace === </span><span class="s0">'URL'</span><span class="s2">) {</span>
+        <span class="s2">namespace = _v4.default.URL</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">if </span><span class="s2">(namespace === </span><span class="s0">'DNS'</span><span class="s2">) {</span>
+        <span class="s2">namespace = _v4.default.DNS</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">console.log((</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_v4.default)(name</span><span class="s1">, </span><span class="s2">namespace))</span><span class="s1">;</span>
+      <span class="s3">break</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+  <span class="s3">default</span><span class="s2">:</span>
+    <span class="s2">usage()</span><span class="s1">;</span>
+    <span class="s2">process.exit(</span><span class="s4">1</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span></pre>
+</body>
+</html>

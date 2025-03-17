@@ -1,0 +1,302 @@
+<html>
+<head>
+<title>merge.spec.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+merge.spec.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">chai from </span><span class="s2">&quot;chai&quot;</span><span class="s3">;</span>
+<span class="s0">import </span><span class="s1">fs from </span><span class="s2">&quot;fs&quot;</span><span class="s3">;</span>
+<span class="s0">import </span><span class="s1">path from </span><span class="s2">&quot;path&quot;</span><span class="s3">;</span>
+<span class="s0">import </span><span class="s1">{ FunctionCov</span><span class="s3">, </span><span class="s1">mergeFunctionCovs</span><span class="s3">, </span><span class="s1">mergeProcessCovs</span><span class="s3">, </span><span class="s1">mergeScriptCovs</span><span class="s3">, </span><span class="s1">ProcessCov</span><span class="s3">, </span><span class="s1">ScriptCov } from </span><span class="s2">&quot;../lib&quot;</span><span class="s3">;</span>
+
+<span class="s0">const </span><span class="s1">REPO_ROOT: string = path.join(__dirname</span><span class="s3">, </span><span class="s2">&quot;..&quot;</span><span class="s3">, </span><span class="s2">&quot;..&quot;</span><span class="s3">, </span><span class="s2">&quot;..&quot;</span><span class="s3">, </span><span class="s2">&quot;..&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">const </span><span class="s1">BENCHES_INPUT_DIR: string = path.join(REPO_ROOT</span><span class="s3">, </span><span class="s2">&quot;benches&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">const </span><span class="s1">BENCHES_DIR: string = path.join(REPO_ROOT</span><span class="s3">, </span><span class="s2">&quot;test-data&quot;</span><span class="s3">, </span><span class="s2">&quot;merge&quot;</span><span class="s3">, </span><span class="s2">&quot;benches&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">const </span><span class="s1">RANGES_DIR: string = path.join(REPO_ROOT</span><span class="s3">, </span><span class="s2">&quot;test-data&quot;</span><span class="s3">, </span><span class="s2">&quot;merge&quot;</span><span class="s3">, </span><span class="s2">&quot;ranges&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">const </span><span class="s1">BENCHES_TIMEOUT: number = </span><span class="s4">20000</span><span class="s3">; </span><span class="s5">// 20sec</span>
+
+<span class="s0">interface </span><span class="s1">MergeRangeItem {</span>
+  <span class="s1">name: string</span><span class="s3">;</span>
+  <span class="s1">status: </span><span class="s2">&quot;run&quot; </span><span class="s1">| </span><span class="s2">&quot;skip&quot; </span><span class="s1">| </span><span class="s2">&quot;only&quot;</span><span class="s3">;</span>
+  <span class="s1">inputs: ProcessCov[]</span><span class="s3">;</span>
+  <span class="s1">expected: ProcessCov</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">const </span><span class="s1">FIXTURES_DIR: string = path.join(REPO_ROOT</span><span class="s3">, </span><span class="s2">&quot;test-data&quot;</span><span class="s3">, </span><span class="s2">&quot;bugs&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">function </span><span class="s1">loadFixture(name: string) {</span>
+  <span class="s0">const </span><span class="s1">content: string = fs.readFileSync(</span>
+    <span class="s1">path.resolve(FIXTURES_DIR</span><span class="s3">, </span><span class="s2">`</span><span class="s1">${name}</span><span class="s2">.json`</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">{encoding: </span><span class="s2">&quot;UTF-8&quot;</span><span class="s1">}</span><span class="s3">,</span>
+  <span class="s1">)</span><span class="s3">;</span>
+  <span class="s0">return </span><span class="s1">JSON.parse(content)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">describe(</span><span class="s2">&quot;merge&quot;</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+  <span class="s1">describe(</span><span class="s2">&quot;Various&quot;</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">it(</span><span class="s2">&quot;accepts empty arrays for `mergeProcessCovs`&quot;</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s0">const </span><span class="s1">inputs: ProcessCov[] = []</span><span class="s3">;</span>
+      <span class="s0">const </span><span class="s1">expected: ProcessCov = {result: []}</span><span class="s3">;</span>
+      <span class="s0">const </span><span class="s1">actual: ProcessCov = mergeProcessCovs(inputs)</span><span class="s3">;</span>
+      <span class="s1">chai.assert.deepEqual(actual</span><span class="s3">, </span><span class="s1">expected)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">&quot;accepts empty arrays for `mergeScriptCovs`&quot;</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s0">const </span><span class="s1">inputs: ScriptCov[] = []</span><span class="s3">;</span>
+      <span class="s0">const </span><span class="s1">expected: ScriptCov | undefined = undefined</span><span class="s3">;</span>
+      <span class="s0">const </span><span class="s1">actual: ScriptCov | undefined = mergeScriptCovs(inputs)</span><span class="s3">;</span>
+      <span class="s1">chai.assert.deepEqual(actual</span><span class="s3">, </span><span class="s1">expected)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">&quot;accepts empty arrays for `mergeFunctionCovs`&quot;</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s0">const </span><span class="s1">inputs: FunctionCov[] = []</span><span class="s3">;</span>
+      <span class="s0">const </span><span class="s1">expected: FunctionCov | undefined = undefined</span><span class="s3">;</span>
+      <span class="s0">const </span><span class="s1">actual: FunctionCov | undefined = mergeFunctionCovs(inputs)</span><span class="s3">;</span>
+      <span class="s1">chai.assert.deepEqual(actual</span><span class="s3">, </span><span class="s1">expected)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">&quot;accepts arrays with a single item for `mergeProcessCovs`&quot;</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s0">const </span><span class="s1">inputs: ProcessCov[] = [</span>
+        <span class="s1">{</span>
+          <span class="s1">result: [</span>
+            <span class="s1">{</span>
+              <span class="s1">scriptId: </span><span class="s2">&quot;123&quot;</span><span class="s3">,</span>
+              <span class="s1">url: </span><span class="s2">&quot;/lib.js&quot;</span><span class="s3">,</span>
+              <span class="s1">functions: [</span>
+                <span class="s1">{</span>
+                  <span class="s1">functionName: </span><span class="s2">&quot;test&quot;</span><span class="s3">,</span>
+                  <span class="s1">isBlockCoverage: </span><span class="s0">true</span><span class="s3">,</span>
+                  <span class="s1">ranges: [</span>
+                    <span class="s1">{startOffset: </span><span class="s4">0</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">4</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">2</span><span class="s1">}</span><span class="s3">,</span>
+                    <span class="s1">{startOffset: </span><span class="s4">1</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">2</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">1</span><span class="s1">}</span><span class="s3">,</span>
+                    <span class="s1">{startOffset: </span><span class="s4">2</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">3</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">1</span><span class="s1">}</span><span class="s3">,</span>
+                  <span class="s1">]</span><span class="s3">,</span>
+                <span class="s1">}</span><span class="s3">,</span>
+              <span class="s1">]</span><span class="s3">,</span>
+            <span class="s1">}</span><span class="s3">,</span>
+          <span class="s1">]</span><span class="s3">,</span>
+        <span class="s1">}</span><span class="s3">,</span>
+      <span class="s1">]</span><span class="s3">;</span>
+      <span class="s0">const </span><span class="s1">expected: ProcessCov = {</span>
+        <span class="s1">result: [</span>
+          <span class="s1">{</span>
+            <span class="s1">scriptId: </span><span class="s2">&quot;0&quot;</span><span class="s3">,</span>
+            <span class="s1">url: </span><span class="s2">&quot;/lib.js&quot;</span><span class="s3">,</span>
+            <span class="s1">functions: [</span>
+              <span class="s1">{</span>
+                <span class="s1">functionName: </span><span class="s2">&quot;test&quot;</span><span class="s3">,</span>
+                <span class="s1">isBlockCoverage: </span><span class="s0">true</span><span class="s3">,</span>
+                <span class="s1">ranges: [</span>
+                  <span class="s1">{startOffset: </span><span class="s4">0</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">4</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">2</span><span class="s1">}</span><span class="s3">,</span>
+                  <span class="s1">{startOffset: </span><span class="s4">1</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">3</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">1</span><span class="s1">}</span><span class="s3">,</span>
+                <span class="s1">]</span><span class="s3">,</span>
+              <span class="s1">}</span><span class="s3">,</span>
+            <span class="s1">]</span><span class="s3">,</span>
+          <span class="s1">}</span><span class="s3">,</span>
+        <span class="s1">]</span><span class="s3">,</span>
+      <span class="s1">}</span><span class="s3">;</span>
+      <span class="s0">const </span><span class="s1">actual: ProcessCov = mergeProcessCovs(inputs)</span><span class="s3">;</span>
+      <span class="s1">chai.assert.deepEqual(actual</span><span class="s3">, </span><span class="s1">expected)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">describe(</span><span class="s2">&quot;mergeProcessCovs&quot;</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s5">// see: https://github.com/demurgos/v8-coverage/issues/2</span>
+      <span class="s1">it(</span><span class="s2">&quot;handles function coverage merged into block coverage&quot;</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s0">const </span><span class="s1">blockCoverage: ProcessCov = loadFixture(</span><span class="s2">&quot;issue-2-block-coverage&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">functionCoverage: ProcessCov = loadFixture(</span><span class="s2">&quot;issue-2-func-coverage&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">inputs: ProcessCov[] = [</span>
+          <span class="s1">functionCoverage</span><span class="s3">,</span>
+          <span class="s1">blockCoverage</span><span class="s3">,</span>
+        <span class="s1">]</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">expected: ProcessCov = loadFixture(</span><span class="s2">&quot;issue-2-expected&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">actual: ProcessCov = mergeProcessCovs(inputs)</span><span class="s3">;</span>
+        <span class="s1">chai.assert.deepEqual(actual</span><span class="s3">, </span><span class="s1">expected)</span><span class="s3">;</span>
+      <span class="s1">})</span><span class="s3">;</span>
+
+      <span class="s5">// see: https://github.com/demurgos/v8-coverage/issues/2</span>
+      <span class="s1">it(</span><span class="s2">&quot;handles block coverage merged into function coverage&quot;</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s0">const </span><span class="s1">blockCoverage: ProcessCov = loadFixture(</span><span class="s2">&quot;issue-2-block-coverage&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">functionCoverage: ProcessCov = loadFixture(</span><span class="s2">&quot;issue-2-func-coverage&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">inputs: ProcessCov[] = [</span>
+          <span class="s1">blockCoverage</span><span class="s3">,</span>
+          <span class="s1">functionCoverage</span><span class="s3">,</span>
+        <span class="s1">]</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">expected: ProcessCov = loadFixture(</span><span class="s2">&quot;issue-2-expected&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">actual: ProcessCov = mergeProcessCovs(inputs)</span><span class="s3">;</span>
+        <span class="s1">chai.assert.deepEqual(actual</span><span class="s3">, </span><span class="s1">expected)</span><span class="s3">;</span>
+      <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">&quot;accepts arrays with a single item for `mergeScriptCovs`&quot;</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s0">const </span><span class="s1">inputs: ScriptCov[] = [</span>
+        <span class="s1">{</span>
+          <span class="s1">scriptId: </span><span class="s2">&quot;123&quot;</span><span class="s3">,</span>
+          <span class="s1">url: </span><span class="s2">&quot;/lib.js&quot;</span><span class="s3">,</span>
+          <span class="s1">functions: [</span>
+            <span class="s1">{</span>
+              <span class="s1">functionName: </span><span class="s2">&quot;test&quot;</span><span class="s3">,</span>
+              <span class="s1">isBlockCoverage: </span><span class="s0">true</span><span class="s3">,</span>
+              <span class="s1">ranges: [</span>
+                <span class="s1">{startOffset: </span><span class="s4">0</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">4</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">2</span><span class="s1">}</span><span class="s3">,</span>
+                <span class="s1">{startOffset: </span><span class="s4">1</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">2</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">1</span><span class="s1">}</span><span class="s3">,</span>
+                <span class="s1">{startOffset: </span><span class="s4">2</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">3</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">1</span><span class="s1">}</span><span class="s3">,</span>
+              <span class="s1">]</span><span class="s3">,</span>
+            <span class="s1">}</span><span class="s3">,</span>
+          <span class="s1">]</span><span class="s3">,</span>
+        <span class="s1">}</span><span class="s3">,</span>
+      <span class="s1">]</span><span class="s3">;</span>
+      <span class="s0">const </span><span class="s1">expected: ScriptCov | undefined = {</span>
+        <span class="s1">scriptId: </span><span class="s2">&quot;123&quot;</span><span class="s3">,</span>
+        <span class="s1">url: </span><span class="s2">&quot;/lib.js&quot;</span><span class="s3">,</span>
+        <span class="s1">functions: [</span>
+          <span class="s1">{</span>
+            <span class="s1">functionName: </span><span class="s2">&quot;test&quot;</span><span class="s3">,</span>
+            <span class="s1">isBlockCoverage: </span><span class="s0">true</span><span class="s3">,</span>
+            <span class="s1">ranges: [</span>
+              <span class="s1">{startOffset: </span><span class="s4">0</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">4</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">2</span><span class="s1">}</span><span class="s3">,</span>
+              <span class="s1">{startOffset: </span><span class="s4">1</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">3</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">1</span><span class="s1">}</span><span class="s3">,</span>
+            <span class="s1">]</span><span class="s3">,</span>
+          <span class="s1">}</span><span class="s3">,</span>
+        <span class="s1">]</span><span class="s3">,</span>
+      <span class="s1">}</span><span class="s3">;</span>
+      <span class="s0">const </span><span class="s1">actual: ScriptCov | undefined = mergeScriptCovs(inputs)</span><span class="s3">;</span>
+      <span class="s1">chai.assert.deepEqual(actual</span><span class="s3">, </span><span class="s1">expected)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">it(</span><span class="s2">&quot;accepts arrays with a single item for `mergeFunctionCovs`&quot;</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s0">const </span><span class="s1">inputs: FunctionCov[] = [</span>
+        <span class="s1">{</span>
+          <span class="s1">functionName: </span><span class="s2">&quot;test&quot;</span><span class="s3">,</span>
+          <span class="s1">isBlockCoverage: </span><span class="s0">true</span><span class="s3">,</span>
+          <span class="s1">ranges: [</span>
+            <span class="s1">{startOffset: </span><span class="s4">0</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">4</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">2</span><span class="s1">}</span><span class="s3">,</span>
+            <span class="s1">{startOffset: </span><span class="s4">1</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">2</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">1</span><span class="s1">}</span><span class="s3">,</span>
+            <span class="s1">{startOffset: </span><span class="s4">2</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">3</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">1</span><span class="s1">}</span><span class="s3">,</span>
+          <span class="s1">]</span><span class="s3">,</span>
+        <span class="s1">}</span><span class="s3">,</span>
+      <span class="s1">]</span><span class="s3">;</span>
+      <span class="s0">const </span><span class="s1">expected: FunctionCov = {</span>
+        <span class="s1">functionName: </span><span class="s2">&quot;test&quot;</span><span class="s3">,</span>
+        <span class="s1">isBlockCoverage: </span><span class="s0">true</span><span class="s3">,</span>
+        <span class="s1">ranges: [</span>
+          <span class="s1">{startOffset: </span><span class="s4">0</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">4</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">2</span><span class="s1">}</span><span class="s3">,</span>
+          <span class="s1">{startOffset: </span><span class="s4">1</span><span class="s3">, </span><span class="s1">endOffset: </span><span class="s4">3</span><span class="s3">, </span><span class="s1">count: </span><span class="s4">1</span><span class="s1">}</span><span class="s3">,</span>
+        <span class="s1">]</span><span class="s3">,</span>
+      <span class="s1">}</span><span class="s3">;</span>
+      <span class="s0">const </span><span class="s1">actual: FunctionCov | undefined = mergeFunctionCovs(inputs)</span><span class="s3">;</span>
+      <span class="s1">chai.assert.deepEqual(actual</span><span class="s3">, </span><span class="s1">expected)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">&quot;ranges&quot;</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">sourceFile of getSourceFiles()) {</span>
+      <span class="s0">const </span><span class="s1">relPath: string = path.relative(RANGES_DIR</span><span class="s3">, </span><span class="s1">sourceFile)</span><span class="s3">;</span>
+      <span class="s1">describe(relPath</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s0">const </span><span class="s1">content: string = fs.readFileSync(sourceFile</span><span class="s3">, </span><span class="s1">{encoding: </span><span class="s2">&quot;UTF-8&quot;</span><span class="s1">})</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">items: MergeRangeItem[] = JSON.parse(content)</span><span class="s3">;</span>
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">item of items) {</span>
+          <span class="s0">const </span><span class="s1">test: () =&gt; </span><span class="s0">void </span><span class="s1">= () =&gt; {</span>
+            <span class="s0">const </span><span class="s1">actual: ProcessCov | undefined = mergeProcessCovs(item.inputs)</span><span class="s3">;</span>
+            <span class="s1">chai.assert.deepEqual(actual</span><span class="s3">, </span><span class="s1">item.expected)</span><span class="s3">;</span>
+          <span class="s1">}</span><span class="s3">;</span>
+          <span class="s0">switch </span><span class="s1">(item.status) {</span>
+            <span class="s0">case </span><span class="s2">&quot;run&quot;</span><span class="s1">:</span>
+              <span class="s1">it(item.name</span><span class="s3">, </span><span class="s1">test)</span><span class="s3">;</span>
+              <span class="s0">break</span><span class="s3">;</span>
+            <span class="s0">case </span><span class="s2">&quot;only&quot;</span><span class="s1">:</span>
+              <span class="s1">it.only(item.name</span><span class="s3">, </span><span class="s1">test)</span><span class="s3">;</span>
+              <span class="s0">break</span><span class="s3">;</span>
+            <span class="s0">case </span><span class="s2">&quot;skip&quot;</span><span class="s1">:</span>
+              <span class="s1">it.skip(item.name</span><span class="s3">, </span><span class="s1">test)</span><span class="s3">;</span>
+              <span class="s0">break</span><span class="s3">;</span>
+            <span class="s0">default</span><span class="s1">:</span>
+              <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">`Unexpected status: </span><span class="s1">${item.status}</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+      <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">describe(</span><span class="s2">&quot;benches&quot;</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">bench of getBenches()) {</span>
+      <span class="s0">const </span><span class="s1">BENCHES_TO_SKIP: Set&lt;string&gt; = </span><span class="s0">new </span><span class="s1">Set()</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(process.env.CI === </span><span class="s2">&quot;true&quot;</span><span class="s1">) {</span>
+        <span class="s5">// Skip very large benchmarks when running continuous integration</span>
+        <span class="s1">BENCHES_TO_SKIP.add(</span><span class="s2">&quot;node@10.11.0&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">BENCHES_TO_SKIP.add(</span><span class="s2">&quot;npm@6.4.1&quot;</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">const </span><span class="s1">name: string = path.basename(bench)</span><span class="s3">;</span>
+
+      <span class="s0">if </span><span class="s1">(BENCHES_TO_SKIP.has(name)) {</span>
+        <span class="s1">it.skip(</span><span class="s2">`</span><span class="s1">${name} </span><span class="s2">(skipped: too large for CI)`</span><span class="s3">, </span><span class="s1">testBench)</span><span class="s3">;</span>
+      <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+        <span class="s1">it(name</span><span class="s3">, </span><span class="s1">testBench)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s1">async </span><span class="s0">function </span><span class="s1">testBench(</span><span class="s0">this</span><span class="s1">: Mocha.Context) {</span>
+        <span class="s0">this</span><span class="s1">.timeout(BENCHES_TIMEOUT)</span><span class="s3">;</span>
+
+        <span class="s0">const </span><span class="s1">inputFileNames: string[] = </span><span class="s0">await </span><span class="s1">fs.promises.readdir(bench)</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">inputPromises: Promise&lt;ProcessCov&gt;[] = []</span><span class="s3">;</span>
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">inputFileName of inputFileNames) {</span>
+          <span class="s0">const </span><span class="s1">resolved: string = path.join(bench</span><span class="s3">, </span><span class="s1">inputFileName)</span><span class="s3">;</span>
+          <span class="s1">inputPromises.push(fs.promises.readFile(resolved).then(buffer =&gt; JSON.parse(buffer.toString(</span><span class="s2">&quot;UTF-8&quot;</span><span class="s1">))))</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s0">const </span><span class="s1">inputs: ProcessCov[] = </span><span class="s0">await </span><span class="s1">Promise.all(inputPromises)</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">expectedPath: string = path.join(BENCHES_DIR</span><span class="s3">, </span><span class="s2">`</span><span class="s1">${name}</span><span class="s2">.json`</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">expectedContent: string = </span><span class="s0">await </span><span class="s1">fs.promises.readFile(expectedPath</span><span class="s3">, </span><span class="s1">{encoding: </span><span class="s2">&quot;UTF-8&quot;</span><span class="s1">}) as string</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">expected: ProcessCov = JSON.parse(expectedContent)</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">startTime: number = Date.now()</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">actual: ProcessCov | undefined = mergeProcessCovs(inputs)</span><span class="s3">;</span>
+        <span class="s0">const </span><span class="s1">endTime: number = Date.now()</span><span class="s3">;</span>
+        <span class="s1">console.error(</span><span class="s2">`Time (</span><span class="s1">${name}</span><span class="s2">): </span><span class="s1">${(endTime - startTime) / </span><span class="s4">1000</span><span class="s1">}</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">chai.assert.deepEqual(actual</span><span class="s3">, </span><span class="s1">expected)</span><span class="s3">;</span>
+        <span class="s1">console.error(</span><span class="s2">`OK: </span><span class="s1">${name}</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">getSourceFiles() {</span>
+  <span class="s0">return </span><span class="s1">getSourcesFrom(RANGES_DIR)</span><span class="s3">;</span>
+
+  <span class="s0">function</span><span class="s1">* getSourcesFrom(dir: string): Iterable&lt;string&gt; {</span>
+    <span class="s0">const </span><span class="s1">names: string[] = fs.readdirSync(dir)</span><span class="s3">;</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">name of names) {</span>
+      <span class="s0">const </span><span class="s1">resolved: string = path.join(dir</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">;</span>
+      <span class="s0">const </span><span class="s1">stat: fs.Stats = fs.statSync(resolved)</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(stat.isDirectory()) {</span>
+        <span class="s0">yield</span><span class="s1">* getSourcesFrom(dir)</span><span class="s3">;</span>
+      <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+        <span class="s0">yield </span><span class="s1">resolved</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s0">function</span><span class="s1">* getBenches(): Iterable&lt;string&gt; {</span>
+  <span class="s0">const </span><span class="s1">names: string[] = fs.readdirSync(BENCHES_INPUT_DIR)</span><span class="s3">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">name of names) {</span>
+    <span class="s0">const </span><span class="s1">resolved: string = path.join(BENCHES_INPUT_DIR</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">;</span>
+    <span class="s0">const </span><span class="s1">stat: fs.Stats = fs.statSync(resolved)</span><span class="s3">;</span>
+    <span class="s0">if </span><span class="s1">(stat.isDirectory()) {</span>
+      <span class="s0">yield </span><span class="s1">resolved</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

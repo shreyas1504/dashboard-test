@@ -1,0 +1,116 @@
+<html>
+<head>
+<title>Global.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a; font-style: italic;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Global.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">/**</span>
+ <span class="s0">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s0">*</span>
+ <span class="s0">* This source code is licensed under the MIT license found in the</span>
+ <span class="s0">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s0">*/</span>
+<span class="s2">import </span><span class="s1">type { CoverageMapData } from </span><span class="s3">'istanbul-lib-coverage'</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type ValidTestReturnValues = </span><span class="s2">void </span><span class="s1">| undefined</span><span class="s4">;</span>
+<span class="s1">declare type TestReturnValuePromise = Promise&lt;unknown&gt;</span><span class="s4">;</span>
+<span class="s1">declare type TestReturnValueGenerator = Generator&lt;</span><span class="s2">void</span><span class="s4">, </span><span class="s1">unknown</span><span class="s4">, </span><span class="s2">void</span><span class="s1">&gt;</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type TestReturnValue = ValidTestReturnValues | TestReturnValuePromise</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type TestContext = Record&lt;string</span><span class="s4">, </span><span class="s1">unknown&gt;</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type DoneFn = (reason?: string | Error) =&gt; </span><span class="s2">void</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type DoneTakingTestFn = (</span><span class="s2">this</span><span class="s1">: TestContext | undefined</span><span class="s4">, </span><span class="s1">done: DoneFn) =&gt; ValidTestReturnValues</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type PromiseReturningTestFn = (</span><span class="s2">this</span><span class="s1">: TestContext | undefined) =&gt; TestReturnValue</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type GeneratorReturningTestFn = (</span><span class="s2">this</span><span class="s1">: TestContext | undefined) =&gt; TestReturnValueGenerator</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type TestName = string</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type TestFn = PromiseReturningTestFn | GeneratorReturningTestFn | DoneTakingTestFn</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type ConcurrentTestFn = () =&gt; TestReturnValuePromise</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type BlockFn = () =&gt; </span><span class="s2">void</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type BlockName = string</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type HookFn = TestFn</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type Col = unknown</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type Row = ReadonlyArray&lt;Col&gt;</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type Table = ReadonlyArray&lt;Row&gt;</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type ArrayTable = Table | Row</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type TemplateTable = TemplateStringsArray</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type TemplateData = ReadonlyArray&lt;unknown&gt;</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type EachTable = ArrayTable | TemplateTable</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type TestCallback = BlockFn | TestFn | ConcurrentTestFn</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type EachTestFn&lt;EachCallback </span><span class="s2">extends </span><span class="s1">TestCallback&gt; = (...args: ReadonlyArray&lt;any&gt;) =&gt; ReturnType&lt;EachCallback&gt;</span><span class="s4">;</span>
+<span class="s1">declare type Jasmine = {</span>
+    <span class="s1">_DEFAULT_TIMEOUT_INTERVAL?: number</span><span class="s4">;</span>
+    <span class="s1">addMatchers: (matchers: Record&lt;string</span><span class="s4">, </span><span class="s1">unknown&gt;) =&gt; </span><span class="s2">void</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+<span class="s1">declare type Each&lt;EachCallback </span><span class="s2">extends </span><span class="s1">TestCallback&gt; = ((table: EachTable</span><span class="s4">, </span><span class="s1">...taggedTemplateData: TemplateData) =&gt; (name: BlockName | TestName</span><span class="s4">, </span><span class="s1">test: EachTestFn&lt;EachCallback&gt;</span><span class="s4">, </span><span class="s1">timeout?: number) =&gt; </span><span class="s2">void</span><span class="s1">) | (() =&gt; () =&gt; </span><span class="s2">void</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">export interface </span><span class="s1">HookBase {</span>
+    <span class="s1">(fn: HookFn</span><span class="s4">, </span><span class="s1">timeout?: number): </span><span class="s2">void</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s2">export interface </span><span class="s1">ItBase {</span>
+    <span class="s1">(testName: TestName</span><span class="s4">, </span><span class="s1">fn: TestFn</span><span class="s4">, </span><span class="s1">timeout?: number): </span><span class="s2">void</span><span class="s4">;</span>
+    <span class="s1">each: Each&lt;TestFn&gt;</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s2">export interface </span><span class="s1">It </span><span class="s2">extends </span><span class="s1">ItBase {</span>
+    <span class="s1">only: ItBase</span><span class="s4">;</span>
+    <span class="s1">skip: ItBase</span><span class="s4">;</span>
+    <span class="s1">todo: (testName: TestName) =&gt; </span><span class="s2">void</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s2">export interface </span><span class="s1">ItConcurrentBase {</span>
+    <span class="s1">(testName: TestName</span><span class="s4">, </span><span class="s1">testFn: ConcurrentTestFn</span><span class="s4">, </span><span class="s1">timeout?: number): </span><span class="s2">void</span><span class="s4">;</span>
+    <span class="s1">each: Each&lt;ConcurrentTestFn&gt;</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s2">export interface </span><span class="s1">ItConcurrentExtended </span><span class="s2">extends </span><span class="s1">ItConcurrentBase {</span>
+    <span class="s1">only: ItConcurrentBase</span><span class="s4">;</span>
+    <span class="s1">skip: ItConcurrentBase</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s2">export interface </span><span class="s1">ItConcurrent </span><span class="s2">extends </span><span class="s1">It {</span>
+    <span class="s1">concurrent: ItConcurrentExtended</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s2">export interface </span><span class="s1">DescribeBase {</span>
+    <span class="s1">(blockName: BlockName</span><span class="s4">, </span><span class="s1">blockFn: BlockFn): </span><span class="s2">void</span><span class="s4">;</span>
+    <span class="s1">each: Each&lt;BlockFn&gt;</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s2">export interface </span><span class="s1">Describe </span><span class="s2">extends </span><span class="s1">DescribeBase {</span>
+    <span class="s1">only: DescribeBase</span><span class="s4">;</span>
+    <span class="s1">skip: DescribeBase</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s2">export interface </span><span class="s1">TestFrameworkGlobals {</span>
+    <span class="s1">it: ItConcurrent</span><span class="s4">;</span>
+    <span class="s1">test: ItConcurrent</span><span class="s4">;</span>
+    <span class="s1">fit: ItBase &amp; {</span>
+        <span class="s1">concurrent?: ItConcurrentBase</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">;</span>
+    <span class="s1">xit: ItBase</span><span class="s4">;</span>
+    <span class="s1">xtest: ItBase</span><span class="s4">;</span>
+    <span class="s1">describe: Describe</span><span class="s4">;</span>
+    <span class="s1">xdescribe: DescribeBase</span><span class="s4">;</span>
+    <span class="s1">fdescribe: DescribeBase</span><span class="s4">;</span>
+    <span class="s1">beforeAll: HookBase</span><span class="s4">;</span>
+    <span class="s1">beforeEach: HookBase</span><span class="s4">;</span>
+    <span class="s1">afterEach: HookBase</span><span class="s4">;</span>
+    <span class="s1">afterAll: HookBase</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s2">export interface </span><span class="s1">GlobalAdditions </span><span class="s2">extends </span><span class="s1">TestFrameworkGlobals {</span>
+    <span class="s1">__coverage__: CoverageMapData</span><span class="s4">;</span>
+    <span class="s1">jasmine: Jasmine</span><span class="s4">;</span>
+    <span class="s1">fail: () =&gt; </span><span class="s2">void</span><span class="s4">;</span>
+    <span class="s1">pending: () =&gt; </span><span class="s2">void</span><span class="s4">;</span>
+    <span class="s1">spyOn: () =&gt; </span><span class="s2">void</span><span class="s4">;</span>
+    <span class="s1">spyOnProperty: () =&gt; </span><span class="s2">void</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s2">export interface </span><span class="s1">Global </span><span class="s2">extends </span><span class="s1">GlobalAdditions</span><span class="s4">, </span><span class="s1">Omit&lt;</span><span class="s2">typeof </span><span class="s1">globalThis</span><span class="s4">, </span><span class="s1">keyof GlobalAdditions&gt; {</span>
+    <span class="s1">[extras: string]: unknown</span><span class="s4">;</span>
+<span class="s1">}</span>
+<span class="s2">export </span><span class="s1">{}</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

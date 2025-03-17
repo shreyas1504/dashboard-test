@@ -1,0 +1,32 @@
+<html>
+<head>
+<title>ascii.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ascii.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">{ RangeCov } from </span><span class="s2">&quot;./types&quot;</span><span class="s3">;</span>
+<span class="s0">interface </span><span class="s1">ReadonlyRangeTree {</span>
+    <span class="s1">readonly start: number</span><span class="s3">;</span>
+    <span class="s1">readonly end: number</span><span class="s3">;</span>
+    <span class="s1">readonly count: number</span><span class="s3">;</span>
+    <span class="s1">readonly children: ReadonlyRangeTree[]</span><span class="s3">;</span>
+<span class="s1">}</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">emitForest(trees: ReadonlyArray&lt;ReadonlyRangeTree&gt;): string</span><span class="s3">;</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">emitForestLines(trees: ReadonlyArray&lt;ReadonlyRangeTree&gt;): string[]</span><span class="s3">;</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">parseFunctionRanges(text: string</span><span class="s3">, </span><span class="s1">offsetMap: Map&lt;number</span><span class="s3">, </span><span class="s1">number&gt;): RangeCov[]</span><span class="s3">;</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">parseOffsets(text: string): Map&lt;number</span><span class="s3">, </span><span class="s1">number&gt;</span><span class="s3">;</span>
+<span class="s0">export </span><span class="s1">{}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

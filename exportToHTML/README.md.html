@@ -1,0 +1,765 @@
+<html>
+<head>
+<title>README.md</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #287bde;}
+.s4 { color: #ffc66d; font-style: italic;}
+.s5 { color: #8ea765;}
+.s6 { color: #a782bb; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+README.md</font>
+</center></td></tr></table>
+<pre><span class="s0"># </span><span class="s2">Source Map</span>
+
+<span class="s1">[![</span><span class="s2">Build Status</span><span class="s1">](</span><span class="s3">https://travis-ci.org/mozilla/source-map.png?branch=master</span><span class="s1">)](</span><span class="s3">https://travis-ci.org/mozilla/source-map</span><span class="s1">)</span>
+
+<span class="s1">[![</span><span class="s2">NPM</span><span class="s1">](</span><span class="s3">https://nodei.co/npm/source-map.png?downloads=true&amp;downloadRank=true</span><span class="s1">)](</span><span class="s3">https://www.npmjs.com/package/source-map</span><span class="s1">)</span>
+
+<span class="s2">This is a library to generate and consume the source map format</span>
+<span class="s1">[</span><span class="s2">described here</span><span class="s1">][</span><span class="s2">format</span><span class="s1">]</span><span class="s2">.</span>
+
+<span class="s0">[format]</span><span class="s1">: </span><span class="s4">https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit</span>
+
+<span class="s0">## </span><span class="s2">Use with Node</span>
+
+    <span class="s5">$ npm install source-map</span>
+
+<span class="s0">## </span><span class="s2">Use on the Web</span>
+
+    <span class="s5">&lt;script src=&quot;https://raw.githubusercontent.com/mozilla/source-map/master/dist/source-map.min.js&quot; defer&gt;&lt;/script&gt;</span>
+
+<span class="s0">--------------------------------------------------------------------------------</span>
+
+<span class="s1">&lt;!-- `npm run toc` to regenerate the Table of Contents --&gt;</span>
+
+<span class="s1">&lt;!-- START doctoc generated TOC please keep comment here to allow auto update --&gt;</span>
+<span class="s1">&lt;!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE --&gt;</span>
+<span class="s0">## </span><span class="s2">Table of Contents</span>
+
+<span class="s0">- </span><span class="s1">[</span><span class="s2">Examples</span><span class="s1">](</span><span class="s2">#examples</span><span class="s1">)</span>
+  <span class="s0">- </span><span class="s1">[</span><span class="s2">Consuming a source map</span><span class="s1">](</span><span class="s2">#consuming-a-source-map</span><span class="s1">)</span>
+  <span class="s0">- </span><span class="s1">[</span><span class="s2">Generating a source map</span><span class="s1">](</span><span class="s2">#generating-a-source-map</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">With SourceNode </span><span class="s1">(</span><span class="s2">high level API</span><span class="s1">)](</span><span class="s2">#with-sourcenode-high-level-api</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">With SourceMapGenerator </span><span class="s1">(</span><span class="s2">low level API</span><span class="s1">)](</span><span class="s2">#with-sourcemapgenerator-low-level-api</span><span class="s1">)</span>
+<span class="s0">- </span><span class="s1">[</span><span class="s2">API</span><span class="s1">](</span><span class="s2">#api</span><span class="s1">)</span>
+  <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceMapConsumer</span><span class="s1">](</span><span class="s2">#sourcemapconsumer</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">new SourceMapConsumer</span><span class="s1">(</span><span class="s2">rawSourceMap</span><span class="s1">)](</span><span class="s2">#new-sourcemapconsumerrawsourcemap</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceMapConsumer.prototype.computeColumnSpans</span><span class="s1">()](</span><span class="s2">#sourcemapconsumerprototypecomputecolumnspans</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceMapConsumer.prototype.originalPositionFor</span><span class="s1">(</span><span class="s2">generatedPosition</span><span class="s1">)](</span><span class="s2">#sourcemapconsumerprototypeoriginalpositionforgeneratedposition</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceMapConsumer.prototype.generatedPositionFor</span><span class="s1">(</span><span class="s2">originalPosition</span><span class="s1">)](</span><span class="s2">#sourcemapconsumerprototypegeneratedpositionfororiginalposition</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceMapConsumer.prototype.allGeneratedPositionsFor</span><span class="s1">(</span><span class="s2">originalPosition</span><span class="s1">)](</span><span class="s2">#sourcemapconsumerprototypeallgeneratedpositionsfororiginalposition</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceMapConsumer.prototype.hasContentsOfAllSources</span><span class="s1">()](</span><span class="s2">#sourcemapconsumerprototypehascontentsofallsources</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceMapConsumer.prototype.sourceContentFor</span><span class="s1">(</span><span class="s2">source</span><span class="s1">[</span><span class="s2">, returnNullOnMissing</span><span class="s1">])](</span><span class="s2">#sourcemapconsumerprototypesourcecontentforsource-returnnullonmissing</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceMapConsumer.prototype.eachMapping</span><span class="s1">(</span><span class="s2">callback, context, order</span><span class="s1">)](</span><span class="s2">#sourcemapconsumerprototypeeachmappingcallback-context-order</span><span class="s1">)</span>
+  <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceMapGenerator</span><span class="s1">](</span><span class="s2">#sourcemapgenerator</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">new SourceMapGenerator</span><span class="s1">([</span><span class="s2">startOfSourceMap</span><span class="s1">])](</span><span class="s2">#new-sourcemapgeneratorstartofsourcemap</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceMapGenerator.fromSourceMap</span><span class="s1">(</span><span class="s2">sourceMapConsumer</span><span class="s1">)](</span><span class="s2">#sourcemapgeneratorfromsourcemapsourcemapconsumer</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceMapGenerator.prototype.addMapping</span><span class="s1">(</span><span class="s2">mapping</span><span class="s1">)](</span><span class="s2">#sourcemapgeneratorprototypeaddmappingmapping</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceMapGenerator.prototype.setSourceContent</span><span class="s1">(</span><span class="s2">sourceFile, sourceContent</span><span class="s1">)](</span><span class="s2">#sourcemapgeneratorprototypesetsourcecontentsourcefile-sourcecontent</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceMapGenerator.prototype.applySourceMap</span><span class="s1">(</span><span class="s2">sourceMapConsumer</span><span class="s1">[</span><span class="s2">, sourceFile</span><span class="s1">[</span><span class="s2">, sourceMapPath</span><span class="s1">]])](</span><span class="s2">#sourcemapgeneratorprototypeapplysourcemapsourcemapconsumer-sourcefile-sourcemappath</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceMapGenerator.prototype.toString</span><span class="s1">()](</span><span class="s2">#sourcemapgeneratorprototypetostring</span><span class="s1">)</span>
+  <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceNode</span><span class="s1">](</span><span class="s2">#sourcenode</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">new SourceNode</span><span class="s1">([</span><span class="s2">line, column, source</span><span class="s1">[</span><span class="s2">, chunk</span><span class="s1">[</span><span class="s2">, name</span><span class="s1">]]])](</span><span class="s2">#new-sourcenodeline-column-source-chunk-name</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceNode.fromStringWithSourceMap</span><span class="s1">(</span><span class="s2">code, sourceMapConsumer</span><span class="s1">[</span><span class="s2">, relativePath</span><span class="s1">])](</span><span class="s2">#sourcenodefromstringwithsourcemapcode-sourcemapconsumer-relativepath</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceNode.prototype.add</span><span class="s1">(</span><span class="s2">chunk</span><span class="s1">)](</span><span class="s2">#sourcenodeprototypeaddchunk</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceNode.prototype.prepend</span><span class="s1">(</span><span class="s2">chunk</span><span class="s1">)](</span><span class="s2">#sourcenodeprototypeprependchunk</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceNode.prototype.setSourceContent</span><span class="s1">(</span><span class="s2">sourceFile, sourceContent</span><span class="s1">)](</span><span class="s2">#sourcenodeprototypesetsourcecontentsourcefile-sourcecontent</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceNode.prototype.walk</span><span class="s1">(</span><span class="s2">fn</span><span class="s1">)](</span><span class="s2">#sourcenodeprototypewalkfn</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceNode.prototype.walkSourceContents</span><span class="s1">(</span><span class="s2">fn</span><span class="s1">)](</span><span class="s2">#sourcenodeprototypewalksourcecontentsfn</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceNode.prototype.join</span><span class="s1">(</span><span class="s2">sep</span><span class="s1">)](</span><span class="s2">#sourcenodeprototypejoinsep</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceNode.prototype.replaceRight</span><span class="s1">(</span><span class="s2">pattern, replacement</span><span class="s1">)](</span><span class="s2">#sourcenodeprototypereplacerightpattern-replacement</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceNode.prototype.toString</span><span class="s1">()](</span><span class="s2">#sourcenodeprototypetostring</span><span class="s1">)</span>
+    <span class="s0">- </span><span class="s1">[</span><span class="s2">SourceNode.prototype.toStringWithSourceMap</span><span class="s1">([</span><span class="s2">startOfSourceMap</span><span class="s1">])](</span><span class="s2">#sourcenodeprototypetostringwithsourcemapstartofsourcemap</span><span class="s1">)</span>
+
+<span class="s1">&lt;!-- END doctoc generated TOC please keep comment here to allow auto update --&gt;</span>
+
+<span class="s0">## </span><span class="s2">Examples</span>
+
+<span class="s0">### </span><span class="s2">Consuming a source map</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">var rawSourceMap = {</span>
+  <span class="s5">version: 3,</span>
+  <span class="s5">file: 'min.js',</span>
+  <span class="s5">names: ['bar', 'baz', 'n'],</span>
+  <span class="s5">sources: ['one.js', 'two.js'],</span>
+  <span class="s5">sourceRoot: 'http://example.com/www/js/',</span>
+  <span class="s5">mappings: 'CAAC,IAAI,IAAM,SAAUA,GAClB,OAAOC,IAAID;CCDb,IAAI,IAAM,SAAUE,GAClB,OAAOA'</span>
+<span class="s5">};</span>
+
+<span class="s5">var smc = new SourceMapConsumer(rawSourceMap);</span>
+
+<span class="s5">console.log(smc.sources);</span>
+<span class="s5">// [ 'http://example.com/www/js/one.js',</span>
+<span class="s5">//   'http://example.com/www/js/two.js' ]</span>
+
+<span class="s5">console.log(smc.originalPositionFor({</span>
+  <span class="s5">line: 2,</span>
+  <span class="s5">column: 28</span>
+<span class="s5">}));</span>
+<span class="s5">// { source: 'http://example.com/www/js/two.js',</span>
+<span class="s5">//   line: 2,</span>
+<span class="s5">//   column: 10,</span>
+<span class="s5">//   name: 'n' }</span>
+
+<span class="s5">console.log(smc.generatedPositionFor({</span>
+  <span class="s5">source: 'http://example.com/www/js/two.js',</span>
+  <span class="s5">line: 2,</span>
+  <span class="s5">column: 10</span>
+<span class="s5">}));</span>
+<span class="s5">// { line: 2, column: 28 }</span>
+
+<span class="s5">smc.eachMapping(function (m) {</span>
+  <span class="s5">// ...</span>
+<span class="s5">});</span>
+<span class="s0">```</span>
+
+<span class="s0">### </span><span class="s2">Generating a source map</span>
+
+<span class="s2">In depth guide</span><span class="s1">:</span>
+<span class="s1">[**</span><span class="s2">Compiling to JavaScript, and Debugging with Source Maps</span><span class="s1">**](</span><span class="s3">https://hacks.mozilla.org/2013/05/compiling-to-javascript-and-debugging-with-source-maps/</span><span class="s1">)</span>
+
+<span class="s0">#### </span><span class="s2">With SourceNode </span><span class="s1">(</span><span class="s2">high level API</span><span class="s1">)</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">function compile(ast) {</span>
+  <span class="s5">switch (ast.type) {</span>
+  <span class="s5">case 'BinaryExpression':</span>
+    <span class="s5">return new SourceNode(</span>
+      <span class="s5">ast.location.line,</span>
+      <span class="s5">ast.location.column,</span>
+      <span class="s5">ast.location.source,</span>
+      <span class="s5">[compile(ast.left), &quot; + &quot;, compile(ast.right)]</span>
+    <span class="s5">);</span>
+  <span class="s5">case 'Literal':</span>
+    <span class="s5">return new SourceNode(</span>
+      <span class="s5">ast.location.line,</span>
+      <span class="s5">ast.location.column,</span>
+      <span class="s5">ast.location.source,</span>
+      <span class="s5">String(ast.value)</span>
+    <span class="s5">);</span>
+  <span class="s5">// ...</span>
+  <span class="s5">default:</span>
+    <span class="s5">throw new Error(&quot;Bad AST&quot;);</span>
+  <span class="s5">}</span>
+<span class="s5">}</span>
+
+<span class="s5">var ast = parse(&quot;40 + 2&quot;, &quot;add.js&quot;);</span>
+<span class="s5">console.log(compile(ast).toStringWithSourceMap({</span>
+  <span class="s5">file: 'add.js'</span>
+<span class="s5">}));</span>
+<span class="s5">// { code: '40 + 2',</span>
+<span class="s5">//   map: [object SourceMapGenerator] }</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">With SourceMapGenerator </span><span class="s1">(</span><span class="s2">low level API</span><span class="s1">)</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">var map = new SourceMapGenerator({</span>
+  <span class="s5">file: &quot;source-mapped.js&quot;</span>
+<span class="s5">});</span>
+
+<span class="s5">map.addMapping({</span>
+  <span class="s5">generated: {</span>
+    <span class="s5">line: 10,</span>
+    <span class="s5">column: 35</span>
+  <span class="s5">},</span>
+  <span class="s5">source: &quot;foo.js&quot;,</span>
+  <span class="s5">original: {</span>
+    <span class="s5">line: 33,</span>
+    <span class="s5">column: 2</span>
+  <span class="s5">},</span>
+  <span class="s5">name: &quot;christopher&quot;</span>
+<span class="s5">});</span>
+
+<span class="s5">console.log(map.toString());</span>
+<span class="s5">// '{&quot;version&quot;:3,&quot;file&quot;:&quot;source-mapped.js&quot;,&quot;sources&quot;:[&quot;foo.js&quot;],&quot;names&quot;:[&quot;christopher&quot;],&quot;mappings&quot;:&quot;;;;;;;;;;mCAgCEA&quot;}'</span>
+<span class="s0">```</span>
+
+<span class="s0">## </span><span class="s2">API</span>
+
+<span class="s2">Get a reference to the module</span><span class="s1">:</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">// Node.js</span>
+<span class="s5">var sourceMap = require('source-map');</span>
+
+<span class="s5">// Browser builds</span>
+<span class="s5">var sourceMap = window.sourceMap;</span>
+
+<span class="s5">// Inside Firefox</span>
+<span class="s5">const sourceMap = require(&quot;devtools/toolkit/sourcemap/source-map.js&quot;);</span>
+<span class="s0">```</span>
+
+<span class="s0">### </span><span class="s2">SourceMapConsumer</span>
+
+<span class="s2">A SourceMapConsumer instance represents a parsed source map which we can query</span>
+<span class="s2">for information about the original file positions by giving it a file position</span>
+<span class="s2">in the generated source.</span>
+
+<span class="s0">#### </span><span class="s2">new SourceMapConsumer</span><span class="s1">(</span><span class="s2">rawSourceMap</span><span class="s1">)</span>
+
+<span class="s2">The only parameter is the raw source map </span><span class="s1">(</span><span class="s2">either as a string which can be</span>
+<span class="s2">`JSON.parse`</span><span class="s1">'</span><span class="s2">d, or an object</span><span class="s1">)</span><span class="s2">. According to the spec, source maps have the</span>
+<span class="s2">following attributes</span><span class="s1">:</span>
+
+<span class="s0">* </span><span class="s2">`version`</span><span class="s1">: </span><span class="s2">Which version of the source map spec this map is following.</span>
+
+<span class="s0">* </span><span class="s2">`sources`</span><span class="s1">: </span><span class="s2">An array of URLs to the original source files.</span>
+
+<span class="s0">* </span><span class="s2">`names`</span><span class="s1">: </span><span class="s2">An array of identifiers which can be referenced by individual</span>
+  <span class="s2">mappings.</span>
+
+<span class="s0">* </span><span class="s2">`sourceRoot`</span><span class="s1">: </span><span class="s2">Optional. The URL root from which all sources are relative.</span>
+
+<span class="s0">* </span><span class="s2">`sourcesContent`</span><span class="s1">: </span><span class="s2">Optional. An array of contents of the original source files.</span>
+
+<span class="s0">* </span><span class="s2">`mappings`</span><span class="s1">: </span><span class="s2">A string of base64 VLQs which contain the actual mappings.</span>
+
+<span class="s0">* </span><span class="s2">`file`</span><span class="s1">: </span><span class="s2">Optional. The generated filename this source map is associated with.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">var consumer = new sourceMap.SourceMapConsumer(rawSourceMapJsonData);</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceMapConsumer.prototype.computeColumnSpans</span><span class="s1">()</span>
+
+<span class="s2">Compute the last column for each generated mapping. The last column is</span>
+<span class="s2">inclusive.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">// Before:</span>
+<span class="s5">consumer.allGeneratedPositionsFor({ line: 2, source: &quot;foo.coffee&quot; })</span>
+<span class="s5">// [ { line: 2,</span>
+<span class="s5">//     column: 1 },</span>
+<span class="s5">//   { line: 2,</span>
+<span class="s5">//     column: 10 },</span>
+<span class="s5">//   { line: 2,</span>
+<span class="s5">//     column: 20 } ]</span>
+
+<span class="s5">consumer.computeColumnSpans();</span>
+
+<span class="s5">// After:</span>
+<span class="s5">consumer.allGeneratedPositionsFor({ line: 2, source: &quot;foo.coffee&quot; })</span>
+<span class="s5">// [ { line: 2,</span>
+<span class="s5">//     column: 1,</span>
+<span class="s5">//     lastColumn: 9 },</span>
+<span class="s5">//   { line: 2,</span>
+<span class="s5">//     column: 10,</span>
+<span class="s5">//     lastColumn: 19 },</span>
+<span class="s5">//   { line: 2,</span>
+<span class="s5">//     column: 20,</span>
+<span class="s5">//     lastColumn: Infinity } ]</span>
+
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceMapConsumer.prototype.originalPositionFor</span><span class="s1">(</span><span class="s2">generatedPosition</span><span class="s1">)</span>
+
+<span class="s2">Returns the original source, line, and column information for the generated</span>
+<span class="s2">source's line and column positions provided. The only argument is an object with</span>
+<span class="s2">the following properties</span><span class="s1">:</span>
+
+<span class="s0">* </span><span class="s2">`line`</span><span class="s1">: </span><span class="s2">The line number in the generated source.  Line numbers in</span>
+  <span class="s2">this library are 1-based </span><span class="s1">(</span><span class="s2">note that the underlying source map</span>
+  <span class="s2">specification uses 0-based line numbers -- this library handles the</span>
+  <span class="s2">translation</span><span class="s1">)</span><span class="s2">.</span>
+
+<span class="s0">* </span><span class="s2">`column`</span><span class="s1">: </span><span class="s2">The column number in the generated source.  Column numbers</span>
+  <span class="s2">in this library are 0-based.</span>
+
+<span class="s0">* </span><span class="s2">`bias`</span><span class="s1">: </span><span class="s2">Either `SourceMapConsumer.GREATEST_LOWER_BOUND` or</span>
+  <span class="s2">`SourceMapConsumer.LEAST_UPPER_BOUND`. Specifies whether to return the closest</span>
+  <span class="s2">element that is smaller than or greater than the one we are searching for,</span>
+  <span class="s2">respectively, if the exact element cannot be found.  Defaults to</span>
+  <span class="s2">`SourceMapConsumer.GREATEST_LOWER_BOUND`.</span>
+
+<span class="s2">and an object is returned with the following properties</span><span class="s1">:</span>
+
+<span class="s0">* </span><span class="s2">`source`</span><span class="s1">: </span><span class="s2">The original source file, or null if this information is not</span>
+  <span class="s2">available.</span>
+
+<span class="s0">* </span><span class="s2">`line`</span><span class="s1">: </span><span class="s2">The line number in the original source, or null if this information is</span>
+  <span class="s2">not available.  The line number is 1-based.</span>
+
+<span class="s0">* </span><span class="s2">`column`</span><span class="s1">: </span><span class="s2">The column number in the original source, or null if this</span>
+  <span class="s2">information is not available.  The column number is 0-based.</span>
+
+<span class="s0">* </span><span class="s2">`name`</span><span class="s1">: </span><span class="s2">The original identifier, or null if this information is not available.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">consumer.originalPositionFor({ line: 2, column: 10 })</span>
+<span class="s5">// { source: 'foo.coffee',</span>
+<span class="s5">//   line: 2,</span>
+<span class="s5">//   column: 2,</span>
+<span class="s5">//   name: null }</span>
+
+<span class="s5">consumer.originalPositionFor({ line: 99999999999999999, column: 999999999999999 })</span>
+<span class="s5">// { source: null,</span>
+<span class="s5">//   line: null,</span>
+<span class="s5">//   column: null,</span>
+<span class="s5">//   name: null }</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceMapConsumer.prototype.generatedPositionFor</span><span class="s1">(</span><span class="s2">originalPosition</span><span class="s1">)</span>
+
+<span class="s2">Returns the generated line and column information for the original source,</span>
+<span class="s2">line, and column positions provided. The only argument is an object with</span>
+<span class="s2">the following properties</span><span class="s1">:</span>
+
+<span class="s0">* </span><span class="s2">`source`</span><span class="s1">: </span><span class="s2">The filename of the original source.</span>
+
+<span class="s0">* </span><span class="s2">`line`</span><span class="s1">: </span><span class="s2">The line number in the original source.  The line number is</span>
+  <span class="s2">1-based.</span>
+
+<span class="s0">* </span><span class="s2">`column`</span><span class="s1">: </span><span class="s2">The column number in the original source.  The column</span>
+  <span class="s2">number is 0-based.</span>
+
+<span class="s2">and an object is returned with the following properties</span><span class="s1">:</span>
+
+<span class="s0">* </span><span class="s2">`line`</span><span class="s1">: </span><span class="s2">The line number in the generated source, or null.  The line</span>
+  <span class="s2">number is 1-based.</span>
+
+<span class="s0">* </span><span class="s2">`column`</span><span class="s1">: </span><span class="s2">The column number in the generated source, or null.  The</span>
+  <span class="s2">column number is 0-based.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">consumer.generatedPositionFor({ source: &quot;example.js&quot;, line: 2, column: 10 })</span>
+<span class="s5">// { line: 1,</span>
+<span class="s5">//   column: 56 }</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceMapConsumer.prototype.allGeneratedPositionsFor</span><span class="s1">(</span><span class="s2">originalPosition</span><span class="s1">)</span>
+
+<span class="s2">Returns all generated line and column information for the original source, line,</span>
+<span class="s2">and column provided. If no column is provided, returns all mappings</span>
+<span class="s2">corresponding to a either the line we are searching for or the next closest line</span>
+<span class="s2">that has any mappings. Otherwise, returns all mappings corresponding to the</span>
+<span class="s2">given line and either the column we are searching for or the next closest column</span>
+<span class="s2">that has any offsets.</span>
+
+<span class="s2">The only argument is an object with the following properties</span><span class="s1">:</span>
+
+<span class="s0">* </span><span class="s2">`source`</span><span class="s1">: </span><span class="s2">The filename of the original source.</span>
+
+<span class="s0">* </span><span class="s2">`line`</span><span class="s1">: </span><span class="s2">The line number in the original source.  The line number is</span>
+  <span class="s2">1-based.</span>
+
+<span class="s0">* </span><span class="s2">`column`</span><span class="s1">: </span><span class="s2">Optional. The column number in the original source.  The</span>
+  <span class="s2">column number is 0-based.</span>
+
+<span class="s2">and an array of objects is returned, each with the following properties</span><span class="s1">:</span>
+
+<span class="s0">* </span><span class="s2">`line`</span><span class="s1">: </span><span class="s2">The line number in the generated source, or null.  The line</span>
+  <span class="s2">number is 1-based.</span>
+
+<span class="s0">* </span><span class="s2">`column`</span><span class="s1">: </span><span class="s2">The column number in the generated source, or null.  The</span>
+  <span class="s2">column number is 0-based.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">consumer.allGeneratedpositionsfor({ line: 2, source: &quot;foo.coffee&quot; })</span>
+<span class="s5">// [ { line: 2,</span>
+<span class="s5">//     column: 1 },</span>
+<span class="s5">//   { line: 2,</span>
+<span class="s5">//     column: 10 },</span>
+<span class="s5">//   { line: 2,</span>
+<span class="s5">//     column: 20 } ]</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceMapConsumer.prototype.hasContentsOfAllSources</span><span class="s1">()</span>
+
+<span class="s2">Return true if we have the embedded source content for every source listed in</span>
+<span class="s2">the source map, false otherwise.</span>
+
+<span class="s2">In other words, if this method returns `true`, then</span>
+<span class="s2">`consumer.sourceContentFor</span><span class="s1">(</span><span class="s2">s</span><span class="s1">)</span><span class="s2">` will succeed for every source `s` in</span>
+<span class="s2">`consumer.sources`.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">// ...</span>
+<span class="s5">if (consumer.hasContentsOfAllSources()) {</span>
+  <span class="s5">consumerReadyCallback(consumer);</span>
+<span class="s5">} else {</span>
+  <span class="s5">fetchSources(consumer, consumerReadyCallback);</span>
+<span class="s5">}</span>
+<span class="s5">// ...</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceMapConsumer.prototype.sourceContentFor</span><span class="s1">(</span><span class="s2">source</span><span class="s1">[</span><span class="s2">, returnNullOnMissing</span><span class="s1">])</span>
+
+<span class="s2">Returns the original source content for the source provided. The only</span>
+<span class="s2">argument is the URL of the original source file.</span>
+
+<span class="s2">If the source content for the given source is not found, then an error is</span>
+<span class="s2">thrown. Optionally, pass `true` as the second param to have `null` returned</span>
+<span class="s2">instead.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">consumer.sources</span>
+<span class="s5">// [ &quot;my-cool-lib.clj&quot; ]</span>
+
+<span class="s5">consumer.sourceContentFor(&quot;my-cool-lib.clj&quot;)</span>
+<span class="s5">// &quot;...&quot;</span>
+
+<span class="s5">consumer.sourceContentFor(&quot;this is not in the source map&quot;);</span>
+<span class="s5">// Error: &quot;this is not in the source map&quot; is not in the source map</span>
+
+<span class="s5">consumer.sourceContentFor(&quot;this is not in the source map&quot;, true);</span>
+<span class="s5">// null</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceMapConsumer.prototype.eachMapping</span><span class="s1">(</span><span class="s2">callback, context, order</span><span class="s1">)</span>
+
+<span class="s2">Iterate over each mapping between an original source/line/column and a</span>
+<span class="s2">generated line/column in this source map.</span>
+
+<span class="s0">* </span><span class="s2">`callback`</span><span class="s1">: </span><span class="s2">The function that is called with each mapping. Mappings have the</span>
+  <span class="s2">form `{ source, generatedLine, generatedColumn, originalLine, originalColumn,</span>
+  <span class="s2">name }`</span>
+
+<span class="s0">* </span><span class="s2">`context`</span><span class="s1">: </span><span class="s2">Optional. If specified, this object will be the value of `this`</span>
+  <span class="s2">every time that `callback` is called.</span>
+
+<span class="s0">* </span><span class="s2">`order`</span><span class="s1">: </span><span class="s2">Either `SourceMapConsumer.GENERATED_ORDER` or</span>
+  <span class="s2">`SourceMapConsumer.ORIGINAL_ORDER`. Specifies whether you want to iterate over</span>
+  <span class="s2">the mappings sorted by the generated file's line/column order or the</span>
+  <span class="s2">original's source/line/column order, respectively. Defaults to</span>
+  <span class="s2">`SourceMapConsumer.GENERATED_ORDER`.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">consumer.eachMapping(function (m) { console.log(m); })</span>
+<span class="s5">// ...</span>
+<span class="s5">// { source: 'illmatic.js',</span>
+<span class="s5">//   generatedLine: 1,</span>
+<span class="s5">//   generatedColumn: 0,</span>
+<span class="s5">//   originalLine: 1,</span>
+<span class="s5">//   originalColumn: 0,</span>
+<span class="s5">//   name: null }</span>
+<span class="s5">// { source: 'illmatic.js',</span>
+<span class="s5">//   generatedLine: 2,</span>
+<span class="s5">//   generatedColumn: 0,</span>
+<span class="s5">//   originalLine: 2,</span>
+<span class="s5">//   originalColumn: 0,</span>
+<span class="s5">//   name: null }</span>
+<span class="s5">// ...</span>
+<span class="s0">```</span>
+<span class="s0">### </span><span class="s2">SourceMapGenerator</span>
+
+<span class="s2">An instance of the SourceMapGenerator represents a source map which is being</span>
+<span class="s2">built incrementally.</span>
+
+<span class="s0">#### </span><span class="s2">new SourceMapGenerator</span><span class="s1">([</span><span class="s2">startOfSourceMap</span><span class="s1">])</span>
+
+<span class="s2">You may pass an object with the following properties</span><span class="s1">:</span>
+
+<span class="s0">* </span><span class="s2">`file`</span><span class="s1">: </span><span class="s2">The filename of the generated source that this source map is</span>
+  <span class="s2">associated with.</span>
+
+<span class="s0">* </span><span class="s2">`sourceRoot`</span><span class="s1">: </span><span class="s2">A root for all relative URLs in this source map.</span>
+
+<span class="s0">* </span><span class="s2">`skipValidation`</span><span class="s1">: </span><span class="s2">Optional. When `true`, disables validation of mappings as</span>
+  <span class="s2">they are added. This can improve performance but should be used with</span>
+  <span class="s2">discretion, as a last resort. Even then, one should avoid using this flag when</span>
+  <span class="s2">running tests, if possible.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">var generator = new sourceMap.SourceMapGenerator({</span>
+  <span class="s5">file: &quot;my-generated-javascript-file.js&quot;,</span>
+  <span class="s5">sourceRoot: &quot;http://example.com/app/js/&quot;</span>
+<span class="s5">});</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceMapGenerator.fromSourceMap</span><span class="s1">(</span><span class="s2">sourceMapConsumer</span><span class="s1">)</span>
+
+<span class="s2">Creates a new `SourceMapGenerator` from an existing `SourceMapConsumer` instance.</span>
+
+<span class="s0">* </span><span class="s2">`sourceMapConsumer` The SourceMap.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">var generator = sourceMap.SourceMapGenerator.fromSourceMap(consumer);</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceMapGenerator.prototype.addMapping</span><span class="s1">(</span><span class="s2">mapping</span><span class="s1">)</span>
+
+<span class="s2">Add a single mapping from original source line and column to the generated</span>
+<span class="s2">source's line and column for this source map being created. The mapping object</span>
+<span class="s2">should have the following properties</span><span class="s1">:</span>
+
+<span class="s0">* </span><span class="s2">`generated`</span><span class="s1">: </span><span class="s2">An object with the generated line and column positions.</span>
+
+<span class="s0">* </span><span class="s2">`original`</span><span class="s1">: </span><span class="s2">An object with the original line and column positions.</span>
+
+<span class="s0">* </span><span class="s2">`source`</span><span class="s1">: </span><span class="s2">The original source file </span><span class="s1">(</span><span class="s2">relative to the sourceRoot</span><span class="s1">)</span><span class="s2">.</span>
+
+<span class="s0">* </span><span class="s2">`name`</span><span class="s1">: </span><span class="s2">An optional original token name for this mapping.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">generator.addMapping({</span>
+  <span class="s5">source: &quot;module-one.scm&quot;,</span>
+  <span class="s5">original: { line: 128, column: 0 },</span>
+  <span class="s5">generated: { line: 3, column: 456 }</span>
+<span class="s5">})</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceMapGenerator.prototype.setSourceContent</span><span class="s1">(</span><span class="s2">sourceFile, sourceContent</span><span class="s1">)</span>
+
+<span class="s2">Set the source content for an original source file.</span>
+
+<span class="s0">* </span><span class="s2">`sourceFile` the URL of the original source file.</span>
+
+<span class="s0">* </span><span class="s2">`sourceContent` the content of the source file.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">generator.setSourceContent(&quot;module-one.scm&quot;,</span>
+                           <span class="s5">fs.readFileSync(&quot;path/to/module-one.scm&quot;))</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceMapGenerator.prototype.applySourceMap</span><span class="s1">(</span><span class="s2">sourceMapConsumer</span><span class="s1">[</span><span class="s2">, sourceFile</span><span class="s1">[</span><span class="s2">, sourceMapPath</span><span class="s1">]])</span>
+
+<span class="s2">Applies a SourceMap for a source file to the SourceMap.</span>
+<span class="s2">Each mapping to the supplied source file is rewritten using the</span>
+<span class="s2">supplied SourceMap. Note</span><span class="s1">: </span><span class="s2">The resolution for the resulting mappings</span>
+<span class="s2">is the minimum of this map and the supplied map.</span>
+
+<span class="s0">* </span><span class="s2">`sourceMapConsumer`</span><span class="s1">: </span><span class="s2">The SourceMap to be applied.</span>
+
+<span class="s0">* </span><span class="s2">`sourceFile`</span><span class="s1">: </span><span class="s2">Optional. The filename of the source file.</span>
+  <span class="s2">If omitted, sourceMapConsumer.file will be used, if it exists.</span>
+  <span class="s2">Otherwise an error will be thrown.</span>
+
+<span class="s0">* </span><span class="s2">`sourceMapPath`</span><span class="s1">: </span><span class="s2">Optional. The dirname of the path to the SourceMap</span>
+  <span class="s2">to be applied. If relative, it is relative to the SourceMap.</span>
+
+  <span class="s2">This parameter is needed when the two SourceMaps aren't in the same</span>
+  <span class="s2">directory, and the SourceMap to be applied contains relative source</span>
+  <span class="s2">paths. If so, those relative source paths need to be rewritten</span>
+  <span class="s2">relative to the SourceMap.</span>
+
+  <span class="s2">If omitted, it is assumed that both SourceMaps are in the same directory,</span>
+  <span class="s2">thus not needing any rewriting. </span><span class="s1">(</span><span class="s2">Supplying `</span><span class="s1">'</span><span class="s2">.'` has the same effect.</span><span class="s1">)</span>
+
+<span class="s0">#### </span><span class="s2">SourceMapGenerator.prototype.toString</span><span class="s1">()</span>
+
+<span class="s2">Renders the source map being generated to a string.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">generator.toString()</span>
+<span class="s5">// '{&quot;version&quot;:3,&quot;sources&quot;:[&quot;module-one.scm&quot;],&quot;names&quot;:[],&quot;mappings&quot;:&quot;...snip...&quot;,&quot;file&quot;:&quot;my-generated-javascript-file.js&quot;,&quot;sourceRoot&quot;:&quot;http://example.com/app/js/&quot;}'</span>
+<span class="s0">```</span>
+
+<span class="s0">### </span><span class="s2">SourceNode</span>
+
+<span class="s2">SourceNodes provide a way to abstract over interpolating and/or concatenating</span>
+<span class="s2">snippets of generated JavaScript source code, while maintaining the line and</span>
+<span class="s2">column information associated between those snippets and the original source</span>
+<span class="s2">code. This is useful as the final intermediate representation a compiler might</span>
+<span class="s2">use before outputting the generated JS and source map.</span>
+
+<span class="s0">#### </span><span class="s2">new SourceNode</span><span class="s1">([</span><span class="s2">line, column, source</span><span class="s1">[</span><span class="s2">, chunk</span><span class="s1">[</span><span class="s2">, name</span><span class="s1">]]])</span>
+
+<span class="s0">* </span><span class="s2">`line`</span><span class="s1">: </span><span class="s2">The original line number associated with this source node, or null if</span>
+  <span class="s2">it isn't associated with an original line.  The line number is 1-based.</span>
+
+<span class="s0">* </span><span class="s2">`column`</span><span class="s1">: </span><span class="s2">The original column number associated with this source node, or null</span>
+  <span class="s2">if it isn't associated with an original column.  The column number</span>
+  <span class="s2">is 0-based.</span>
+
+<span class="s0">* </span><span class="s2">`source`</span><span class="s1">: </span><span class="s2">The original source's filename; null if no filename is provided.</span>
+
+<span class="s0">* </span><span class="s2">`chunk`</span><span class="s1">: </span><span class="s2">Optional. Is immediately passed to `SourceNode.prototype.add`, see</span>
+  <span class="s2">below.</span>
+
+<span class="s0">* </span><span class="s2">`name`</span><span class="s1">: </span><span class="s2">Optional. The original identifier.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">var node = new SourceNode(1, 2, &quot;a.cpp&quot;, [</span>
+  <span class="s5">new SourceNode(3, 4, &quot;b.cpp&quot;, &quot;extern int status;\n&quot;),</span>
+  <span class="s5">new SourceNode(5, 6, &quot;c.cpp&quot;, &quot;std::string* make_string(size_t n);\n&quot;),</span>
+  <span class="s5">new SourceNode(7, 8, &quot;d.cpp&quot;, &quot;int main(int argc, char** argv) {}\n&quot;),</span>
+<span class="s5">]);</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceNode.fromStringWithSourceMap</span><span class="s1">(</span><span class="s2">code, sourceMapConsumer</span><span class="s1">[</span><span class="s2">, relativePath</span><span class="s1">])</span>
+
+<span class="s2">Creates a SourceNode from generated code and a SourceMapConsumer.</span>
+
+<span class="s0">* </span><span class="s2">`code`</span><span class="s1">: </span><span class="s2">The generated code</span>
+
+<span class="s0">* </span><span class="s2">`sourceMapConsumer` The SourceMap for the generated code</span>
+
+<span class="s0">* </span><span class="s2">`relativePath` The optional path that relative sources in `sourceMapConsumer`</span>
+  <span class="s2">should be relative to.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">var consumer = new SourceMapConsumer(fs.readFileSync(&quot;path/to/my-file.js.map&quot;, &quot;utf8&quot;));</span>
+<span class="s5">var node = SourceNode.fromStringWithSourceMap(fs.readFileSync(&quot;path/to/my-file.js&quot;),</span>
+                                              <span class="s5">consumer);</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceNode.prototype.add</span><span class="s1">(</span><span class="s2">chunk</span><span class="s1">)</span>
+
+<span class="s2">Add a chunk of generated JS to this source node.</span>
+
+<span class="s0">* </span><span class="s2">`chunk`</span><span class="s1">: </span><span class="s2">A string snippet of generated JS code, another instance of</span>
+   <span class="s2">`SourceNode`, or an array where each member is one of those things.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">node.add(&quot; + &quot;);</span>
+<span class="s5">node.add(otherNode);</span>
+<span class="s5">node.add([leftHandOperandNode, &quot; + &quot;, rightHandOperandNode]);</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceNode.prototype.prepend</span><span class="s1">(</span><span class="s2">chunk</span><span class="s1">)</span>
+
+<span class="s2">Prepend a chunk of generated JS to this source node.</span>
+
+<span class="s0">* </span><span class="s2">`chunk`</span><span class="s1">: </span><span class="s2">A string snippet of generated JS code, another instance of</span>
+   <span class="s2">`SourceNode`, or an array where each member is one of those things.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">node.prepend(&quot;/** Build Id: f783haef86324gf **/\n\n&quot;);</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceNode.prototype.setSourceContent</span><span class="s1">(</span><span class="s2">sourceFile, sourceContent</span><span class="s1">)</span>
+
+<span class="s2">Set the source content for a source file. This will be added to the</span>
+<span class="s2">`SourceMap` in the `sourcesContent` field.</span>
+
+<span class="s0">* </span><span class="s2">`sourceFile`</span><span class="s1">: </span><span class="s2">The filename of the source file</span>
+
+<span class="s0">* </span><span class="s2">`sourceContent`</span><span class="s1">: </span><span class="s2">The content of the source file</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">node.setSourceContent(&quot;module-one.scm&quot;,</span>
+                      <span class="s5">fs.readFileSync(&quot;path/to/module-one.scm&quot;))</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceNode.prototype.walk</span><span class="s1">(</span><span class="s2">fn</span><span class="s1">)</span>
+
+<span class="s2">Walk over the tree of JS snippets in this node and its children. The walking</span>
+<span class="s2">function is called once for each snippet of JS and is passed that snippet and</span>
+<span class="s2">the its original associated source's line/column location.</span>
+
+<span class="s0">* </span><span class="s2">`fn`</span><span class="s1">: </span><span class="s2">The traversal function.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">var node = new SourceNode(1, 2, &quot;a.js&quot;, [</span>
+  <span class="s5">new SourceNode(3, 4, &quot;b.js&quot;, &quot;uno&quot;),</span>
+  <span class="s5">&quot;dos&quot;,</span>
+  <span class="s5">[</span>
+    <span class="s5">&quot;tres&quot;,</span>
+    <span class="s5">new SourceNode(5, 6, &quot;c.js&quot;, &quot;quatro&quot;)</span>
+  <span class="s5">]</span>
+<span class="s5">]);</span>
+
+<span class="s5">node.walk(function (code, loc) { console.log(&quot;WALK:&quot;, code, loc); })</span>
+<span class="s5">// WALK: uno { source: 'b.js', line: 3, column: 4, name: null }</span>
+<span class="s5">// WALK: dos { source: 'a.js', line: 1, column: 2, name: null }</span>
+<span class="s5">// WALK: tres { source: 'a.js', line: 1, column: 2, name: null }</span>
+<span class="s5">// WALK: quatro { source: 'c.js', line: 5, column: 6, name: null }</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceNode.prototype.walkSourceContents</span><span class="s1">(</span><span class="s2">fn</span><span class="s1">)</span>
+
+<span class="s2">Walk over the tree of SourceNodes. The walking function is called for each</span>
+<span class="s2">source file content and is passed the filename and source content.</span>
+
+<span class="s0">* </span><span class="s2">`fn`</span><span class="s1">: </span><span class="s2">The traversal function.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">var a = new SourceNode(1, 2, &quot;a.js&quot;, &quot;generated from a&quot;);</span>
+<span class="s5">a.setSourceContent(&quot;a.js&quot;, &quot;original a&quot;);</span>
+<span class="s5">var b = new SourceNode(1, 2, &quot;b.js&quot;, &quot;generated from b&quot;);</span>
+<span class="s5">b.setSourceContent(&quot;b.js&quot;, &quot;original b&quot;);</span>
+<span class="s5">var c = new SourceNode(1, 2, &quot;c.js&quot;, &quot;generated from c&quot;);</span>
+<span class="s5">c.setSourceContent(&quot;c.js&quot;, &quot;original c&quot;);</span>
+
+<span class="s5">var node = new SourceNode(null, null, null, [a, b, c]);</span>
+<span class="s5">node.walkSourceContents(function (source, contents) { console.log(&quot;WALK:&quot;, source, &quot;:&quot;, contents); })</span>
+<span class="s5">// WALK: a.js : original a</span>
+<span class="s5">// WALK: b.js : original b</span>
+<span class="s5">// WALK: c.js : original c</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceNode.prototype.join</span><span class="s1">(</span><span class="s2">sep</span><span class="s1">)</span>
+
+<span class="s2">Like `Array.prototype.join` except for SourceNodes. Inserts the separator</span>
+<span class="s2">between each of this source node's children.</span>
+
+<span class="s0">* </span><span class="s2">`sep`</span><span class="s1">: </span><span class="s2">The separator.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">var lhs = new SourceNode(1, 2, &quot;a.rs&quot;, &quot;my_copy&quot;);</span>
+<span class="s5">var operand = new SourceNode(3, 4, &quot;a.rs&quot;, &quot;=&quot;);</span>
+<span class="s5">var rhs = new SourceNode(5, 6, &quot;a.rs&quot;, &quot;orig.clone()&quot;);</span>
+
+<span class="s5">var node = new SourceNode(null, null, null, [ lhs, operand, rhs ]);</span>
+<span class="s5">var joinedNode = node.join(&quot; &quot;);</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceNode.prototype.replaceRight</span><span class="s1">(</span><span class="s2">pattern, replacement</span><span class="s1">)</span>
+
+<span class="s2">Call `String.prototype.replace` on the very right-most source snippet. Useful</span>
+<span class="s2">for trimming white space from the end of a source node, etc.</span>
+
+<span class="s0">* </span><span class="s2">`pattern`</span><span class="s1">: </span><span class="s2">The pattern to replace.</span>
+
+<span class="s0">* </span><span class="s2">`replacement`</span><span class="s1">: </span><span class="s2">The thing to replace the pattern with.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">// Trim trailing white space.</span>
+<span class="s5">node.replaceRight(/\s*$/, &quot;&quot;);</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceNode.prototype.toString</span><span class="s1">()</span>
+
+<span class="s2">Return the string representation of this source node. Walks over the tree and</span>
+<span class="s2">concatenates all the various snippets together to one string.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">var node = new SourceNode(1, 2, &quot;a.js&quot;, [</span>
+  <span class="s5">new SourceNode(3, 4, &quot;b.js&quot;, &quot;uno&quot;),</span>
+  <span class="s5">&quot;dos&quot;,</span>
+  <span class="s5">[</span>
+    <span class="s5">&quot;tres&quot;,</span>
+    <span class="s5">new SourceNode(5, 6, &quot;c.js&quot;, &quot;quatro&quot;)</span>
+  <span class="s5">]</span>
+<span class="s5">]);</span>
+
+<span class="s5">node.toString()</span>
+<span class="s5">// 'unodostresquatro'</span>
+<span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">SourceNode.prototype.toStringWithSourceMap</span><span class="s1">([</span><span class="s2">startOfSourceMap</span><span class="s1">])</span>
+
+<span class="s2">Returns the string representation of this tree of source nodes, plus a</span>
+<span class="s2">SourceMapGenerator which contains all the mappings between the generated and</span>
+<span class="s2">original sources.</span>
+
+<span class="s2">The arguments are the same as those to `new SourceMapGenerator`.</span>
+
+<span class="s0">```</span><span class="s6">js</span>
+<span class="s5">var node = new SourceNode(1, 2, &quot;a.js&quot;, [</span>
+  <span class="s5">new SourceNode(3, 4, &quot;b.js&quot;, &quot;uno&quot;),</span>
+  <span class="s5">&quot;dos&quot;,</span>
+  <span class="s5">[</span>
+    <span class="s5">&quot;tres&quot;,</span>
+    <span class="s5">new SourceNode(5, 6, &quot;c.js&quot;, &quot;quatro&quot;)</span>
+  <span class="s5">]</span>
+<span class="s5">]);</span>
+
+<span class="s5">node.toStringWithSourceMap({ file: &quot;my-output-file.js&quot; })</span>
+<span class="s5">// { code: 'unodostresquatro',</span>
+<span class="s5">//   map: [object SourceMapGenerator] }</span>
+<span class="s0">```</span>
+</pre>
+</body>
+</html>

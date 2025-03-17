@@ -1,0 +1,293 @@
+<html>
+<head>
+<title>SummaryReporter.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+SummaryReporter.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">Object.defineProperty(exports</span><span class="s1">, </span><span class="s0">'__esModule'</span><span class="s1">, </span><span class="s2">{</span>
+  <span class="s2">value: </span><span class="s3">true</span>
+<span class="s2">})</span><span class="s1">;</span>
+<span class="s2">exports.default = </span><span class="s3">void </span><span class="s4">0</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">_chalk() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'chalk'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_chalk = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestUtil() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestUtil = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">var </span><span class="s2">_BaseReporter = _interopRequireDefault(require(</span><span class="s0">'./BaseReporter'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_getResultHeader = _interopRequireDefault(require(</span><span class="s0">'./getResultHeader'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_getSnapshotSummary = _interopRequireDefault(</span>
+  <span class="s2">require(</span><span class="s0">'./getSnapshotSummary'</span><span class="s2">)</span>
+<span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_utils = require(</span><span class="s0">'./utils'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireDefault(obj) {</span>
+  <span class="s3">return </span><span class="s2">obj &amp;&amp; obj.__esModule ? obj : {</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_defineProperty(obj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">value) {</span>
+  <span class="s3">if </span><span class="s2">(key </span><span class="s3">in </span><span class="s2">obj) {</span>
+    <span class="s2">Object.defineProperty(obj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">value: value</span><span class="s1">,</span>
+      <span class="s2">enumerable: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">configurable: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">writable: </span><span class="s3">true</span>
+    <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s2">obj[key] = value</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">obj</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">const </span><span class="s2">TEST_SUMMARY_THRESHOLD = </span><span class="s4">20</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">NPM_EVENTS = </span><span class="s3">new </span><span class="s2">Set([</span>
+  <span class="s0">'prepublish'</span><span class="s1">,</span>
+  <span class="s0">'publish'</span><span class="s1">,</span>
+  <span class="s0">'postpublish'</span><span class="s1">,</span>
+  <span class="s0">'preinstall'</span><span class="s1">,</span>
+  <span class="s0">'install'</span><span class="s1">,</span>
+  <span class="s0">'postinstall'</span><span class="s1">,</span>
+  <span class="s0">'preuninstall'</span><span class="s1">,</span>
+  <span class="s0">'uninstall'</span><span class="s1">,</span>
+  <span class="s0">'postuninstall'</span><span class="s1">,</span>
+  <span class="s0">'preversion'</span><span class="s1">,</span>
+  <span class="s0">'version'</span><span class="s1">,</span>
+  <span class="s0">'postversion'</span><span class="s1">,</span>
+  <span class="s0">'pretest'</span><span class="s1">,</span>
+  <span class="s0">'test'</span><span class="s1">,</span>
+  <span class="s0">'posttest'</span><span class="s1">,</span>
+  <span class="s0">'prestop'</span><span class="s1">,</span>
+  <span class="s0">'stop'</span><span class="s1">,</span>
+  <span class="s0">'poststop'</span><span class="s1">,</span>
+  <span class="s0">'prestart'</span><span class="s1">,</span>
+  <span class="s0">'start'</span><span class="s1">,</span>
+  <span class="s0">'poststart'</span><span class="s1">,</span>
+  <span class="s0">'prerestart'</span><span class="s1">,</span>
+  <span class="s0">'restart'</span><span class="s1">,</span>
+  <span class="s0">'postrestart'</span>
+<span class="s2">])</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">{npm_config_user_agent</span><span class="s1">, </span><span class="s2">npm_lifecycle_event</span><span class="s1">, </span><span class="s2">npm_lifecycle_script} =</span>
+  <span class="s2">process.env</span><span class="s1">;</span>
+
+<span class="s3">class </span><span class="s2">SummaryReporter </span><span class="s3">extends </span><span class="s2">_BaseReporter.default {</span>
+  <span class="s2">constructor(globalConfig) {</span>
+    <span class="s3">super</span><span class="s2">()</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_estimatedTime'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_globalConfig'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._globalConfig = globalConfig</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._estimatedTime = </span><span class="s4">0</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s5">// If we write more than one character at a time it is possible that</span>
+  <span class="s5">// Node.js exits in the middle of printing the result. This was first observed</span>
+  <span class="s5">// in Node.js 0.10 and still persists in Node.js 6.7+.</span>
+  <span class="s5">// Let's print the test failure summary character by character which is safer</span>
+  <span class="s5">// when hundreds of tests are failing.</span>
+
+  <span class="s2">_write(string) {</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">let </span><span class="s2">i = </span><span class="s4">0</span><span class="s1">; </span><span class="s2">i &lt; string.length</span><span class="s1">; </span><span class="s2">i++) {</span>
+      <span class="s2">process.stderr.write(string.charAt(i))</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">onRunStart(aggregatedResults</span><span class="s1">, </span><span class="s2">options) {</span>
+    <span class="s3">super</span><span class="s2">.onRunStart(aggregatedResults</span><span class="s1">, </span><span class="s2">options)</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._estimatedTime = options.estimatedTime</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">onRunComplete(contexts</span><span class="s1">, </span><span class="s2">aggregatedResults) {</span>
+    <span class="s3">const </span><span class="s2">{numTotalTestSuites</span><span class="s1">, </span><span class="s2">testResults</span><span class="s1">, </span><span class="s2">wasInterrupted} = aggregatedResults</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(numTotalTestSuites) {</span>
+      <span class="s3">const </span><span class="s2">lastResult = testResults[testResults.length - </span><span class="s4">1</span><span class="s2">]</span><span class="s1">; </span><span class="s5">// Print a newline if the last test did not fail to line up newlines</span>
+      <span class="s5">// similar to when an error would have been thrown in the test.</span>
+
+      <span class="s3">if </span><span class="s2">(</span>
+        <span class="s2">!</span><span class="s3">this</span><span class="s2">._globalConfig.verbose &amp;&amp;</span>
+        <span class="s2">lastResult &amp;&amp;</span>
+        <span class="s2">!lastResult.numFailingTests &amp;&amp;</span>
+        <span class="s2">!lastResult.testExecError</span>
+      <span class="s2">) {</span>
+        <span class="s3">this</span><span class="s2">.log(</span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">this</span><span class="s2">._printSummary(aggregatedResults</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._globalConfig)</span><span class="s1">;</span>
+
+      <span class="s3">this</span><span class="s2">._printSnapshotSummary(</span>
+        <span class="s2">aggregatedResults.snapshot</span><span class="s1">,</span>
+        <span class="s3">this</span><span class="s2">._globalConfig</span>
+      <span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(numTotalTestSuites) {</span>
+        <span class="s3">let </span><span class="s2">message = (</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_utils.getSummary)(aggregatedResults</span><span class="s1">, </span><span class="s2">{</span>
+          <span class="s2">estimatedTime: </span><span class="s3">this</span><span class="s2">._estimatedTime</span>
+        <span class="s2">})</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(!</span><span class="s3">this</span><span class="s2">._globalConfig.silent) {</span>
+          <span class="s2">message +=</span>
+            <span class="s0">'</span><span class="s1">\n</span><span class="s0">' </span><span class="s2">+</span>
+            <span class="s2">(wasInterrupted</span>
+              <span class="s2">? _chalk().default.bold.red(</span><span class="s0">'Test run was interrupted.'</span><span class="s2">)</span>
+              <span class="s2">: </span><span class="s3">this</span><span class="s2">._getTestSummary(contexts</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._globalConfig))</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s3">this</span><span class="s2">.log(message)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_printSnapshotSummary(snapshots</span><span class="s1">, </span><span class="s2">globalConfig) {</span>
+    <span class="s3">if </span><span class="s2">(</span>
+      <span class="s2">snapshots.added ||</span>
+      <span class="s2">snapshots.filesRemoved ||</span>
+      <span class="s2">snapshots.unchecked ||</span>
+      <span class="s2">snapshots.unmatched ||</span>
+      <span class="s2">snapshots.updated</span>
+    <span class="s2">) {</span>
+      <span class="s3">let </span><span class="s2">updateCommand</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">event = npm_lifecycle_event || </span><span class="s0">''</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">prefix = NPM_EVENTS.has(event) ? </span><span class="s0">'' </span><span class="s2">: </span><span class="s0">'run '</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">isYarn =</span>
+        <span class="s3">typeof </span><span class="s2">npm_config_user_agent === </span><span class="s0">'string' </span><span class="s2">&amp;&amp;</span>
+        <span class="s2">npm_config_user_agent.includes(</span><span class="s0">'yarn'</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">client = isYarn ? </span><span class="s0">'yarn' </span><span class="s2">: </span><span class="s0">'npm'</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">scriptUsesJest =</span>
+        <span class="s3">typeof </span><span class="s2">npm_lifecycle_script === </span><span class="s0">'string' </span><span class="s2">&amp;&amp;</span>
+        <span class="s2">npm_lifecycle_script.includes(</span><span class="s0">'jest'</span><span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(globalConfig.watch || globalConfig.watchAll) {</span>
+        <span class="s2">updateCommand = </span><span class="s0">'press `u`'</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else if </span><span class="s2">(event &amp;&amp; scriptUsesJest) {</span>
+        <span class="s2">updateCommand = </span><span class="s0">`run </span><span class="s1">\`</span><span class="s2">${</span>
+          <span class="s2">client + </span><span class="s0">' ' </span><span class="s2">+ prefix + event + (isYarn ? </span><span class="s0">'' </span><span class="s2">: </span><span class="s0">' --'</span><span class="s2">)</span>
+        <span class="s2">} </span><span class="s0">-u</span><span class="s1">\`</span><span class="s0">`</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s2">updateCommand = </span><span class="s0">'re-run jest with `-u`'</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">const </span><span class="s2">snapshotSummary = (</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_getSnapshotSummary.default)(</span>
+        <span class="s2">snapshots</span><span class="s1">,</span>
+        <span class="s2">globalConfig</span><span class="s1">,</span>
+        <span class="s2">updateCommand</span>
+      <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">snapshotSummary.forEach(</span><span class="s3">this</span><span class="s2">.log)</span><span class="s1">;</span>
+      <span class="s3">this</span><span class="s2">.log(</span><span class="s0">''</span><span class="s2">)</span><span class="s1">; </span><span class="s5">// print empty line</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_printSummary(aggregatedResults</span><span class="s1">, </span><span class="s2">globalConfig) {</span>
+    <span class="s5">// If there were any failing tests and there was a large number of tests</span>
+    <span class="s5">// executed, re-print the failing results at the end of execution output.</span>
+    <span class="s3">const </span><span class="s2">failedTests = aggregatedResults.numFailedTests</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">runtimeErrors = aggregatedResults.numRuntimeErrorTestSuites</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span>
+      <span class="s2">failedTests + runtimeErrors &gt; </span><span class="s4">0 </span><span class="s2">&amp;&amp;</span>
+      <span class="s2">aggregatedResults.numTotalTestSuites &gt; TEST_SUMMARY_THRESHOLD</span>
+    <span class="s2">) {</span>
+      <span class="s3">this</span><span class="s2">.log(_chalk().default.bold(</span><span class="s0">'Summary of all failing tests'</span><span class="s2">))</span><span class="s1">;</span>
+      <span class="s2">aggregatedResults.testResults.forEach(testResult =&gt; {</span>
+        <span class="s3">const </span><span class="s2">{failureMessage} = testResult</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(failureMessage) {</span>
+          <span class="s3">this</span><span class="s2">._write(</span>
+            <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_getResultHeader.default)(testResult</span><span class="s1">, </span><span class="s2">globalConfig) +</span>
+              <span class="s0">'</span><span class="s1">\n</span><span class="s0">' </span><span class="s2">+</span>
+              <span class="s2">failureMessage +</span>
+              <span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span>
+          <span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+      <span class="s2">})</span><span class="s1">;</span>
+      <span class="s3">this</span><span class="s2">.log(</span><span class="s0">''</span><span class="s2">)</span><span class="s1">; </span><span class="s5">// print empty line</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_getTestSummary(contexts</span><span class="s1">, </span><span class="s2">globalConfig) {</span>
+    <span class="s3">const </span><span class="s2">getMatchingTestsInfo = () =&gt; {</span>
+      <span class="s3">const </span><span class="s2">prefix = globalConfig.findRelatedTests</span>
+        <span class="s2">? </span><span class="s0">' related to files matching '</span>
+        <span class="s2">: </span><span class="s0">' matching '</span><span class="s1">;</span>
+      <span class="s3">return </span><span class="s2">(</span>
+        <span class="s2">_chalk().default.dim(prefix) +</span>
+        <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_jestUtil().testPathPatternToRegExp)(</span>
+          <span class="s2">globalConfig.testPathPattern</span>
+        <span class="s2">).toString()</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">;</span>
+
+    <span class="s3">let </span><span class="s2">testInfo = </span><span class="s0">''</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(globalConfig.runTestsByPath) {</span>
+      <span class="s2">testInfo = _chalk().default.dim(</span><span class="s0">' within paths'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(globalConfig.onlyChanged) {</span>
+      <span class="s2">testInfo = _chalk().default.dim(</span><span class="s0">' related to changed files'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(globalConfig.testPathPattern) {</span>
+      <span class="s2">testInfo = getMatchingTestsInfo()</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">let </span><span class="s2">nameInfo = </span><span class="s0">''</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(globalConfig.runTestsByPath) {</span>
+      <span class="s2">nameInfo = </span><span class="s0">' ' </span><span class="s2">+ globalConfig.nonFlagArgs.map(p =&gt; </span><span class="s0">`&quot;</span><span class="s2">${p}</span><span class="s0">&quot;`</span><span class="s2">).join(</span><span class="s0">', '</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(globalConfig.testNamePattern) {</span>
+      <span class="s2">nameInfo =</span>
+        <span class="s2">_chalk().default.dim(</span><span class="s0">' with tests matching '</span><span class="s2">) +</span>
+        <span class="s0">`&quot;</span><span class="s2">${globalConfig.testNamePattern}</span><span class="s0">&quot;`</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">const </span><span class="s2">contextInfo =</span>
+      <span class="s2">contexts.size &gt; </span><span class="s4">1</span>
+        <span class="s2">? _chalk().default.dim(</span><span class="s0">' in '</span><span class="s2">) +</span>
+          <span class="s2">contexts.size +</span>
+          <span class="s2">_chalk().default.dim(</span><span class="s0">' projects'</span><span class="s2">)</span>
+        <span class="s2">: </span><span class="s0">''</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">(</span>
+      <span class="s2">_chalk().default.dim(</span><span class="s0">'Ran all test suites'</span><span class="s2">) +</span>
+      <span class="s2">testInfo +</span>
+      <span class="s2">nameInfo +</span>
+      <span class="s2">contextInfo +</span>
+      <span class="s2">_chalk().default.dim(</span><span class="s0">'.'</span><span class="s2">)</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s2">exports.default = SummaryReporter</span><span class="s1">;</span>
+
+<span class="s2">_defineProperty(SummaryReporter</span><span class="s1">, </span><span class="s0">'filename'</span><span class="s1">, </span><span class="s2">__filename)</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

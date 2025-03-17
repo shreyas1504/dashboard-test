@@ -1,0 +1,246 @@
+<html>
+<head>
+<title>browser-raw.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #808080;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #6897bb;}
+.s6 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+browser-raw.js</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;use strict&quot;</span><span class="s1">;</span>
+
+<span class="s3">// Use the fastest means possible to execute a task in its own turn, with</span>
+<span class="s3">// priority over other events including IO, animation, reflow, and redraw</span>
+<span class="s3">// events in browsers.</span>
+<span class="s3">//</span>
+<span class="s3">// An exception thrown by a task will permanently interrupt the processing of</span>
+<span class="s3">// subsequent tasks. The higher level `asap` function ensures that if an</span>
+<span class="s3">// exception is thrown by a task, that the task queue will continue flushing as</span>
+<span class="s3">// soon as possible, but if you use `rawAsap` directly, you are responsible to</span>
+<span class="s3">// either ensure that no exceptions are thrown from your task, or to manually</span>
+<span class="s3">// call `rawAsap.requestFlush` if an exception is thrown.</span>
+<span class="s2">module.exports = rawAsap</span><span class="s1">;</span>
+<span class="s4">function </span><span class="s2">rawAsap(task) {</span>
+    <span class="s4">if </span><span class="s2">(!queue.length) {</span>
+        <span class="s2">requestFlush()</span><span class="s1">;</span>
+        <span class="s2">flushing = </span><span class="s4">true</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s3">// Equivalent to push, but avoids a function call.</span>
+    <span class="s2">queue[queue.length] = task</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s4">var </span><span class="s2">queue = []</span><span class="s1">;</span>
+<span class="s3">// Once a flush has been requested, no further calls to `requestFlush` are</span>
+<span class="s3">// necessary until the next `flush` completes.</span>
+<span class="s4">var </span><span class="s2">flushing = </span><span class="s4">false</span><span class="s1">;</span>
+<span class="s3">// `requestFlush` is an implementation-specific method that attempts to kick</span>
+<span class="s3">// off a `flush` event as quickly as possible. `flush` will attempt to exhaust</span>
+<span class="s3">// the event queue before yielding to the browser's own event loop.</span>
+<span class="s4">var </span><span class="s2">requestFlush</span><span class="s1">;</span>
+<span class="s3">// The position of the next task to execute in the task queue. This is</span>
+<span class="s3">// preserved between calls to `flush` so that it can be resumed if</span>
+<span class="s3">// a task throws an exception.</span>
+<span class="s4">var </span><span class="s2">index = </span><span class="s5">0</span><span class="s1">;</span>
+<span class="s3">// If a task schedules additional tasks recursively, the task queue can grow</span>
+<span class="s3">// unbounded. To prevent memory exhaustion, the task queue will periodically</span>
+<span class="s3">// truncate already-completed tasks.</span>
+<span class="s4">var </span><span class="s2">capacity = </span><span class="s5">1024</span><span class="s1">;</span>
+
+<span class="s3">// The flush function processes all tasks that have been scheduled with</span>
+<span class="s3">// `rawAsap` unless and until one of those tasks throws an exception.</span>
+<span class="s3">// If a task throws an exception, `flush` ensures that its state will remain</span>
+<span class="s3">// consistent and will resume where it left off when called again.</span>
+<span class="s3">// However, `flush` does not make any arrangements to be called again if an</span>
+<span class="s3">// exception is thrown.</span>
+<span class="s4">function </span><span class="s2">flush() {</span>
+    <span class="s4">while </span><span class="s2">(index &lt; queue.length) {</span>
+        <span class="s4">var </span><span class="s2">currentIndex = index</span><span class="s1">;</span>
+        <span class="s3">// Advance the index before calling the task. This ensures that we will</span>
+        <span class="s3">// begin flushing on the next task the task throws an error.</span>
+        <span class="s2">index = index + </span><span class="s5">1</span><span class="s1">;</span>
+        <span class="s2">queue[currentIndex].call()</span><span class="s1">;</span>
+        <span class="s3">// Prevent leaking memory for long chains of recursive calls to `asap`.</span>
+        <span class="s3">// If we call `asap` within tasks scheduled by `asap`, the queue will</span>
+        <span class="s3">// grow, but to avoid an O(n) walk for every task we execute, we don't</span>
+        <span class="s3">// shift tasks off the queue after they have been executed.</span>
+        <span class="s3">// Instead, we periodically shift 1024 tasks off the queue.</span>
+        <span class="s4">if </span><span class="s2">(index &gt; capacity) {</span>
+            <span class="s3">// Manually shift all values starting at the index back to the</span>
+            <span class="s3">// beginning of the queue.</span>
+            <span class="s4">for </span><span class="s2">(</span><span class="s4">var </span><span class="s2">scan = </span><span class="s5">0</span><span class="s1">, </span><span class="s2">newLength = queue.length - index</span><span class="s1">; </span><span class="s2">scan &lt; newLength</span><span class="s1">; </span><span class="s2">scan++) {</span>
+                <span class="s2">queue[scan] = queue[scan + index]</span><span class="s1">;</span>
+            <span class="s2">}</span>
+            <span class="s2">queue.length -= index</span><span class="s1">;</span>
+            <span class="s2">index = </span><span class="s5">0</span><span class="s1">;</span>
+        <span class="s2">}</span>
+    <span class="s2">}</span>
+    <span class="s2">queue.length = </span><span class="s5">0</span><span class="s1">;</span>
+    <span class="s2">index = </span><span class="s5">0</span><span class="s1">;</span>
+    <span class="s2">flushing = </span><span class="s4">false</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">// `requestFlush` is implemented using a strategy based on data collected from</span>
+<span class="s3">// every available SauceLabs Selenium web driver worker at time of writing.</span>
+<span class="s3">// https://docs.google.com/spreadsheets/d/1mG-5UYGup5qxGdEMWkhP6BWCz053NUb2E1QoUTU16uA/edit#gid=783724593</span>
+
+<span class="s3">// Safari 6 and 6.1 for desktop, iPad, and iPhone are the only browsers that</span>
+<span class="s3">// have WebKitMutationObserver but not un-prefixed MutationObserver.</span>
+<span class="s3">// Must use `global` or `self` instead of `window` to work in both frames and web</span>
+<span class="s3">// workers. `global` is a provision of Browserify, Mr, Mrs, or Mop.</span>
+
+<span class="s6">/* globals self */</span>
+<span class="s4">var </span><span class="s2">scope = </span><span class="s4">typeof </span><span class="s2">global !== </span><span class="s0">&quot;undefined&quot; </span><span class="s2">? global : self</span><span class="s1">;</span>
+<span class="s4">var </span><span class="s2">BrowserMutationObserver = scope.MutationObserver || scope.WebKitMutationObserver</span><span class="s1">;</span>
+
+<span class="s3">// MutationObservers are desirable because they have high priority and work</span>
+<span class="s3">// reliably everywhere they are implemented.</span>
+<span class="s3">// They are implemented in all modern browsers.</span>
+<span class="s3">//</span>
+<span class="s3">// - Android 4-4.3</span>
+<span class="s3">// - Chrome 26-34</span>
+<span class="s3">// - Firefox 14-29</span>
+<span class="s3">// - Internet Explorer 11</span>
+<span class="s3">// - iPad Safari 6-7.1</span>
+<span class="s3">// - iPhone Safari 7-7.1</span>
+<span class="s3">// - Safari 6-7</span>
+<span class="s4">if </span><span class="s2">(</span><span class="s4">typeof </span><span class="s2">BrowserMutationObserver === </span><span class="s0">&quot;function&quot;</span><span class="s2">) {</span>
+    <span class="s2">requestFlush = makeRequestCallFromMutationObserver(flush)</span><span class="s1">;</span>
+
+<span class="s3">// MessageChannels are desirable because they give direct access to the HTML</span>
+<span class="s3">// task queue, are implemented in Internet Explorer 10, Safari 5.0-1, and Opera</span>
+<span class="s3">// 11-12, and in web workers in many engines.</span>
+<span class="s3">// Although message channels yield to any queued rendering and IO tasks, they</span>
+<span class="s3">// would be better than imposing the 4ms delay of timers.</span>
+<span class="s3">// However, they do not work reliably in Internet Explorer or Safari.</span>
+
+<span class="s3">// Internet Explorer 10 is the only browser that has setImmediate but does</span>
+<span class="s3">// not have MutationObservers.</span>
+<span class="s3">// Although setImmediate yields to the browser's renderer, it would be</span>
+<span class="s3">// preferrable to falling back to setTimeout since it does not have</span>
+<span class="s3">// the minimum 4ms penalty.</span>
+<span class="s3">// Unfortunately there appears to be a bug in Internet Explorer 10 Mobile (and</span>
+<span class="s3">// Desktop to a lesser extent) that renders both setImmediate and</span>
+<span class="s3">// MessageChannel useless for the purposes of ASAP.</span>
+<span class="s3">// https://github.com/kriskowal/q/issues/396</span>
+
+<span class="s3">// Timers are implemented universally.</span>
+<span class="s3">// We fall back to timers in workers in most engines, and in foreground</span>
+<span class="s3">// contexts in the following browsers.</span>
+<span class="s3">// However, note that even this simple case requires nuances to operate in a</span>
+<span class="s3">// broad spectrum of browsers.</span>
+<span class="s3">//</span>
+<span class="s3">// - Firefox 3-13</span>
+<span class="s3">// - Internet Explorer 6-9</span>
+<span class="s3">// - iPad Safari 4.3</span>
+<span class="s3">// - Lynx 2.8.7</span>
+<span class="s2">} </span><span class="s4">else </span><span class="s2">{</span>
+    <span class="s2">requestFlush = makeRequestCallFromTimer(flush)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">// `requestFlush` requests that the high priority event queue be flushed as</span>
+<span class="s3">// soon as possible.</span>
+<span class="s3">// This is useful to prevent an error thrown in a task from stalling the event</span>
+<span class="s3">// queue if the exception handled by Node.js’s</span>
+<span class="s3">// `process.on(&quot;uncaughtException&quot;)` or by a domain.</span>
+<span class="s2">rawAsap.requestFlush = requestFlush</span><span class="s1">;</span>
+
+<span class="s3">// To request a high priority event, we induce a mutation observer by toggling</span>
+<span class="s3">// the text of a text node between &quot;1&quot; and &quot;-1&quot;.</span>
+<span class="s4">function </span><span class="s2">makeRequestCallFromMutationObserver(callback) {</span>
+    <span class="s4">var </span><span class="s2">toggle = </span><span class="s5">1</span><span class="s1">;</span>
+    <span class="s4">var </span><span class="s2">observer = </span><span class="s4">new </span><span class="s2">BrowserMutationObserver(callback)</span><span class="s1">;</span>
+    <span class="s4">var </span><span class="s2">node = document.createTextNode(</span><span class="s0">&quot;&quot;</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">observer.observe(node</span><span class="s1">, </span><span class="s2">{characterData: </span><span class="s4">true</span><span class="s2">})</span><span class="s1">;</span>
+    <span class="s4">return function </span><span class="s2">requestCall() {</span>
+        <span class="s2">toggle = -toggle</span><span class="s1">;</span>
+        <span class="s2">node.data = toggle</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">// The message channel technique was discovered by Malte Ubl and was the</span>
+<span class="s3">// original foundation for this library.</span>
+<span class="s3">// http://www.nonblocking.io/2011/06/windownexttick.html</span>
+
+<span class="s3">// Safari 6.0.5 (at least) intermittently fails to create message ports on a</span>
+<span class="s3">// page's first load. Thankfully, this version of Safari supports</span>
+<span class="s3">// MutationObservers, so we don't need to fall back in that case.</span>
+
+<span class="s3">// function makeRequestCallFromMessageChannel(callback) {</span>
+<span class="s3">//     var channel = new MessageChannel();</span>
+<span class="s3">//     channel.port1.onmessage = callback;</span>
+<span class="s3">//     return function requestCall() {</span>
+<span class="s3">//         channel.port2.postMessage(0);</span>
+<span class="s3">//     };</span>
+<span class="s3">// }</span>
+
+<span class="s3">// For reasons explained above, we are also unable to use `setImmediate`</span>
+<span class="s3">// under any circumstances.</span>
+<span class="s3">// Even if we were, there is another bug in Internet Explorer 10.</span>
+<span class="s3">// It is not sufficient to assign `setImmediate` to `requestFlush` because</span>
+<span class="s3">// `setImmediate` must be called *by name* and therefore must be wrapped in a</span>
+<span class="s3">// closure.</span>
+<span class="s3">// Never forget.</span>
+
+<span class="s3">// function makeRequestCallFromSetImmediate(callback) {</span>
+<span class="s3">//     return function requestCall() {</span>
+<span class="s3">//         setImmediate(callback);</span>
+<span class="s3">//     };</span>
+<span class="s3">// }</span>
+
+<span class="s3">// Safari 6.0 has a problem where timers will get lost while the user is</span>
+<span class="s3">// scrolling. This problem does not impact ASAP because Safari 6.0 supports</span>
+<span class="s3">// mutation observers, so that implementation is used instead.</span>
+<span class="s3">// However, if we ever elect to use timers in Safari, the prevalent work-around</span>
+<span class="s3">// is to add a scroll event listener that calls for a flush.</span>
+
+<span class="s3">// `setTimeout` does not call the passed callback if the delay is less than</span>
+<span class="s3">// approximately 7 in web workers in Firefox 8 through 18, and sometimes not</span>
+<span class="s3">// even then.</span>
+
+<span class="s4">function </span><span class="s2">makeRequestCallFromTimer(callback) {</span>
+    <span class="s4">return function </span><span class="s2">requestCall() {</span>
+        <span class="s3">// We dispatch a timeout with a specified delay of 0 for engines that</span>
+        <span class="s3">// can reliably accommodate that request. This will usually be snapped</span>
+        <span class="s3">// to a 4 milisecond delay, but once we're flushing, there's no delay</span>
+        <span class="s3">// between events.</span>
+        <span class="s4">var </span><span class="s2">timeoutHandle = setTimeout(handleTimer</span><span class="s1">, </span><span class="s5">0</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s3">// However, since this timer gets frequently dropped in Firefox</span>
+        <span class="s3">// workers, we enlist an interval handle that will try to fire</span>
+        <span class="s3">// an event 20 times per second until it succeeds.</span>
+        <span class="s4">var </span><span class="s2">intervalHandle = setInterval(handleTimer</span><span class="s1">, </span><span class="s5">50</span><span class="s2">)</span><span class="s1">;</span>
+
+        <span class="s4">function </span><span class="s2">handleTimer() {</span>
+            <span class="s3">// Whichever timer succeeds will cancel both timers and</span>
+            <span class="s3">// execute the callback.</span>
+            <span class="s2">clearTimeout(timeoutHandle)</span><span class="s1">;</span>
+            <span class="s2">clearInterval(intervalHandle)</span><span class="s1">;</span>
+            <span class="s2">callback()</span><span class="s1">;</span>
+        <span class="s2">}</span>
+    <span class="s2">}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">// This is for `asap.js` only.</span>
+<span class="s3">// Its name will be periodically randomized to break any code that depends on</span>
+<span class="s3">// its existence.</span>
+<span class="s2">rawAsap.makeRequestCallFromTimer = makeRequestCallFromTimer</span><span class="s1">;</span>
+
+<span class="s3">// ASAP was originally a nextTick shim included in Q. This was factored out</span>
+<span class="s3">// into this ASAP package. It was later adapted to RSVP which made further</span>
+<span class="s3">// amendments. These decisions, particularly to marginalize MessageChannel and</span>
+<span class="s3">// to capture the MutationObserver implementation in a closure, were integrated</span>
+<span class="s3">// back into ASAP proper.</span>
+<span class="s3">// https://github.com/tildeio/rsvp.js/blob/cddf7232546a9cf858524b75cde6f9edf72620a7/lib/rsvp/asap.js</span>
+</pre>
+</body>
+</html>

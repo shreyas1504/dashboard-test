@@ -1,0 +1,43 @@
+<html>
+<head>
+<title>TestPathPattern.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a; font-style: italic;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #808080;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8ea765;}
+.s5 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+TestPathPattern.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">/**</span>
+ <span class="s0">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s0">*</span>
+ <span class="s0">* This source code is licensed under the MIT license found in the</span>
+ <span class="s0">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s0">*/</span>
+<span class="s2">/// &lt;reference types=&quot;node&quot; /&gt;</span>
+<span class="s3">import </span><span class="s1">type { Config } from </span><span class="s4">'@jest/types'</span><span class="s5">;</span>
+<span class="s3">import </span><span class="s1">{ BaseWatchPlugin</span><span class="s5">, </span><span class="s1">UpdateConfigCallback</span><span class="s5">, </span><span class="s1">UsageData } from </span><span class="s4">'jest-watcher'</span><span class="s5">;</span>
+<span class="s1">declare </span><span class="s3">class </span><span class="s1">TestPathPatternPlugin </span><span class="s3">extends </span><span class="s1">BaseWatchPlugin {</span>
+    <span class="s3">private </span><span class="s1">_prompt</span><span class="s5">;</span>
+    <span class="s1">isInternal: </span><span class="s3">true</span><span class="s5">;</span>
+    <span class="s1">constructor(options: {</span>
+        <span class="s1">stdin: NodeJS.ReadStream</span><span class="s5">;</span>
+        <span class="s1">stdout: NodeJS.WriteStream</span><span class="s5">;</span>
+    <span class="s1">})</span><span class="s5">;</span>
+    <span class="s1">getUsageInfo(): UsageData</span><span class="s5">;</span>
+    <span class="s1">onKey(key: string): </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">run(globalConfig: Config.GlobalConfig</span><span class="s5">, </span><span class="s1">updateConfigAndRun: UpdateConfigCallback): Promise&lt;</span><span class="s3">void</span><span class="s1">&gt;</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s3">export default </span><span class="s1">TestPathPatternPlugin</span><span class="s5">;</span>
+</pre>
+</body>
+</html>

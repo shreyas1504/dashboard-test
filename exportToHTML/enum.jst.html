@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>enum.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+enum.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+<span class="s0">{{# def.$data }}</span>
+
+<span class="s0">{{</span>
+  <span class="s0">var $i = 'i' + $lvl</span>
+    <span class="s0">, $vSchema = 'schema' + $lvl;</span>
+<span class="s0">}}</span>
+
+<span class="s0">{{? !$isData }}</span>
+  <span class="s0">var {{=$vSchema}} = validate.schema{{=$schemaPath}};</span>
+<span class="s0">{{?}}</span>
+<span class="s0">var {{=$valid}};</span>
+
+<span class="s0">{{?$isData}}{{# def.check$dataIsArray }}{{?}}</span>
+
+<span class="s0">{{=$valid}} = false;</span>
+
+<span class="s0">for (var {{=$i}}=0; {{=$i}}&lt;{{=$vSchema}}.length; {{=$i}}++)</span>
+  <span class="s0">if (equal({{=$data}}, {{=$vSchema}}[{{=$i}}])) {</span>
+    <span class="s0">{{=$valid}} = true;</span>
+    <span class="s0">break;</span>
+  <span class="s0">}</span>
+
+<span class="s0">{{? $isData }}  }  {{?}}</span>
+
+<span class="s0">{{# def.checkError:'enum' }}</span>
+
+<span class="s0">{{? $breakOnError }} else { {{?}}</span>
+</pre>
+</body>
+</html>

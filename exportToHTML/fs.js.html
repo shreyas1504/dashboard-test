@@ -1,0 +1,83 @@
+<html>
+<head>
+<title>fs.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #cc7832; font-weight: bold;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+fs.js</font>
+</center></td></tr></table>
+<pre>
+<span class="s1">var </span><span class="s0">Promise = require(</span><span class="s2">'any-promise'</span><span class="s0">)</span>
+<span class="s1">var </span><span class="s0">fs</span>
+<span class="s1">try </span><span class="s0">{</span>
+  <span class="s0">fs = require(</span><span class="s2">'graceful-fs'</span><span class="s0">)</span>
+<span class="s0">} </span><span class="s1">catch</span><span class="s0">(err) {</span>
+  <span class="s0">fs = require(</span><span class="s2">'fs'</span><span class="s0">)</span>
+<span class="s0">}</span>
+
+<span class="s1">var </span><span class="s0">api = [</span>
+  <span class="s2">'appendFile'</span><span class="s3">,</span>
+  <span class="s2">'chmod'</span><span class="s3">,</span>
+  <span class="s2">'chown'</span><span class="s3">,</span>
+  <span class="s2">'close'</span><span class="s3">,</span>
+  <span class="s2">'fchmod'</span><span class="s3">,</span>
+  <span class="s2">'fchown'</span><span class="s3">,</span>
+  <span class="s2">'fdatasync'</span><span class="s3">,</span>
+  <span class="s2">'fstat'</span><span class="s3">,</span>
+  <span class="s2">'fsync'</span><span class="s3">,</span>
+  <span class="s2">'ftruncate'</span><span class="s3">,</span>
+  <span class="s2">'futimes'</span><span class="s3">,</span>
+  <span class="s2">'lchown'</span><span class="s3">,</span>
+  <span class="s2">'link'</span><span class="s3">,</span>
+  <span class="s2">'lstat'</span><span class="s3">,</span>
+  <span class="s2">'mkdir'</span><span class="s3">,</span>
+  <span class="s2">'open'</span><span class="s3">,</span>
+  <span class="s2">'read'</span><span class="s3">,</span>
+  <span class="s2">'readFile'</span><span class="s3">,</span>
+  <span class="s2">'readdir'</span><span class="s3">,</span>
+  <span class="s2">'readlink'</span><span class="s3">,</span>
+  <span class="s2">'realpath'</span><span class="s3">,</span>
+  <span class="s2">'rename'</span><span class="s3">,</span>
+  <span class="s2">'rmdir'</span><span class="s3">,</span>
+  <span class="s2">'stat'</span><span class="s3">,</span>
+  <span class="s2">'symlink'</span><span class="s3">,</span>
+  <span class="s2">'truncate'</span><span class="s3">,</span>
+  <span class="s2">'unlink'</span><span class="s3">,</span>
+  <span class="s2">'utimes'</span><span class="s3">,</span>
+  <span class="s2">'write'</span><span class="s3">,</span>
+  <span class="s2">'writeFile'</span>
+<span class="s0">]</span>
+
+<span class="s1">typeof </span><span class="s0">fs.access === </span><span class="s2">'function' </span><span class="s0">&amp;&amp; api.push(</span><span class="s2">'access'</span><span class="s0">)</span>
+<span class="s1">typeof </span><span class="s0">fs.copyFile === </span><span class="s2">'function' </span><span class="s0">&amp;&amp; api.push(</span><span class="s2">'copyFile'</span><span class="s0">)</span>
+<span class="s1">typeof </span><span class="s0">fs.mkdtemp === </span><span class="s2">'function' </span><span class="s0">&amp;&amp; api.push(</span><span class="s2">'mkdtemp'</span><span class="s0">)</span>
+
+<span class="s0">require(</span><span class="s2">'thenify-all'</span><span class="s0">).withCallback(fs</span><span class="s3">, </span><span class="s0">exports</span><span class="s3">, </span><span class="s0">api)</span>
+
+<span class="s0">exports.exists = </span><span class="s1">function </span><span class="s0">(filename</span><span class="s3">, </span><span class="s0">callback) {</span>
+  <span class="s4">// callback</span>
+  <span class="s1">if </span><span class="s0">(</span><span class="s1">typeof </span><span class="s0">callback === </span><span class="s2">'function'</span><span class="s0">) {</span>
+    <span class="s1">return </span><span class="s0">fs.stat(filename</span><span class="s3">, </span><span class="s1">function </span><span class="s0">(err) {</span>
+      <span class="s0">callback(</span><span class="s1">null</span><span class="s3">, </span><span class="s0">!err)</span><span class="s3">;</span>
+    <span class="s0">})</span>
+  <span class="s0">}</span>
+  <span class="s4">// or promise</span>
+  <span class="s1">return new </span><span class="s0">Promise(</span><span class="s1">function </span><span class="s0">(resolve) {</span>
+    <span class="s0">fs.stat(filename</span><span class="s3">, </span><span class="s1">function </span><span class="s0">(err) {</span>
+      <span class="s0">resolve(!err)</span>
+    <span class="s0">})</span>
+  <span class="s0">})</span>
+<span class="s0">}</span>
+</pre>
+</body>
+</html>

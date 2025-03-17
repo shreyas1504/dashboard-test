@@ -1,0 +1,530 @@
+<html>
+<head>
+<title>ajv.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #6897bb;}
+.s7 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ajv.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">compileSchema = require(</span><span class="s0">'./compile'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">resolve = require(</span><span class="s0">'./compile/resolve'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">Cache = require(</span><span class="s0">'./cache'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">SchemaObject = require(</span><span class="s0">'./compile/schema_obj'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">stableStringify = require(</span><span class="s0">'fast-json-stable-stringify'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">formats = require(</span><span class="s0">'./compile/formats'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">rules = require(</span><span class="s0">'./compile/rules'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">$dataMetaSchema = require(</span><span class="s0">'./data'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">util = require(</span><span class="s0">'./compile/util'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s2">module.exports = Ajv</span><span class="s1">;</span>
+
+<span class="s2">Ajv.prototype.validate = validate</span><span class="s1">;</span>
+<span class="s2">Ajv.prototype.compile = compile</span><span class="s1">;</span>
+<span class="s2">Ajv.prototype.addSchema = addSchema</span><span class="s1">;</span>
+<span class="s2">Ajv.prototype.addMetaSchema = addMetaSchema</span><span class="s1">;</span>
+<span class="s2">Ajv.prototype.validateSchema = validateSchema</span><span class="s1">;</span>
+<span class="s2">Ajv.prototype.getSchema = getSchema</span><span class="s1">;</span>
+<span class="s2">Ajv.prototype.removeSchema = removeSchema</span><span class="s1">;</span>
+<span class="s2">Ajv.prototype.addFormat = addFormat</span><span class="s1">;</span>
+<span class="s2">Ajv.prototype.errorsText = errorsText</span><span class="s1">;</span>
+
+<span class="s2">Ajv.prototype._addSchema = _addSchema</span><span class="s1">;</span>
+<span class="s2">Ajv.prototype._compile = _compile</span><span class="s1">;</span>
+
+<span class="s2">Ajv.prototype.compileAsync = require(</span><span class="s0">'./compile/async'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">customKeyword = require(</span><span class="s0">'./keyword'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">Ajv.prototype.addKeyword = customKeyword.add</span><span class="s1">;</span>
+<span class="s2">Ajv.prototype.getKeyword = customKeyword.get</span><span class="s1">;</span>
+<span class="s2">Ajv.prototype.removeKeyword = customKeyword.remove</span><span class="s1">;</span>
+<span class="s2">Ajv.prototype.validateKeyword = customKeyword.validate</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">errorClasses = require(</span><span class="s0">'./compile/error_classes'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">Ajv.ValidationError = errorClasses.Validation</span><span class="s1">;</span>
+<span class="s2">Ajv.MissingRefError = errorClasses.MissingRef</span><span class="s1">;</span>
+<span class="s2">Ajv.$dataMetaSchema = $dataMetaSchema</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">META_SCHEMA_ID = </span><span class="s0">'http://json-schema.org/draft-07/schema'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">META_IGNORE_OPTIONS = [ </span><span class="s0">'removeAdditional'</span><span class="s1">, </span><span class="s0">'useDefaults'</span><span class="s1">, </span><span class="s0">'coerceTypes'</span><span class="s1">, </span><span class="s0">'strictDefaults' </span><span class="s2">]</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">META_SUPPORT_DATA = [</span><span class="s0">'/properties'</span><span class="s2">]</span><span class="s1">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Creates validator instance.</span>
+ <span class="s4">* Usage: `Ajv(opts)`</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} opts optional options</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Object} ajv instance</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">Ajv(opts) {</span>
+  <span class="s3">if </span><span class="s2">(!(</span><span class="s3">this instanceof </span><span class="s2">Ajv)) </span><span class="s3">return new </span><span class="s2">Ajv(opts)</span><span class="s1">;</span>
+  <span class="s2">opts = </span><span class="s3">this</span><span class="s2">._opts = util.copy(opts) || {}</span><span class="s1">;</span>
+  <span class="s2">setLogger(</span><span class="s3">this</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">._schemas = {}</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">._refs = {}</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">._fragments = {}</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">._formats = formats(opts.format)</span><span class="s1">;</span>
+
+  <span class="s3">this</span><span class="s2">._cache = opts.cache || </span><span class="s3">new </span><span class="s2">Cache</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">._loadingSchemas = {}</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">._compilations = []</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">.RULES = rules()</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">._getId = chooseGetId(opts)</span><span class="s1">;</span>
+
+  <span class="s2">opts.loopRequired = opts.loopRequired || Infinity</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(opts.errorDataPath == </span><span class="s0">'property'</span><span class="s2">) opts._errorDataPathProperty = </span><span class="s3">true</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(opts.serialize === undefined) opts.serialize = stableStringify</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">._metaOpts = getMetaSchemaOptions(</span><span class="s3">this</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(opts.formats) addInitialFormats(</span><span class="s3">this</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(opts.keywords) addInitialKeywords(</span><span class="s3">this</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">addDefaultMetaSchema(</span><span class="s3">this</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">opts.meta == </span><span class="s0">'object'</span><span class="s2">) </span><span class="s3">this</span><span class="s2">.addMetaSchema(opts.meta)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(opts.nullable) </span><span class="s3">this</span><span class="s2">.addKeyword(</span><span class="s0">'nullable'</span><span class="s1">, </span><span class="s2">{metaSchema: {type: </span><span class="s0">'boolean'</span><span class="s2">}})</span><span class="s1">;</span>
+  <span class="s2">addInitialSchemas(</span><span class="s3">this</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Validate data using schema</span>
+ <span class="s4">* Schema will be compiled and cached (using serialized JSON as key. [fast-json-stable-stringify](https://github.com/epoberezkin/fast-json-stable-stringify) is used to serialize.</span>
+ <span class="s4">* </span><span class="s5">@this   </span><span class="s4">Ajv</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{String|Object} schemaKeyRef key, ref or schema object</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{Any} data to be validated</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Boolean} validation result. Errors from the last validation will be available in `ajv.errors` (and also in compiled schema: `schema.errors`).</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">validate(schemaKeyRef</span><span class="s1">, </span><span class="s2">data) {</span>
+  <span class="s3">var </span><span class="s2">v</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">schemaKeyRef == </span><span class="s0">'string'</span><span class="s2">) {</span>
+    <span class="s2">v = </span><span class="s3">this</span><span class="s2">.getSchema(schemaKeyRef)</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(!v) </span><span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'no schema with key or ref &quot;' </span><span class="s2">+ schemaKeyRef + </span><span class="s0">'&quot;'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s3">var </span><span class="s2">schemaObj = </span><span class="s3">this</span><span class="s2">._addSchema(schemaKeyRef)</span><span class="s1">;</span>
+    <span class="s2">v = schemaObj.validate || </span><span class="s3">this</span><span class="s2">._compile(schemaObj)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">var </span><span class="s2">valid = v(data)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(v.$async !== </span><span class="s3">true</span><span class="s2">) </span><span class="s3">this</span><span class="s2">.errors = v.errors</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">valid</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Create validating function for passed schema.</span>
+ <span class="s4">* </span><span class="s5">@this   </span><span class="s4">Ajv</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{Object} schema schema object</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{Boolean} _meta true if schema is a meta-schema. Used internally to compile meta schemas of custom keywords.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Function} validating function</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">compile(schema</span><span class="s1">, </span><span class="s2">_meta) {</span>
+  <span class="s3">var </span><span class="s2">schemaObj = </span><span class="s3">this</span><span class="s2">._addSchema(schema</span><span class="s1">, </span><span class="s2">undefined</span><span class="s1">, </span><span class="s2">_meta)</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">schemaObj.validate || </span><span class="s3">this</span><span class="s2">._compile(schemaObj)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Adds schema to the instance.</span>
+ <span class="s4">* </span><span class="s5">@this   </span><span class="s4">Ajv</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object|Array} schema schema or array of schemas. If array is passed, `key` and other parameters will be ignored.</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String} key Optional schema key. Can be passed to `validate` method instead of schema object or id/ref. One schema per instance can have empty `id` and `key`.</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Boolean} _skipValidation true to skip schema validation. Used internally, option validateSchema should be used instead.</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Boolean} _meta true if schema is a meta-schema. Used internally, addMetaSchema should be used instead.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Ajv} this for method chaining</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">addSchema(schema</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">_skipValidation</span><span class="s1">, </span><span class="s2">_meta) {</span>
+  <span class="s3">if </span><span class="s2">(Array.isArray(schema)){</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i=</span><span class="s6">0</span><span class="s1">; </span><span class="s2">i&lt;schema.length</span><span class="s1">; </span><span class="s2">i++) </span><span class="s3">this</span><span class="s2">.addSchema(schema[i]</span><span class="s1">, </span><span class="s2">undefined</span><span class="s1">, </span><span class="s2">_skipValidation</span><span class="s1">, </span><span class="s2">_meta)</span><span class="s1">;</span>
+    <span class="s3">return this</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">id = </span><span class="s3">this</span><span class="s2">._getId(schema)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(id !== undefined &amp;&amp; </span><span class="s3">typeof </span><span class="s2">id != </span><span class="s0">'string'</span><span class="s2">)</span>
+    <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'schema id must be string'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">key = resolve.normalizeId(key || id)</span><span class="s1">;</span>
+  <span class="s2">checkUnique(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">key)</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">._schemas[key] = </span><span class="s3">this</span><span class="s2">._addSchema(schema</span><span class="s1">, </span><span class="s2">_skipValidation</span><span class="s1">, </span><span class="s2">_meta</span><span class="s1">, </span><span class="s3">true</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">return this</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Add schema that will be used to validate other schemas</span>
+ <span class="s4">* options in META_IGNORE_OPTIONS are alway set to false</span>
+ <span class="s4">* </span><span class="s5">@this   </span><span class="s4">Ajv</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} schema schema object</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String} key optional schema key</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Boolean} skipValidation true to skip schema validation, can be used to override validateSchema option for meta-schema</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Ajv} this for method chaining</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">addMetaSchema(schema</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">skipValidation) {</span>
+  <span class="s3">this</span><span class="s2">.addSchema(schema</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">skipValidation</span><span class="s1">, </span><span class="s3">true</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">return this</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Validate schema</span>
+ <span class="s4">* </span><span class="s5">@this   </span><span class="s4">Ajv</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} schema schema to validate</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Boolean} throwOrLogError pass true to throw (or log) an error if invalid</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Boolean} true if schema is valid</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">validateSchema(schema</span><span class="s1">, </span><span class="s2">throwOrLogError) {</span>
+  <span class="s3">var </span><span class="s2">$schema = schema.$schema</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">($schema !== undefined &amp;&amp; </span><span class="s3">typeof </span><span class="s2">$schema != </span><span class="s0">'string'</span><span class="s2">)</span>
+    <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'$schema must be a string'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">$schema = $schema || </span><span class="s3">this</span><span class="s2">._opts.defaultMeta || defaultMeta(</span><span class="s3">this</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(!$schema) {</span>
+    <span class="s3">this</span><span class="s2">.logger.warn(</span><span class="s0">'meta-schema not available'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.errors = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s3">return true</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">valid = </span><span class="s3">this</span><span class="s2">.validate($schema</span><span class="s1">, </span><span class="s2">schema)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(!valid &amp;&amp; throwOrLogError) {</span>
+    <span class="s3">var </span><span class="s2">message = </span><span class="s0">'schema is invalid: ' </span><span class="s2">+ </span><span class="s3">this</span><span class="s2">.errorsText()</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._opts.validateSchema == </span><span class="s0">'log'</span><span class="s2">) </span><span class="s3">this</span><span class="s2">.logger.error(message)</span><span class="s1">;</span>
+    <span class="s3">else throw new </span><span class="s2">Error(message)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">valid</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">defaultMeta(self) {</span>
+  <span class="s3">var </span><span class="s2">meta = self._opts.meta</span><span class="s1">;</span>
+  <span class="s2">self._opts.defaultMeta = </span><span class="s3">typeof </span><span class="s2">meta == </span><span class="s0">'object'</span>
+                            <span class="s2">? self._getId(meta) || meta</span>
+                            <span class="s2">: self.getSchema(META_SCHEMA_ID)</span>
+                              <span class="s2">? META_SCHEMA_ID</span>
+                              <span class="s2">: undefined</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">self._opts.defaultMeta</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Get compiled schema from the instance by `key` or `ref`.</span>
+ <span class="s4">* </span><span class="s5">@this   </span><span class="s4">Ajv</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{String} keyRef `key` that was passed to `addSchema` or full schema reference (`schema.id` or resolved id).</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Function} schema validating function (with property `schema`).</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">getSchema(keyRef) {</span>
+  <span class="s3">var </span><span class="s2">schemaObj = _getSchemaObj(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">keyRef)</span><span class="s1">;</span>
+  <span class="s3">switch </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">schemaObj) {</span>
+    <span class="s3">case </span><span class="s0">'object'</span><span class="s2">: </span><span class="s3">return </span><span class="s2">schemaObj.validate || </span><span class="s3">this</span><span class="s2">._compile(schemaObj)</span><span class="s1">;</span>
+    <span class="s3">case </span><span class="s0">'string'</span><span class="s2">: </span><span class="s3">return this</span><span class="s2">.getSchema(schemaObj)</span><span class="s1">;</span>
+    <span class="s3">case </span><span class="s0">'undefined'</span><span class="s2">: </span><span class="s3">return </span><span class="s2">_getSchemaFragment(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">keyRef)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">_getSchemaFragment(self</span><span class="s1">, </span><span class="s2">ref) {</span>
+  <span class="s3">var </span><span class="s2">res = resolve.schema.call(self</span><span class="s1">, </span><span class="s2">{ schema: {} }</span><span class="s1">, </span><span class="s2">ref)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(res) {</span>
+    <span class="s3">var </span><span class="s2">schema = res.schema</span>
+      <span class="s1">, </span><span class="s2">root = res.root</span>
+      <span class="s1">, </span><span class="s2">baseId = res.baseId</span><span class="s1">;</span>
+    <span class="s3">var </span><span class="s2">v = compileSchema.call(self</span><span class="s1">, </span><span class="s2">schema</span><span class="s1">, </span><span class="s2">root</span><span class="s1">, </span><span class="s2">undefined</span><span class="s1">, </span><span class="s2">baseId)</span><span class="s1">;</span>
+    <span class="s2">self._fragments[ref] = </span><span class="s3">new </span><span class="s2">SchemaObject({</span>
+      <span class="s2">ref: ref</span><span class="s1">,</span>
+      <span class="s2">fragment: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">schema: schema</span><span class="s1">,</span>
+      <span class="s2">root: root</span><span class="s1">,</span>
+      <span class="s2">baseId: baseId</span><span class="s1">,</span>
+      <span class="s2">validate: v</span>
+    <span class="s2">})</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">v</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">_getSchemaObj(self</span><span class="s1">, </span><span class="s2">keyRef) {</span>
+  <span class="s2">keyRef = resolve.normalizeId(keyRef)</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">self._schemas[keyRef] || self._refs[keyRef] || self._fragments[keyRef]</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Remove cached schema(s).</span>
+ <span class="s4">* If no parameter is passed all schemas but meta-schemas are removed.</span>
+ <span class="s4">* If RegExp is passed all schemas with key/id matching pattern but meta-schemas are removed.</span>
+ <span class="s4">* Even if schema is referenced by other schemas it still can be removed as other schemas have local references.</span>
+ <span class="s4">* </span><span class="s5">@this   </span><span class="s4">Ajv</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{String|Object|RegExp} schemaKeyRef key, ref, pattern to match key/ref or schema object</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Ajv} this for method chaining</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">removeSchema(schemaKeyRef) {</span>
+  <span class="s3">if </span><span class="s2">(schemaKeyRef </span><span class="s3">instanceof </span><span class="s2">RegExp) {</span>
+    <span class="s2">_removeAllSchemas(</span><span class="s3">this</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._schemas</span><span class="s1">, </span><span class="s2">schemaKeyRef)</span><span class="s1">;</span>
+    <span class="s2">_removeAllSchemas(</span><span class="s3">this</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._refs</span><span class="s1">, </span><span class="s2">schemaKeyRef)</span><span class="s1">;</span>
+    <span class="s3">return this</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">switch </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">schemaKeyRef) {</span>
+    <span class="s3">case </span><span class="s0">'undefined'</span><span class="s2">:</span>
+      <span class="s2">_removeAllSchemas(</span><span class="s3">this</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._schemas)</span><span class="s1">;</span>
+      <span class="s2">_removeAllSchemas(</span><span class="s3">this</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._refs)</span><span class="s1">;</span>
+      <span class="s3">this</span><span class="s2">._cache.clear()</span><span class="s1">;</span>
+      <span class="s3">return this</span><span class="s1">;</span>
+    <span class="s3">case </span><span class="s0">'string'</span><span class="s2">:</span>
+      <span class="s3">var </span><span class="s2">schemaObj = _getSchemaObj(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">schemaKeyRef)</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(schemaObj) </span><span class="s3">this</span><span class="s2">._cache.del(schemaObj.cacheKey)</span><span class="s1">;</span>
+      <span class="s3">delete this</span><span class="s2">._schemas[schemaKeyRef]</span><span class="s1">;</span>
+      <span class="s3">delete this</span><span class="s2">._refs[schemaKeyRef]</span><span class="s1">;</span>
+      <span class="s3">return this</span><span class="s1">;</span>
+    <span class="s3">case </span><span class="s0">'object'</span><span class="s2">:</span>
+      <span class="s3">var </span><span class="s2">serialize = </span><span class="s3">this</span><span class="s2">._opts.serialize</span><span class="s1">;</span>
+      <span class="s3">var </span><span class="s2">cacheKey = serialize ? serialize(schemaKeyRef) : schemaKeyRef</span><span class="s1">;</span>
+      <span class="s3">this</span><span class="s2">._cache.del(cacheKey)</span><span class="s1">;</span>
+      <span class="s3">var </span><span class="s2">id = </span><span class="s3">this</span><span class="s2">._getId(schemaKeyRef)</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(id) {</span>
+        <span class="s2">id = resolve.normalizeId(id)</span><span class="s1">;</span>
+        <span class="s3">delete this</span><span class="s2">._schemas[id]</span><span class="s1">;</span>
+        <span class="s3">delete this</span><span class="s2">._refs[id]</span><span class="s1">;</span>
+      <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s3">return this</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">_removeAllSchemas(self</span><span class="s1">, </span><span class="s2">schemas</span><span class="s1">, </span><span class="s2">regex) {</span>
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">keyRef </span><span class="s3">in </span><span class="s2">schemas) {</span>
+    <span class="s3">var </span><span class="s2">schemaObj = schemas[keyRef]</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(!schemaObj.meta &amp;&amp; (!regex || regex.test(keyRef))) {</span>
+      <span class="s2">self._cache.del(schemaObj.cacheKey)</span><span class="s1">;</span>
+      <span class="s3">delete </span><span class="s2">schemas[keyRef]</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+
+<span class="s7">/* @this   Ajv */</span>
+<span class="s3">function </span><span class="s2">_addSchema(schema</span><span class="s1">, </span><span class="s2">skipValidation</span><span class="s1">, </span><span class="s2">meta</span><span class="s1">, </span><span class="s2">shouldAddSchema) {</span>
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">schema != </span><span class="s0">'object' </span><span class="s2">&amp;&amp; </span><span class="s3">typeof </span><span class="s2">schema != </span><span class="s0">'boolean'</span><span class="s2">)</span>
+    <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'schema should be object or boolean'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">serialize = </span><span class="s3">this</span><span class="s2">._opts.serialize</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">cacheKey = serialize ? serialize(schema) : schema</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">cached = </span><span class="s3">this</span><span class="s2">._cache.get(cacheKey)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(cached) </span><span class="s3">return </span><span class="s2">cached</span><span class="s1">;</span>
+
+  <span class="s2">shouldAddSchema = shouldAddSchema || </span><span class="s3">this</span><span class="s2">._opts.addUsedSchema !== </span><span class="s3">false</span><span class="s1">;</span>
+
+  <span class="s3">var </span><span class="s2">id = resolve.normalizeId(</span><span class="s3">this</span><span class="s2">._getId(schema))</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(id &amp;&amp; shouldAddSchema) checkUnique(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">id)</span><span class="s1">;</span>
+
+  <span class="s3">var </span><span class="s2">willValidate = </span><span class="s3">this</span><span class="s2">._opts.validateSchema !== </span><span class="s3">false </span><span class="s2">&amp;&amp; !skipValidation</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">recursiveMeta</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(willValidate &amp;&amp; !(recursiveMeta = id &amp;&amp; id == resolve.normalizeId(schema.$schema)))</span>
+    <span class="s3">this</span><span class="s2">.validateSchema(schema</span><span class="s1">, </span><span class="s3">true</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s3">var </span><span class="s2">localRefs = resolve.ids.call(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">schema)</span><span class="s1">;</span>
+
+  <span class="s3">var </span><span class="s2">schemaObj = </span><span class="s3">new </span><span class="s2">SchemaObject({</span>
+    <span class="s2">id: id</span><span class="s1">,</span>
+    <span class="s2">schema: schema</span><span class="s1">,</span>
+    <span class="s2">localRefs: localRefs</span><span class="s1">,</span>
+    <span class="s2">cacheKey: cacheKey</span><span class="s1">,</span>
+    <span class="s2">meta: meta</span>
+  <span class="s2">})</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(id[</span><span class="s6">0</span><span class="s2">] != </span><span class="s0">'#' </span><span class="s2">&amp;&amp; shouldAddSchema) </span><span class="s3">this</span><span class="s2">._refs[id] = schemaObj</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">._cache.put(cacheKey</span><span class="s1">, </span><span class="s2">schemaObj)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(willValidate &amp;&amp; recursiveMeta) </span><span class="s3">this</span><span class="s2">.validateSchema(schema</span><span class="s1">, </span><span class="s3">true</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">schemaObj</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s7">/* @this   Ajv */</span>
+<span class="s3">function </span><span class="s2">_compile(schemaObj</span><span class="s1">, </span><span class="s2">root) {</span>
+  <span class="s3">if </span><span class="s2">(schemaObj.compiling) {</span>
+    <span class="s2">schemaObj.validate = callValidate</span><span class="s1">;</span>
+    <span class="s2">callValidate.schema = schemaObj.schema</span><span class="s1">;</span>
+    <span class="s2">callValidate.errors = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s2">callValidate.root = root ? root : callValidate</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(schemaObj.schema.$async === </span><span class="s3">true</span><span class="s2">)</span>
+      <span class="s2">callValidate.$async = </span><span class="s3">true</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">callValidate</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s2">schemaObj.compiling = </span><span class="s3">true</span><span class="s1">;</span>
+
+  <span class="s3">var </span><span class="s2">currentOpts</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(schemaObj.meta) {</span>
+    <span class="s2">currentOpts = </span><span class="s3">this</span><span class="s2">._opts</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._opts = </span><span class="s3">this</span><span class="s2">._metaOpts</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">var </span><span class="s2">v</span><span class="s1">;</span>
+  <span class="s3">try </span><span class="s2">{ v = compileSchema.call(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">schemaObj.schema</span><span class="s1">, </span><span class="s2">root</span><span class="s1">, </span><span class="s2">schemaObj.localRefs)</span><span class="s1">; </span><span class="s2">}</span>
+  <span class="s3">catch</span><span class="s2">(e) {</span>
+    <span class="s3">delete </span><span class="s2">schemaObj.validate</span><span class="s1">;</span>
+    <span class="s3">throw </span><span class="s2">e</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">finally </span><span class="s2">{</span>
+    <span class="s2">schemaObj.compiling = </span><span class="s3">false</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(schemaObj.meta) </span><span class="s3">this</span><span class="s2">._opts = currentOpts</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">schemaObj.validate = v</span><span class="s1">;</span>
+  <span class="s2">schemaObj.refs = v.refs</span><span class="s1">;</span>
+  <span class="s2">schemaObj.refVal = v.refVal</span><span class="s1">;</span>
+  <span class="s2">schemaObj.root = v.root</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">v</span><span class="s1">;</span>
+
+
+  <span class="s7">/* @this   {*} - custom context, see passContext option */</span>
+  <span class="s3">function </span><span class="s2">callValidate() {</span>
+    <span class="s7">/* jshint validthis: true */</span>
+    <span class="s3">var </span><span class="s2">_validate = schemaObj.validate</span><span class="s1">;</span>
+    <span class="s3">var </span><span class="s2">result = _validate.apply(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">arguments)</span><span class="s1">;</span>
+    <span class="s2">callValidate.errors = _validate.errors</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">result</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">chooseGetId(opts) {</span>
+  <span class="s3">switch </span><span class="s2">(opts.schemaId) {</span>
+    <span class="s3">case </span><span class="s0">'auto'</span><span class="s2">: </span><span class="s3">return </span><span class="s2">_get$IdOrId</span><span class="s1">;</span>
+    <span class="s3">case </span><span class="s0">'id'</span><span class="s2">: </span><span class="s3">return </span><span class="s2">_getId</span><span class="s1">;</span>
+    <span class="s3">default</span><span class="s2">: </span><span class="s3">return </span><span class="s2">_get$Id</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s7">/* @this   Ajv */</span>
+<span class="s3">function </span><span class="s2">_getId(schema) {</span>
+  <span class="s3">if </span><span class="s2">(schema.$id) </span><span class="s3">this</span><span class="s2">.logger.warn(</span><span class="s0">'schema $id ignored'</span><span class="s1">, </span><span class="s2">schema.$id)</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">schema.id</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s7">/* @this   Ajv */</span>
+<span class="s3">function </span><span class="s2">_get$Id(schema) {</span>
+  <span class="s3">if </span><span class="s2">(schema.id) </span><span class="s3">this</span><span class="s2">.logger.warn(</span><span class="s0">'schema id ignored'</span><span class="s1">, </span><span class="s2">schema.id)</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">schema.$id</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">_get$IdOrId(schema) {</span>
+  <span class="s3">if </span><span class="s2">(schema.$id &amp;&amp; schema.id &amp;&amp; schema.$id != schema.id)</span>
+    <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'schema $id is different from id'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">schema.$id || schema.id</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Convert array of error message objects to string</span>
+ <span class="s4">* </span><span class="s5">@this   </span><span class="s4">Ajv</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{Array&lt;Object&gt;} errors optional array of validation errors, if not passed errors from the instance are used.</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{Object} options optional options with properties `separator` and `dataVar`.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{String} human readable string with all errors descriptions</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">errorsText(errors</span><span class="s1">, </span><span class="s2">options) {</span>
+  <span class="s2">errors = errors || </span><span class="s3">this</span><span class="s2">.errors</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(!errors) </span><span class="s3">return </span><span class="s0">'No errors'</span><span class="s1">;</span>
+  <span class="s2">options = options || {}</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">separator = options.separator === undefined ? </span><span class="s0">', ' </span><span class="s2">: options.separator</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">dataVar = options.dataVar === undefined ? </span><span class="s0">'data' </span><span class="s2">: options.dataVar</span><span class="s1">;</span>
+
+  <span class="s3">var </span><span class="s2">text = </span><span class="s0">''</span><span class="s1">;</span>
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i=</span><span class="s6">0</span><span class="s1">; </span><span class="s2">i&lt;errors.length</span><span class="s1">; </span><span class="s2">i++) {</span>
+    <span class="s3">var </span><span class="s2">e = errors[i]</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(e) text += dataVar + e.dataPath + </span><span class="s0">' ' </span><span class="s2">+ e.message + separator</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">text.slice(</span><span class="s6">0</span><span class="s1">, </span><span class="s2">-separator.length)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Add custom format</span>
+ <span class="s4">* </span><span class="s5">@this   </span><span class="s4">Ajv</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String} name format name</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String|RegExp|Function} format string is converted to RegExp; function should return boolean (true when valid)</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Ajv} this for method chaining</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">addFormat(name</span><span class="s1">, </span><span class="s2">format) {</span>
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">format == </span><span class="s0">'string'</span><span class="s2">) format = </span><span class="s3">new </span><span class="s2">RegExp(format)</span><span class="s1">;</span>
+  <span class="s3">this</span><span class="s2">._formats[name] = format</span><span class="s1">;</span>
+  <span class="s3">return this</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">addDefaultMetaSchema(self) {</span>
+  <span class="s3">var </span><span class="s2">$dataSchema</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(self._opts.$data) {</span>
+    <span class="s2">$dataSchema = require(</span><span class="s0">'./refs/data.json'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">self.addMetaSchema($dataSchema</span><span class="s1">, </span><span class="s2">$dataSchema.$id</span><span class="s1">, </span><span class="s3">true</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">if </span><span class="s2">(self._opts.meta === </span><span class="s3">false</span><span class="s2">) </span><span class="s3">return</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">metaSchema = require(</span><span class="s0">'./refs/json-schema-draft-07.json'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(self._opts.$data) metaSchema = $dataMetaSchema(metaSchema</span><span class="s1">, </span><span class="s2">META_SUPPORT_DATA)</span><span class="s1">;</span>
+  <span class="s2">self.addMetaSchema(metaSchema</span><span class="s1">, </span><span class="s2">META_SCHEMA_ID</span><span class="s1">, </span><span class="s3">true</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">self._refs[</span><span class="s0">'http://json-schema.org/schema'</span><span class="s2">] = META_SCHEMA_ID</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">addInitialSchemas(self) {</span>
+  <span class="s3">var </span><span class="s2">optsSchemas = self._opts.schemas</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(!optsSchemas) </span><span class="s3">return</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(Array.isArray(optsSchemas)) self.addSchema(optsSchemas)</span><span class="s1">;</span>
+  <span class="s3">else for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">key </span><span class="s3">in </span><span class="s2">optsSchemas) self.addSchema(optsSchemas[key]</span><span class="s1">, </span><span class="s2">key)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">addInitialFormats(self) {</span>
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">name </span><span class="s3">in </span><span class="s2">self._opts.formats) {</span>
+    <span class="s3">var </span><span class="s2">format = self._opts.formats[name]</span><span class="s1">;</span>
+    <span class="s2">self.addFormat(name</span><span class="s1">, </span><span class="s2">format)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">addInitialKeywords(self) {</span>
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">name </span><span class="s3">in </span><span class="s2">self._opts.keywords) {</span>
+    <span class="s3">var </span><span class="s2">keyword = self._opts.keywords[name]</span><span class="s1">;</span>
+    <span class="s2">self.addKeyword(name</span><span class="s1">, </span><span class="s2">keyword)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">checkUnique(self</span><span class="s1">, </span><span class="s2">id) {</span>
+  <span class="s3">if </span><span class="s2">(self._schemas[id] || self._refs[id])</span>
+    <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'schema with key or id &quot;' </span><span class="s2">+ id + </span><span class="s0">'&quot; already exists'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">getMetaSchemaOptions(self) {</span>
+  <span class="s3">var </span><span class="s2">metaOpts = util.copy(self._opts)</span><span class="s1">;</span>
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i=</span><span class="s6">0</span><span class="s1">; </span><span class="s2">i&lt;META_IGNORE_OPTIONS.length</span><span class="s1">; </span><span class="s2">i++)</span>
+    <span class="s3">delete </span><span class="s2">metaOpts[META_IGNORE_OPTIONS[i]]</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">metaOpts</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">setLogger(self) {</span>
+  <span class="s3">var </span><span class="s2">logger = self._opts.logger</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(logger === </span><span class="s3">false</span><span class="s2">) {</span>
+    <span class="s2">self.logger = {log: noop</span><span class="s1">, </span><span class="s2">warn: noop</span><span class="s1">, </span><span class="s2">error: noop}</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s3">if </span><span class="s2">(logger === undefined) logger = console</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(!(</span><span class="s3">typeof </span><span class="s2">logger == </span><span class="s0">'object' </span><span class="s2">&amp;&amp; logger.log &amp;&amp; logger.warn &amp;&amp; logger.error))</span>
+      <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'logger must implement log, warn and error methods'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">self.logger = logger</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">noop() {}</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<html>
+<head>
+<title>wrap-idb-value.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #808080;}
+.s4 { color: #8ea765;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+wrap-idb-value.js</font>
+</center></td></tr></table>
+<pre><span class="s0">const </span><span class="s1">instanceOfAny = (object</span><span class="s2">, </span><span class="s1">constructors) =&gt; constructors.some((c) =&gt; object </span><span class="s0">instanceof </span><span class="s1">c)</span><span class="s2">;</span>
+
+<span class="s0">let </span><span class="s1">idbProxyableTypes</span><span class="s2">;</span>
+<span class="s0">let </span><span class="s1">cursorAdvanceMethods</span><span class="s2">;</span>
+<span class="s3">// This is a function to prevent it throwing up in node environments.</span>
+<span class="s0">function </span><span class="s1">getIdbProxyableTypes() {</span>
+    <span class="s0">return </span><span class="s1">(idbProxyableTypes ||</span>
+        <span class="s1">(idbProxyableTypes = [</span>
+            <span class="s1">IDBDatabase</span><span class="s2">,</span>
+            <span class="s1">IDBObjectStore</span><span class="s2">,</span>
+            <span class="s1">IDBIndex</span><span class="s2">,</span>
+            <span class="s1">IDBCursor</span><span class="s2">,</span>
+            <span class="s1">IDBTransaction</span><span class="s2">,</span>
+        <span class="s1">]))</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s3">// This is a function to prevent it throwing up in node environments.</span>
+<span class="s0">function </span><span class="s1">getCursorAdvanceMethods() {</span>
+    <span class="s0">return </span><span class="s1">(cursorAdvanceMethods ||</span>
+        <span class="s1">(cursorAdvanceMethods = [</span>
+            <span class="s1">IDBCursor.prototype.advance</span><span class="s2">,</span>
+            <span class="s1">IDBCursor.prototype.continue</span><span class="s2">,</span>
+            <span class="s1">IDBCursor.prototype.continuePrimaryKey</span><span class="s2">,</span>
+        <span class="s1">]))</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">const </span><span class="s1">cursorRequestMap = </span><span class="s0">new </span><span class="s1">WeakMap()</span><span class="s2">;</span>
+<span class="s0">const </span><span class="s1">transactionDoneMap = </span><span class="s0">new </span><span class="s1">WeakMap()</span><span class="s2">;</span>
+<span class="s0">const </span><span class="s1">transactionStoreNamesMap = </span><span class="s0">new </span><span class="s1">WeakMap()</span><span class="s2">;</span>
+<span class="s0">const </span><span class="s1">transformCache = </span><span class="s0">new </span><span class="s1">WeakMap()</span><span class="s2">;</span>
+<span class="s0">const </span><span class="s1">reverseTransformCache = </span><span class="s0">new </span><span class="s1">WeakMap()</span><span class="s2">;</span>
+<span class="s0">function </span><span class="s1">promisifyRequest(request) {</span>
+    <span class="s0">const </span><span class="s1">promise = </span><span class="s0">new </span><span class="s1">Promise((resolve</span><span class="s2">, </span><span class="s1">reject) =&gt; {</span>
+        <span class="s0">const </span><span class="s1">unlisten = () =&gt; {</span>
+            <span class="s1">request.removeEventListener(</span><span class="s4">'success'</span><span class="s2">, </span><span class="s1">success)</span><span class="s2">;</span>
+            <span class="s1">request.removeEventListener(</span><span class="s4">'error'</span><span class="s2">, </span><span class="s1">error)</span><span class="s2">;</span>
+        <span class="s1">}</span><span class="s2">;</span>
+        <span class="s0">const </span><span class="s1">success = () =&gt; {</span>
+            <span class="s1">resolve(wrap(request.result))</span><span class="s2">;</span>
+            <span class="s1">unlisten()</span><span class="s2">;</span>
+        <span class="s1">}</span><span class="s2">;</span>
+        <span class="s0">const </span><span class="s1">error = () =&gt; {</span>
+            <span class="s1">reject(request.error)</span><span class="s2">;</span>
+            <span class="s1">unlisten()</span><span class="s2">;</span>
+        <span class="s1">}</span><span class="s2">;</span>
+        <span class="s1">request.addEventListener(</span><span class="s4">'success'</span><span class="s2">, </span><span class="s1">success)</span><span class="s2">;</span>
+        <span class="s1">request.addEventListener(</span><span class="s4">'error'</span><span class="s2">, </span><span class="s1">error)</span><span class="s2">;</span>
+    <span class="s1">})</span><span class="s2">;</span>
+    <span class="s1">promise</span>
+        <span class="s1">.then((value) =&gt; {</span>
+        <span class="s3">// Since cursoring reuses the IDBRequest (*sigh*), we cache it for later retrieval</span>
+        <span class="s3">// (see wrapFunction).</span>
+        <span class="s0">if </span><span class="s1">(value </span><span class="s0">instanceof </span><span class="s1">IDBCursor) {</span>
+            <span class="s1">cursorRequestMap.set(value</span><span class="s2">, </span><span class="s1">request)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+        <span class="s3">// Catching to avoid &quot;Uncaught Promise exceptions&quot;</span>
+    <span class="s1">})</span>
+        <span class="s1">.catch(() =&gt; { })</span><span class="s2">;</span>
+    <span class="s3">// This mapping exists in reverseTransformCache but doesn't doesn't exist in transformCache. This</span>
+    <span class="s3">// is because we create many promises from a single IDBRequest.</span>
+    <span class="s1">reverseTransformCache.set(promise</span><span class="s2">, </span><span class="s1">request)</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">promise</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">function </span><span class="s1">cacheDonePromiseForTransaction(tx) {</span>
+    <span class="s3">// Early bail if we've already created a done promise for this transaction.</span>
+    <span class="s0">if </span><span class="s1">(transactionDoneMap.has(tx))</span>
+        <span class="s0">return</span><span class="s2">;</span>
+    <span class="s0">const </span><span class="s1">done = </span><span class="s0">new </span><span class="s1">Promise((resolve</span><span class="s2">, </span><span class="s1">reject) =&gt; {</span>
+        <span class="s0">const </span><span class="s1">unlisten = () =&gt; {</span>
+            <span class="s1">tx.removeEventListener(</span><span class="s4">'complete'</span><span class="s2">, </span><span class="s1">complete)</span><span class="s2">;</span>
+            <span class="s1">tx.removeEventListener(</span><span class="s4">'error'</span><span class="s2">, </span><span class="s1">error)</span><span class="s2">;</span>
+            <span class="s1">tx.removeEventListener(</span><span class="s4">'abort'</span><span class="s2">, </span><span class="s1">error)</span><span class="s2">;</span>
+        <span class="s1">}</span><span class="s2">;</span>
+        <span class="s0">const </span><span class="s1">complete = () =&gt; {</span>
+            <span class="s1">resolve()</span><span class="s2">;</span>
+            <span class="s1">unlisten()</span><span class="s2">;</span>
+        <span class="s1">}</span><span class="s2">;</span>
+        <span class="s0">const </span><span class="s1">error = () =&gt; {</span>
+            <span class="s1">reject(tx.error || </span><span class="s0">new </span><span class="s1">DOMException(</span><span class="s4">'AbortError'</span><span class="s2">, </span><span class="s4">'AbortError'</span><span class="s1">))</span><span class="s2">;</span>
+            <span class="s1">unlisten()</span><span class="s2">;</span>
+        <span class="s1">}</span><span class="s2">;</span>
+        <span class="s1">tx.addEventListener(</span><span class="s4">'complete'</span><span class="s2">, </span><span class="s1">complete)</span><span class="s2">;</span>
+        <span class="s1">tx.addEventListener(</span><span class="s4">'error'</span><span class="s2">, </span><span class="s1">error)</span><span class="s2">;</span>
+        <span class="s1">tx.addEventListener(</span><span class="s4">'abort'</span><span class="s2">, </span><span class="s1">error)</span><span class="s2">;</span>
+    <span class="s1">})</span><span class="s2">;</span>
+    <span class="s3">// Cache it for later retrieval.</span>
+    <span class="s1">transactionDoneMap.set(tx</span><span class="s2">, </span><span class="s1">done)</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">let </span><span class="s1">idbProxyTraps = {</span>
+    <span class="s1">get(target</span><span class="s2">, </span><span class="s1">prop</span><span class="s2">, </span><span class="s1">receiver) {</span>
+        <span class="s0">if </span><span class="s1">(target </span><span class="s0">instanceof </span><span class="s1">IDBTransaction) {</span>
+            <span class="s3">// Special handling for transaction.done.</span>
+            <span class="s0">if </span><span class="s1">(prop === </span><span class="s4">'done'</span><span class="s1">)</span>
+                <span class="s0">return </span><span class="s1">transactionDoneMap.get(target)</span><span class="s2">;</span>
+            <span class="s3">// Polyfill for objectStoreNames because of Edge.</span>
+            <span class="s0">if </span><span class="s1">(prop === </span><span class="s4">'objectStoreNames'</span><span class="s1">) {</span>
+                <span class="s0">return </span><span class="s1">target.objectStoreNames || transactionStoreNamesMap.get(target)</span><span class="s2">;</span>
+            <span class="s1">}</span>
+            <span class="s3">// Make tx.store return the only store in the transaction, or undefined if there are many.</span>
+            <span class="s0">if </span><span class="s1">(prop === </span><span class="s4">'store'</span><span class="s1">) {</span>
+                <span class="s0">return </span><span class="s1">receiver.objectStoreNames[</span><span class="s5">1</span><span class="s1">]</span>
+                    <span class="s1">? undefined</span>
+                    <span class="s1">: receiver.objectStore(receiver.objectStoreNames[</span><span class="s5">0</span><span class="s1">])</span><span class="s2">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s3">// Else transform whatever we get back.</span>
+        <span class="s0">return </span><span class="s1">wrap(target[prop])</span><span class="s2">;</span>
+    <span class="s1">}</span><span class="s2">,</span>
+    <span class="s1">set(target</span><span class="s2">, </span><span class="s1">prop</span><span class="s2">, </span><span class="s1">value) {</span>
+        <span class="s1">target[prop] = value</span><span class="s2">;</span>
+        <span class="s0">return true</span><span class="s2">;</span>
+    <span class="s1">}</span><span class="s2">,</span>
+    <span class="s1">has(target</span><span class="s2">, </span><span class="s1">prop) {</span>
+        <span class="s0">if </span><span class="s1">(target </span><span class="s0">instanceof </span><span class="s1">IDBTransaction &amp;&amp;</span>
+            <span class="s1">(prop === </span><span class="s4">'done' </span><span class="s1">|| prop === </span><span class="s4">'store'</span><span class="s1">)) {</span>
+            <span class="s0">return true</span><span class="s2">;</span>
+        <span class="s1">}</span>
+        <span class="s0">return </span><span class="s1">prop </span><span class="s0">in </span><span class="s1">target</span><span class="s2">;</span>
+    <span class="s1">}</span><span class="s2">,</span>
+<span class="s1">}</span><span class="s2">;</span>
+<span class="s0">function </span><span class="s1">replaceTraps(callback) {</span>
+    <span class="s1">idbProxyTraps = callback(idbProxyTraps)</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">function </span><span class="s1">wrapFunction(func) {</span>
+    <span class="s3">// Due to expected object equality (which is enforced by the caching in `wrap`), we</span>
+    <span class="s3">// only create one new func per func.</span>
+    <span class="s3">// Edge doesn't support objectStoreNames (booo), so we polyfill it here.</span>
+    <span class="s0">if </span><span class="s1">(func === IDBDatabase.prototype.transaction &amp;&amp;</span>
+        <span class="s1">!(</span><span class="s4">'objectStoreNames' </span><span class="s0">in </span><span class="s1">IDBTransaction.prototype)) {</span>
+        <span class="s0">return function </span><span class="s1">(storeNames</span><span class="s2">, </span><span class="s1">...args) {</span>
+            <span class="s0">const </span><span class="s1">tx = func.call(unwrap(</span><span class="s0">this</span><span class="s1">)</span><span class="s2">, </span><span class="s1">storeNames</span><span class="s2">, </span><span class="s1">...args)</span><span class="s2">;</span>
+            <span class="s1">transactionStoreNamesMap.set(tx</span><span class="s2">, </span><span class="s1">storeNames.sort ? storeNames.sort() : [storeNames])</span><span class="s2">;</span>
+            <span class="s0">return </span><span class="s1">wrap(tx)</span><span class="s2">;</span>
+        <span class="s1">}</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s3">// Cursor methods are special, as the behaviour is a little more different to standard IDB. In</span>
+    <span class="s3">// IDB, you advance the cursor and wait for a new 'success' on the IDBRequest that gave you the</span>
+    <span class="s3">// cursor. It's kinda like a promise that can resolve with many values. That doesn't make sense</span>
+    <span class="s3">// with real promises, so each advance methods returns a new promise for the cursor object, or</span>
+    <span class="s3">// undefined if the end of the cursor has been reached.</span>
+    <span class="s0">if </span><span class="s1">(getCursorAdvanceMethods().includes(func)) {</span>
+        <span class="s0">return function </span><span class="s1">(...args) {</span>
+            <span class="s3">// Calling the original function with the proxy as 'this' causes ILLEGAL INVOCATION, so we use</span>
+            <span class="s3">// the original object.</span>
+            <span class="s1">func.apply(unwrap(</span><span class="s0">this</span><span class="s1">)</span><span class="s2">, </span><span class="s1">args)</span><span class="s2">;</span>
+            <span class="s0">return </span><span class="s1">wrap(cursorRequestMap.get(</span><span class="s0">this</span><span class="s1">))</span><span class="s2">;</span>
+        <span class="s1">}</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s0">return function </span><span class="s1">(...args) {</span>
+        <span class="s3">// Calling the original function with the proxy as 'this' causes ILLEGAL INVOCATION, so we use</span>
+        <span class="s3">// the original object.</span>
+        <span class="s0">return </span><span class="s1">wrap(func.apply(unwrap(</span><span class="s0">this</span><span class="s1">)</span><span class="s2">, </span><span class="s1">args))</span><span class="s2">;</span>
+    <span class="s1">}</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">function </span><span class="s1">transformCachableValue(value) {</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">value === </span><span class="s4">'function'</span><span class="s1">)</span>
+        <span class="s0">return </span><span class="s1">wrapFunction(value)</span><span class="s2">;</span>
+    <span class="s3">// This doesn't return, it just creates a 'done' promise for the transaction,</span>
+    <span class="s3">// which is later returned for transaction.done (see idbObjectHandler).</span>
+    <span class="s0">if </span><span class="s1">(value </span><span class="s0">instanceof </span><span class="s1">IDBTransaction)</span>
+        <span class="s1">cacheDonePromiseForTransaction(value)</span><span class="s2">;</span>
+    <span class="s0">if </span><span class="s1">(instanceOfAny(value</span><span class="s2">, </span><span class="s1">getIdbProxyableTypes()))</span>
+        <span class="s0">return new </span><span class="s1">Proxy(value</span><span class="s2">, </span><span class="s1">idbProxyTraps)</span><span class="s2">;</span>
+    <span class="s3">// Return the same value back if we're not going to transform it.</span>
+    <span class="s0">return </span><span class="s1">value</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">function </span><span class="s1">wrap(value) {</span>
+    <span class="s3">// We sometimes generate multiple promises from a single IDBRequest (eg when cursoring), because</span>
+    <span class="s3">// IDB is weird and a single IDBRequest can yield many responses, so these can't be cached.</span>
+    <span class="s0">if </span><span class="s1">(value </span><span class="s0">instanceof </span><span class="s1">IDBRequest)</span>
+        <span class="s0">return </span><span class="s1">promisifyRequest(value)</span><span class="s2">;</span>
+    <span class="s3">// If we've already transformed this value before, reuse the transformed value.</span>
+    <span class="s3">// This is faster, but it also provides object equality.</span>
+    <span class="s0">if </span><span class="s1">(transformCache.has(value))</span>
+        <span class="s0">return </span><span class="s1">transformCache.get(value)</span><span class="s2">;</span>
+    <span class="s0">const </span><span class="s1">newValue = transformCachableValue(value)</span><span class="s2">;</span>
+    <span class="s3">// Not all types are transformed.</span>
+    <span class="s3">// These may be primitive types, so they can't be WeakMap keys.</span>
+    <span class="s0">if </span><span class="s1">(newValue !== value) {</span>
+        <span class="s1">transformCache.set(value</span><span class="s2">, </span><span class="s1">newValue)</span><span class="s2">;</span>
+        <span class="s1">reverseTransformCache.set(newValue</span><span class="s2">, </span><span class="s1">value)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s0">return </span><span class="s1">newValue</span><span class="s2">;</span>
+<span class="s1">}</span>
+<span class="s0">const </span><span class="s1">unwrap = (value) =&gt; reverseTransformCache.get(value)</span><span class="s2">;</span>
+
+<span class="s0">export </span><span class="s1">{ reverseTransformCache as a</span><span class="s2">, </span><span class="s1">instanceOfAny as i</span><span class="s2">, </span><span class="s1">replaceTraps as r</span><span class="s2">, </span><span class="s1">unwrap as u</span><span class="s2">, </span><span class="s1">wrap as w }</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

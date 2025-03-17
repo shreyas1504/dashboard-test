@@ -1,0 +1,604 @@
+<html>
+<head>
+<title>coa.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #6897bb;}
+.s6 { color: #8a8a8a; font-style: italic;}
+.s7 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s8 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+coa.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* jshint quotmark: false */</span>
+<span class="s2">'use strict'</span><span class="s3">;</span>
+
+<span class="s4">var </span><span class="s1">FS = require(</span><span class="s2">'fs'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">PATH = require(</span><span class="s2">'path'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">chalk = require(</span><span class="s2">'chalk'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">mkdirp = require(</span><span class="s2">'mkdirp'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">promisify = require(</span><span class="s2">'util.promisify'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">readdir = promisify(FS.readdir)</span><span class="s3">,</span>
+    <span class="s1">readFile = promisify(FS.readFile)</span><span class="s3">,</span>
+    <span class="s1">writeFile = promisify(FS.writeFile)</span><span class="s3">,</span>
+    <span class="s1">SVGO = require(</span><span class="s2">'../svgo.js'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">YAML = require(</span><span class="s2">'js-yaml'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">PKG = require(</span><span class="s2">'../../package.json'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">encodeSVGDatauri = require(</span><span class="s2">'./tools.js'</span><span class="s1">).encodeSVGDatauri</span><span class="s3">,</span>
+    <span class="s1">decodeSVGDatauri = require(</span><span class="s2">'./tools.js'</span><span class="s1">).decodeSVGDatauri</span><span class="s3">,</span>
+    <span class="s1">checkIsDir = require(</span><span class="s2">'./tools.js'</span><span class="s1">).checkIsDir</span><span class="s3">,</span>
+    <span class="s1">regSVGFile = </span><span class="s5">/\.svg$/</span><span class="s3">,</span>
+    <span class="s1">noop = () =&gt; {}</span><span class="s3">,</span>
+    <span class="s1">svgo</span><span class="s3">;</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Command-Option-Argument.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@see </span><span class="s6">https://github.com/veged/coa</span>
+ <span class="s6">*/</span>
+<span class="s1">module.exports = require(</span><span class="s2">'coa'</span><span class="s1">).Cmd()</span>
+    <span class="s1">.helpful()</span>
+    <span class="s1">.name(PKG.name)</span>
+    <span class="s1">.title(PKG.description)</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'version'</span><span class="s1">).title(</span><span class="s2">'Version'</span><span class="s1">)</span>
+        <span class="s1">.short(</span><span class="s2">'v'</span><span class="s1">).long(</span><span class="s2">'version'</span><span class="s1">)</span>
+        <span class="s1">.only()</span>
+        <span class="s1">.flag()</span>
+        <span class="s1">.act(</span><span class="s4">function</span><span class="s1">() {</span>
+            <span class="s8">// output the version to stdout instead of stderr if returned</span>
+            <span class="s1">process.stdout.write(PKG.version + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s8">// coa will run `.toString` on the returned value and send it to stderr</span>
+            <span class="s4">return </span><span class="s2">''</span><span class="s3">;</span>
+        <span class="s1">})</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'input'</span><span class="s1">).title(</span><span class="s2">'Input file, &quot;-&quot; for STDIN'</span><span class="s1">)</span>
+        <span class="s1">.short(</span><span class="s2">'i'</span><span class="s1">).long(</span><span class="s2">'input'</span><span class="s1">)</span>
+        <span class="s1">.arr()</span>
+        <span class="s1">.val(</span><span class="s4">function</span><span class="s1">(val) {</span>
+            <span class="s4">return </span><span class="s1">val || </span><span class="s4">this</span><span class="s1">.reject(</span><span class="s2">&quot;Option '--input' must have a value.&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">})</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'string'</span><span class="s1">).title(</span><span class="s2">'Input SVG data string'</span><span class="s1">)</span>
+        <span class="s1">.short(</span><span class="s2">'s'</span><span class="s1">).long(</span><span class="s2">'string'</span><span class="s1">)</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'folder'</span><span class="s1">).title(</span><span class="s2">'Input folder, optimize and rewrite all *.svg files'</span><span class="s1">)</span>
+        <span class="s1">.short(</span><span class="s2">'f'</span><span class="s1">).long(</span><span class="s2">'folder'</span><span class="s1">)</span>
+        <span class="s1">.val(</span><span class="s4">function</span><span class="s1">(val) {</span>
+            <span class="s4">return </span><span class="s1">val || </span><span class="s4">this</span><span class="s1">.reject(</span><span class="s2">&quot;Option '--folder' must have a value.&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">})</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'output'</span><span class="s1">).title(</span><span class="s2">'Output file or folder (by default the same as the input), &quot;-&quot; for STDOUT'</span><span class="s1">)</span>
+        <span class="s1">.short(</span><span class="s2">'o'</span><span class="s1">).long(</span><span class="s2">'output'</span><span class="s1">)</span>
+        <span class="s1">.arr()</span>
+        <span class="s1">.val(</span><span class="s4">function</span><span class="s1">(val) {</span>
+            <span class="s4">return </span><span class="s1">val || </span><span class="s4">this</span><span class="s1">.reject(</span><span class="s2">&quot;Option '--output' must have a value.&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">})</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'precision'</span><span class="s1">).title(</span><span class="s2">'Set number of digits in the fractional part, overrides plugins params'</span><span class="s1">)</span>
+        <span class="s1">.short(</span><span class="s2">'p'</span><span class="s1">).long(</span><span class="s2">'precision'</span><span class="s1">)</span>
+        <span class="s1">.val(</span><span class="s4">function</span><span class="s1">(val) {</span>
+            <span class="s4">return </span><span class="s1">!isNaN(val) ? val : </span><span class="s4">this</span><span class="s1">.reject(</span><span class="s2">&quot;Option '--precision' must be an integer number&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">})</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'config'</span><span class="s1">).title(</span><span class="s2">'Config file or JSON string to extend or replace default'</span><span class="s1">)</span>
+        <span class="s1">.long(</span><span class="s2">'config'</span><span class="s1">)</span>
+        <span class="s1">.val(</span><span class="s4">function</span><span class="s1">(val) {</span>
+            <span class="s4">return </span><span class="s1">val || </span><span class="s4">this</span><span class="s1">.reject(</span><span class="s2">&quot;Option '--config' must have a value.&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">})</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'disable'</span><span class="s1">).title(</span><span class="s2">'Disable plugin by name, &quot;--disable={PLUGIN1,PLUGIN2}&quot; for multiple plugins (*nix)'</span><span class="s1">)</span>
+        <span class="s1">.long(</span><span class="s2">'disable'</span><span class="s1">)</span>
+        <span class="s1">.arr()</span>
+        <span class="s1">.val(</span><span class="s4">function</span><span class="s1">(val) {</span>
+            <span class="s4">return </span><span class="s1">val || </span><span class="s4">this</span><span class="s1">.reject(</span><span class="s2">&quot;Option '--disable' must have a value.&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">})</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'enable'</span><span class="s1">).title(</span><span class="s2">'Enable plugin by name, &quot;--enable={PLUGIN3,PLUGIN4}&quot; for multiple plugins (*nix)'</span><span class="s1">)</span>
+        <span class="s1">.long(</span><span class="s2">'enable'</span><span class="s1">)</span>
+        <span class="s1">.arr()</span>
+        <span class="s1">.val(</span><span class="s4">function</span><span class="s1">(val) {</span>
+            <span class="s4">return </span><span class="s1">val || </span><span class="s4">this</span><span class="s1">.reject(</span><span class="s2">&quot;Option '--enable' must have a value.&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">})</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'datauri'</span><span class="s1">).title(</span><span class="s2">'Output as Data URI string (base64, URI encoded or unencoded)'</span><span class="s1">)</span>
+        <span class="s1">.long(</span><span class="s2">'datauri'</span><span class="s1">)</span>
+        <span class="s1">.val(</span><span class="s4">function</span><span class="s1">(val) {</span>
+            <span class="s4">return </span><span class="s1">val || </span><span class="s4">this</span><span class="s1">.reject(</span><span class="s2">&quot;Option '--datauri' must have one of the following values: 'base64', 'enc' or 'unenc'&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">})</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'multipass'</span><span class="s1">).title(</span><span class="s2">'Pass over SVGs multiple times to ensure all optimizations are applied'</span><span class="s1">)</span>
+        <span class="s1">.long(</span><span class="s2">'multipass'</span><span class="s1">)</span>
+        <span class="s1">.flag()</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'pretty'</span><span class="s1">).title(</span><span class="s2">'Make SVG pretty printed'</span><span class="s1">)</span>
+        <span class="s1">.long(</span><span class="s2">'pretty'</span><span class="s1">)</span>
+        <span class="s1">.flag()</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'indent'</span><span class="s1">).title(</span><span class="s2">'Indent number when pretty printing SVGs'</span><span class="s1">)</span>
+        <span class="s1">.long(</span><span class="s2">'indent'</span><span class="s1">)</span>
+        <span class="s1">.val(</span><span class="s4">function</span><span class="s1">(val) {</span>
+            <span class="s4">return </span><span class="s1">!isNaN(val) ? val : </span><span class="s4">this</span><span class="s1">.reject(</span><span class="s2">&quot;Option '--indent' must be an integer number&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">})</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'recursive'</span><span class="s1">).title(</span><span class="s2">'Use with </span><span class="s3">\'</span><span class="s2">-f</span><span class="s3">\'</span><span class="s2">. Optimizes *.svg files in folders recursively.'</span><span class="s1">)</span>
+        <span class="s1">.short(</span><span class="s2">'r'</span><span class="s1">).long(</span><span class="s2">'recursive'</span><span class="s1">)</span>
+        <span class="s1">.flag()</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'quiet'</span><span class="s1">).title(</span><span class="s2">'Only output error messages, not regular status messages'</span><span class="s1">)</span>
+        <span class="s1">.short(</span><span class="s2">'q'</span><span class="s1">).long(</span><span class="s2">'quiet'</span><span class="s1">)</span>
+        <span class="s1">.flag()</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.opt()</span>
+        <span class="s1">.name(</span><span class="s2">'show-plugins'</span><span class="s1">).title(</span><span class="s2">'Show available plugins and exit'</span><span class="s1">)</span>
+        <span class="s1">.long(</span><span class="s2">'show-plugins'</span><span class="s1">)</span>
+        <span class="s1">.flag()</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.arg()</span>
+        <span class="s1">.name(</span><span class="s2">'input'</span><span class="s1">).title(</span><span class="s2">'Alias to --input'</span><span class="s1">)</span>
+        <span class="s1">.arr()</span>
+        <span class="s1">.end()</span>
+    <span class="s1">.act(</span><span class="s4">function</span><span class="s1">(opts</span><span class="s3">, </span><span class="s1">args) {</span>
+        <span class="s4">var </span><span class="s1">input = opts.input || args.input</span><span class="s3">,</span>
+            <span class="s1">output = opts.output</span><span class="s3">,</span>
+            <span class="s1">config = {}</span><span class="s3">;</span>
+
+        <span class="s8">// --show-plugins</span>
+        <span class="s4">if </span><span class="s1">(opts[</span><span class="s2">'show-plugins'</span><span class="s1">]) {</span>
+            <span class="s1">showAvailablePlugins()</span><span class="s3">;</span>
+            <span class="s4">return</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s8">// w/o anything</span>
+        <span class="s4">if </span><span class="s1">(</span>
+            <span class="s1">(!input || input[</span><span class="s5">0</span><span class="s1">] === </span><span class="s2">'-'</span><span class="s1">) &amp;&amp;</span>
+            <span class="s1">!opts.string &amp;&amp;</span>
+            <span class="s1">!opts.stdin &amp;&amp;</span>
+            <span class="s1">!opts.folder &amp;&amp;</span>
+            <span class="s1">process.stdin.isTTY === </span><span class="s4">true</span>
+        <span class="s1">) </span><span class="s4">return this</span><span class="s1">.usage()</span><span class="s3">;</span>
+
+        <span class="s4">if </span><span class="s1">(</span><span class="s4">typeof </span><span class="s1">process == </span><span class="s2">'object' </span><span class="s1">&amp;&amp; process.versions &amp;&amp; process.versions.node &amp;&amp; PKG &amp;&amp; PKG.engines.node) {</span>
+            <span class="s4">var </span><span class="s1">nodeVersion = String(PKG.engines.node).match(</span><span class="s5">/\d*(\.\d+)*/</span><span class="s1">)[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+            <span class="s4">if </span><span class="s1">(parseFloat(process.versions.node) &lt; parseFloat(nodeVersion)) {</span>
+                <span class="s4">return </span><span class="s1">printErrorAndExit(</span><span class="s2">`Error: </span><span class="s1">${PKG.name} </span><span class="s2">requires Node.js version </span><span class="s1">${nodeVersion} </span><span class="s2">or higher.`</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s8">// --config</span>
+        <span class="s4">if </span><span class="s1">(opts.config) {</span>
+            <span class="s8">// string</span>
+            <span class="s4">if </span><span class="s1">(opts.config.charAt(</span><span class="s5">0</span><span class="s1">) === </span><span class="s2">'{'</span><span class="s1">) {</span>
+                <span class="s4">try </span><span class="s1">{</span>
+                    <span class="s1">config = JSON.parse(opts.config)</span><span class="s3">;</span>
+                <span class="s1">} </span><span class="s4">catch </span><span class="s1">(e) {</span>
+                    <span class="s4">return </span><span class="s1">printErrorAndExit(</span><span class="s2">`Error: Couldn't parse config JSON.</span><span class="s3">\n</span><span class="s1">${String(e)}</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s8">// external file</span>
+            <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+                <span class="s4">var </span><span class="s1">configPath = PATH.resolve(opts.config)</span><span class="s3">,</span>
+                    <span class="s1">configData</span><span class="s3">;</span>
+                <span class="s4">try </span><span class="s1">{</span>
+                    <span class="s8">// require() adds some weird output on YML files</span>
+                    <span class="s1">configData = FS.readFileSync(configPath</span><span class="s3">, </span><span class="s2">'utf8'</span><span class="s1">)</span><span class="s3">;</span>
+                    <span class="s1">config = JSON.parse(configData)</span><span class="s3">;</span>
+                <span class="s1">} </span><span class="s4">catch </span><span class="s1">(err) {</span>
+                    <span class="s4">if </span><span class="s1">(err.code === </span><span class="s2">'ENOENT'</span><span class="s1">) {</span>
+                        <span class="s4">return </span><span class="s1">printErrorAndExit(</span><span class="s2">`Error: couldn't find config file '</span><span class="s1">${opts.config}</span><span class="s2">'.`</span><span class="s1">)</span><span class="s3">;</span>
+                    <span class="s1">} </span><span class="s4">else if </span><span class="s1">(err.code === </span><span class="s2">'EISDIR'</span><span class="s1">) {</span>
+                        <span class="s4">return </span><span class="s1">printErrorAndExit(</span><span class="s2">`Error: directory '</span><span class="s1">${opts.config}</span><span class="s2">' is not a config file.`</span><span class="s1">)</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                    <span class="s1">config = YAML.safeLoad(configData)</span><span class="s3">;</span>
+                    <span class="s1">config.__DIR = PATH.dirname(configPath)</span><span class="s3">; </span><span class="s8">// will use it to resolve custom plugins defined via path</span>
+
+                    <span class="s4">if </span><span class="s1">(!config || Array.isArray(config)) {</span>
+                        <span class="s4">return </span><span class="s1">printErrorAndExit(</span><span class="s2">`Error: invalid config file '</span><span class="s1">${opts.config}</span><span class="s2">'.`</span><span class="s1">)</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s8">// --quiet</span>
+        <span class="s4">if </span><span class="s1">(opts.quiet) {</span>
+            <span class="s1">config.quiet = opts.quiet</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s8">// --recursive</span>
+        <span class="s4">if </span><span class="s1">(opts.recursive) {</span>
+            <span class="s1">config.recursive = opts.recursive</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s8">// --precision</span>
+        <span class="s4">if </span><span class="s1">(opts.precision) {</span>
+            <span class="s4">var </span><span class="s1">precision = Math.min(Math.max(</span><span class="s5">0</span><span class="s3">, </span><span class="s1">parseInt(opts.precision))</span><span class="s3">, </span><span class="s5">20</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s4">if </span><span class="s1">(!isNaN(precision)) {</span>
+                <span class="s1">config.floatPrecision = precision</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s8">// --disable</span>
+        <span class="s4">if </span><span class="s1">(opts.disable) {</span>
+            <span class="s1">changePluginsState(opts.disable</span><span class="s3">, </span><span class="s4">false</span><span class="s3">, </span><span class="s1">config)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s8">// --enable</span>
+        <span class="s4">if </span><span class="s1">(opts.enable) {</span>
+            <span class="s1">changePluginsState(opts.enable</span><span class="s3">, </span><span class="s4">true</span><span class="s3">, </span><span class="s1">config)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s8">// --multipass</span>
+        <span class="s4">if </span><span class="s1">(opts.multipass) {</span>
+            <span class="s1">config.multipass = </span><span class="s4">true</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s8">// --pretty</span>
+        <span class="s4">if </span><span class="s1">(opts.pretty) {</span>
+            <span class="s1">config.js2svg = config.js2svg || {}</span><span class="s3">;</span>
+            <span class="s1">config.js2svg.pretty = </span><span class="s4">true</span><span class="s3">;</span>
+            <span class="s4">var </span><span class="s1">indent</span><span class="s3">;</span>
+            <span class="s4">if </span><span class="s1">(opts.indent &amp;&amp; !isNaN(indent = parseInt(opts.indent))) {</span>
+                <span class="s1">config.js2svg.indent = indent</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s1">svgo = </span><span class="s4">new </span><span class="s1">SVGO(config)</span><span class="s3">;</span>
+
+        <span class="s8">// --output</span>
+        <span class="s4">if </span><span class="s1">(output) {</span>
+            <span class="s4">if </span><span class="s1">(input &amp;&amp; input[</span><span class="s5">0</span><span class="s1">] != </span><span class="s2">'-'</span><span class="s1">) {</span>
+                <span class="s4">if </span><span class="s1">(output.length == </span><span class="s5">1 </span><span class="s1">&amp;&amp; checkIsDir(output[</span><span class="s5">0</span><span class="s1">])) {</span>
+                    <span class="s4">var </span><span class="s1">dir = output[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+                    <span class="s4">for </span><span class="s1">(</span><span class="s4">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; input.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+                        <span class="s1">output[i] = checkIsDir(input[i]) ? input[i] : PATH.resolve(dir</span><span class="s3">, </span><span class="s1">PATH.basename(input[i]))</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">} </span><span class="s4">else if </span><span class="s1">(output.length &lt; input.length) {</span>
+                    <span class="s1">output = output.concat(input.slice(output.length))</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+        <span class="s1">} </span><span class="s4">else if </span><span class="s1">(input) {</span>
+            <span class="s1">output = input</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s4">else if </span><span class="s1">(opts.string) {</span>
+            <span class="s1">output = </span><span class="s2">'-'</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s4">if </span><span class="s1">(opts.datauri) {</span>
+            <span class="s1">config.datauri = opts.datauri</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s8">// --folder</span>
+        <span class="s4">if </span><span class="s1">(opts.folder) {</span>
+            <span class="s4">var </span><span class="s1">ouputFolder = output &amp;&amp; output[</span><span class="s5">0</span><span class="s1">] || opts.folder</span><span class="s3">;</span>
+            <span class="s4">return </span><span class="s1">optimizeFolder(config</span><span class="s3">, </span><span class="s1">opts.folder</span><span class="s3">, </span><span class="s1">ouputFolder).then(noop</span><span class="s3">, </span><span class="s1">printErrorAndExit)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s8">// --input</span>
+        <span class="s4">if </span><span class="s1">(input) {</span>
+            <span class="s8">// STDIN</span>
+            <span class="s4">if </span><span class="s1">(input[</span><span class="s5">0</span><span class="s1">] === </span><span class="s2">'-'</span><span class="s1">) {</span>
+                <span class="s4">return new </span><span class="s1">Promise((resolve</span><span class="s3">, </span><span class="s1">reject) =&gt; {</span>
+                    <span class="s4">var </span><span class="s1">data = </span><span class="s2">''</span><span class="s3">,</span>
+                        <span class="s1">file = output[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+
+                    <span class="s1">process.stdin</span>
+                        <span class="s1">.on(</span><span class="s2">'data'</span><span class="s3">, </span><span class="s1">chunk =&gt; data += chunk)</span>
+                        <span class="s1">.once(</span><span class="s2">'end'</span><span class="s3">, </span><span class="s1">() =&gt; processSVGData(config</span><span class="s3">, </span><span class="s1">{input: </span><span class="s2">'string'</span><span class="s1">}</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">file).then(resolve</span><span class="s3">, </span><span class="s1">reject))</span><span class="s3">;</span>
+                <span class="s1">})</span><span class="s3">;</span>
+            <span class="s8">// file</span>
+            <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+                <span class="s4">return </span><span class="s1">Promise.all(input.map((file</span><span class="s3">, </span><span class="s1">n) =&gt; optimizeFile(config</span><span class="s3">, </span><span class="s1">file</span><span class="s3">, </span><span class="s1">output[n])))</span>
+                    <span class="s1">.then(noop</span><span class="s3">, </span><span class="s1">printErrorAndExit)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+        <span class="s8">// --string</span>
+        <span class="s1">} </span><span class="s4">else if </span><span class="s1">(opts.string) {</span>
+            <span class="s4">var </span><span class="s1">data = decodeSVGDatauri(opts.string)</span><span class="s3">;</span>
+
+            <span class="s4">return </span><span class="s1">processSVGData(config</span><span class="s3">, </span><span class="s1">{input: </span><span class="s2">'string'</span><span class="s1">}</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">output[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Change plugins state by names array.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} names plugins names</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Boolean} state active state</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} config original config</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Object} changed config</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">changePluginsState(names</span><span class="s3">, </span><span class="s1">state</span><span class="s3">, </span><span class="s1">config) {</span>
+    <span class="s1">names.forEach(flattenPluginsCbk)</span><span class="s3">;</span>
+
+    <span class="s8">// extend config</span>
+    <span class="s4">if </span><span class="s1">(config.plugins) {</span>
+        <span class="s4">for </span><span class="s1">(</span><span class="s4">var </span><span class="s1">name of names) {</span>
+            <span class="s4">var </span><span class="s1">matched = </span><span class="s4">false</span><span class="s3">,</span>
+                <span class="s1">key</span><span class="s3">;</span>
+
+            <span class="s4">for </span><span class="s1">(</span><span class="s4">var </span><span class="s1">plugin of config.plugins) {</span>
+                <span class="s8">// get plugin name</span>
+                <span class="s4">if </span><span class="s1">(</span><span class="s4">typeof </span><span class="s1">plugin === </span><span class="s2">'object'</span><span class="s1">) {</span>
+                    <span class="s1">key = Object.keys(plugin)[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+                <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+                    <span class="s1">key = plugin</span><span class="s3">;</span>
+                <span class="s1">}</span>
+
+                <span class="s8">// if there is such a plugin name</span>
+                <span class="s4">if </span><span class="s1">(key === name) {</span>
+                    <span class="s8">// don't replace plugin's params with true</span>
+                    <span class="s4">if </span><span class="s1">(</span><span class="s4">typeof </span><span class="s1">plugin[key] !== </span><span class="s2">'object' </span><span class="s1">|| !state) {</span>
+                        <span class="s1">plugin[key] = state</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                    <span class="s8">// mark it as matched</span>
+                    <span class="s1">matched = </span><span class="s4">true</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+
+            <span class="s8">// if not matched and current config is not full</span>
+            <span class="s4">if </span><span class="s1">(!matched &amp;&amp; !config.full) {</span>
+                <span class="s8">// push new plugin Object</span>
+                <span class="s1">config.plugins.push({ [name]: state })</span><span class="s3">;</span>
+                <span class="s1">matched = </span><span class="s4">true</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s8">// just push</span>
+    <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+        <span class="s1">config.plugins = names.map(name =&gt; ({ [name]: state }))</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s4">return </span><span class="s1">config</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Flatten an array of plugins by invoking this callback on each element</span>
+ <span class="s6">* whose value may be a comma separated list of plugins.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{String} name Plugin name</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Number} index Plugin index</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} names Plugins being traversed</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">flattenPluginsCbk(name</span><span class="s3">, </span><span class="s1">index</span><span class="s3">, </span><span class="s1">names)</span>
+<span class="s1">{</span>
+    <span class="s4">var </span><span class="s1">split = name.split(</span><span class="s2">','</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s4">if</span><span class="s1">(split.length &gt; </span><span class="s5">1</span><span class="s1">) {</span>
+        <span class="s1">names[index] = split.shift()</span><span class="s3">;</span>
+        <span class="s1">names.push.apply(names</span><span class="s3">, </span><span class="s1">split)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Optimize SVG files in a directory.</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} config options</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} dir input directory</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} output output directory</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Promise}</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">optimizeFolder(config</span><span class="s3">, </span><span class="s1">dir</span><span class="s3">, </span><span class="s1">output) {</span>
+    <span class="s4">if </span><span class="s1">(!config.quiet) {</span>
+        <span class="s1">console.log(</span><span class="s2">`Processing directory '</span><span class="s1">${dir}</span><span class="s2">':</span><span class="s3">\n</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s4">return </span><span class="s1">readdir(dir).then(files =&gt; processDirectory(config</span><span class="s3">, </span><span class="s1">dir</span><span class="s3">, </span><span class="s1">files</span><span class="s3">, </span><span class="s1">output))</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Process given files, take only SVG.</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} config options</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} dir input directory</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} files list of file names in the directory</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} output output directory</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Promise}</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">processDirectory(config</span><span class="s3">, </span><span class="s1">dir</span><span class="s3">, </span><span class="s1">files</span><span class="s3">, </span><span class="s1">output) {</span>
+    <span class="s8">// take only *.svg files, recursively if necessary</span>
+    <span class="s4">var </span><span class="s1">svgFilesDescriptions = getFilesDescriptions(config</span><span class="s3">, </span><span class="s1">dir</span><span class="s3">, </span><span class="s1">files</span><span class="s3">, </span><span class="s1">output)</span><span class="s3">;</span>
+
+    <span class="s4">return </span><span class="s1">svgFilesDescriptions.length ?</span>
+        <span class="s1">Promise.all(svgFilesDescriptions.map(fileDescription =&gt; optimizeFile(config</span><span class="s3">, </span><span class="s1">fileDescription.inputPath</span><span class="s3">, </span><span class="s1">fileDescription.outputPath))) :</span>
+        <span class="s1">Promise.reject(</span><span class="s4">new </span><span class="s1">Error(</span><span class="s2">`No SVG files have been found in '</span><span class="s1">${dir}</span><span class="s2">' directory.`</span><span class="s1">))</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Get svg files descriptions</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} config options</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} dir input directory</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} files list of file names in the directory</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} output output directory</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Array}</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">getFilesDescriptions(config</span><span class="s3">, </span><span class="s1">dir</span><span class="s3">, </span><span class="s1">files</span><span class="s3">, </span><span class="s1">output) {</span>
+    <span class="s4">const </span><span class="s1">filesInThisFolder = files</span>
+        <span class="s1">.filter(name =&gt; regSVGFile.test(name))</span>
+        <span class="s1">.map(name =&gt; ({</span>
+            <span class="s1">inputPath: PATH.resolve(dir</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">,</span>
+            <span class="s1">outputPath: PATH.resolve(output</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">,</span>
+        <span class="s1">}))</span><span class="s3">;</span>
+
+    <span class="s4">return </span><span class="s1">config.recursive ?</span>
+        <span class="s1">[].concat(</span>
+            <span class="s1">filesInThisFolder</span><span class="s3">,</span>
+            <span class="s1">files</span>
+                <span class="s1">.filter(name =&gt; checkIsDir(PATH.resolve(dir</span><span class="s3">, </span><span class="s1">name)))</span>
+                <span class="s1">.map(subFolderName =&gt; {</span>
+                    <span class="s4">const </span><span class="s1">subFolderPath = PATH.resolve(dir</span><span class="s3">, </span><span class="s1">subFolderName)</span><span class="s3">;</span>
+                    <span class="s4">const </span><span class="s1">subFolderFiles = FS.readdirSync(subFolderPath)</span><span class="s3">;</span>
+                    <span class="s4">const </span><span class="s1">subFolderOutput = PATH.resolve(output</span><span class="s3">, </span><span class="s1">subFolderName)</span><span class="s3">;</span>
+                    <span class="s4">return </span><span class="s1">getFilesDescriptions(config</span><span class="s3">, </span><span class="s1">subFolderPath</span><span class="s3">, </span><span class="s1">subFolderFiles</span><span class="s3">, </span><span class="s1">subFolderOutput)</span><span class="s3">;</span>
+                <span class="s1">})</span>
+                <span class="s1">.reduce((a</span><span class="s3">, </span><span class="s1">b) =&gt; [].concat(a</span><span class="s3">, </span><span class="s1">b)</span><span class="s3">, </span><span class="s1">[])</span>
+        <span class="s1">) :</span>
+        <span class="s1">filesInThisFolder</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Read SVG file and pass to processing.</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} config options</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} file</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} output</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Promise}</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">optimizeFile(config</span><span class="s3">, </span><span class="s1">file</span><span class="s3">, </span><span class="s1">output) {</span>
+    <span class="s4">return </span><span class="s1">readFile(file</span><span class="s3">, </span><span class="s2">'utf8'</span><span class="s1">).then(</span>
+        <span class="s1">data =&gt; processSVGData(config</span><span class="s3">, </span><span class="s1">{input: </span><span class="s2">'file'</span><span class="s3">, </span><span class="s1">path: file}</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">output</span><span class="s3">, </span><span class="s1">file)</span><span class="s3">,</span>
+        <span class="s1">error =&gt; checkOptimizeFileError(config</span><span class="s3">, </span><span class="s1">file</span><span class="s3">, </span><span class="s1">output</span><span class="s3">, </span><span class="s1">error)</span>
+    <span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Optimize SVG data.</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} config options</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} data SVG content to optimize</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} output where to write optimized file</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} [input] input file name (being used if output is a directory)</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Promise}</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">processSVGData(config</span><span class="s3">, </span><span class="s1">info</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">output</span><span class="s3">, </span><span class="s1">input) {</span>
+    <span class="s4">var </span><span class="s1">startTime = Date.now()</span><span class="s3">,</span>
+        <span class="s1">prevFileSize = Buffer.byteLength(data</span><span class="s3">, </span><span class="s2">'utf8'</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s4">return </span><span class="s1">svgo.optimize(data</span><span class="s3">, </span><span class="s1">info).then(</span><span class="s4">function</span><span class="s1">(result) {</span>
+        <span class="s4">if </span><span class="s1">(config.datauri) {</span>
+            <span class="s1">result.data = encodeSVGDatauri(result.data</span><span class="s3">, </span><span class="s1">config.datauri)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s4">var </span><span class="s1">resultFileSize = Buffer.byteLength(result.data</span><span class="s3">, </span><span class="s2">'utf8'</span><span class="s1">)</span><span class="s3">,</span>
+            <span class="s1">processingTime = Date.now() - startTime</span><span class="s3">;</span>
+
+        <span class="s4">return </span><span class="s1">writeOutput(input</span><span class="s3">, </span><span class="s1">output</span><span class="s3">, </span><span class="s1">result.data).then(</span><span class="s4">function</span><span class="s1">() {</span>
+            <span class="s4">if </span><span class="s1">(!config.quiet &amp;&amp; output != </span><span class="s2">'-'</span><span class="s1">) {</span>
+                <span class="s4">if </span><span class="s1">(input) {</span>
+                    <span class="s1">console.log(</span><span class="s2">`</span><span class="s3">\n</span><span class="s1">${PATH.basename(input)}</span><span class="s2">:`</span><span class="s1">)</span><span class="s3">;</span>
+                <span class="s1">}</span>
+                <span class="s1">printTimeInfo(processingTime)</span><span class="s3">;</span>
+                <span class="s1">printProfitInfo(prevFileSize</span><span class="s3">, </span><span class="s1">resultFileSize)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span><span class="s3">,</span>
+        <span class="s1">error =&gt; Promise.reject(</span><span class="s4">new </span><span class="s1">Error(error.code === </span><span class="s2">'ENOTDIR' </span><span class="s1">? </span><span class="s2">`Error: output '</span><span class="s1">${output}</span><span class="s2">' is not a directory.` </span><span class="s1">: error)))</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Write result of an optimization.</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} input</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} output output file name. '-' for stdout</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} data data to write</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Promise}</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">writeOutput(input</span><span class="s3">, </span><span class="s1">output</span><span class="s3">, </span><span class="s1">data) {</span>
+    <span class="s4">if </span><span class="s1">(output == </span><span class="s2">'-'</span><span class="s1">) {</span>
+        <span class="s1">console.log(data)</span><span class="s3">;</span>
+        <span class="s4">return </span><span class="s1">Promise.resolve()</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">mkdirp.sync(PATH.dirname(output))</span><span class="s3">;</span>
+
+    <span class="s4">return </span><span class="s1">writeFile(output</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s2">'utf8'</span><span class="s1">).catch(error =&gt; checkWriteFileError(input</span><span class="s3">, </span><span class="s1">output</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">error))</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+
+<span class="s6">/**</span>
+ <span class="s6">* Write a time taken by optimization.</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} time time in milliseconds.</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">printTimeInfo(time) {</span>
+    <span class="s1">console.log(</span><span class="s2">`Done in </span><span class="s1">${time} </span><span class="s2">ms!`</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Write optimizing information in human readable format.</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} inBytes size before optimization.</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{number} outBytes size after optimization.</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">printProfitInfo(inBytes</span><span class="s3">, </span><span class="s1">outBytes) {</span>
+    <span class="s4">var </span><span class="s1">profitPercents = </span><span class="s5">100 </span><span class="s1">- outBytes * </span><span class="s5">100 </span><span class="s1">/ inBytes</span><span class="s3">;</span>
+
+    <span class="s1">console.log(</span>
+        <span class="s1">(Math.round((inBytes / </span><span class="s5">1024</span><span class="s1">) * </span><span class="s5">1000</span><span class="s1">) / </span><span class="s5">1000</span><span class="s1">) + </span><span class="s2">' KiB' </span><span class="s1">+</span>
+        <span class="s1">(profitPercents &lt; </span><span class="s5">0 </span><span class="s1">? </span><span class="s2">' + ' </span><span class="s1">: </span><span class="s2">' - '</span><span class="s1">) +</span>
+        <span class="s1">chalk.green(Math.abs((Math.round(profitPercents * </span><span class="s5">10</span><span class="s1">) / </span><span class="s5">10</span><span class="s1">)) + </span><span class="s2">'%'</span><span class="s1">) + </span><span class="s2">' = ' </span><span class="s1">+</span>
+        <span class="s1">(Math.round((outBytes / </span><span class="s5">1024</span><span class="s1">) * </span><span class="s5">1000</span><span class="s1">) / </span><span class="s5">1000</span><span class="s1">) + </span><span class="s2">' KiB'</span>
+    <span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Check for errors, if it's a dir optimize the dir.</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} config</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} input</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} output</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Error} error</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Promise}</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">checkOptimizeFileError(config</span><span class="s3">, </span><span class="s1">input</span><span class="s3">, </span><span class="s1">output</span><span class="s3">, </span><span class="s1">error) {</span>
+    <span class="s4">if </span><span class="s1">(error.code == </span><span class="s2">'EISDIR'</span><span class="s1">) {</span>
+        <span class="s4">return </span><span class="s1">optimizeFolder(config</span><span class="s3">, </span><span class="s1">input</span><span class="s3">, </span><span class="s1">output)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">else if </span><span class="s1">(error.code == </span><span class="s2">'ENOENT'</span><span class="s1">) {</span>
+        <span class="s4">return </span><span class="s1">Promise.reject(</span><span class="s4">new </span><span class="s1">Error(</span><span class="s2">`Error: no such file or directory '</span><span class="s1">${error.path}</span><span class="s2">'.`</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s4">return </span><span class="s1">Promise.reject(error)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Check for saving file error. If the output is a dir, then write file there.</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} input</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} output</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{string} data</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Error} error</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Promise}</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">checkWriteFileError(input</span><span class="s3">, </span><span class="s1">output</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">error) {</span>
+    <span class="s4">if </span><span class="s1">(error.code == </span><span class="s2">'EISDIR' </span><span class="s1">&amp;&amp; input) {</span>
+        <span class="s4">return </span><span class="s1">writeFile(PATH.resolve(output</span><span class="s3">, </span><span class="s1">PATH.basename(input))</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s2">'utf8'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+        <span class="s4">return </span><span class="s1">Promise.reject(error)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Show list of available plugins with short description.</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">showAvailablePlugins() {</span>
+    <span class="s1">console.log(</span><span class="s2">'Currently available plugins:'</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s8">// Flatten an array of plugins grouped per type, sort and write output</span>
+    <span class="s4">var </span><span class="s1">list = [].concat.apply([]</span><span class="s3">, </span><span class="s4">new </span><span class="s1">SVGO().config.plugins)</span>
+        <span class="s1">.sort((a</span><span class="s3">, </span><span class="s1">b) =&gt; a.name.localeCompare(b.name))</span>
+        <span class="s1">.map(plugin =&gt; </span><span class="s2">` [ </span><span class="s1">${chalk.green(plugin.name)} </span><span class="s2">] </span><span class="s1">${plugin.description}</span><span class="s2">`</span><span class="s1">)</span>
+        <span class="s1">.join(</span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">console.log(list)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Write an error and exit.</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Error} error</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Promise} a promise for running tests</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">printErrorAndExit(error) {</span>
+    <span class="s1">console.error(chalk.red(error))</span><span class="s3">;</span>
+    <span class="s1">process.exit(</span><span class="s5">1</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s4">return </span><span class="s1">Promise.reject(error)</span><span class="s3">; </span><span class="s8">// for tests</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

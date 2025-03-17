@@ -1,0 +1,100 @@
+<html>
+<head>
+<title>escodegen</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8a8a8a;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8ea765;}
+.s5 { color: #cc7832;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+escodegen</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+<span class="s2">/* 
+  Copyright (C) 2012 Yusuke Suzuki &lt;utatane.tea@gmail.com&gt; 
+ 
+  Redistribution and use in source and binary forms, with or without 
+  modification, are permitted provided that the following conditions are met: 
+ 
+    * Redistributions of source code must retain the above copyright 
+      notice, this list of conditions and the following disclaimer. 
+    * Redistributions in binary form must reproduce the above copyright 
+      notice, this list of conditions and the following disclaimer in the 
+      documentation and/or other materials provided with the distribution. 
+ 
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; 
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+  ARE DISCLAIMED. IN NO EVENT SHALL &lt;COPYRIGHT HOLDER&gt; BE LIABLE FOR ANY 
+  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND 
+  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
+  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+*/</span>
+
+<span class="s2">/*jslint sloppy:true node:true */</span>
+
+<span class="s3">var </span><span class="s1">fs = require(</span><span class="s4">'fs'</span><span class="s1">)</span><span class="s5">,</span>
+    <span class="s1">path = require(</span><span class="s4">'path'</span><span class="s1">)</span><span class="s5">,</span>
+    <span class="s1">root = path.join(path.dirname(fs.realpathSync(__filename))</span><span class="s5">, </span><span class="s4">'..'</span><span class="s1">)</span><span class="s5">,</span>
+    <span class="s1">esprima = require(</span><span class="s4">'esprima'</span><span class="s1">)</span><span class="s5">,</span>
+    <span class="s1">escodegen = require(root)</span><span class="s5">,</span>
+    <span class="s1">optionator = require(</span><span class="s4">'optionator'</span><span class="s1">)({</span>
+        <span class="s1">prepend: </span><span class="s4">'Usage: escodegen [options] file...'</span><span class="s5">,</span>
+        <span class="s1">options: [</span>
+            <span class="s1">{</span>
+                <span class="s1">option: </span><span class="s4">'config'</span><span class="s5">,</span>
+                <span class="s1">alias: </span><span class="s4">'c'</span><span class="s5">,</span>
+                <span class="s1">type: </span><span class="s4">'String'</span><span class="s5">,</span>
+                <span class="s1">description: </span><span class="s4">'configuration json for escodegen'</span>
+            <span class="s1">}</span>
+        <span class="s1">]</span>
+    <span class="s1">})</span><span class="s5">,</span>
+    <span class="s1">args = optionator.parse(process.argv)</span><span class="s5">,</span>
+    <span class="s1">files = args._</span><span class="s5">,</span>
+    <span class="s1">options</span><span class="s5">,</span>
+    <span class="s1">esprimaOptions = {</span>
+        <span class="s1">raw: </span><span class="s3">true</span><span class="s5">,</span>
+        <span class="s1">tokens: </span><span class="s3">true</span><span class="s5">,</span>
+        <span class="s1">range: </span><span class="s3">true</span><span class="s5">,</span>
+        <span class="s1">comment: </span><span class="s3">true</span>
+    <span class="s1">}</span><span class="s5">;</span>
+
+<span class="s3">if </span><span class="s1">(files.length === </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s1">console.log(optionator.generateHelp())</span><span class="s5">;</span>
+    <span class="s1">process.exit(</span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s3">if </span><span class="s1">(args.config) {</span>
+    <span class="s3">try </span><span class="s1">{</span>
+        <span class="s1">options = JSON.parse(fs.readFileSync(args.config</span><span class="s5">, </span><span class="s4">'utf-8'</span><span class="s1">))</span><span class="s5">;</span>
+    <span class="s1">} </span><span class="s3">catch </span><span class="s1">(err) {</span>
+        <span class="s1">console.error(</span><span class="s4">'Error parsing config: '</span><span class="s5">, </span><span class="s1">err)</span><span class="s5">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">files.forEach(</span><span class="s3">function </span><span class="s1">(filename) {</span>
+    <span class="s3">var </span><span class="s1">content = fs.readFileSync(filename</span><span class="s5">, </span><span class="s4">'utf-8'</span><span class="s1">)</span><span class="s5">,</span>
+        <span class="s1">syntax = esprima.parse(content</span><span class="s5">, </span><span class="s1">esprimaOptions)</span><span class="s5">;</span>
+
+    <span class="s3">if </span><span class="s1">(options.comment) {</span>
+        <span class="s1">escodegen.attachComments(syntax</span><span class="s5">, </span><span class="s1">syntax.comments</span><span class="s5">, </span><span class="s1">syntax.tokens)</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">console.log(escodegen.generate(syntax</span><span class="s5">, </span><span class="s1">options))</span><span class="s5">;</span>
+<span class="s1">})</span><span class="s5">;</span>
+<span class="s2">/* vim: set sw=4 ts=4 et tw=80 : */</span>
+</pre>
+</body>
+</html>

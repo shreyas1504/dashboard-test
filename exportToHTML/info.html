@@ -1,0 +1,32 @@
+<html>
+<head>
+<title>info</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+info</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+
+<span class="s2">'use strict'</span><span class="s3">;</span>
+
+<span class="s4">var </span><span class="s1">fs = require(</span><span class="s2">'fs'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">var </span><span class="s1">name = process.argv[</span><span class="s5">2</span><span class="s1">] || </span><span class="s2">'.'</span><span class="s3">;</span>
+<span class="s4">var </span><span class="s1">property = process.argv[</span><span class="s5">3</span><span class="s1">] || </span><span class="s2">'version'</span><span class="s3">;</span>
+<span class="s4">if </span><span class="s1">(name != </span><span class="s2">'.'</span><span class="s1">) name = </span><span class="s2">'node_modules/' </span><span class="s1">+ name</span><span class="s3">;</span>
+<span class="s4">var </span><span class="s1">json = JSON.parse(fs.readFileSync(name + </span><span class="s2">'/package.json'</span><span class="s3">, </span><span class="s2">'utf8'</span><span class="s1">))</span><span class="s3">;</span>
+<span class="s1">console.log(json[property])</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<html>
+<head>
+<title>create-files.sh</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #6897bb;}
+.s4 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+create-files.sh</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env bash</span>
+
+<span class="s1">rm 10*.txt</span>
+<span class="s2">for </span><span class="s1">n </span><span class="s2">in </span><span class="s3">10 100 1000</span><span class="s1">; </span><span class="s2">do</span>
+  <span class="s1">node log.js </span><span class="s3">0 </span><span class="s4">$n </span><span class="s1">stdout stderr &amp;&gt; </span><span class="s4">$n</span><span class="s1">-stdout-stderr.txt</span>
+  <span class="s1">node log.js </span><span class="s3">0 </span><span class="s4">$n </span><span class="s1">stdout &amp;&gt; </span><span class="s4">$n</span><span class="s1">-stdout.txt</span>
+  <span class="s1">node log.js </span><span class="s3">0 </span><span class="s4">$n </span><span class="s1">stderr &amp;&gt; </span><span class="s4">$n</span><span class="s1">-stderr.txt</span>
+<span class="s2">done</span>
+</pre>
+</body>
+</html>

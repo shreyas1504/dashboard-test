@@ -1,0 +1,100 @@
+<html>
+<head>
+<title>usage.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #6897bb;}
+.s4 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+usage.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">hasOwnProperty = Object.prototype.hasOwnProperty</span><span class="s2">;</span>
+
+<span class="s0">function </span><span class="s1">buildMap(list</span><span class="s2">, </span><span class="s1">caseInsensitive) {</span>
+    <span class="s0">var </span><span class="s1">map = Object.create(</span><span class="s0">null</span><span class="s1">)</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(!Array.isArray(list)) {</span>
+        <span class="s0">return null</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s3">0</span><span class="s2">; </span><span class="s1">i &lt; list.length</span><span class="s2">; </span><span class="s1">i++) {</span>
+        <span class="s0">var </span><span class="s1">name = list[i]</span><span class="s2">;</span>
+
+        <span class="s0">if </span><span class="s1">(caseInsensitive) {</span>
+            <span class="s1">name = name.toLowerCase()</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">map[name] = </span><span class="s0">true</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">map</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">buildList(data) {</span>
+    <span class="s0">if </span><span class="s1">(!data) {</span>
+        <span class="s0">return null</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">tags = buildMap(data.tags</span><span class="s2">, </span><span class="s0">true</span><span class="s1">)</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">ids = buildMap(data.ids)</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">classes = buildMap(data.classes)</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(tags === </span><span class="s0">null </span><span class="s1">&amp;&amp;</span>
+        <span class="s1">ids === </span><span class="s0">null </span><span class="s1">&amp;&amp;</span>
+        <span class="s1">classes === </span><span class="s0">null</span><span class="s1">) {</span>
+        <span class="s0">return null</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">{</span>
+        <span class="s1">tags: tags</span><span class="s2">,</span>
+        <span class="s1">ids: ids</span><span class="s2">,</span>
+        <span class="s1">classes: classes</span>
+    <span class="s1">}</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">buildIndex(data) {</span>
+    <span class="s0">var </span><span class="s1">scopes = </span><span class="s0">false</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(data.scopes &amp;&amp; Array.isArray(data.scopes)) {</span>
+        <span class="s1">scopes = Object.create(</span><span class="s0">null</span><span class="s1">)</span><span class="s2">;</span>
+
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s3">0</span><span class="s2">; </span><span class="s1">i &lt; data.scopes.length</span><span class="s2">; </span><span class="s1">i++) {</span>
+            <span class="s0">var </span><span class="s1">list = data.scopes[i]</span><span class="s2">;</span>
+
+            <span class="s0">if </span><span class="s1">(!list || !Array.isArray(list)) {</span>
+                <span class="s0">throw new </span><span class="s1">Error(</span><span class="s4">'Wrong usage format'</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">j = </span><span class="s3">0</span><span class="s2">; </span><span class="s1">j &lt; list.length</span><span class="s2">; </span><span class="s1">j++) {</span>
+                <span class="s0">var </span><span class="s1">name = list[j]</span><span class="s2">;</span>
+
+                <span class="s0">if </span><span class="s1">(hasOwnProperty.call(scopes</span><span class="s2">, </span><span class="s1">name)) {</span>
+                    <span class="s0">throw new </span><span class="s1">Error(</span><span class="s4">'Class can</span><span class="s2">\'</span><span class="s4">t be used for several scopes: ' </span><span class="s1">+ name)</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s1">scopes[name] = i + </span><span class="s3">1</span><span class="s2">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">{</span>
+        <span class="s1">whitelist: buildList(data)</span><span class="s2">,</span>
+        <span class="s1">blacklist: buildList(data.blacklist)</span><span class="s2">,</span>
+        <span class="s1">scopes: scopes</span>
+    <span class="s1">}</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">buildIndex: buildIndex</span>
+<span class="s1">}</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

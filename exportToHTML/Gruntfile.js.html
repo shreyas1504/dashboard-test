@@ -1,0 +1,69 @@
+<html>
+<head>
+<title>Gruntfile.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Gruntfile.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">module.exports = </span><span class="s3">function</span><span class="s2">(grunt) {</span>
+
+  <span class="s4">// Project configuration.</span>
+  <span class="s2">grunt.initConfig({</span>
+    <span class="s2">nodeunit: {</span>
+      <span class="s2">files: [</span><span class="s0">'test/**/*_test.js'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">jshint: {</span>
+      <span class="s2">options: {</span>
+        <span class="s2">jshintrc: </span><span class="s0">'.jshintrc'</span>
+      <span class="s2">}</span><span class="s1">,</span>
+      <span class="s2">gruntfile: {</span>
+        <span class="s2">src: </span><span class="s0">'Gruntfile.js'</span>
+      <span class="s2">}</span><span class="s1">,</span>
+      <span class="s2">lib: {</span>
+        <span class="s2">src: [</span><span class="s0">'lib/**/*.js'</span><span class="s2">]</span>
+      <span class="s2">}</span><span class="s1">,</span>
+      <span class="s2">test: {</span>
+        <span class="s2">src: [</span><span class="s0">'test/**/*.js'</span><span class="s2">]</span>
+      <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">watch: {</span>
+      <span class="s2">gruntfile: {</span>
+        <span class="s2">files: </span><span class="s0">'&lt;%= jshint.gruntfile.src %&gt;'</span><span class="s1">,</span>
+        <span class="s2">tasks: [</span><span class="s0">'jshint:gruntfile'</span><span class="s2">]</span>
+      <span class="s2">}</span><span class="s1">,</span>
+      <span class="s2">lib: {</span>
+        <span class="s2">files: </span><span class="s0">'&lt;%= jshint.lib.src %&gt;'</span><span class="s1">,</span>
+        <span class="s2">tasks: [</span><span class="s0">'jshint:lib'</span><span class="s1">, </span><span class="s0">'nodeunit'</span><span class="s2">]</span>
+      <span class="s2">}</span><span class="s1">,</span>
+      <span class="s2">test: {</span>
+        <span class="s2">files: </span><span class="s0">'&lt;%= jshint.test.src %&gt;'</span><span class="s1">,</span>
+        <span class="s2">tasks: [</span><span class="s0">'jshint:test'</span><span class="s1">, </span><span class="s0">'nodeunit'</span><span class="s2">]</span>
+      <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">}</span><span class="s1">,</span>
+  <span class="s2">})</span><span class="s1">;</span>
+
+  <span class="s4">// These plugins provide necessary tasks.</span>
+  <span class="s2">grunt.loadNpmTasks(</span><span class="s0">'grunt-contrib-nodeunit'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">grunt.loadNpmTasks(</span><span class="s0">'grunt-contrib-jshint'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">grunt.loadNpmTasks(</span><span class="s0">'grunt-contrib-watch'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s4">// Default task.</span>
+  <span class="s2">grunt.registerTask(</span><span class="s0">'default'</span><span class="s1">, </span><span class="s2">[</span><span class="s0">'jshint'</span><span class="s1">, </span><span class="s0">'nodeunit'</span><span class="s2">])</span><span class="s1">;</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

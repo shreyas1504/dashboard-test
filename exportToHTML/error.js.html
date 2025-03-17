@@ -1,0 +1,149 @@
+<html>
+<head>
+<title>error.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+error.js</font>
+</center></td></tr></table>
+<pre><span class="s0">const </span><span class="s1">createCustomError = require(</span><span class="s2">'../utils/createCustomError'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">const </span><span class="s1">generate = require(</span><span class="s2">'../definition-syntax/generate'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">const </span><span class="s1">defaultLoc = { offset: </span><span class="s4">0</span><span class="s3">, </span><span class="s1">line: </span><span class="s4">1</span><span class="s3">, </span><span class="s1">column: </span><span class="s4">1 </span><span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">locateMismatch(matchResult</span><span class="s3">, </span><span class="s1">node) {</span>
+    <span class="s0">const </span><span class="s1">tokens = matchResult.tokens</span><span class="s3">;</span>
+    <span class="s0">const </span><span class="s1">longestMatch = matchResult.longestMatch</span><span class="s3">;</span>
+    <span class="s0">const </span><span class="s1">mismatchNode = longestMatch &lt; tokens.length ? tokens[longestMatch].node || </span><span class="s0">null </span><span class="s1">: </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s0">const </span><span class="s1">badNode = mismatchNode !== node ? mismatchNode : </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">mismatchOffset = </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">mismatchLength = </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">entries = </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">css = </span><span class="s2">''</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">start</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">end</span><span class="s3">;</span>
+
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">let </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; tokens.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+        <span class="s0">const </span><span class="s1">token = tokens[i].value</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(i === longestMatch) {</span>
+            <span class="s1">mismatchLength = token.length</span><span class="s3">;</span>
+            <span class="s1">mismatchOffset = css.length</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(badNode !== </span><span class="s0">null </span><span class="s1">&amp;&amp; tokens[i].node === badNode) {</span>
+            <span class="s0">if </span><span class="s1">(i &lt;= longestMatch) {</span>
+                <span class="s1">entries++</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                <span class="s1">entries = </span><span class="s4">0</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s1">css += token</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(longestMatch === tokens.length || entries &gt; </span><span class="s4">1</span><span class="s1">) { </span><span class="s5">// last</span>
+        <span class="s1">start = fromLoc(badNode || node</span><span class="s3">, </span><span class="s2">'end'</span><span class="s1">) || buildLoc(defaultLoc</span><span class="s3">, </span><span class="s1">css)</span><span class="s3">;</span>
+        <span class="s1">end = buildLoc(start)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+        <span class="s1">start = fromLoc(badNode</span><span class="s3">, </span><span class="s2">'start'</span><span class="s1">) ||</span>
+            <span class="s1">buildLoc(fromLoc(node</span><span class="s3">, </span><span class="s2">'start'</span><span class="s1">) || defaultLoc</span><span class="s3">, </span><span class="s1">css.slice(</span><span class="s4">0</span><span class="s3">, </span><span class="s1">mismatchOffset))</span><span class="s3">;</span>
+        <span class="s1">end = fromLoc(badNode</span><span class="s3">, </span><span class="s2">'end'</span><span class="s1">) ||</span>
+            <span class="s1">buildLoc(start</span><span class="s3">, </span><span class="s1">css.substr(mismatchOffset</span><span class="s3">, </span><span class="s1">mismatchLength))</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">{</span>
+        <span class="s1">css</span><span class="s3">,</span>
+        <span class="s1">mismatchOffset</span><span class="s3">,</span>
+        <span class="s1">mismatchLength</span><span class="s3">,</span>
+        <span class="s1">start</span><span class="s3">,</span>
+        <span class="s1">end</span>
+    <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">fromLoc(node</span><span class="s3">, </span><span class="s1">point) {</span>
+    <span class="s0">const </span><span class="s1">value = node &amp;&amp; node.loc &amp;&amp; node.loc[point]</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(value) {</span>
+        <span class="s0">return </span><span class="s2">'line' </span><span class="s0">in </span><span class="s1">value ? buildLoc(value) : value</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return null</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">buildLoc({ offset</span><span class="s3">, </span><span class="s1">line</span><span class="s3">, </span><span class="s1">column }</span><span class="s3">, </span><span class="s1">extra) {</span>
+    <span class="s0">const </span><span class="s1">loc = {</span>
+        <span class="s1">offset</span><span class="s3">,</span>
+        <span class="s1">line</span><span class="s3">,</span>
+        <span class="s1">column</span>
+    <span class="s1">}</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(extra) {</span>
+        <span class="s0">const </span><span class="s1">lines = extra.split(</span><span class="s4">/\n|\r\n?|\f/</span><span class="s1">)</span><span class="s3">;</span>
+
+        <span class="s1">loc.offset += extra.length</span><span class="s3">;</span>
+        <span class="s1">loc.line += lines.length - </span><span class="s4">1</span><span class="s3">;</span>
+        <span class="s1">loc.column = lines.length === </span><span class="s4">1 </span><span class="s1">? loc.column + extra.length : lines.pop().length + </span><span class="s4">1</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">loc</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">const </span><span class="s1">SyntaxReferenceError = </span><span class="s0">function</span><span class="s1">(type</span><span class="s3">, </span><span class="s1">referenceName) {</span>
+    <span class="s0">const </span><span class="s1">error = createCustomError(</span>
+        <span class="s2">'SyntaxReferenceError'</span><span class="s3">,</span>
+        <span class="s1">type + (referenceName ? </span><span class="s2">' `' </span><span class="s1">+ referenceName + </span><span class="s2">'`' </span><span class="s1">: </span><span class="s2">''</span><span class="s1">)</span>
+    <span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s1">error.reference = referenceName</span><span class="s3">;</span>
+
+    <span class="s0">return </span><span class="s1">error</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">const </span><span class="s1">SyntaxMatchError = </span><span class="s0">function</span><span class="s1">(message</span><span class="s3">, </span><span class="s1">syntax</span><span class="s3">, </span><span class="s1">node</span><span class="s3">, </span><span class="s1">matchResult) {</span>
+    <span class="s0">const </span><span class="s1">error = createCustomError(</span><span class="s2">'SyntaxMatchError'</span><span class="s3">, </span><span class="s1">message)</span><span class="s3">;</span>
+    <span class="s0">const </span><span class="s1">{</span>
+        <span class="s1">css</span><span class="s3">,</span>
+        <span class="s1">mismatchOffset</span><span class="s3">,</span>
+        <span class="s1">mismatchLength</span><span class="s3">,</span>
+        <span class="s1">start</span><span class="s3">,</span>
+        <span class="s1">end</span>
+    <span class="s1">} = locateMismatch(matchResult</span><span class="s3">, </span><span class="s1">node)</span><span class="s3">;</span>
+
+    <span class="s1">error.rawMessage = message</span><span class="s3">;</span>
+    <span class="s1">error.syntax = syntax ? generate(syntax) : </span><span class="s2">'&lt;generic&gt;'</span><span class="s3">;</span>
+    <span class="s1">error.css = css</span><span class="s3">;</span>
+    <span class="s1">error.mismatchOffset = mismatchOffset</span><span class="s3">;</span>
+    <span class="s1">error.mismatchLength = mismatchLength</span><span class="s3">;</span>
+    <span class="s1">error.message = message + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">+</span>
+        <span class="s2">'  syntax: ' </span><span class="s1">+ error.syntax + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">+</span>
+        <span class="s2">'   value: ' </span><span class="s1">+ (css || </span><span class="s2">'&lt;empty string&gt;'</span><span class="s1">) + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">+</span>
+        <span class="s2">'  --------' </span><span class="s1">+ </span><span class="s0">new </span><span class="s1">Array(error.mismatchOffset + </span><span class="s4">1</span><span class="s1">).join(</span><span class="s2">'-'</span><span class="s1">) + </span><span class="s2">'^'</span><span class="s3">;</span>
+
+    <span class="s1">Object.assign(error</span><span class="s3">, </span><span class="s1">start)</span><span class="s3">;</span>
+    <span class="s1">error.loc = {</span>
+        <span class="s1">source: (node &amp;&amp; node.loc &amp;&amp; node.loc.source) || </span><span class="s2">'&lt;unknown&gt;'</span><span class="s3">,</span>
+        <span class="s1">start</span><span class="s3">,</span>
+        <span class="s1">end</span>
+    <span class="s1">}</span><span class="s3">;</span>
+
+    <span class="s0">return </span><span class="s1">error</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">SyntaxReferenceError</span><span class="s3">,</span>
+    <span class="s1">SyntaxMatchError</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

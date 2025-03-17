@@ -1,0 +1,124 @@
+<html>
+<head>
+<title>atob.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #8a8a8a; font-style: italic;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #6897bb;}
+.s6 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+atob.js</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;use strict&quot;</span><span class="s1">;</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* Implementation of atob() according to the HTML and Infra specs, except that</span>
+ <span class="s3">* instead of throwing INVALID_CHARACTER_ERR we return null.</span>
+ <span class="s3">*/</span>
+<span class="s4">function </span><span class="s2">atob(data) {</span>
+  <span class="s4">if </span><span class="s2">(arguments.length === </span><span class="s5">0</span><span class="s2">) {</span>
+    <span class="s4">throw new </span><span class="s2">TypeError(</span><span class="s0">&quot;1 argument required, but only 0 present.&quot;</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s6">// Web IDL requires DOMStrings to just be converted using ECMAScript</span>
+  <span class="s6">// ToString, which in our case amounts to using a template literal.</span>
+  <span class="s2">data = </span><span class="s0">`</span><span class="s2">${data}</span><span class="s0">`</span><span class="s1">;</span>
+  <span class="s6">// &quot;Remove all ASCII whitespace from data.&quot;</span>
+  <span class="s2">data = data.replace(</span><span class="s5">/[ \t\n\f\r]/g</span><span class="s1">, </span><span class="s0">&quot;&quot;</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s6">// &quot;If data's length divides by 4 leaving no remainder, then: if data ends</span>
+  <span class="s6">// with one or two U+003D (=) code points, then remove them from data.&quot;</span>
+  <span class="s4">if </span><span class="s2">(data.length % </span><span class="s5">4 </span><span class="s2">=== </span><span class="s5">0</span><span class="s2">) {</span>
+    <span class="s2">data = data.replace(</span><span class="s5">/==?$/</span><span class="s1">, </span><span class="s0">&quot;&quot;</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s6">// &quot;If data's length divides by 4 leaving a remainder of 1, then return</span>
+  <span class="s6">// failure.&quot;</span>
+  <span class="s6">//</span>
+  <span class="s6">// &quot;If data contains a code point that is not one of</span>
+  <span class="s6">//</span>
+  <span class="s6">// U+002B (+)</span>
+  <span class="s6">// U+002F (/)</span>
+  <span class="s6">// ASCII alphanumeric</span>
+  <span class="s6">//</span>
+  <span class="s6">// then return failure.&quot;</span>
+  <span class="s4">if </span><span class="s2">(data.length % </span><span class="s5">4 </span><span class="s2">=== </span><span class="s5">1 </span><span class="s2">|| </span><span class="s5">/[^+/0-9A-Za-z]/</span><span class="s2">.test(data)) {</span>
+    <span class="s4">return null</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s6">// &quot;Let output be an empty byte sequence.&quot;</span>
+  <span class="s4">let </span><span class="s2">output = </span><span class="s0">&quot;&quot;</span><span class="s1">;</span>
+  <span class="s6">// &quot;Let buffer be an empty buffer that can have bits appended to it.&quot;</span>
+  <span class="s6">//</span>
+  <span class="s6">// We append bits via left-shift and or.  accumulatedBits is used to track</span>
+  <span class="s6">// when we've gotten to 24 bits.</span>
+  <span class="s4">let </span><span class="s2">buffer = </span><span class="s5">0</span><span class="s1">;</span>
+  <span class="s4">let </span><span class="s2">accumulatedBits = </span><span class="s5">0</span><span class="s1">;</span>
+  <span class="s6">// &quot;Let position be a position variable for data, initially pointing at the</span>
+  <span class="s6">// start of data.&quot;</span>
+  <span class="s6">//</span>
+  <span class="s6">// &quot;While position does not point past the end of data:&quot;</span>
+  <span class="s4">for </span><span class="s2">(</span><span class="s4">let </span><span class="s2">i = </span><span class="s5">0</span><span class="s1">; </span><span class="s2">i &lt; data.length</span><span class="s1">; </span><span class="s2">i++) {</span>
+    <span class="s6">// &quot;Find the code point pointed to by position in the second column of</span>
+    <span class="s6">// Table 1: The Base 64 Alphabet of RFC 4648. Let n be the number given in</span>
+    <span class="s6">// the first cell of the same row.</span>
+    <span class="s6">//</span>
+    <span class="s6">// &quot;Append to buffer the six bits corresponding to n, most significant bit</span>
+    <span class="s6">// first.&quot;</span>
+    <span class="s6">//</span>
+    <span class="s6">// atobLookup() implements the table from RFC 4648.</span>
+    <span class="s2">buffer &lt;&lt;= </span><span class="s5">6</span><span class="s1">;</span>
+    <span class="s2">buffer |= atobLookup(data[i])</span><span class="s1">;</span>
+    <span class="s2">accumulatedBits += </span><span class="s5">6</span><span class="s1">;</span>
+    <span class="s6">// &quot;If buffer has accumulated 24 bits, interpret them as three 8-bit</span>
+    <span class="s6">// big-endian numbers. Append three bytes with values equal to those</span>
+    <span class="s6">// numbers to output, in the same order, and then empty buffer.&quot;</span>
+    <span class="s4">if </span><span class="s2">(accumulatedBits === </span><span class="s5">24</span><span class="s2">) {</span>
+      <span class="s2">output += String.fromCharCode((buffer &amp; </span><span class="s5">0xff0000</span><span class="s2">) &gt;&gt; </span><span class="s5">16</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">output += String.fromCharCode((buffer &amp; </span><span class="s5">0xff00</span><span class="s2">) &gt;&gt; </span><span class="s5">8</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">output += String.fromCharCode(buffer &amp; </span><span class="s5">0xff</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">buffer = accumulatedBits = </span><span class="s5">0</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s6">// &quot;Advance position by 1.&quot;</span>
+  <span class="s2">}</span>
+  <span class="s6">// &quot;If buffer is not empty, it contains either 12 or 18 bits. If it contains</span>
+  <span class="s6">// 12 bits, then discard the last four and interpret the remaining eight as</span>
+  <span class="s6">// an 8-bit big-endian number. If it contains 18 bits, then discard the last</span>
+  <span class="s6">// two and interpret the remaining 16 as two 8-bit big-endian numbers. Append</span>
+  <span class="s6">// the one or two bytes with values equal to those one or two numbers to</span>
+  <span class="s6">// output, in the same order.&quot;</span>
+  <span class="s4">if </span><span class="s2">(accumulatedBits === </span><span class="s5">12</span><span class="s2">) {</span>
+    <span class="s2">buffer &gt;&gt;= </span><span class="s5">4</span><span class="s1">;</span>
+    <span class="s2">output += String.fromCharCode(buffer)</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s4">else if </span><span class="s2">(accumulatedBits === </span><span class="s5">18</span><span class="s2">) {</span>
+    <span class="s2">buffer &gt;&gt;= </span><span class="s5">2</span><span class="s1">;</span>
+    <span class="s2">output += String.fromCharCode((buffer &amp; </span><span class="s5">0xff00</span><span class="s2">) &gt;&gt; </span><span class="s5">8</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">output += String.fromCharCode(buffer &amp; </span><span class="s5">0xff</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s6">// &quot;Return output.&quot;</span>
+  <span class="s4">return </span><span class="s2">output</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s3">/**</span>
+ <span class="s3">* A lookup table for atob(), which converts an ASCII character to the</span>
+ <span class="s3">* corresponding six-bit number.</span>
+ <span class="s3">*/</span>
+
+<span class="s4">const </span><span class="s2">keystr =</span>
+  <span class="s0">&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;</span><span class="s1">;</span>
+
+<span class="s4">function </span><span class="s2">atobLookup(chr) {</span>
+  <span class="s4">const </span><span class="s2">index = keystr.indexOf(chr)</span><span class="s1">;</span>
+  <span class="s6">// Throw exception if character is not in the lookup string; should not be hit in tests</span>
+  <span class="s4">return </span><span class="s2">index &lt; </span><span class="s5">0 </span><span class="s2">? undefined : index</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s2">module.exports = atob</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

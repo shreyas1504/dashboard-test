@@ -1,0 +1,1026 @@
+<html>
+<head>
+<title>streamify.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+streamify.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span>
+
+<span class="s2">const </span><span class="s1">assert = require(</span><span class="s0">'chai'</span><span class="s1">).assert</span>
+<span class="s2">const </span><span class="s1">proxyquire = require(</span><span class="s0">'proxyquire'</span><span class="s1">)</span>
+<span class="s2">const </span><span class="s1">spooks = require(</span><span class="s0">'spooks'</span><span class="s1">)</span>
+
+<span class="s2">const </span><span class="s1">modulePath = </span><span class="s0">'../../src/streamify'</span>
+
+<span class="s1">suite(</span><span class="s0">'streamify:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+  <span class="s1">test(</span><span class="s0">'require does not throw'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">assert.doesNotThrow(() =&gt; {</span>
+      <span class="s1">require(modulePath)</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+
+  <span class="s1">test(</span><span class="s0">'require returns function'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">assert.isFunction(require(modulePath))</span>
+  <span class="s1">})</span>
+
+  <span class="s1">suite(</span><span class="s0">'require:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s2">let </span><span class="s1">log</span><span class="s3">, </span><span class="s1">results</span><span class="s3">, </span><span class="s1">streamify</span>
+
+    <span class="s1">setup(() =&gt; {</span>
+      <span class="s1">log = {}</span>
+      <span class="s1">results = {</span>
+        <span class="s1">eventify: [</span>
+          <span class="s1">{ on: spooks.fn({ name: </span><span class="s0">'on'</span><span class="s3">, </span><span class="s1">log: log }) }</span>
+        <span class="s1">]</span><span class="s3">,</span>
+        <span class="s1">push: [ </span><span class="s2">true </span><span class="s1">]</span>
+      <span class="s1">}</span>
+      <span class="s1">streamify = proxyquire(modulePath</span><span class="s3">, </span><span class="s1">{</span>
+        <span class="s0">'./eventify'</span><span class="s1">: spooks.fn({</span>
+          <span class="s1">name: </span><span class="s0">'eventify'</span><span class="s3">,</span>
+          <span class="s1">log: log</span><span class="s3">,</span>
+          <span class="s1">results: results.eventify</span>
+        <span class="s1">})</span><span class="s3">,</span>
+        <span class="s0">'./jsonstream'</span><span class="s1">: spooks.ctor({</span>
+          <span class="s1">name: </span><span class="s0">'JsonStream'</span><span class="s3">,</span>
+          <span class="s1">log: log</span><span class="s3">,</span>
+          <span class="s1">archetype: { instance: { push: () =&gt; {}</span><span class="s3">, </span><span class="s1">emit: () =&gt; {} } }</span><span class="s3">,</span>
+          <span class="s1">results: results</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'streamify expects one argument'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.lengthOf(streamify</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'streamify does not throw'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.doesNotThrow(() =&gt; {</span>
+        <span class="s1">streamify()</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'streamify returns stream'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.isFunction(streamify().push)</span>
+      <span class="s1">assert.isFunction(streamify().emit)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'JsonStream was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.strictEqual(log.counts.JsonStream</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'eventify was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.strictEqual(log.counts.eventify</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'EventEmitter.on was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.strictEqual(log.counts.on</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'streamify:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options</span><span class="s3">, </span><span class="s1">result</span>
+
+      <span class="s1">setup(() =&gt; {</span>
+        <span class="s1">data = {}</span>
+        <span class="s1">options = { foo: </span><span class="s0">'bar'</span><span class="s3">, </span><span class="s1">highWaterMark: </span><span class="s4">42 </span><span class="s1">}</span>
+        <span class="s1">result = streamify(data</span><span class="s3">, </span><span class="s1">options)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'JsonStream was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.JsonStream</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.isObject(log.these.JsonStream[</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'JsonStream was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.JsonStream[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">assert.deepEqual(log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">{ highWaterMark: </span><span class="s4">42 </span><span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'eventify was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.eventify</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.isUndefined(log.these.eventify[</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'eventify was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.eventify[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.eventify[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">data)</span>
+        <span class="s1">assert.lengthOf(Object.keys(log.args.eventify[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.eventify[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">options)</span>
+        <span class="s1">assert.lengthOf(Object.keys(log.args.eventify[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'EventEmitter.on was called eleven times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.on</span><span class="s3">, </span><span class="s4">11</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.these.on[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">results.eventify[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">assert.strictEqual(log.these.on[</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">results.eventify[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">assert.strictEqual(log.these.on[</span><span class="s4">2</span><span class="s1">]</span><span class="s3">, </span><span class="s1">results.eventify[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">assert.strictEqual(log.these.on[</span><span class="s4">3</span><span class="s1">]</span><span class="s3">, </span><span class="s1">results.eventify[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">assert.strictEqual(log.these.on[</span><span class="s4">4</span><span class="s1">]</span><span class="s3">, </span><span class="s1">results.eventify[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">assert.strictEqual(log.these.on[</span><span class="s4">5</span><span class="s1">]</span><span class="s3">, </span><span class="s1">results.eventify[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">assert.strictEqual(log.these.on[</span><span class="s4">6</span><span class="s1">]</span><span class="s3">, </span><span class="s1">results.eventify[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">assert.strictEqual(log.these.on[</span><span class="s4">7</span><span class="s1">]</span><span class="s3">, </span><span class="s1">results.eventify[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">assert.strictEqual(log.these.on[</span><span class="s4">8</span><span class="s1">]</span><span class="s3">, </span><span class="s1">results.eventify[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">assert.strictEqual(log.these.on[</span><span class="s4">9</span><span class="s1">]</span><span class="s3">, </span><span class="s1">results.eventify[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">assert.strictEqual(log.these.on[</span><span class="s4">10</span><span class="s1">]</span><span class="s3">, </span><span class="s1">results.eventify[</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'EventEmitter.on was called correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.on[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'arr'</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.on[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'EventEmitter.on was called correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.on[</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'obj'</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.on[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'EventEmitter.on was called correctly third time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.on[</span><span class="s4">2</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'pro'</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.on[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'EventEmitter.on was called correctly fourth time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.on[</span><span class="s4">3</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'str'</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'EventEmitter.on was called correctly fifth time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.on[</span><span class="s4">4</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">4</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'num'</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.on[</span><span class="s4">4</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'EventEmitter.on was called correctly sixth time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.on[</span><span class="s4">5</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">5</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'lit'</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.on[</span><span class="s4">5</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'EventEmitter.on was called correctly seventh time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.on[</span><span class="s4">6</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">6</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'end-arr'</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.on[</span><span class="s4">6</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'EventEmitter.on was called correctly eighth time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.on[</span><span class="s4">7</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">7</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'end-obj'</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.on[</span><span class="s4">7</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'EventEmitter.on was called correctly ninth time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.on[</span><span class="s4">8</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">8</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'end'</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.on[</span><span class="s4">8</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'EventEmitter.on was called correctly tenth time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.on[</span><span class="s4">9</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">9</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'err'</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.on[</span><span class="s4">9</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'EventEmitter.on was called correctly eleventh time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.on[</span><span class="s4">10</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">10</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'err-data'</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.on[</span><span class="s4">10</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">suite(</span><span class="s0">'array event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">setup(() =&gt; {</span>
+          <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'stream.push was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">suite(</span><span class="s0">'end event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">setup(() =&gt; {</span>
+            <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">8</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+          <span class="s1">})</span>
+
+          <span class="s1">test(</span><span class="s0">'stream.push was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+            <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+          <span class="s1">})</span>
+
+          <span class="s1">suite(</span><span class="s0">'read stream:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+            <span class="s1">setup(() =&gt; {</span>
+              <span class="s1">log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]()</span>
+            <span class="s1">})</span>
+
+            <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+            <span class="s1">})</span>
+
+            <span class="s1">test(</span><span class="s0">'stream.push was called correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">assert.lengthOf(log.args.push[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+              <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'['</span><span class="s1">)</span>
+              <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'utf8'</span><span class="s1">)</span>
+            <span class="s1">})</span>
+
+            <span class="s1">test(</span><span class="s0">'stream.push was called correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">assert.lengthOf(log.args.push[</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+              <span class="s1">assert.isNull(log.args.push[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+            <span class="s1">})</span>
+
+            <span class="s1">test(</span><span class="s0">'stream.emit was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">assert.strictEqual(log.counts.emit</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+            <span class="s1">})</span>
+          <span class="s1">})</span>
+        <span class="s1">})</span>
+
+        <span class="s1">suite(</span><span class="s0">'read stream:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">setup(() =&gt; {</span>
+            <span class="s1">log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]()</span>
+          <span class="s1">})</span>
+
+          <span class="s1">test(</span><span class="s0">'stream.push was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+            <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+          <span class="s1">})</span>
+
+          <span class="s1">suite(</span><span class="s0">'end event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+            <span class="s1">setup(() =&gt; {</span>
+              <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">8</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+            <span class="s1">})</span>
+
+            <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+            <span class="s1">})</span>
+
+            <span class="s1">test(</span><span class="s0">'stream.push was called correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'['</span><span class="s1">)</span>
+            <span class="s1">})</span>
+
+            <span class="s1">test(</span><span class="s0">'stream.push was called correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">assert.isNull(log.args.push[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+            <span class="s1">})</span>
+
+            <span class="s1">test(</span><span class="s0">'stream.emit was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">assert.strictEqual(log.counts.emit</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+            <span class="s1">})</span>
+          <span class="s1">})</span>
+
+          <span class="s1">suite(</span><span class="s0">'string event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+            <span class="s1">setup(() =&gt; {</span>
+              <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'foo'</span><span class="s1">)</span>
+            <span class="s1">})</span>
+
+            <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+            <span class="s1">})</span>
+
+            <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'['</span><span class="s1">)</span>
+              <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;foo&quot;'</span><span class="s1">)</span>
+            <span class="s1">})</span>
+
+            <span class="s1">suite(</span><span class="s0">'string event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">setup(() =&gt; {</span>
+                <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'bar'</span><span class="s1">)</span>
+              <span class="s1">})</span>
+
+              <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">4</span><span class="s1">)</span>
+              <span class="s1">})</span>
+
+              <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;bar&quot;'</span><span class="s1">)</span>
+              <span class="s1">})</span>
+            <span class="s1">})</span>
+
+            <span class="s1">suite(</span><span class="s0">'array event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">setup(() =&gt; {</span>
+                <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+              <span class="s1">})</span>
+
+              <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">4</span><span class="s1">)</span>
+              <span class="s1">})</span>
+
+              <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'['</span><span class="s1">)</span>
+              <span class="s1">})</span>
+
+              <span class="s1">suite(</span><span class="s0">'array event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">setup(() =&gt; {</span>
+                  <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+                <span class="s1">})</span>
+
+                <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">5</span><span class="s1">)</span>
+                <span class="s1">})</span>
+
+                <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">4</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'['</span><span class="s1">)</span>
+                <span class="s1">})</span>
+
+                <span class="s1">suite(</span><span class="s0">'endArray event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">setup(() =&gt; {</span>
+                    <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">6</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">6</span><span class="s1">)</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">5</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">']'</span><span class="s1">)</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">suite(</span><span class="s0">'string event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">setup(() =&gt; {</span>
+                      <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'bar'</span><span class="s1">)</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">8</span><span class="s1">)</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">6</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                      <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">7</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;bar&quot;'</span><span class="s1">)</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">suite(</span><span class="s0">'string event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">setup(() =&gt; {</span>
+                        <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'baz'</span><span class="s1">)</span>
+                      <span class="s1">})</span>
+
+                      <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                        <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">10</span><span class="s1">)</span>
+                      <span class="s1">})</span>
+
+                      <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                        <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">8</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                        <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">9</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;baz&quot;'</span><span class="s1">)</span>
+                      <span class="s1">})</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">suite(</span><span class="s0">'endArray event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">setup(() =&gt; {</span>
+                        <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">6</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+                      <span class="s1">})</span>
+
+                      <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                        <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">9</span><span class="s1">)</span>
+                      <span class="s1">})</span>
+
+                      <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                        <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">8</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">']'</span><span class="s1">)</span>
+                      <span class="s1">})</span>
+
+                      <span class="s1">suite(</span><span class="s0">'string event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                        <span class="s1">setup(() =&gt; {</span>
+                          <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'baz'</span><span class="s1">)</span>
+                        <span class="s1">})</span>
+
+                        <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                          <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">11</span><span class="s1">)</span>
+                        <span class="s1">})</span>
+
+                        <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                          <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">9</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                          <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">10</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;baz&quot;'</span><span class="s1">)</span>
+                        <span class="s1">})</span>
+
+                        <span class="s1">test(</span><span class="s0">'stream.emit was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                          <span class="s1">assert.strictEqual(log.counts.emit</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+                        <span class="s1">})</span>
+                      <span class="s1">})</span>
+                    <span class="s1">})</span>
+                  <span class="s1">})</span>
+                <span class="s1">})</span>
+              <span class="s1">})</span>
+            <span class="s1">})</span>
+
+            <span class="s1">suite(</span><span class="s0">'object event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">setup(() =&gt; {</span>
+                <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+              <span class="s1">})</span>
+
+              <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">4</span><span class="s1">)</span>
+              <span class="s1">})</span>
+
+              <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'{'</span><span class="s1">)</span>
+              <span class="s1">})</span>
+
+              <span class="s1">suite(</span><span class="s0">'property event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">setup(() =&gt; {</span>
+                  <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'bar'</span><span class="s1">)</span>
+                <span class="s1">})</span>
+
+                <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">5</span><span class="s1">)</span>
+                <span class="s1">})</span>
+
+                <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">4</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;bar&quot;:'</span><span class="s1">)</span>
+                <span class="s1">})</span>
+
+                <span class="s1">suite(</span><span class="s0">'string event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">setup(() =&gt; {</span>
+                    <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'baz'</span><span class="s1">)</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">6</span><span class="s1">)</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">5</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;baz&quot;'</span><span class="s1">)</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">suite(</span><span class="s0">'property event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">setup(() =&gt; {</span>
+                      <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'nested'</span><span class="s1">)</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">8</span><span class="s1">)</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">6</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                      <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">7</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;nested&quot;:'</span><span class="s1">)</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">suite(</span><span class="s0">'object event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">setup(() =&gt; {</span>
+                        <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+                      <span class="s1">})</span>
+
+                      <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                        <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">9</span><span class="s1">)</span>
+                      <span class="s1">})</span>
+
+                      <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                        <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">8</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'{'</span><span class="s1">)</span>
+                      <span class="s1">})</span>
+
+                      <span class="s1">suite(</span><span class="s0">'endObject event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                        <span class="s1">setup(() =&gt; {</span>
+                          <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">7</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+                        <span class="s1">})</span>
+
+                        <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                          <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">10</span><span class="s1">)</span>
+                        <span class="s1">})</span>
+
+                        <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                          <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">9</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'}'</span><span class="s1">)</span>
+                        <span class="s1">})</span>
+
+                        <span class="s1">suite(</span><span class="s0">'property event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                          <span class="s1">setup(() =&gt; {</span>
+                            <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'qux'</span><span class="s1">)</span>
+                          <span class="s1">})</span>
+
+                          <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                            <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">12</span><span class="s1">)</span>
+                          <span class="s1">})</span>
+
+                          <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                            <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">10</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                            <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">11</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;qux&quot;:'</span><span class="s1">)</span>
+                          <span class="s1">})</span>
+
+                          <span class="s1">suite(</span><span class="s0">'string event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                            <span class="s1">setup(() =&gt; {</span>
+                              <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'wibble'</span><span class="s1">)</span>
+                            <span class="s1">})</span>
+
+                            <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                              <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">13</span><span class="s1">)</span>
+                            <span class="s1">})</span>
+
+                            <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                              <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">12</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;wibble&quot;'</span><span class="s1">)</span>
+                            <span class="s1">})</span>
+                          <span class="s1">})</span>
+                        <span class="s1">})</span>
+
+                        <span class="s1">suite(</span><span class="s0">'endObject event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                          <span class="s1">setup(() =&gt; {</span>
+                            <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">7</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+                          <span class="s1">})</span>
+
+                          <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                            <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">11</span><span class="s1">)</span>
+                          <span class="s1">})</span>
+
+                          <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                            <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">10</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'}'</span><span class="s1">)</span>
+                          <span class="s1">})</span>
+
+                          <span class="s1">suite(</span><span class="s0">'string event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                            <span class="s1">setup(() =&gt; {</span>
+                              <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'wibble'</span><span class="s1">)</span>
+                            <span class="s1">})</span>
+
+                            <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                              <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">13</span><span class="s1">)</span>
+                            <span class="s1">})</span>
+
+                            <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                              <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">11</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                              <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">12</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;wibble&quot;'</span><span class="s1">)</span>
+                            <span class="s1">})</span>
+
+                            <span class="s1">test(</span><span class="s0">'stream.emit was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                              <span class="s1">assert.strictEqual(log.counts.emit</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+                            <span class="s1">})</span>
+                          <span class="s1">})</span>
+                        <span class="s1">})</span>
+                      <span class="s1">})</span>
+                    <span class="s1">})</span>
+                  <span class="s1">})</span>
+                <span class="s1">})</span>
+              <span class="s1">})</span>
+            <span class="s1">})</span>
+          <span class="s1">})</span>
+
+          <span class="s1">suite(</span><span class="s0">'string event, push returns false:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+            <span class="s1">setup(() =&gt; {</span>
+              <span class="s1">results.push[</span><span class="s4">0</span><span class="s1">] = </span><span class="s2">false</span>
+              <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'foo'</span><span class="s1">)</span>
+            <span class="s1">})</span>
+
+            <span class="s1">teardown(() =&gt; {</span>
+              <span class="s1">results.push[</span><span class="s4">0</span><span class="s1">] = </span><span class="s2">true</span>
+            <span class="s1">})</span>
+
+            <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+            <span class="s1">})</span>
+
+            <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'['</span><span class="s1">)</span>
+            <span class="s1">})</span>
+
+            <span class="s1">suite(</span><span class="s0">'string event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">setup(() =&gt; {</span>
+                <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'bar'</span><span class="s1">)</span>
+              <span class="s1">})</span>
+
+              <span class="s1">test(</span><span class="s0">'stream.push was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+              <span class="s1">})</span>
+
+              <span class="s1">suite(</span><span class="s0">'read stream, endArrayEvent:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">setup(() =&gt; {</span>
+                  <span class="s1">log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]()</span>
+                  <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">6</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+                <span class="s1">})</span>
+
+                <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+                <span class="s1">})</span>
+
+                <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;foo&quot;'</span><span class="s1">)</span>
+                <span class="s1">})</span>
+
+                <span class="s1">suite(</span><span class="s0">'read stream:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">setup(() =&gt; {</span>
+                    <span class="s1">log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]()</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">test(</span><span class="s0">'stream.push was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">test(</span><span class="s0">'stream.emit was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">assert.strictEqual(log.counts.emit</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+                  <span class="s1">})</span>
+                <span class="s1">})</span>
+              <span class="s1">})</span>
+
+              <span class="s1">suite(</span><span class="s0">'end event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">setup(() =&gt; {</span>
+                  <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">8</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+                <span class="s1">})</span>
+
+                <span class="s1">test(</span><span class="s0">'stream.push was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+                <span class="s1">})</span>
+
+                <span class="s1">suite(</span><span class="s0">'read stream:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">setup(() =&gt; {</span>
+                    <span class="s1">log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]()</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;foo&quot;'</span><span class="s1">)</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">suite(</span><span class="s0">'read stream:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">setup(() =&gt; {</span>
+                      <span class="s1">log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]()</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">suite(</span><span class="s0">'read stream:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">setup(() =&gt; {</span>
+                        <span class="s1">log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]()</span>
+                      <span class="s1">})</span>
+
+                      <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                        <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">4</span><span class="s1">)</span>
+                      <span class="s1">})</span>
+
+                      <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                        <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;bar&quot;'</span><span class="s1">)</span>
+                      <span class="s1">})</span>
+
+                      <span class="s1">suite(</span><span class="s0">'read stream:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                        <span class="s1">setup(() =&gt; {</span>
+                          <span class="s1">log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]()</span>
+                        <span class="s1">})</span>
+
+                        <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                          <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">5</span><span class="s1">)</span>
+                        <span class="s1">})</span>
+
+                        <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                          <span class="s1">assert.isNull(log.args.push[</span><span class="s4">4</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+                        <span class="s1">})</span>
+                      <span class="s1">})</span>
+                    <span class="s1">})</span>
+                  <span class="s1">})</span>
+                <span class="s1">})</span>
+
+                <span class="s1">suite(</span><span class="s0">'read stream, push returns true:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">setup(() =&gt; {</span>
+                    <span class="s1">results.push[</span><span class="s4">0</span><span class="s1">] = </span><span class="s2">true</span>
+                    <span class="s1">log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]()</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">test(</span><span class="s0">'stream.push was called four times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">5</span><span class="s1">)</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;foo&quot;'</span><span class="s1">)</span>
+                    <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                    <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;bar&quot;'</span><span class="s1">)</span>
+                    <span class="s1">assert.isNull(log.args.push[</span><span class="s4">4</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">suite(</span><span class="s0">'read stream:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">setup(() =&gt; {</span>
+                      <span class="s1">log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]()</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">test(</span><span class="s0">'stream.push was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">5</span><span class="s1">)</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">test(</span><span class="s0">'stream.emit was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">assert.strictEqual(log.counts.emit</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+                    <span class="s1">})</span>
+                  <span class="s1">})</span>
+                <span class="s1">})</span>
+              <span class="s1">})</span>
+            <span class="s1">})</span>
+          <span class="s1">})</span>
+        <span class="s1">})</span>
+
+        <span class="s1">suite(</span><span class="s0">'object event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">setup(() =&gt; {</span>
+            <span class="s1">log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]()</span>
+            <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+          <span class="s1">})</span>
+
+          <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+            <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+          <span class="s1">})</span>
+
+          <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+            <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'['</span><span class="s1">)</span>
+            <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'{'</span><span class="s1">)</span>
+          <span class="s1">})</span>
+
+          <span class="s1">test(</span><span class="s0">'stream.emit was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+            <span class="s1">assert.strictEqual(log.counts.emit</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+          <span class="s1">})</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'streamify with space option:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options</span><span class="s3">, </span><span class="s1">result</span>
+
+      <span class="s1">setup(() =&gt; {</span>
+        <span class="s1">data = {}</span>
+        <span class="s1">options = { space: </span><span class="s4">2 </span><span class="s1">}</span>
+        <span class="s1">result = streamify(data</span><span class="s3">, </span><span class="s1">options)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'JsonStream was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.JsonStream</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'eventify was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.eventify</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'EventEmitter.on was called eleven times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.on</span><span class="s3">, </span><span class="s4">11</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'stream.push was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">suite(</span><span class="s0">'read stream, object event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">setup(() =&gt; {</span>
+          <span class="s1">log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]()</span>
+          <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'{'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">suite(</span><span class="s0">'property event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">setup(() =&gt; {</span>
+            <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'foo'</span><span class="s1">)</span>
+          <span class="s1">})</span>
+
+          <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+            <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+          <span class="s1">})</span>
+
+          <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+            <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'</span><span class="s3">\n  </span><span class="s0">'</span><span class="s1">)</span>
+            <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;foo&quot;:'</span><span class="s1">)</span>
+          <span class="s1">})</span>
+
+          <span class="s1">suite(</span><span class="s0">'string event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+            <span class="s1">setup(() =&gt; {</span>
+              <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'bar'</span><span class="s1">)</span>
+            <span class="s1">})</span>
+
+            <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">5</span><span class="s1">)</span>
+            <span class="s1">})</span>
+
+            <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">' '</span><span class="s1">)</span>
+              <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">4</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;bar&quot;'</span><span class="s1">)</span>
+            <span class="s1">})</span>
+
+            <span class="s1">suite(</span><span class="s0">'property event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+              <span class="s1">setup(() =&gt; {</span>
+                <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'baz'</span><span class="s1">)</span>
+              <span class="s1">})</span>
+
+              <span class="s1">test(</span><span class="s0">'stream.push was called three times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">8</span><span class="s1">)</span>
+              <span class="s1">})</span>
+
+              <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">5</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">6</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'</span><span class="s3">\n  </span><span class="s0">'</span><span class="s1">)</span>
+                <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">7</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;baz&quot;:'</span><span class="s1">)</span>
+              <span class="s1">})</span>
+
+              <span class="s1">suite(</span><span class="s0">'string event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">setup(() =&gt; {</span>
+                  <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'qux'</span><span class="s1">)</span>
+                <span class="s1">})</span>
+
+                <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">10</span><span class="s1">)</span>
+                <span class="s1">})</span>
+
+                <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">8</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">' '</span><span class="s1">)</span>
+                  <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">9</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;qux&quot;'</span><span class="s1">)</span>
+                <span class="s1">})</span>
+
+                <span class="s1">suite(</span><span class="s0">'property event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                  <span class="s1">setup(() =&gt; {</span>
+                    <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'wibble'</span><span class="s1">)</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">test(</span><span class="s0">'stream.push was called three times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">13</span><span class="s1">)</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">10</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                    <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">11</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'</span><span class="s3">\n  </span><span class="s0">'</span><span class="s1">)</span>
+                    <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">12</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;wibble&quot;:'</span><span class="s1">)</span>
+                  <span class="s1">})</span>
+
+                  <span class="s1">suite(</span><span class="s0">'array event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                    <span class="s1">setup(() =&gt; {</span>
+                      <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">15</span><span class="s1">)</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">13</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">' '</span><span class="s1">)</span>
+                      <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">14</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'['</span><span class="s1">)</span>
+                    <span class="s1">})</span>
+
+                    <span class="s1">suite(</span><span class="s0">'string event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                      <span class="s1">setup(() =&gt; {</span>
+                        <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'0'</span><span class="s1">)</span>
+                      <span class="s1">})</span>
+
+                      <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                        <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">17</span><span class="s1">)</span>
+                      <span class="s1">})</span>
+
+                      <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                        <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">15</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'</span><span class="s3">\n    </span><span class="s0">'</span><span class="s1">)</span>
+                        <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">16</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;0&quot;'</span><span class="s1">)</span>
+                      <span class="s1">})</span>
+
+                      <span class="s1">suite(</span><span class="s0">'string event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                        <span class="s1">setup(() =&gt; {</span>
+                          <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'1'</span><span class="s1">)</span>
+                        <span class="s1">})</span>
+
+                        <span class="s1">test(</span><span class="s0">'stream.push was called three times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                          <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">20</span><span class="s1">)</span>
+                        <span class="s1">})</span>
+
+                        <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                          <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">17</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                          <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">18</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'</span><span class="s3">\n    </span><span class="s0">'</span><span class="s1">)</span>
+                          <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">19</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;1&quot;'</span><span class="s1">)</span>
+                        <span class="s1">})</span>
+
+                        <span class="s1">suite(</span><span class="s0">'endArray event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                          <span class="s1">setup(() =&gt; {</span>
+                            <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">6</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+                          <span class="s1">})</span>
+
+                          <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                            <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">22</span><span class="s1">)</span>
+                          <span class="s1">})</span>
+
+                          <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                            <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">20</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'</span><span class="s3">\n  </span><span class="s0">'</span><span class="s1">)</span>
+                            <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">21</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">']'</span><span class="s1">)</span>
+                          <span class="s1">})</span>
+
+                          <span class="s1">suite(</span><span class="s0">'property event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                            <span class="s1">setup(() =&gt; {</span>
+                              <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'a'</span><span class="s1">)</span>
+                            <span class="s1">})</span>
+
+                            <span class="s1">test(</span><span class="s0">'stream.push was called three times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                              <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">25</span><span class="s1">)</span>
+                            <span class="s1">})</span>
+
+                            <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                              <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">22</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">','</span><span class="s1">)</span>
+                              <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">23</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'</span><span class="s3">\n  </span><span class="s0">'</span><span class="s1">)</span>
+                              <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">24</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;a&quot;:'</span><span class="s1">)</span>
+                            <span class="s1">})</span>
+
+                            <span class="s1">suite(</span><span class="s0">'string event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                              <span class="s1">setup(() =&gt; {</span>
+                                <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'b'</span><span class="s1">)</span>
+                              <span class="s1">})</span>
+
+                              <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                                <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">27</span><span class="s1">)</span>
+                              <span class="s1">})</span>
+
+                              <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                                <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">25</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">' '</span><span class="s1">)</span>
+                                <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">26</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'&quot;b&quot;'</span><span class="s1">)</span>
+                              <span class="s1">})</span>
+
+                              <span class="s1">suite(</span><span class="s0">'endObject event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                                <span class="s1">setup(() =&gt; {</span>
+                                  <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">7</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+                                <span class="s1">})</span>
+
+                                <span class="s1">test(</span><span class="s0">'stream.push was called twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                                  <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">29</span><span class="s1">)</span>
+                                <span class="s1">})</span>
+
+                                <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                                  <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">27</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'</span><span class="s3">\n</span><span class="s0">'</span><span class="s1">)</span>
+                                  <span class="s1">assert.strictEqual(log.args.push[</span><span class="s4">28</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'}'</span><span class="s1">)</span>
+                                <span class="s1">})</span>
+
+                                <span class="s1">test(</span><span class="s0">'stream.emit was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                                  <span class="s1">assert.strictEqual(log.counts.emit</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+                                <span class="s1">})</span>
+                              <span class="s1">})</span>
+                            <span class="s1">})</span>
+                          <span class="s1">})</span>
+                        <span class="s1">})</span>
+                      <span class="s1">})</span>
+                    <span class="s1">})</span>
+                  <span class="s1">})</span>
+                <span class="s1">})</span>
+              <span class="s1">})</span>
+            <span class="s1">})</span>
+          <span class="s1">})</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">suite(</span><span class="s0">'read stream, end event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">setup(() =&gt; {</span>
+          <span class="s1">log.args.JsonStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]()</span>
+          <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">8</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]()</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'stream.push was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.strictEqual(log.counts.push</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'stream.push was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.isNull(log.args.push[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'stream.emit was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.strictEqual(log.counts.emit</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">suite(</span><span class="s0">'error event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">setup(() =&gt; {</span>
+          <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">9</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'foo'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'stream.emit was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.strictEqual(log.counts.emit</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'stream.emit was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.lengthOf(log.args.emit[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+          <span class="s1">assert.strictEqual(log.args.emit[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'error'</span><span class="s1">)</span>
+          <span class="s1">assert.strictEqual(log.args.emit[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">suite(</span><span class="s0">'dataError event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">setup(() =&gt; {</span>
+          <span class="s2">return </span><span class="s1">log.args.on[</span><span class="s4">10</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'bar'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'stream.emit was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.strictEqual(log.counts.emit</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'stream.emit was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.lengthOf(log.args.emit[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+          <span class="s1">assert.strictEqual(log.args.emit[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'dataError'</span><span class="s1">)</span>
+          <span class="s1">assert.strictEqual(log.args.emit[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'bar'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+<span class="s1">})</span>
+</pre>
+</body>
+</html>

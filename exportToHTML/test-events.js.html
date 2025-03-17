@@ -1,0 +1,183 @@
+<html>
+<head>
+<title>test-events.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test-events.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">parseCst = require(</span><span class="s0">'./parse-cst.js'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">Document = require(</span><span class="s0">'./Document-9b4560a1.js'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">require(</span><span class="s0">'./PlainValue-ec8e588e.js'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">require(</span><span class="s0">'./resolveSeq-d03cb037.js'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">require(</span><span class="s0">'./Schema-88e323a7.js'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">require(</span><span class="s0">'./warnings-1000a372.js'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">testEvents(src</span><span class="s1">, </span><span class="s2">options) {</span>
+  <span class="s3">const </span><span class="s2">opt = Object.assign({</span>
+    <span class="s2">keepCstNodes: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">keepNodeTypes: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">version: </span><span class="s0">'1.2'</span>
+  <span class="s2">}</span><span class="s1">, </span><span class="s2">options)</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">docs = parseCst.parse(src).map(cstDoc =&gt; </span><span class="s3">new </span><span class="s2">Document.Document(opt).parse(cstDoc))</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">errDoc = docs.find(doc =&gt; doc.errors.length &gt; </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">error = errDoc ? errDoc.errors[</span><span class="s4">0</span><span class="s2">].message : </span><span class="s3">null</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">events = [</span><span class="s0">'+STR'</span><span class="s2">]</span><span class="s1">;</span>
+
+  <span class="s3">try </span><span class="s2">{</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">let </span><span class="s2">i = </span><span class="s4">0</span><span class="s1">; </span><span class="s2">i &lt; docs.length</span><span class="s1">; </span><span class="s2">++i) {</span>
+      <span class="s3">const </span><span class="s2">doc = docs[i]</span><span class="s1">;</span>
+      <span class="s3">let </span><span class="s2">root = doc.contents</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(Array.isArray(root)) root = root[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">[rootStart</span><span class="s1">, </span><span class="s2">rootEnd] = doc.range || [</span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+      <span class="s3">let </span><span class="s2">e = doc.errors[</span><span class="s4">0</span><span class="s2">] &amp;&amp; doc.errors[</span><span class="s4">0</span><span class="s2">].source</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(e &amp;&amp; e.type === </span><span class="s0">'SEQ_ITEM'</span><span class="s2">) e = e.node</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(e &amp;&amp; (e.type === </span><span class="s0">'DOCUMENT' </span><span class="s2">|| e.range.start &lt; rootStart)) </span><span class="s3">throw new </span><span class="s2">Error()</span><span class="s1">;</span>
+      <span class="s3">let </span><span class="s2">docStart = </span><span class="s0">'+DOC'</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">pre = src.slice(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">rootStart)</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">explicitDoc = </span><span class="s4">/---\s*$/</span><span class="s2">.test(pre)</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(explicitDoc) docStart += </span><span class="s0">' ---'</span><span class="s1">;</span><span class="s3">else if </span><span class="s2">(!doc.contents) </span><span class="s3">continue</span><span class="s1">;</span>
+      <span class="s2">events.push(docStart)</span><span class="s1">;</span>
+      <span class="s2">addEvents(events</span><span class="s1">, </span><span class="s2">doc</span><span class="s1">, </span><span class="s2">e</span><span class="s1">, </span><span class="s2">root)</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(doc.contents &amp;&amp; doc.contents.length &gt; </span><span class="s4">1</span><span class="s2">) </span><span class="s3">throw new </span><span class="s2">Error()</span><span class="s1">;</span>
+      <span class="s3">let </span><span class="s2">docEnd = </span><span class="s0">'-DOC'</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(rootEnd) {</span>
+        <span class="s3">const </span><span class="s2">post = src.slice(rootEnd)</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(</span><span class="s4">/^\.\.\./</span><span class="s2">.test(post)) docEnd += </span><span class="s0">' ...'</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">events.push(docEnd)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">} </span><span class="s3">catch </span><span class="s2">(e) {</span>
+    <span class="s3">return </span><span class="s2">{</span>
+      <span class="s2">events</span><span class="s1">,</span>
+      <span class="s2">error: error || e</span>
+    <span class="s2">}</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">events.push(</span><span class="s0">'-STR'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">{</span>
+    <span class="s2">events</span><span class="s1">,</span>
+    <span class="s2">error</span>
+  <span class="s2">}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">addEvents(events</span><span class="s1">, </span><span class="s2">doc</span><span class="s1">, </span><span class="s2">e</span><span class="s1">, </span><span class="s2">node) {</span>
+  <span class="s3">if </span><span class="s2">(!node) {</span>
+    <span class="s2">events.push(</span><span class="s0">'=VAL :'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">return</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(e &amp;&amp; node.cstNode === e) </span><span class="s3">throw new </span><span class="s2">Error()</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">props = </span><span class="s0">''</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">anchor = doc.anchors.getName(node)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(anchor) {</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s4">/\d$/</span><span class="s2">.test(anchor)) {</span>
+      <span class="s3">const </span><span class="s2">alt = anchor.replace(</span><span class="s4">/\d$/</span><span class="s1">, </span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(doc.anchors.getNode(alt)) anchor = alt</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s2">props = </span><span class="s0">` &amp;</span><span class="s2">${anchor}</span><span class="s0">`</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(node.cstNode &amp;&amp; node.cstNode.tag) {</span>
+    <span class="s3">const </span><span class="s2">{</span>
+      <span class="s2">handle</span><span class="s1">,</span>
+      <span class="s2">suffix</span>
+    <span class="s2">} = node.cstNode.tag</span><span class="s1">;</span>
+    <span class="s2">props += handle === </span><span class="s0">'!' </span><span class="s2">&amp;&amp; !suffix ? </span><span class="s0">' &lt;!&gt;' </span><span class="s2">: </span><span class="s0">` &lt;</span><span class="s2">${node.tag}</span><span class="s0">&gt;`</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">let </span><span class="s2">scalar = </span><span class="s3">null</span><span class="s1">;</span>
+
+  <span class="s3">switch </span><span class="s2">(node.type) {</span>
+    <span class="s3">case </span><span class="s0">'ALIAS'</span><span class="s2">:</span>
+      <span class="s2">{</span>
+        <span class="s3">let </span><span class="s2">alias = doc.anchors.getName(node.source)</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(</span><span class="s4">/\d$/</span><span class="s2">.test(alias)) {</span>
+          <span class="s3">const </span><span class="s2">alt = alias.replace(</span><span class="s4">/\d$/</span><span class="s1">, </span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+          <span class="s3">if </span><span class="s2">(doc.anchors.getNode(alt)) alias = alt</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s2">events.push(</span><span class="s0">`=ALI</span><span class="s2">${props} </span><span class="s0">*</span><span class="s2">${alias}</span><span class="s0">`</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+      <span class="s3">break</span><span class="s1">;</span>
+
+    <span class="s3">case </span><span class="s0">'BLOCK_FOLDED'</span><span class="s2">:</span>
+      <span class="s2">scalar = </span><span class="s0">'&gt;'</span><span class="s1">;</span>
+      <span class="s3">break</span><span class="s1">;</span>
+
+    <span class="s3">case </span><span class="s0">'BLOCK_LITERAL'</span><span class="s2">:</span>
+      <span class="s2">scalar = </span><span class="s0">'|'</span><span class="s1">;</span>
+      <span class="s3">break</span><span class="s1">;</span>
+
+    <span class="s3">case </span><span class="s0">'PLAIN'</span><span class="s2">:</span>
+      <span class="s2">scalar = </span><span class="s0">':'</span><span class="s1">;</span>
+      <span class="s3">break</span><span class="s1">;</span>
+
+    <span class="s3">case </span><span class="s0">'QUOTE_DOUBLE'</span><span class="s2">:</span>
+      <span class="s2">scalar = </span><span class="s0">'&quot;'</span><span class="s1">;</span>
+      <span class="s3">break</span><span class="s1">;</span>
+
+    <span class="s3">case </span><span class="s0">'QUOTE_SINGLE'</span><span class="s2">:</span>
+      <span class="s2">scalar = </span><span class="s0">&quot;'&quot;</span><span class="s1">;</span>
+      <span class="s3">break</span><span class="s1">;</span>
+
+    <span class="s3">case </span><span class="s0">'PAIR'</span><span class="s2">:</span>
+      <span class="s2">events.push(</span><span class="s0">`+MAP</span><span class="s2">${props}</span><span class="s0">`</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">addEvents(events</span><span class="s1">, </span><span class="s2">doc</span><span class="s1">, </span><span class="s2">e</span><span class="s1">, </span><span class="s2">node.key)</span><span class="s1">;</span>
+      <span class="s2">addEvents(events</span><span class="s1">, </span><span class="s2">doc</span><span class="s1">, </span><span class="s2">e</span><span class="s1">, </span><span class="s2">node.value)</span><span class="s1">;</span>
+      <span class="s2">events.push(</span><span class="s0">'-MAP'</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s3">break</span><span class="s1">;</span>
+
+    <span class="s3">case </span><span class="s0">'FLOW_SEQ'</span><span class="s2">:</span>
+    <span class="s3">case </span><span class="s0">'SEQ'</span><span class="s2">:</span>
+      <span class="s2">events.push(</span><span class="s0">`+SEQ</span><span class="s2">${props}</span><span class="s0">`</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">node.items.forEach(item =&gt; {</span>
+        <span class="s2">addEvents(events</span><span class="s1">, </span><span class="s2">doc</span><span class="s1">, </span><span class="s2">e</span><span class="s1">, </span><span class="s2">item)</span><span class="s1">;</span>
+      <span class="s2">})</span><span class="s1">;</span>
+      <span class="s2">events.push(</span><span class="s0">'-SEQ'</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s3">break</span><span class="s1">;</span>
+
+    <span class="s3">case </span><span class="s0">'FLOW_MAP'</span><span class="s2">:</span>
+    <span class="s3">case </span><span class="s0">'MAP'</span><span class="s2">:</span>
+      <span class="s2">events.push(</span><span class="s0">`+MAP</span><span class="s2">${props}</span><span class="s0">`</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">node.items.forEach(({</span>
+        <span class="s2">key</span><span class="s1">,</span>
+        <span class="s2">value</span>
+      <span class="s2">}) =&gt; {</span>
+        <span class="s2">addEvents(events</span><span class="s1">, </span><span class="s2">doc</span><span class="s1">, </span><span class="s2">e</span><span class="s1">, </span><span class="s2">key)</span><span class="s1">;</span>
+        <span class="s2">addEvents(events</span><span class="s1">, </span><span class="s2">doc</span><span class="s1">, </span><span class="s2">e</span><span class="s1">, </span><span class="s2">value)</span><span class="s1">;</span>
+      <span class="s2">})</span><span class="s1">;</span>
+      <span class="s2">events.push(</span><span class="s0">'-MAP'</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s3">break</span><span class="s1">;</span>
+
+    <span class="s3">default</span><span class="s2">:</span>
+      <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">`Unexpected node type </span><span class="s2">${node.type}</span><span class="s0">`</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(scalar) {</span>
+    <span class="s3">const </span><span class="s2">value = node.cstNode.strValue.replace(</span><span class="s4">/\\/g</span><span class="s1">, </span><span class="s0">'</span><span class="s1">\\\\</span><span class="s0">'</span><span class="s2">).replace(</span><span class="s4">/\0/g</span><span class="s1">, </span><span class="s0">'</span><span class="s1">\\</span><span class="s0">0'</span><span class="s2">).replace(</span><span class="s4">/\x07/g</span><span class="s1">, </span><span class="s0">'</span><span class="s1">\\</span><span class="s0">a'</span><span class="s2">).replace(</span><span class="s4">/\x08/g</span><span class="s1">, </span><span class="s0">'</span><span class="s1">\\</span><span class="s0">b'</span><span class="s2">).replace(</span><span class="s4">/\t/g</span><span class="s1">, </span><span class="s0">'</span><span class="s1">\\</span><span class="s0">t'</span><span class="s2">).replace(</span><span class="s4">/\n/g</span><span class="s1">, </span><span class="s0">'</span><span class="s1">\\</span><span class="s0">n'</span><span class="s2">).replace(</span><span class="s4">/\v/g</span><span class="s1">, </span><span class="s0">'</span><span class="s1">\\</span><span class="s0">v'</span><span class="s2">).replace(</span><span class="s4">/\f/g</span><span class="s1">, </span><span class="s0">'</span><span class="s1">\\</span><span class="s0">f'</span><span class="s2">).replace(</span><span class="s4">/\r/g</span><span class="s1">, </span><span class="s0">'</span><span class="s1">\\</span><span class="s0">r'</span><span class="s2">).replace(</span><span class="s4">/\x1b/g</span><span class="s1">, </span><span class="s0">'</span><span class="s1">\\</span><span class="s0">e'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">events.push(</span><span class="s0">`=VAL</span><span class="s2">${props} ${scalar}${value}</span><span class="s0">`</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s2">exports.testEvents = testEvents</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

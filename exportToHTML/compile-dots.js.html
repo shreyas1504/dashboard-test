@@ -1,0 +1,95 @@
+<html>
+<head>
+<title>compile-dots.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+compile-dots.js</font>
+</center></td></tr></table>
+<pre><span class="s0">//compile doT templates to js functions</span>
+<span class="s2">'use strict'</span><span class="s3">;</span>
+
+<span class="s4">var </span><span class="s1">glob = require(</span><span class="s2">'glob'</span><span class="s1">)</span>
+  <span class="s3">, </span><span class="s1">fs = require(</span><span class="s2">'fs'</span><span class="s1">)</span>
+  <span class="s3">, </span><span class="s1">path = require(</span><span class="s2">'path'</span><span class="s1">)</span>
+  <span class="s3">, </span><span class="s1">doT = require(</span><span class="s2">'dot'</span><span class="s1">)</span>
+  <span class="s3">, </span><span class="s1">beautify = require(</span><span class="s2">'js-beautify'</span><span class="s1">).js_beautify</span><span class="s3">;</span>
+
+<span class="s4">var </span><span class="s1">defsRootPath = process.argv[</span><span class="s5">2</span><span class="s1">] || path.join(__dirname</span><span class="s3">, </span><span class="s2">'../lib'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">var </span><span class="s1">defs = {}</span><span class="s3">;</span>
+<span class="s4">var </span><span class="s1">defFiles = glob.sync(</span><span class="s2">'./dot/**/*.def'</span><span class="s3">, </span><span class="s1">{ cwd: defsRootPath })</span><span class="s3">;</span>
+<span class="s1">defFiles.forEach(</span><span class="s4">function </span><span class="s1">(f) {</span>
+  <span class="s4">var </span><span class="s1">name = path.basename(f</span><span class="s3">, </span><span class="s2">'.def'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">defs[name] = fs.readFileSync(path.join(defsRootPath</span><span class="s3">, </span><span class="s1">f))</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s4">var </span><span class="s1">filesRootPath = process.argv[</span><span class="s5">3</span><span class="s1">] || path.join(__dirname</span><span class="s3">, </span><span class="s2">'../lib'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">var </span><span class="s1">files = glob.sync(</span><span class="s2">'./dot/**/*.jst'</span><span class="s3">, </span><span class="s1">{ cwd: filesRootPath })</span><span class="s3">;</span>
+
+<span class="s4">var </span><span class="s1">dotjsPath = path.join(filesRootPath</span><span class="s3">, </span><span class="s2">'./dotjs'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">try </span><span class="s1">{ fs.mkdirSync(dotjsPath)</span><span class="s3">; </span><span class="s1">} </span><span class="s4">catch</span><span class="s1">(e) {}</span>
+
+<span class="s1">console.log(</span><span class="s2">'</span><span class="s3">\n\n</span><span class="s2">Compiling:'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">var </span><span class="s1">FUNCTION_NAME = </span><span class="s5">/function\s+anonymous\s*\(it[^)]*\)\s*{/</span><span class="s3">;</span>
+<span class="s4">var </span><span class="s1">OUT_EMPTY_STRING = </span><span class="s5">/out\s*\+=\s*'\s*';/g</span><span class="s3">;</span>
+<span class="s4">var </span><span class="s1">ISTANBUL = </span><span class="s5">/'(istanbul[^']+)';/g</span><span class="s3">;</span>
+<span class="s4">var </span><span class="s1">ERROR_KEYWORD = </span><span class="s5">/\$errorKeyword/g</span><span class="s3">;</span>
+<span class="s4">var </span><span class="s1">ERROR_KEYWORD_OR = </span><span class="s5">/\$errorKeyword\s+\|\|/g</span><span class="s3">;</span>
+<span class="s4">var </span><span class="s1">VARS = [</span>
+  <span class="s2">'$errs'</span><span class="s3">, </span><span class="s2">'$valid'</span><span class="s3">, </span><span class="s2">'$lvl'</span><span class="s3">, </span><span class="s2">'$data'</span><span class="s3">, </span><span class="s2">'$dataLvl'</span><span class="s3">,</span>
+  <span class="s2">'$errorKeyword'</span><span class="s3">, </span><span class="s2">'$closingBraces'</span><span class="s3">, </span><span class="s2">'$schemaPath'</span><span class="s3">,</span>
+  <span class="s2">'$validate'</span>
+<span class="s1">]</span><span class="s3">;</span>
+
+<span class="s1">files.forEach(</span><span class="s4">function </span><span class="s1">(f) {</span>
+  <span class="s4">var </span><span class="s1">keyword = path.basename(f</span><span class="s3">, </span><span class="s2">'.jst'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s4">var </span><span class="s1">targetPath = path.join(dotjsPath</span><span class="s3">, </span><span class="s1">keyword + </span><span class="s2">'.js'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s4">var </span><span class="s1">template = fs.readFileSync(path.join(filesRootPath</span><span class="s3">, </span><span class="s1">f))</span><span class="s3">;</span>
+  <span class="s4">var </span><span class="s1">code = doT.compile(template</span><span class="s3">, </span><span class="s1">defs)</span><span class="s3">;</span>
+  <span class="s1">code = code.toString()</span>
+             <span class="s1">.replace(OUT_EMPTY_STRING</span><span class="s3">, </span><span class="s2">''</span><span class="s1">)</span>
+             <span class="s1">.replace(FUNCTION_NAME</span><span class="s3">, </span><span class="s2">'function generate_' </span><span class="s1">+ keyword + </span><span class="s2">'(it, $keyword, $ruleType) {'</span><span class="s1">)</span>
+             <span class="s1">.replace(ISTANBUL</span><span class="s3">, </span><span class="s2">'/* $1 */'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">removeAlwaysFalsyInOr()</span><span class="s3">;</span>
+  <span class="s1">VARS.forEach(removeUnusedVar)</span><span class="s3">;</span>
+  <span class="s1">code = </span><span class="s2">&quot;'use strict';</span><span class="s3">\n</span><span class="s2">module.exports = &quot; </span><span class="s1">+ code</span><span class="s3">;</span>
+  <span class="s1">code = beautify(code</span><span class="s3">, </span><span class="s1">{ indent_size: </span><span class="s5">2 </span><span class="s1">}) + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+  <span class="s1">fs.writeFileSync(targetPath</span><span class="s3">, </span><span class="s1">code)</span><span class="s3">;</span>
+  <span class="s1">console.log(</span><span class="s2">'compiled'</span><span class="s3">, </span><span class="s1">keyword)</span><span class="s3">;</span>
+
+  <span class="s4">function </span><span class="s1">removeUnusedVar(v) {</span>
+    <span class="s1">v = v.replace(</span><span class="s5">/\$/g</span><span class="s3">, </span><span class="s2">'</span><span class="s3">\\</span><span class="s2">$$'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s4">var </span><span class="s1">regexp = </span><span class="s4">new </span><span class="s1">RegExp(v + </span><span class="s2">'[^A-Za-z0-9_$]'</span><span class="s3">, </span><span class="s2">'g'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s4">var </span><span class="s1">count = occurrences(regexp)</span><span class="s3">;</span>
+    <span class="s4">if </span><span class="s1">(count == </span><span class="s5">1</span><span class="s1">) {</span>
+      <span class="s1">regexp = </span><span class="s4">new </span><span class="s1">RegExp(</span><span class="s2">'var</span><span class="s3">\\</span><span class="s2">s+' </span><span class="s1">+ v + </span><span class="s2">'</span><span class="s3">\\</span><span class="s2">s*=[^;]+;|var</span><span class="s3">\\</span><span class="s2">s+' </span><span class="s1">+ v + </span><span class="s2">';'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">code = code.replace(regexp</span><span class="s3">, </span><span class="s2">''</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s4">function </span><span class="s1">removeAlwaysFalsyInOr() {</span>
+    <span class="s4">var </span><span class="s1">countUsed = occurrences(ERROR_KEYWORD)</span><span class="s3">;</span>
+    <span class="s4">var </span><span class="s1">countOr = occurrences(ERROR_KEYWORD_OR)</span><span class="s3">;</span>
+    <span class="s4">if </span><span class="s1">(countUsed == countOr + </span><span class="s5">1</span><span class="s1">) code = code.replace(ERROR_KEYWORD_OR</span><span class="s3">, </span><span class="s2">''</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">function </span><span class="s1">occurrences(regexp) {</span>
+    <span class="s4">return </span><span class="s1">(code.match(regexp) || []).length</span><span class="s3">;</span>
+  <span class="s1">}</span>
+<span class="s1">})</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

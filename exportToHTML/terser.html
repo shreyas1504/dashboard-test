@@ -1,0 +1,43 @@
+<html>
+<head>
+<title>terser</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+terser</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+
+<span class="s2">&quot;use strict&quot;</span><span class="s3">;</span>
+
+<span class="s1">require(</span><span class="s2">&quot;../tools/exit.cjs&quot;</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">try </span><span class="s1">{</span>
+    <span class="s1">require(</span><span class="s2">&quot;source-map-support&quot;</span><span class="s1">).install()</span><span class="s3">;</span>
+<span class="s1">} </span><span class="s4">catch </span><span class="s1">(err) {}</span>
+
+<span class="s4">const </span><span class="s1">fs = require(</span><span class="s2">&quot;fs&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">const </span><span class="s1">path = require(</span><span class="s2">&quot;path&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">const </span><span class="s1">program = require(</span><span class="s2">&quot;commander&quot;</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">const </span><span class="s1">packageJson = require(</span><span class="s2">&quot;../package.json&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">const </span><span class="s1">{ _run_cli: run_cli } = require(</span><span class="s2">&quot;..&quot;</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s1">run_cli({ program</span><span class="s3">, </span><span class="s1">packageJson</span><span class="s3">, </span><span class="s1">fs</span><span class="s3">, </span><span class="s1">path }).catch((error) =&gt; {</span>
+    <span class="s1">console.error(error)</span><span class="s3">;</span>
+    <span class="s1">process.exitCode = </span><span class="s5">1</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<html>
+<head>
+<title>v35.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+v35.js</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">stringify from </span><span class="s2">'./stringify.js'</span><span class="s3">;</span>
+<span class="s0">import </span><span class="s1">parse from </span><span class="s2">'./parse.js'</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">stringToBytes(str) {</span>
+  <span class="s1">str = unescape(encodeURIComponent(str))</span><span class="s3">; </span><span class="s4">// UTF8 escape</span>
+
+  <span class="s0">var </span><span class="s1">bytes = []</span><span class="s3">;</span>
+
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; str.length</span><span class="s3">; </span><span class="s1">++i) {</span>
+    <span class="s1">bytes.push(str.charCodeAt(i))</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">bytes</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export var </span><span class="s1">DNS = </span><span class="s2">'6ba7b810-9dad-11d1-80b4-00c04fd430c8'</span><span class="s3">;</span>
+<span class="s0">export var </span><span class="s1">URL = </span><span class="s2">'6ba7b811-9dad-11d1-80b4-00c04fd430c8'</span><span class="s3">;</span>
+<span class="s0">export default function </span><span class="s1">(name</span><span class="s3">, </span><span class="s1">version</span><span class="s3">, </span><span class="s1">hashfunc) {</span>
+  <span class="s0">function </span><span class="s1">generateUUID(value</span><span class="s3">, </span><span class="s1">namespace</span><span class="s3">, </span><span class="s1">buf</span><span class="s3">, </span><span class="s1">offset) {</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">value === </span><span class="s2">'string'</span><span class="s1">) {</span>
+      <span class="s1">value = stringToBytes(value)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">namespace === </span><span class="s2">'string'</span><span class="s1">) {</span>
+      <span class="s1">namespace = parse(namespace)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(namespace.length !== </span><span class="s5">16</span><span class="s1">) {</span>
+      <span class="s0">throw </span><span class="s1">TypeError(</span><span class="s2">'Namespace must be array-like (16 iterable integer values, 0-255)'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">// Compute hash of namespace and value, Per 4.3</span>
+    <span class="s4">// Future: Use spread syntax when supported on all platforms, e.g. `bytes =</span>
+    <span class="s4">// hashfunc([...namespace, ... value])`</span>
+
+
+    <span class="s0">var </span><span class="s1">bytes = </span><span class="s0">new </span><span class="s1">Uint8Array(</span><span class="s5">16 </span><span class="s1">+ value.length)</span><span class="s3">;</span>
+    <span class="s1">bytes.set(namespace)</span><span class="s3">;</span>
+    <span class="s1">bytes.set(value</span><span class="s3">, </span><span class="s1">namespace.length)</span><span class="s3">;</span>
+    <span class="s1">bytes = hashfunc(bytes)</span><span class="s3">;</span>
+    <span class="s1">bytes[</span><span class="s5">6</span><span class="s1">] = bytes[</span><span class="s5">6</span><span class="s1">] &amp; </span><span class="s5">0x0f </span><span class="s1">| version</span><span class="s3">;</span>
+    <span class="s1">bytes[</span><span class="s5">8</span><span class="s1">] = bytes[</span><span class="s5">8</span><span class="s1">] &amp; </span><span class="s5">0x3f </span><span class="s1">| </span><span class="s5">0x80</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(buf) {</span>
+      <span class="s1">offset = offset || </span><span class="s5">0</span><span class="s3">;</span>
+
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s5">16</span><span class="s3">; </span><span class="s1">++i) {</span>
+        <span class="s1">buf[offset + i] = bytes[i]</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">buf</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">stringify(bytes)</span><span class="s3">;</span>
+  <span class="s1">} </span><span class="s4">// Function#name is not settable on some platforms (#270)</span>
+
+
+  <span class="s0">try </span><span class="s1">{</span>
+    <span class="s1">generateUUID.name = name</span><span class="s3">; </span><span class="s4">// eslint-disable-next-line no-empty</span>
+  <span class="s1">} </span><span class="s0">catch </span><span class="s1">(err) {} </span><span class="s4">// For CommonJS default export support</span>
+
+
+  <span class="s1">generateUUID.DNS = DNS</span><span class="s3">;</span>
+  <span class="s1">generateUUID.URL = URL</span><span class="s3">;</span>
+  <span class="s0">return </span><span class="s1">generateUUID</span><span class="s3">;</span>
+<span class="s1">}</span></pre>
+</body>
+</html>

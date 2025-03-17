@@ -1,0 +1,85 @@
+<html>
+<head>
+<title>regjsparser</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+regjsparser</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+<span class="s1">(</span><span class="s2">function</span><span class="s1">() {</span>
+
+  <span class="s2">var </span><span class="s1">fs = require(</span><span class="s3">'fs'</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">path = require(</span><span class="s3">'path'</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">parse = require(</span><span class="s3">'../parser'</span><span class="s1">).parse</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">jsesc = require(</span><span class="s3">'jsesc'</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">regexes = process.argv.splice(</span><span class="s5">2</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">first = regexes[</span><span class="s5">0</span><span class="s1">]</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">data</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">log = console.log</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">flags = </span><span class="s3">''</span><span class="s4">;</span>
+  <span class="s2">var </span><span class="s1">main = </span><span class="s2">function</span><span class="s1">() {</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s5">/^(?:-h|--help|undefined)$/</span><span class="s1">.test(first)) {</span>
+      <span class="s1">log([</span>
+        <span class="s3">'</span><span class="s4">\n</span><span class="s3">Usage:</span><span class="s4">\n</span><span class="s3">'</span><span class="s4">,</span>
+        <span class="s3">'</span><span class="s4">\t</span><span class="s3">regjsparser [regex ...]'</span><span class="s4">,</span>
+        <span class="s3">'</span><span class="s4">\t</span><span class="s3">regjsparser [-f | --flags] u [regex ...]'</span><span class="s4">,</span>
+        <span class="s3">'</span><span class="s4">\t</span><span class="s3">regjsparser [-v | --version]'</span><span class="s4">,</span>
+        <span class="s3">'</span><span class="s4">\t</span><span class="s3">regjsparser [-h | --help]'</span><span class="s4">,</span>
+        <span class="s3">'</span><span class="s4">\n</span><span class="s3">Examples:</span><span class="s4">\n</span><span class="s3">'</span><span class="s4">,</span>
+        <span class="s3">'</span><span class="s4">\t</span><span class="s3">regjsparser </span><span class="s4">\'</span><span class="s3">^foo.bar$</span><span class="s4">\'</span><span class="s3">'</span><span class="s4">,</span>
+        <span class="s3">'</span><span class="s4">\t</span><span class="s3">regjsparser </span><span class="s4">\'</span><span class="s3">[a-zA-Z0-9]</span><span class="s4">\'</span><span class="s3">'</span>
+      <span class="s1">].join(</span><span class="s3">'</span><span class="s4">\n</span><span class="s3">'</span><span class="s1">))</span><span class="s4">;</span>
+      <span class="s2">return </span><span class="s1">process.exit(</span><span class="s5">1</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(</span><span class="s5">/^(?:-v|--version)$/</span><span class="s1">.test(first)) {</span>
+      <span class="s1">log(</span><span class="s3">'v%s'</span><span class="s4">, </span><span class="s1">require(path.resolve(__dirname</span><span class="s4">, </span><span class="s3">'../package.json'</span><span class="s1">)).version)</span><span class="s4">;</span>
+      <span class="s2">return </span><span class="s1">process.exit(</span><span class="s5">1</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(</span><span class="s5">/^(?:-f|--flags)$/</span><span class="s1">.test(first)) {</span>
+      <span class="s1">flags = regexes[</span><span class="s5">1</span><span class="s1">]</span><span class="s4">;</span>
+      <span class="s1">regexes = regexes.slice(</span><span class="s5">2</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">regexes.forEach(</span><span class="s2">function</span><span class="s1">(snippet) {</span>
+      <span class="s2">try </span><span class="s1">{</span>
+        <span class="s1">result = parse(snippet</span><span class="s4">, </span><span class="s1">flags)</span><span class="s4">;</span>
+        <span class="s1">log(jsesc(result</span><span class="s4">, </span><span class="s1">{</span>
+          <span class="s3">'json'</span><span class="s1">: </span><span class="s2">true</span><span class="s4">,</span>
+          <span class="s3">'compact'</span><span class="s1">: </span><span class="s2">false</span><span class="s4">,</span>
+          <span class="s3">'indent'</span><span class="s1">: </span><span class="s3">'</span><span class="s4">\t</span><span class="s3">'</span>
+        <span class="s1">}))</span><span class="s4">;</span>
+      <span class="s1">} </span><span class="s2">catch</span><span class="s1">(error) {</span>
+        <span class="s1">log(error.message + </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">'</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">log(</span><span class="s3">'Error: failed to parse. Make sure the regular expression is valid.'</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">log(</span><span class="s3">'If you think this is a bug in regjsparser, please report it:'</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">log(</span><span class="s3">'</span><span class="s4">\t</span><span class="s3">https://github.com/jviereck/regjsparser/issues/new'</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">log(</span><span class="s3">'</span><span class="s4">\n</span><span class="s3">Stack trace:</span><span class="s4">\n</span><span class="s3">'</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">log(error.stack)</span><span class="s4">;</span>
+        <span class="s2">return </span><span class="s1">process.exit(</span><span class="s5">1</span><span class="s1">)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span><span class="s4">;</span>
+    <span class="s0">// Return with exit status 0 outside of the `forEach` loop, in case</span>
+    <span class="s0">// multiple regular expressions were passed in.</span>
+    <span class="s2">return </span><span class="s1">process.exit(</span><span class="s5">0</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s1">main()</span><span class="s4">;</span>
+
+<span class="s1">}())</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

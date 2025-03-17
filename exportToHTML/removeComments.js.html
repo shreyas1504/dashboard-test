@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>removeComments.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+removeComments.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">exports.type = </span><span class="s0">'perItem'</span><span class="s1">;</span>
+
+<span class="s2">exports.active = </span><span class="s3">true</span><span class="s1">;</span>
+
+<span class="s2">exports.description = </span><span class="s0">'removes comments'</span><span class="s1">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Remove comments.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@example</span>
+ <span class="s4">* &lt;!-- Generator: Adobe Illustrator 15.0.0, SVG Export</span>
+ <span class="s4">* Plug-In . SVG Version: 6.00 Build 0)  --&gt;</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} item current iteration item</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Boolean} if false, item will be filtered out</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@author </span><span class="s4">Kir Belevich</span>
+ <span class="s4">*/</span>
+<span class="s2">exports.fn = </span><span class="s3">function</span><span class="s2">(item) {</span>
+
+    <span class="s3">if </span><span class="s2">(item.comment &amp;&amp; item.comment.charAt(</span><span class="s6">0</span><span class="s2">) !== </span><span class="s0">'!'</span><span class="s2">) {</span>
+        <span class="s3">return false</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

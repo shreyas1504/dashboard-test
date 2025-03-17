@@ -1,0 +1,78 @@
+<html>
+<head>
+<title>detect</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+detect</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+
+<span class="s2">'use strict'</span><span class="s3">;</span>
+
+<span class="s4">const </span><span class="s1">pkg = require(</span><span class="s2">'../package'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">const </span><span class="s1">args = process.argv.slice(</span><span class="s5">2</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">const </span><span class="s1">arg_0 = args[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+
+<span class="s4">if </span><span class="s1">(!!~[</span><span class="s2">'-v'</span><span class="s3">, </span><span class="s2">'--version'</span><span class="s1">].indexOf(arg_0)) {</span>
+  <span class="s1">console.log(pkg.version)</span><span class="s3">;</span>
+  <span class="s1">process.exit(</span><span class="s5">0</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">const </span><span class="s1">port = parseInt(arg_0</span><span class="s3">, </span><span class="s5">10</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">const </span><span class="s1">main = require(</span><span class="s2">'..'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">if </span><span class="s1">(!arg_0) {</span>
+  <span class="s4">const </span><span class="s1">random = Math.floor(</span><span class="s5">9000 </span><span class="s1">+ Math.random() * (</span><span class="s5">65535 </span><span class="s1">- </span><span class="s5">9000</span><span class="s1">))</span><span class="s3">;</span>
+
+  <span class="s1">main(random</span><span class="s3">, </span><span class="s1">(err</span><span class="s3">, </span><span class="s1">port) =&gt; {</span>
+    <span class="s4">if </span><span class="s1">(err) {</span>
+      <span class="s1">console.log(</span><span class="s2">`get available port failed with </span><span class="s1">${err}</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s1">console.log(</span><span class="s2">`get available port </span><span class="s1">${port} </span><span class="s2">randomly`</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">} </span><span class="s4">else if </span><span class="s1">(isNaN(port)) {</span>
+  <span class="s1">console.log()</span><span class="s3">;</span>
+  <span class="s1">console.log(</span><span class="s2">`  </span><span class="s3">\u001b</span><span class="s2">[37m</span><span class="s1">${pkg.description}</span><span class="s3">\u001b</span><span class="s2">[0m`</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">console.log()</span><span class="s3">;</span>
+  <span class="s1">console.log(</span><span class="s2">'  Usage:'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">console.log()</span><span class="s3">;</span>
+  <span class="s1">console.log(</span><span class="s2">`    </span><span class="s1">${pkg.name} </span><span class="s2">[port]`</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">console.log()</span><span class="s3">;</span>
+  <span class="s1">console.log(</span><span class="s2">'  Options:'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">console.log()</span><span class="s3">;</span>
+  <span class="s1">console.log(</span><span class="s2">'    -v, --version    show version and exit'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">console.log(</span><span class="s2">'    -h, --help       output usage information'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">console.log()</span><span class="s3">;</span>
+  <span class="s1">console.log(</span><span class="s2">'  Further help:'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">console.log()</span><span class="s3">;</span>
+  <span class="s1">console.log(</span><span class="s2">`    </span><span class="s1">${pkg.homepage}</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">console.log()</span><span class="s3">;</span>
+<span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+  <span class="s1">main(port</span><span class="s3">, </span><span class="s1">(err</span><span class="s3">, </span><span class="s1">_port) =&gt; {</span>
+    <span class="s4">if </span><span class="s1">(err) {</span>
+      <span class="s1">console.log(</span><span class="s2">`get available port failed with </span><span class="s1">${err}</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">if </span><span class="s1">(port !== _port) {</span>
+      <span class="s1">console.log(</span><span class="s2">`port </span><span class="s1">${port} </span><span class="s2">was occupied`</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s1">console.log(</span><span class="s2">`get available port </span><span class="s1">${_port}</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

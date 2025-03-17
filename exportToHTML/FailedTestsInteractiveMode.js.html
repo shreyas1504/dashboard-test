@@ -1,0 +1,284 @@
+<html>
+<head>
+<title>FailedTestsInteractiveMode.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+FailedTestsInteractiveMode.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">Object.defineProperty(exports</span><span class="s1">, </span><span class="s0">'__esModule'</span><span class="s1">, </span><span class="s2">{</span>
+  <span class="s2">value: </span><span class="s3">true</span>
+<span class="s2">})</span><span class="s1">;</span>
+<span class="s2">exports.default = </span><span class="s3">void </span><span class="s4">0</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">_ansiEscapes() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'ansi-escapes'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_ansiEscapes = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_chalk() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'chalk'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_chalk = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestUtil() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestUtil = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestWatcher() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-watcher'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestWatcher = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireDefault(obj) {</span>
+  <span class="s3">return </span><span class="s2">obj &amp;&amp; obj.__esModule ? obj : {</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_defineProperty(obj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">value) {</span>
+  <span class="s3">if </span><span class="s2">(key </span><span class="s3">in </span><span class="s2">obj) {</span>
+    <span class="s2">Object.defineProperty(obj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">value: value</span><span class="s1">,</span>
+      <span class="s2">enumerable: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">configurable: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">writable: </span><span class="s3">true</span>
+    <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s2">obj[key] = value</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">obj</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">const </span><span class="s2">{ARROW</span><span class="s1">, </span><span class="s2">CLEAR} = _jestUtil().specialChars</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">describeKey(key</span><span class="s1">, </span><span class="s2">description) {</span>
+  <span class="s3">return </span><span class="s0">`</span><span class="s2">${_chalk().default.dim(</span>
+    <span class="s2">ARROW + </span><span class="s0">'Press'</span>
+  <span class="s2">)} ${key} ${_chalk().default.dim(description)}</span><span class="s0">`</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">const </span><span class="s2">TestProgressLabel = _chalk().default.bold(</span><span class="s0">'Interactive Test Progress'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">class </span><span class="s2">FailedTestsInteractiveMode {</span>
+  <span class="s2">constructor(_pipe) {</span>
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_isActive'</span><span class="s1">, </span><span class="s3">false</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_countPaths'</span><span class="s1">, </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_skippedNum'</span><span class="s1">, </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_testAssertions'</span><span class="s1">, </span><span class="s2">[])</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_updateTestRunnerConfig'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._pipe = _pipe</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">isActive() {</span>
+    <span class="s3">return this</span><span class="s2">._isActive</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">put(key) {</span>
+    <span class="s3">switch </span><span class="s2">(key) {</span>
+      <span class="s3">case </span><span class="s0">'s'</span><span class="s2">:</span>
+        <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._skippedNum === </span><span class="s3">this</span><span class="s2">._testAssertions.length) {</span>
+          <span class="s3">break</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s3">this</span><span class="s2">._skippedNum += </span><span class="s4">1</span><span class="s1">; </span><span class="s5">// move skipped test to the end</span>
+
+        <span class="s3">this</span><span class="s2">._testAssertions.push(</span><span class="s3">this</span><span class="s2">._testAssertions.shift())</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._testAssertions.length - </span><span class="s3">this</span><span class="s2">._skippedNum &gt; </span><span class="s4">0</span><span class="s2">) {</span>
+          <span class="s3">this</span><span class="s2">._run()</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+          <span class="s3">this</span><span class="s2">._drawUIDoneWithSkipped()</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s3">break</span><span class="s1">;</span>
+
+      <span class="s3">case </span><span class="s0">'q'</span><span class="s2">:</span>
+      <span class="s3">case </span><span class="s2">_jestWatcher().KEYS.ESCAPE:</span>
+        <span class="s3">this</span><span class="s2">.abort()</span><span class="s1">;</span>
+        <span class="s3">break</span><span class="s1">;</span>
+
+      <span class="s3">case </span><span class="s0">'r'</span><span class="s2">:</span>
+        <span class="s3">this</span><span class="s2">.restart()</span><span class="s1">;</span>
+        <span class="s3">break</span><span class="s1">;</span>
+
+      <span class="s3">case </span><span class="s2">_jestWatcher().KEYS.ENTER:</span>
+        <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._testAssertions.length === </span><span class="s4">0</span><span class="s2">) {</span>
+          <span class="s3">this</span><span class="s2">.abort()</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+          <span class="s3">this</span><span class="s2">._run()</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s3">break</span><span class="s1">;</span>
+
+      <span class="s3">default</span><span class="s2">:</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">run(failedTestAssertions</span><span class="s1">, </span><span class="s2">updateConfig) {</span>
+    <span class="s3">if </span><span class="s2">(failedTestAssertions.length === </span><span class="s4">0</span><span class="s2">) </span><span class="s3">return</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._testAssertions = [...failedTestAssertions]</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._countPaths = </span><span class="s3">this</span><span class="s2">._testAssertions.length</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._updateTestRunnerConfig = updateConfig</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._isActive = </span><span class="s3">true</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._run()</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">updateWithResults(results) {</span>
+    <span class="s3">if </span><span class="s2">(!results.snapshot.failure &amp;&amp; results.numFailedTests &gt; </span><span class="s4">0</span><span class="s2">) {</span>
+      <span class="s3">return this</span><span class="s2">._drawUIOverlay()</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">this</span><span class="s2">._testAssertions.shift()</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._testAssertions.length === </span><span class="s4">0</span><span class="s2">) {</span>
+      <span class="s3">return this</span><span class="s2">._drawUIOverlay()</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s5">// Go to the next test</span>
+
+    <span class="s3">return this</span><span class="s2">._run()</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_clearTestSummary() {</span>
+    <span class="s3">this</span><span class="s2">._pipe.write(_ansiEscapes().default.cursorUp(</span><span class="s4">6</span><span class="s2">))</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._pipe.write(_ansiEscapes().default.eraseDown)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_drawUIDone() {</span>
+    <span class="s3">this</span><span class="s2">._pipe.write(CLEAR)</span><span class="s1">;</span>
+
+    <span class="s3">const </span><span class="s2">messages = [</span>
+      <span class="s2">_chalk().default.bold(</span><span class="s0">'Watch Usage'</span><span class="s2">)</span><span class="s1">,</span>
+      <span class="s2">describeKey(</span><span class="s0">'Enter'</span><span class="s1">, </span><span class="s0">'to return to watch mode.'</span><span class="s2">)</span>
+    <span class="s2">]</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._pipe.write(messages.join(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">) + </span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_drawUIDoneWithSkipped() {</span>
+    <span class="s3">this</span><span class="s2">._pipe.write(CLEAR)</span><span class="s1">;</span>
+
+    <span class="s3">let </span><span class="s2">stats = </span><span class="s0">`</span><span class="s2">${(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_jestUtil().pluralize)(</span>
+      <span class="s0">'test'</span><span class="s1">,</span>
+      <span class="s3">this</span><span class="s2">._countPaths</span>
+    <span class="s2">)} </span><span class="s0">reviewed`</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._skippedNum &gt; </span><span class="s4">0</span><span class="s2">) {</span>
+      <span class="s3">const </span><span class="s2">skippedText = _chalk().default.bold.yellow(</span>
+        <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_jestUtil().pluralize)(</span><span class="s0">'test'</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._skippedNum) + </span><span class="s0">' skipped'</span>
+      <span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s2">stats = </span><span class="s0">`</span><span class="s2">${stats}</span><span class="s0">, </span><span class="s2">${skippedText}</span><span class="s0">`</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">const </span><span class="s2">message = [</span>
+      <span class="s2">TestProgressLabel</span><span class="s1">,</span>
+      <span class="s0">`</span><span class="s2">${ARROW}${stats}</span><span class="s0">`</span><span class="s1">,</span>
+      <span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s1">,</span>
+      <span class="s2">_chalk().default.bold(</span><span class="s0">'Watch Usage'</span><span class="s2">)</span><span class="s1">,</span>
+      <span class="s2">describeKey(</span><span class="s0">'r'</span><span class="s1">, </span><span class="s0">'to restart Interactive Mode.'</span><span class="s2">)</span><span class="s1">,</span>
+      <span class="s2">describeKey(</span><span class="s0">'q'</span><span class="s1">, </span><span class="s0">'to quit Interactive Mode.'</span><span class="s2">)</span><span class="s1">,</span>
+      <span class="s2">describeKey(</span><span class="s0">'Enter'</span><span class="s1">, </span><span class="s0">'to return to watch mode.'</span><span class="s2">)</span>
+    <span class="s2">]</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._pipe.write(</span><span class="s0">`</span><span class="s1">\n</span><span class="s2">${message.join(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">)}</span><span class="s0">`</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_drawUIProgress() {</span>
+    <span class="s3">this</span><span class="s2">._clearTestSummary()</span><span class="s1">;</span>
+
+    <span class="s3">const </span><span class="s2">numPass = </span><span class="s3">this</span><span class="s2">._countPaths - </span><span class="s3">this</span><span class="s2">._testAssertions.length</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">numRemaining = </span><span class="s3">this</span><span class="s2">._countPaths - numPass - </span><span class="s3">this</span><span class="s2">._skippedNum</span><span class="s1">;</span>
+    <span class="s3">let </span><span class="s2">stats = </span><span class="s0">`</span><span class="s2">${(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_jestUtil().pluralize)(</span><span class="s0">'test'</span><span class="s1">, </span><span class="s2">numRemaining)} </span><span class="s0">remaining`</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._skippedNum &gt; </span><span class="s4">0</span><span class="s2">) {</span>
+      <span class="s3">const </span><span class="s2">skippedText = _chalk().default.bold.yellow(</span>
+        <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_jestUtil().pluralize)(</span><span class="s0">'test'</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._skippedNum) + </span><span class="s0">' skipped'</span>
+      <span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s2">stats = </span><span class="s0">`</span><span class="s2">${stats}</span><span class="s0">, </span><span class="s2">${skippedText}</span><span class="s0">`</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">const </span><span class="s2">message = [</span>
+      <span class="s2">TestProgressLabel</span><span class="s1">,</span>
+      <span class="s0">`</span><span class="s2">${ARROW}${stats}</span><span class="s0">`</span><span class="s1">,</span>
+      <span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s1">,</span>
+      <span class="s2">_chalk().default.bold(</span><span class="s0">'Watch Usage'</span><span class="s2">)</span><span class="s1">,</span>
+      <span class="s2">describeKey(</span><span class="s0">'s'</span><span class="s1">, </span><span class="s0">'to skip the current test.'</span><span class="s2">)</span><span class="s1">,</span>
+      <span class="s2">describeKey(</span><span class="s0">'q'</span><span class="s1">, </span><span class="s0">'to quit Interactive Mode.'</span><span class="s2">)</span><span class="s1">,</span>
+      <span class="s2">describeKey(</span><span class="s0">'Enter'</span><span class="s1">, </span><span class="s0">'to return to watch mode.'</span><span class="s2">)</span>
+    <span class="s2">]</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._pipe.write(</span><span class="s0">`</span><span class="s1">\n</span><span class="s2">${message.join(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">)}</span><span class="s0">`</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_drawUIOverlay() {</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._testAssertions.length === </span><span class="s4">0</span><span class="s2">) </span><span class="s3">return this</span><span class="s2">._drawUIDone()</span><span class="s1">;</span>
+    <span class="s3">return this</span><span class="s2">._drawUIProgress()</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_run() {</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._updateTestRunnerConfig) {</span>
+      <span class="s3">this</span><span class="s2">._updateTestRunnerConfig(</span><span class="s3">this</span><span class="s2">._testAssertions[</span><span class="s4">0</span><span class="s2">])</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">abort() {</span>
+    <span class="s3">this</span><span class="s2">._isActive = </span><span class="s3">false</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._skippedNum = </span><span class="s4">0</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._updateTestRunnerConfig) {</span>
+      <span class="s3">this</span><span class="s2">._updateTestRunnerConfig()</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">restart() {</span>
+    <span class="s3">this</span><span class="s2">._skippedNum = </span><span class="s4">0</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._countPaths = </span><span class="s3">this</span><span class="s2">._testAssertions.length</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._run()</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s2">exports.default = FailedTestsInteractiveMode</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

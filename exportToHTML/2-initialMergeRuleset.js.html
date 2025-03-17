@@ -1,0 +1,68 @@
+<html>
+<head>
+<title>2-initialMergeRuleset.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+2-initialMergeRuleset.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">walk = require(</span><span class="s2">'css-tree'</span><span class="s1">).walk</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">utils = require(</span><span class="s2">'./utils'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">processRule(node</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">list) {</span>
+    <span class="s0">var </span><span class="s1">selectors = node.prelude.children</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">declarations = node.block.children</span><span class="s3">;</span>
+
+    <span class="s1">list.prevUntil(item.prev</span><span class="s3">, </span><span class="s0">function</span><span class="s1">(prev) {</span>
+        <span class="s4">// skip non-ruleset node if safe</span>
+        <span class="s0">if </span><span class="s1">(prev.type !== </span><span class="s2">'Rule'</span><span class="s1">) {</span>
+            <span class="s0">return </span><span class="s1">utils.unsafeToSkipNode.call(selectors</span><span class="s3">, </span><span class="s1">prev)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">var </span><span class="s1">prevSelectors = prev.prelude.children</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">prevDeclarations = prev.block.children</span><span class="s3">;</span>
+
+        <span class="s4">// try to join rulesets with equal pseudo signature</span>
+        <span class="s0">if </span><span class="s1">(node.pseudoSignature === prev.pseudoSignature) {</span>
+            <span class="s4">// try to join by selectors</span>
+            <span class="s0">if </span><span class="s1">(utils.isEqualSelectors(prevSelectors</span><span class="s3">, </span><span class="s1">selectors)) {</span>
+                <span class="s1">prevDeclarations.appendList(declarations)</span><span class="s3">;</span>
+                <span class="s1">list.remove(item)</span><span class="s3">;</span>
+                <span class="s0">return true</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s4">// try to join by declarations</span>
+            <span class="s0">if </span><span class="s1">(utils.isEqualDeclarations(declarations</span><span class="s3">, </span><span class="s1">prevDeclarations)) {</span>
+                <span class="s1">utils.addSelectors(prevSelectors</span><span class="s3">, </span><span class="s1">selectors)</span><span class="s3">;</span>
+                <span class="s1">list.remove(item)</span><span class="s3">;</span>
+                <span class="s0">return true</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s4">// go to prev ruleset if has no selector similarities</span>
+        <span class="s0">return </span><span class="s1">utils.hasSimilarSelectors(selectors</span><span class="s3">, </span><span class="s1">prevSelectors)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">// NOTE: direction should be left to right, since rulesets merge to left</span>
+<span class="s4">// ruleset. When direction right to left unmerged rulesets may prevent lookup</span>
+<span class="s4">// TODO: remove initial merge</span>
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">initialMergeRule(ast) {</span>
+    <span class="s1">walk(ast</span><span class="s3">, </span><span class="s1">{</span>
+        <span class="s1">visit: </span><span class="s2">'Rule'</span><span class="s3">,</span>
+        <span class="s1">enter: processRule</span>
+    <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

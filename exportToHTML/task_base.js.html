@@ -1,0 +1,188 @@
+<html>
+<head>
+<title>task_base.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+task_base.js</font>
+</center></td></tr></table>
+<pre><span class="s0">let </span><span class="s1">assert = require(</span><span class="s2">'assert'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">let </span><span class="s1">h = require(</span><span class="s2">'./helpers'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">let </span><span class="s1">exec = require(</span><span class="s2">'child_process'</span><span class="s1">).execSync</span><span class="s3">;</span>
+
+<span class="s0">const </span><span class="s1">PROJECT_DIR = process.env.PROJECT_DIR</span><span class="s3">;</span>
+<span class="s0">const </span><span class="s1">JAKE_CMD = </span><span class="s2">`</span><span class="s1">${PROJECT_DIR}</span><span class="s2">/bin/cli.js`</span><span class="s3">;</span>
+
+<span class="s1">suite(</span><span class="s2">'taskBase'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+
+  <span class="s0">this</span><span class="s1">.timeout(</span><span class="s4">7000</span><span class="s1">)</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'default task'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out</span><span class="s3">;</span>
+    <span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'default task'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q default`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'default task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'task with no action'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q noAction`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'default task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'a task with no action and no prereqs'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s1">exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">noActionNoPrereqs`</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'a task that exists at the top-level, and not in the specified namespace, should error'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">res = require(</span><span class="s2">'child_process'</span><span class="s1">).spawnSync(</span><span class="s2">`</span><span class="s1">${JAKE_CMD}</span><span class="s2">`</span><span class="s3">,</span>
+      <span class="s1">[</span><span class="s2">'asdfasdfasdf:zerbofrangazoomy'</span><span class="s1">])</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">err = res.stderr.toString()</span><span class="s3">;</span>
+    <span class="s1">assert.ok(err.indexOf(</span><span class="s2">'Unknown task' </span><span class="s1">&gt; -</span><span class="s4">1</span><span class="s1">))</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'passing args to a task'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q argsEnvVars[foo,bar]`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">parsed = h.parse(out)</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">args = parsed.args</span><span class="s3">;</span>
+    <span class="s1">assert.equal(args[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s2">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(args[</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s2">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'a task with environment vars'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q argsEnvVars foo=bar baz=qux`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">parsed = h.parse(out)</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">env = parsed.env</span><span class="s3">;</span>
+    <span class="s1">assert.equal(env.foo</span><span class="s3">, </span><span class="s2">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(env.baz</span><span class="s3">, </span><span class="s2">'qux'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'passing args and using environment vars'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q argsEnvVars[foo,bar] foo=bar baz=qux`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">parsed = h.parse(out)</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">args = parsed.args</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">env = parsed.env</span><span class="s3">;</span>
+    <span class="s1">assert.equal(args[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s2">'foo'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(args[</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s2">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(env.foo</span><span class="s3">, </span><span class="s2">'bar'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(env.baz</span><span class="s3">, </span><span class="s2">'qux'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'a simple prereq'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q foo:baz`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'foo:bar task</span><span class="s3">\n</span><span class="s2">foo:baz task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'a duplicate prereq only runs once'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q foo:asdf`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'foo:bar task</span><span class="s3">\n</span><span class="s2">foo:baz task</span><span class="s3">\n</span><span class="s2">foo:asdf task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'a prereq with command-line args'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q foo:qux`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'foo:bar[asdf,qwer] task</span><span class="s3">\n</span><span class="s2">foo:qux task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'a prereq with args via invoke'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q foo:frang[zxcv,uiop]`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'foo:bar[zxcv,uiop] task</span><span class="s3">\n</span><span class="s2">foo:frang task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'a prereq with args via execute'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q foo:zerb[zxcv,uiop]`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'foo:bar[zxcv,uiop] task</span><span class="s3">\n</span><span class="s2">foo:zerb task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'repeating the task via execute'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q foo:voom`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'foo:bar task</span><span class="s3">\n</span><span class="s2">foo:bar task</span><span class="s3">\n</span><span class="s2">complete</span><span class="s3">\n</span><span class="s2">complete'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'prereq execution-order'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q hoge:fuga`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'hoge:hoge task</span><span class="s3">\n</span><span class="s2">hoge:piyo task</span><span class="s3">\n</span><span class="s2">hoge:fuga task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'basic async task'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q bar:bar`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'bar:foo task</span><span class="s3">\n</span><span class="s2">bar:bar task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'promise async task'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q bar:dependOnpromise`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'bar:promise task</span><span class="s3">\n</span><span class="s2">bar:dependOnpromise task saw value 123654'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'failing promise async task'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">try </span><span class="s1">{</span>
+      <span class="s1">exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q bar:brokenPromise`</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s0">catch</span><span class="s1">(e) {</span>
+      <span class="s1">assert(e.message.indexOf(</span><span class="s2">'Command failed'</span><span class="s1">) &gt; -</span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'that current-prereq index gets reset'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q hoge:kira`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'hoge:hoge task</span><span class="s3">\n</span><span class="s2">hoge:piyo task</span><span class="s3">\n</span><span class="s2">hoge:fuga task</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">+</span>
+        <span class="s2">'hoge:charan task</span><span class="s3">\n</span><span class="s2">hoge:gero task</span><span class="s3">\n</span><span class="s2">hoge:kira task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'modifying a task by adding prereq during execution'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q voom`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'listening for task error-event'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">try </span><span class="s1">{</span>
+      <span class="s1">exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q vronk:groo`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s0">catch</span><span class="s1">(e) {</span>
+      <span class="s1">assert(e.message.indexOf(</span><span class="s2">'OMFGZONG'</span><span class="s1">) &gt; -</span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'listening for jake error-event'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q throwy`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert(out.indexOf(</span><span class="s2">'Emitted</span><span class="s3">\n</span><span class="s2">Error: I am bad'</span><span class="s1">) &gt; -</span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'listening for jake unhandledRejection-event'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q promiseRejecter`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'&lt;promise rejected on purpose&gt;'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'large number of same prereqs'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q large:same`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'large:leaf</span><span class="s3">\n</span><span class="s2">large:same'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'large number of different prereqs'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q large:different`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'leaf-12</span><span class="s3">\n</span><span class="s2">leaf-123</span><span class="s3">\n</span><span class="s2">large:different'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'large number of different prereqs'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q usingRequire:test`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(out</span><span class="s3">, </span><span class="s2">'howdy test'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'modifying a namespace by adding a new task'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q one:two`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">'one:one</span><span class="s3">\n</span><span class="s2">one:two'</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">})</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

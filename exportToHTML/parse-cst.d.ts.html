@@ -1,0 +1,212 @@
+<html>
+<head>
+<title>parse-cst.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #8a8a8a; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+parse-cst.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">{ Type</span><span class="s2">, </span><span class="s1">YAMLSyntaxError } from </span><span class="s3">'./util'</span>
+
+<span class="s0">export default function </span><span class="s1">parseCST(str: string): ParsedCST</span>
+
+<span class="s0">export interface </span><span class="s1">ParsedCST </span><span class="s0">extends </span><span class="s1">Array&lt;CST.Document&gt; {</span>
+  <span class="s1">setOrigRanges(): boolean</span>
+<span class="s1">}</span>
+
+<span class="s0">export </span><span class="s1">namespace CST {</span>
+  <span class="s0">interface </span><span class="s1">Range {</span>
+    <span class="s1">start: number</span>
+    <span class="s1">end: number</span>
+    <span class="s1">origStart?: number</span>
+    <span class="s1">origEnd?: number</span>
+    <span class="s1">isEmpty(): boolean</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">ParseContext {</span>
+    <span class="s4">/** Node starts at beginning of line */</span>
+    <span class="s1">atLineStart: boolean</span>
+    <span class="s4">/** true if currently in a collection context */</span>
+    <span class="s1">inCollection: boolean</span>
+    <span class="s4">/** true if currently in a flow context */</span>
+    <span class="s1">inFlow: boolean</span>
+    <span class="s4">/** Current level of indentation */</span>
+    <span class="s1">indent: number</span>
+    <span class="s4">/** Start of the current line */</span>
+    <span class="s1">lineStart: number</span>
+    <span class="s4">/** The parent of the node */</span>
+    <span class="s1">parent: Node</span>
+    <span class="s4">/** Source of the YAML document */</span>
+    <span class="s1">src: string</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">Node {</span>
+    <span class="s1">context: ParseContext | </span><span class="s0">null</span>
+    <span class="s4">/** if not null, indicates a parser failure */</span>
+    <span class="s1">error: YAMLSyntaxError | </span><span class="s0">null</span>
+    <span class="s4">/** span of context.src parsed into this node */</span>
+    <span class="s1">range: Range | </span><span class="s0">null</span>
+    <span class="s1">valueRange: Range | </span><span class="s0">null</span>
+    <span class="s4">/** anchors, tags and comments */</span>
+    <span class="s1">props: Range[]</span>
+    <span class="s4">/** specific node type */</span>
+    <span class="s1">type: Type</span>
+    <span class="s4">/** if non-null, overrides source value */</span>
+    <span class="s1">value: string | </span><span class="s0">null</span>
+
+    <span class="s1">readonly anchor: string | </span><span class="s0">null</span>
+    <span class="s1">readonly comment: string | </span><span class="s0">null</span>
+    <span class="s1">readonly hasComment: boolean</span>
+    <span class="s1">readonly hasProps: boolean</span>
+    <span class="s1">readonly jsonLike: boolean</span>
+    <span class="s1">readonly rangeAsLinePos: </span><span class="s0">null </span><span class="s1">| {</span>
+      <span class="s1">start: { line: number</span><span class="s2">; </span><span class="s1">col: number }</span>
+      <span class="s1">end?: { line: number</span><span class="s2">; </span><span class="s1">col: number }</span>
+    <span class="s1">}</span>
+    <span class="s1">readonly rawValue: string | </span><span class="s0">null</span>
+    <span class="s1">readonly tag:</span>
+      <span class="s1">| </span><span class="s0">null</span>
+      <span class="s1">| { verbatim: string }</span>
+      <span class="s1">| { handle: string</span><span class="s2">; </span><span class="s1">suffix: string }</span>
+    <span class="s1">readonly valueRangeContainsNewline: boolean</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">Alias </span><span class="s0">extends </span><span class="s1">Node {</span>
+    <span class="s1">type: Type.ALIAS</span>
+    <span class="s4">/** contain the anchor without the * prefix */</span>
+    <span class="s1">readonly rawValue: string</span>
+  <span class="s1">}</span>
+
+  <span class="s1">type Scalar = BlockValue | PlainValue | QuoteValue</span>
+
+  <span class="s0">interface </span><span class="s1">BlockValue </span><span class="s0">extends </span><span class="s1">Node {</span>
+    <span class="s1">type: Type.BLOCK_FOLDED | Type.BLOCK_LITERAL</span>
+    <span class="s1">chomping: </span><span class="s3">'CLIP' </span><span class="s1">| </span><span class="s3">'KEEP' </span><span class="s1">| </span><span class="s3">'STRIP'</span>
+    <span class="s1">blockIndent: number | </span><span class="s0">null</span>
+    <span class="s1">header: Range</span>
+    <span class="s1">readonly strValue: string | </span><span class="s0">null</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">BlockFolded </span><span class="s0">extends </span><span class="s1">BlockValue {</span>
+    <span class="s1">type: Type.BLOCK_FOLDED</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">BlockLiteral </span><span class="s0">extends </span><span class="s1">BlockValue {</span>
+    <span class="s1">type: Type.BLOCK_LITERAL</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">PlainValue </span><span class="s0">extends </span><span class="s1">Node {</span>
+    <span class="s1">type: Type.PLAIN</span>
+    <span class="s1">readonly strValue: string | </span><span class="s0">null</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">QuoteValue </span><span class="s0">extends </span><span class="s1">Node {</span>
+    <span class="s1">type: Type.QUOTE_DOUBLE | Type.QUOTE_SINGLE</span>
+    <span class="s1">readonly strValue:</span>
+      <span class="s1">| </span><span class="s0">null</span>
+      <span class="s1">| string</span>
+      <span class="s1">| { str: string</span><span class="s2">; </span><span class="s1">errors: YAMLSyntaxError[] }</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">QuoteDouble </span><span class="s0">extends </span><span class="s1">QuoteValue {</span>
+    <span class="s1">type: Type.QUOTE_DOUBLE</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">QuoteSingle </span><span class="s0">extends </span><span class="s1">QuoteValue {</span>
+    <span class="s1">type: Type.QUOTE_SINGLE</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">Comment </span><span class="s0">extends </span><span class="s1">Node {</span>
+    <span class="s1">type: Type.COMMENT</span>
+    <span class="s1">readonly anchor: </span><span class="s0">null</span>
+    <span class="s1">readonly comment: string</span>
+    <span class="s1">readonly rawValue: </span><span class="s0">null</span>
+    <span class="s1">readonly tag: </span><span class="s0">null</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">BlankLine </span><span class="s0">extends </span><span class="s1">Node {</span>
+    <span class="s1">type: Type.BLANK_LINE</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">MapItem </span><span class="s0">extends </span><span class="s1">Node {</span>
+    <span class="s1">type: Type.MAP_KEY | Type.MAP_VALUE</span>
+    <span class="s1">node: ContentNode | </span><span class="s0">null</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">MapKey </span><span class="s0">extends </span><span class="s1">MapItem {</span>
+    <span class="s1">type: Type.MAP_KEY</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">MapValue </span><span class="s0">extends </span><span class="s1">MapItem {</span>
+    <span class="s1">type: Type.MAP_VALUE</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">Map </span><span class="s0">extends </span><span class="s1">Node {</span>
+    <span class="s1">type: Type.MAP</span>
+    <span class="s4">/** implicit keys are not wrapped */</span>
+    <span class="s1">items: Array&lt;BlankLine | Comment | Alias | Scalar | MapItem&gt;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">SeqItem </span><span class="s0">extends </span><span class="s1">Node {</span>
+    <span class="s1">type: Type.SEQ_ITEM</span>
+    <span class="s1">node: ContentNode | </span><span class="s0">null</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">Seq </span><span class="s0">extends </span><span class="s1">Node {</span>
+    <span class="s1">type: Type.SEQ</span>
+    <span class="s1">items: Array&lt;BlankLine | Comment | SeqItem&gt;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">FlowChar {</span>
+    <span class="s1">char: </span><span class="s3">'{' </span><span class="s1">| </span><span class="s3">'}' </span><span class="s1">| </span><span class="s3">'[' </span><span class="s1">| </span><span class="s3">']' </span><span class="s1">| </span><span class="s3">',' </span><span class="s1">| </span><span class="s3">'?' </span><span class="s1">| </span><span class="s3">':'</span>
+    <span class="s1">offset: number</span>
+    <span class="s1">origOffset?: number</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">FlowCollection </span><span class="s0">extends </span><span class="s1">Node {</span>
+    <span class="s1">type: Type.FLOW_MAP | Type.FLOW_SEQ</span>
+    <span class="s1">items: Array&lt;</span>
+      <span class="s1">FlowChar | BlankLine | Comment | Alias | Scalar | FlowCollection</span>
+    <span class="s1">&gt;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">FlowMap </span><span class="s0">extends </span><span class="s1">FlowCollection {</span>
+    <span class="s1">type: Type.FLOW_MAP</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">FlowSeq </span><span class="s0">extends </span><span class="s1">FlowCollection {</span>
+    <span class="s1">type: Type.FLOW_SEQ</span>
+  <span class="s1">}</span>
+
+  <span class="s1">type ContentNode = Alias | Scalar | Map | Seq | FlowCollection</span>
+
+  <span class="s0">interface </span><span class="s1">Directive </span><span class="s0">extends </span><span class="s1">Node {</span>
+    <span class="s1">type: Type.DIRECTIVE</span>
+    <span class="s1">name: string</span>
+    <span class="s1">readonly anchor: </span><span class="s0">null</span>
+    <span class="s1">readonly parameters: string[]</span>
+    <span class="s1">readonly tag: </span><span class="s0">null</span>
+  <span class="s1">}</span>
+
+  <span class="s0">interface </span><span class="s1">Document </span><span class="s0">extends </span><span class="s1">Node {</span>
+    <span class="s1">type: Type.DOCUMENT</span>
+    <span class="s1">directives: Array&lt;BlankLine | Comment | Directive&gt;</span>
+    <span class="s1">contents: Array&lt;BlankLine | Comment | ContentNode&gt;</span>
+    <span class="s1">readonly anchor: </span><span class="s0">null</span>
+    <span class="s1">readonly comment: </span><span class="s0">null</span>
+    <span class="s1">readonly tag: </span><span class="s0">null</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<html>
+<head>
+<title>font-weight.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #cc7832; font-weight: bold;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+font-weight.js</font>
+</center></td></tr></table>
+<pre><span class="s0">module.exports = </span><span class="s1">function </span><span class="s0">compressFontWeight(node) {</span>
+    <span class="s1">var </span><span class="s0">value = node.children.head.data</span><span class="s2">;</span>
+
+    <span class="s1">if </span><span class="s0">(value.type === </span><span class="s3">'Identifier'</span><span class="s0">) {</span>
+        <span class="s1">switch </span><span class="s0">(value.name) {</span>
+            <span class="s1">case </span><span class="s3">'normal'</span><span class="s0">:</span>
+                <span class="s0">node.children.head.data = {</span>
+                    <span class="s0">type: </span><span class="s3">'Number'</span><span class="s2">,</span>
+                    <span class="s0">loc: value.loc</span><span class="s2">,</span>
+                    <span class="s0">value: </span><span class="s3">'400'</span>
+                <span class="s0">}</span><span class="s2">;</span>
+                <span class="s1">break</span><span class="s2">;</span>
+            <span class="s1">case </span><span class="s3">'bold'</span><span class="s0">:</span>
+                <span class="s0">node.children.head.data = {</span>
+                    <span class="s0">type: </span><span class="s3">'Number'</span><span class="s2">,</span>
+                    <span class="s0">loc: value.loc</span><span class="s2">,</span>
+                    <span class="s0">value: </span><span class="s3">'700'</span>
+                <span class="s0">}</span><span class="s2">;</span>
+                <span class="s1">break</span><span class="s2">;</span>
+        <span class="s0">}</span>
+    <span class="s0">}</span>
+<span class="s0">}</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

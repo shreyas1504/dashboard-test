@@ -1,0 +1,62 @@
+<html>
+<head>
+<title>once.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+once.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">wrappy = require(</span><span class="s2">'wrappy'</span><span class="s1">)</span>
+<span class="s1">module.exports = wrappy(once)</span>
+<span class="s1">module.exports.strict = wrappy(onceStrict)</span>
+
+<span class="s1">once.proto = once(</span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s1">Object.defineProperty(Function.prototype</span><span class="s3">, </span><span class="s2">'once'</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">() {</span>
+      <span class="s0">return </span><span class="s1">once(</span><span class="s0">this</span><span class="s1">)</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">configurable: </span><span class="s0">true</span>
+  <span class="s1">})</span>
+
+  <span class="s1">Object.defineProperty(Function.prototype</span><span class="s3">, </span><span class="s2">'onceStrict'</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">() {</span>
+      <span class="s0">return </span><span class="s1">onceStrict(</span><span class="s0">this</span><span class="s1">)</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">configurable: </span><span class="s0">true</span>
+  <span class="s1">})</span>
+<span class="s1">})</span>
+
+<span class="s0">function </span><span class="s1">once (fn) {</span>
+  <span class="s0">var </span><span class="s1">f = </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">if </span><span class="s1">(f.called) </span><span class="s0">return </span><span class="s1">f.value</span>
+    <span class="s1">f.called = </span><span class="s0">true</span>
+    <span class="s0">return </span><span class="s1">f.value = fn.apply(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">arguments)</span>
+  <span class="s1">}</span>
+  <span class="s1">f.called = </span><span class="s0">false</span>
+  <span class="s0">return </span><span class="s1">f</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">onceStrict (fn) {</span>
+  <span class="s0">var </span><span class="s1">f = </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">if </span><span class="s1">(f.called)</span>
+      <span class="s0">throw new </span><span class="s1">Error(f.onceError)</span>
+    <span class="s1">f.called = </span><span class="s0">true</span>
+    <span class="s0">return </span><span class="s1">f.value = fn.apply(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">arguments)</span>
+  <span class="s1">}</span>
+  <span class="s0">var </span><span class="s1">name = fn.name || </span><span class="s2">'Function wrapped with `once`'</span>
+  <span class="s1">f.onceError = name + </span><span class="s2">&quot; shouldn't be called more than once&quot;</span>
+  <span class="s1">f.called = </span><span class="s0">false</span>
+  <span class="s0">return </span><span class="s1">f</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

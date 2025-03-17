@@ -1,0 +1,61 @@
+<html>
+<head>
+<title>merge.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+merge.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">{ FunctionCov</span><span class="s2">, </span><span class="s1">ProcessCov</span><span class="s2">, </span><span class="s1">ScriptCov } from </span><span class="s3">&quot;./types&quot;</span><span class="s2">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* Merges a list of process coverages.</span>
+ <span class="s4">*</span>
+ <span class="s4">* The result is normalized.</span>
+ <span class="s4">* The input values may be mutated, it is not safe to use them after passing</span>
+ <span class="s4">* them to this function.</span>
+ <span class="s4">* The computation is synchronous.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">processCovs Process coverages to merge.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">Merged process coverage.</span>
+ <span class="s4">*/</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">mergeProcessCovs(processCovs: ReadonlyArray&lt;ProcessCov&gt;): ProcessCov</span><span class="s2">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* Merges a list of matching script coverages.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Scripts are matching if they have the same `url`.</span>
+ <span class="s4">* The result is normalized.</span>
+ <span class="s4">* The input values may be mutated, it is not safe to use them after passing</span>
+ <span class="s4">* them to this function.</span>
+ <span class="s4">* The computation is synchronous.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">scriptCovs Process coverages to merge.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">Merged script coverage, or `undefined` if the input list was empty.</span>
+ <span class="s4">*/</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">mergeScriptCovs(scriptCovs: ReadonlyArray&lt;ScriptCov&gt;): ScriptCov | undefined</span><span class="s2">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* Merges a list of matching function coverages.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Functions are matching if their root ranges have the same span.</span>
+ <span class="s4">* The result is normalized.</span>
+ <span class="s4">* The input values may be mutated, it is not safe to use them after passing</span>
+ <span class="s4">* them to this function.</span>
+ <span class="s4">* The computation is synchronous.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">funcCovs Function coverages to merge.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">Merged function coverage, or `undefined` if the input list was empty.</span>
+ <span class="s4">*/</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">mergeFunctionCovs(funcCovs: ReadonlyArray&lt;FunctionCov&gt;): FunctionCov | undefined</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

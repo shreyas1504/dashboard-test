@@ -1,0 +1,82 @@
+<html>
+<head>
+<title>PseudoClassSelector.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+PseudoClassSelector.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).TYPE</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">IDENT = TYPE.Ident</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">FUNCTION = TYPE.Function</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">COLON = TYPE.Colon</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">RIGHTPARENTHESIS = TYPE.RightParenthesis</span><span class="s3">;</span>
+
+<span class="s4">// : [ &lt;ident&gt; | &lt;function-token&gt; &lt;any-value&gt;? ) ]</span>
+<span class="s1">module.exports = {</span>
+    <span class="s1">name: </span><span class="s2">'PseudoClassSelector'</span><span class="s3">,</span>
+    <span class="s1">structure: {</span>
+        <span class="s1">name: String</span><span class="s3">,</span>
+        <span class="s1">children: [[</span><span class="s2">'Raw'</span><span class="s1">]</span><span class="s3">, </span><span class="s0">null</span><span class="s1">]</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">parse: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">var </span><span class="s1">start = </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">children = </span><span class="s0">null</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">name</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">nameLowerCase</span><span class="s3">;</span>
+
+        <span class="s0">this</span><span class="s1">.eat(COLON)</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenType === FUNCTION) {</span>
+            <span class="s1">name = </span><span class="s0">this</span><span class="s1">.consumeFunctionName()</span><span class="s3">;</span>
+            <span class="s1">nameLowerCase = name.toLowerCase()</span><span class="s3">;</span>
+
+            <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.pseudo.hasOwnProperty(nameLowerCase)) {</span>
+                <span class="s0">this</span><span class="s1">.scanner.skipSC()</span><span class="s3">;</span>
+                <span class="s1">children = </span><span class="s0">this</span><span class="s1">.pseudo[nameLowerCase].call(</span><span class="s0">this</span><span class="s1">)</span><span class="s3">;</span>
+                <span class="s0">this</span><span class="s1">.scanner.skipSC()</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                <span class="s1">children = </span><span class="s0">this</span><span class="s1">.createList()</span><span class="s3">;</span>
+                <span class="s1">children.push(</span>
+                    <span class="s0">this</span><span class="s1">.Raw(</span><span class="s0">this</span><span class="s1">.scanner.tokenIndex</span><span class="s3">, </span><span class="s0">null</span><span class="s3">, </span><span class="s0">false</span><span class="s1">)</span>
+                <span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">this</span><span class="s1">.eat(RIGHTPARENTHESIS)</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s1">name = </span><span class="s0">this</span><span class="s1">.consume(IDENT)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">type: </span><span class="s2">'PseudoClassSelector'</span><span class="s3">,</span>
+            <span class="s1">loc: </span><span class="s0">this</span><span class="s1">.getLocation(start</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart)</span><span class="s3">,</span>
+            <span class="s1">name: name</span><span class="s3">,</span>
+            <span class="s1">children: children</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">generate: </span><span class="s0">function</span><span class="s1">(node) {</span>
+        <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">':'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.chunk(node.name)</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(node.children !== </span><span class="s0">null</span><span class="s1">) {</span>
+            <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">'('</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.children(node)</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">')'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">walkContext: </span><span class="s2">'function'</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<html>
+<head>
+<title>coaobject.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s7 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+coaobject.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* eslint-disable class-methods-use-this */</span>
+<span class="s2">'use strict'</span><span class="s3">;</span>
+
+<span class="s4">const </span><span class="s1">Q = require(</span><span class="s2">'q'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* COA Object</span>
+ <span class="s5">*</span>
+ <span class="s5">* Base class for all COA-related objects</span>
+ <span class="s5">*</span>
+ <span class="s5">* --------|-----|-----|-----</span>
+ <span class="s5">*         | Cmd | Opt | Arg</span>
+ <span class="s5">* --------|-----|-----|-----</span>
+ <span class="s5">*  name   | ✓   | ✓   | ✓</span>
+ <span class="s5">*  title  | ✓   | ✓   | ✓</span>
+ <span class="s5">*  comp   | ✓   | ✓   | ✓</span>
+ <span class="s5">*  reject | ✓   | ✓   | ✓</span>
+ <span class="s5">*  end    | ✓   | ✓   | ✓</span>
+ <span class="s5">*  apply  | ✓   | ✓   | ✓</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@class </span><span class="s5">CoaObject</span>
+ <span class="s5">*/</span>
+<span class="s1">module.exports = </span><span class="s4">class </span><span class="s1">CoaObject {</span>
+    <span class="s1">constructor(cmd) {</span>
+        <span class="s4">this</span><span class="s1">._cmd = cmd</span><span class="s3">;</span>
+        <span class="s4">this</span><span class="s1">._name = </span><span class="s4">null</span><span class="s3">;</span>
+        <span class="s4">this</span><span class="s1">._title = </span><span class="s4">null</span><span class="s3">;</span>
+        <span class="s4">this</span><span class="s1">._comp = </span><span class="s4">null</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Set a canonical identifier to be used anywhere in the API.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{String} name - command, option or argument name</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{COA.CoaObject} - this instance (for chainability)</span>
+     <span class="s5">*/</span>
+    <span class="s1">name(name) {</span>
+        <span class="s4">this</span><span class="s1">._name = name</span><span class="s3">;</span>
+        <span class="s4">return this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Set a long description to be used anywhere in text messages.</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{String} title - human readable entity title</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{COA.CoaObject} - this instance (for chainability)</span>
+     <span class="s5">*/</span>
+    <span class="s1">title(title) {</span>
+        <span class="s4">this</span><span class="s1">._title = title</span><span class="s3">;</span>
+        <span class="s4">return this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Set custom additional completion for current object.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Function} comp - completion generation function,</span>
+     <span class="s5">*         invoked in the context of object instance.</span>
+     <span class="s5">*         Accepts parameters:</span>
+     <span class="s5">*                 - {Object} opts - completion options</span>
+     <span class="s5">*         It can return promise or any other value threated as a result.</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{COA.CoaObject} - this instance (for chainability)</span>
+     <span class="s5">*/</span>
+    <span class="s1">comp(comp) {</span>
+        <span class="s4">this</span><span class="s1">._comp = comp</span><span class="s3">;</span>
+        <span class="s4">return this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Apply function with arguments in a context of object instance.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Function} fn - body</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Array.&lt;*&gt;} args... - arguments</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{COA.CoaObject} - this instance (for chainability)</span>
+     <span class="s5">*/</span>
+    <span class="s1">apply(fn) {</span>
+        <span class="s1">arguments.length &gt; </span><span class="s7">1</span><span class="s1">?</span>
+            <span class="s1">fn.apply(</span><span class="s4">this</span><span class="s3">, </span><span class="s1">[].slice.call(arguments</span><span class="s3">, </span><span class="s7">1</span><span class="s1">))</span>
+            <span class="s1">: fn.call(</span><span class="s4">this</span><span class="s1">)</span><span class="s3">;</span>
+
+        <span class="s4">return this</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Return reject of actions results promise with error code.</span>
+     <span class="s5">* Use in .act() for return with error.</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Object} reason - reject reason</span>
+     <span class="s5">*         You can customize toString() method and exitCode property</span>
+     <span class="s5">*         of reason object.</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{Q.promise} rejected promise</span>
+     <span class="s5">*/</span>
+    <span class="s1">reject(reason) {</span>
+        <span class="s4">return </span><span class="s1">Q.reject(reason)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">/**</span>
+     <span class="s5">* Finish chain for current subcommand and return parent command instance.</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{COA.Cmd} parent command</span>
+     <span class="s5">*/</span>
+    <span class="s1">end() {</span>
+        <span class="s4">return this</span><span class="s1">._cmd</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

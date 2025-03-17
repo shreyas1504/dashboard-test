@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>stringify.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #6897bb;}
+.s6 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+stringify.js</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">validate from </span><span class="s2">'./validate.js'</span><span class="s3">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* Convert array of 16 byte values to UUID string format of the form:</span>
+ <span class="s4">* XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX</span>
+ <span class="s4">*/</span>
+
+<span class="s0">var </span><span class="s1">byteToHex = []</span><span class="s3">;</span>
+
+<span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s5">256</span><span class="s3">; </span><span class="s1">++i) {</span>
+  <span class="s1">byteToHex.push((i + </span><span class="s5">0x100</span><span class="s1">).toString(</span><span class="s5">16</span><span class="s1">).substr(</span><span class="s5">1</span><span class="s1">))</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">stringify(arr) {</span>
+  <span class="s0">var </span><span class="s1">offset = arguments.length &gt; </span><span class="s5">1 </span><span class="s1">&amp;&amp; arguments[</span><span class="s5">1</span><span class="s1">] !== undefined ? arguments[</span><span class="s5">1</span><span class="s1">] : </span><span class="s5">0</span><span class="s3">;</span>
+  <span class="s6">// Note: Be careful editing this code!  It's been tuned for performance</span>
+  <span class="s6">// and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434</span>
+  <span class="s0">var </span><span class="s1">uuid = (byteToHex[arr[offset + </span><span class="s5">0</span><span class="s1">]] + byteToHex[arr[offset + </span><span class="s5">1</span><span class="s1">]] + byteToHex[arr[offset + </span><span class="s5">2</span><span class="s1">]] + byteToHex[arr[offset + </span><span class="s5">3</span><span class="s1">]] + </span><span class="s2">'-' </span><span class="s1">+ byteToHex[arr[offset + </span><span class="s5">4</span><span class="s1">]] + byteToHex[arr[offset + </span><span class="s5">5</span><span class="s1">]] + </span><span class="s2">'-' </span><span class="s1">+ byteToHex[arr[offset + </span><span class="s5">6</span><span class="s1">]] + byteToHex[arr[offset + </span><span class="s5">7</span><span class="s1">]] + </span><span class="s2">'-' </span><span class="s1">+ byteToHex[arr[offset + </span><span class="s5">8</span><span class="s1">]] + byteToHex[arr[offset + </span><span class="s5">9</span><span class="s1">]] + </span><span class="s2">'-' </span><span class="s1">+ byteToHex[arr[offset + </span><span class="s5">10</span><span class="s1">]] + byteToHex[arr[offset + </span><span class="s5">11</span><span class="s1">]] + byteToHex[arr[offset + </span><span class="s5">12</span><span class="s1">]] + byteToHex[arr[offset + </span><span class="s5">13</span><span class="s1">]] + byteToHex[arr[offset + </span><span class="s5">14</span><span class="s1">]] + byteToHex[arr[offset + </span><span class="s5">15</span><span class="s1">]]).toLowerCase()</span><span class="s3">; </span><span class="s6">// Consistency check for valid UUID.  If this throws, it's likely due to one</span>
+  <span class="s6">// of the following:</span>
+  <span class="s6">// - One or more input array values don't map to a hex octet (leading to</span>
+  <span class="s6">// &quot;undefined&quot; in the uuid)</span>
+  <span class="s6">// - Invalid input values for the RFC `version` or `variant` fields</span>
+
+  <span class="s0">if </span><span class="s1">(!validate(uuid)) {</span>
+    <span class="s0">throw </span><span class="s1">TypeError(</span><span class="s2">'Stringified UUID is invalid'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">uuid</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export default </span><span class="s1">stringify</span><span class="s3">;</span></pre>
+</body>
+</html>

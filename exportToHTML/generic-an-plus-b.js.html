@@ -1,0 +1,259 @@
+<html>
+<head>
+<title>generic-an-plus-b.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+.s6 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+generic-an-plus-b.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">isDigit = require(</span><span class="s2">'../tokenizer'</span><span class="s1">).isDigit</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">cmpChar = require(</span><span class="s2">'../tokenizer'</span><span class="s1">).cmpChar</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s2">'../tokenizer'</span><span class="s1">).TYPE</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">DELIM = TYPE.Delim</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">WHITESPACE = TYPE.WhiteSpace</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">COMMENT = TYPE.Comment</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">IDENT = TYPE.Ident</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">NUMBER = TYPE.Number</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">DIMENSION = TYPE.Dimension</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">PLUSSIGN = </span><span class="s4">0x002B</span><span class="s3">;    </span><span class="s5">// U+002B PLUS SIGN (+)</span>
+<span class="s0">var </span><span class="s1">HYPHENMINUS = </span><span class="s4">0x002D</span><span class="s3">; </span><span class="s5">// U+002D HYPHEN-MINUS (-)</span>
+<span class="s0">var </span><span class="s1">N = </span><span class="s4">0x006E</span><span class="s3">;           </span><span class="s5">// U+006E LATIN SMALL LETTER N (n)</span>
+<span class="s0">var </span><span class="s1">DISALLOW_SIGN = </span><span class="s0">true</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">ALLOW_SIGN = </span><span class="s0">false</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">isDelim(token</span><span class="s3">, </span><span class="s1">code) {</span>
+    <span class="s0">return </span><span class="s1">token !== </span><span class="s0">null </span><span class="s1">&amp;&amp; token.type === DELIM &amp;&amp; token.value.charCodeAt(</span><span class="s4">0</span><span class="s1">) === code</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">skipSC(token</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">getNextToken) {</span>
+    <span class="s0">while </span><span class="s1">(token !== </span><span class="s0">null </span><span class="s1">&amp;&amp; (token.type === WHITESPACE || token.type === COMMENT)) {</span>
+        <span class="s1">token = getNextToken(++offset)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">offset</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">checkInteger(token</span><span class="s3">, </span><span class="s1">valueOffset</span><span class="s3">, </span><span class="s1">disallowSign</span><span class="s3">, </span><span class="s1">offset) {</span>
+    <span class="s0">if </span><span class="s1">(!token) {</span>
+        <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">code = token.value.charCodeAt(valueOffset)</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(code === PLUSSIGN || code === HYPHENMINUS) {</span>
+        <span class="s0">if </span><span class="s1">(disallowSign) {</span>
+            <span class="s5">// Number sign is not allowed</span>
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s1">valueOffset++</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">for </span><span class="s1">(</span><span class="s3">; </span><span class="s1">valueOffset &lt; token.value.length</span><span class="s3">; </span><span class="s1">valueOffset++) {</span>
+        <span class="s0">if </span><span class="s1">(!isDigit(token.value.charCodeAt(valueOffset))) {</span>
+            <span class="s5">// Integer is expected</span>
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">offset + </span><span class="s4">1</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s5">// ... &lt;signed-integer&gt;</span>
+<span class="s5">// ... ['+' | '-'] &lt;signless-integer&gt;</span>
+<span class="s0">function </span><span class="s1">consumeB(token</span><span class="s3">, </span><span class="s1">offset_</span><span class="s3">, </span><span class="s1">getNextToken) {</span>
+    <span class="s0">var </span><span class="s1">sign = </span><span class="s0">false</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">offset = skipSC(token</span><span class="s3">, </span><span class="s1">offset_</span><span class="s3">, </span><span class="s1">getNextToken)</span><span class="s3">;</span>
+
+    <span class="s1">token = getNextToken(offset)</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(token === </span><span class="s0">null</span><span class="s1">) {</span>
+        <span class="s0">return </span><span class="s1">offset_</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(token.type !== NUMBER) {</span>
+        <span class="s0">if </span><span class="s1">(isDelim(token</span><span class="s3">, </span><span class="s1">PLUSSIGN) || isDelim(token</span><span class="s3">, </span><span class="s1">HYPHENMINUS)) {</span>
+            <span class="s1">sign = </span><span class="s0">true</span><span class="s3">;</span>
+            <span class="s1">offset = skipSC(getNextToken(++offset)</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">getNextToken)</span><span class="s3">;</span>
+            <span class="s1">token = getNextToken(offset)</span><span class="s3">;</span>
+
+            <span class="s0">if </span><span class="s1">(token === </span><span class="s0">null </span><span class="s1">&amp;&amp; token.type !== NUMBER) {</span>
+                <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s0">return </span><span class="s1">offset_</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(!sign) {</span>
+        <span class="s0">var </span><span class="s1">code = token.value.charCodeAt(</span><span class="s4">0</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(code !== PLUSSIGN &amp;&amp; code !== HYPHENMINUS) {</span>
+            <span class="s5">// Number sign is expected</span>
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">checkInteger(token</span><span class="s3">, </span><span class="s1">sign ? </span><span class="s4">0 </span><span class="s1">: </span><span class="s4">1</span><span class="s3">, </span><span class="s1">sign</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s5">// An+B microsyntax https://www.w3.org/TR/css-syntax-3/#anb</span>
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">anPlusB(token</span><span class="s3">, </span><span class="s1">getNextToken) {</span>
+    <span class="s6">/* eslint-disable brace-style*/</span>
+    <span class="s0">var </span><span class="s1">offset = </span><span class="s4">0</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(!token) {</span>
+        <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">// &lt;integer&gt;</span>
+    <span class="s0">if </span><span class="s1">(token.type === NUMBER) {</span>
+        <span class="s0">return </span><span class="s1">checkInteger(token</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s1">ALLOW_SIGN</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">; </span><span class="s5">// b</span>
+    <span class="s1">}</span>
+
+    <span class="s5">// -n</span>
+    <span class="s5">// -n &lt;signed-integer&gt;</span>
+    <span class="s5">// -n ['+' | '-'] &lt;signless-integer&gt;</span>
+    <span class="s5">// -n- &lt;signless-integer&gt;</span>
+    <span class="s5">// &lt;dashndashdigit-ident&gt;</span>
+    <span class="s0">else if </span><span class="s1">(token.type === IDENT &amp;&amp; token.value.charCodeAt(</span><span class="s4">0</span><span class="s1">) === HYPHENMINUS) {</span>
+        <span class="s5">// expect 1st char is N</span>
+        <span class="s0">if </span><span class="s1">(!cmpChar(token.value</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s1">N)) {</span>
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">switch </span><span class="s1">(token.value.length) {</span>
+            <span class="s5">// -n</span>
+            <span class="s5">// -n &lt;signed-integer&gt;</span>
+            <span class="s5">// -n ['+' | '-'] &lt;signless-integer&gt;</span>
+            <span class="s0">case </span><span class="s4">2</span><span class="s1">:</span>
+                <span class="s0">return </span><span class="s1">consumeB(getNextToken(++offset)</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">getNextToken)</span><span class="s3">;</span>
+
+            <span class="s5">// -n- &lt;signless-integer&gt;</span>
+            <span class="s0">case </span><span class="s4">3</span><span class="s1">:</span>
+                <span class="s0">if </span><span class="s1">(token.value.charCodeAt(</span><span class="s4">2</span><span class="s1">) !== HYPHENMINUS) {</span>
+                    <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+                <span class="s1">}</span>
+
+                <span class="s1">offset = skipSC(getNextToken(++offset)</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">getNextToken)</span><span class="s3">;</span>
+                <span class="s1">token = getNextToken(offset)</span><span class="s3">;</span>
+
+                <span class="s0">return </span><span class="s1">checkInteger(token</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s1">DISALLOW_SIGN</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+
+            <span class="s5">// &lt;dashndashdigit-ident&gt;</span>
+            <span class="s0">default</span><span class="s1">:</span>
+                <span class="s0">if </span><span class="s1">(token.value.charCodeAt(</span><span class="s4">2</span><span class="s1">) !== HYPHENMINUS) {</span>
+                    <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">return </span><span class="s1">checkInteger(token</span><span class="s3">, </span><span class="s4">3</span><span class="s3">, </span><span class="s1">DISALLOW_SIGN</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s5">// '+'? n</span>
+    <span class="s5">// '+'? n &lt;signed-integer&gt;</span>
+    <span class="s5">// '+'? n ['+' | '-'] &lt;signless-integer&gt;</span>
+    <span class="s5">// '+'? n- &lt;signless-integer&gt;</span>
+    <span class="s5">// '+'? &lt;ndashdigit-ident&gt;</span>
+    <span class="s0">else if </span><span class="s1">(token.type === IDENT || (isDelim(token</span><span class="s3">, </span><span class="s1">PLUSSIGN) &amp;&amp; getNextToken(offset + </span><span class="s4">1</span><span class="s1">).type === IDENT)) {</span>
+        <span class="s5">// just ignore a plus</span>
+        <span class="s0">if </span><span class="s1">(token.type !== IDENT) {</span>
+            <span class="s1">token = getNextToken(++offset)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(token === </span><span class="s0">null </span><span class="s1">|| !cmpChar(token.value</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s1">N)) {</span>
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">switch </span><span class="s1">(token.value.length) {</span>
+            <span class="s5">// '+'? n</span>
+            <span class="s5">// '+'? n &lt;signed-integer&gt;</span>
+            <span class="s5">// '+'? n ['+' | '-'] &lt;signless-integer&gt;</span>
+            <span class="s0">case </span><span class="s4">1</span><span class="s1">:</span>
+                <span class="s0">return </span><span class="s1">consumeB(getNextToken(++offset)</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">getNextToken)</span><span class="s3">;</span>
+
+            <span class="s5">// '+'? n- &lt;signless-integer&gt;</span>
+            <span class="s0">case </span><span class="s4">2</span><span class="s1">:</span>
+                <span class="s0">if </span><span class="s1">(token.value.charCodeAt(</span><span class="s4">1</span><span class="s1">) !== HYPHENMINUS) {</span>
+                    <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+                <span class="s1">}</span>
+
+                <span class="s1">offset = skipSC(getNextToken(++offset)</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">getNextToken)</span><span class="s3">;</span>
+                <span class="s1">token = getNextToken(offset)</span><span class="s3">;</span>
+
+                <span class="s0">return </span><span class="s1">checkInteger(token</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s1">DISALLOW_SIGN</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+
+            <span class="s5">// '+'? &lt;ndashdigit-ident&gt;</span>
+            <span class="s0">default</span><span class="s1">:</span>
+                <span class="s0">if </span><span class="s1">(token.value.charCodeAt(</span><span class="s4">1</span><span class="s1">) !== HYPHENMINUS) {</span>
+                    <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">return </span><span class="s1">checkInteger(token</span><span class="s3">, </span><span class="s4">2</span><span class="s3">, </span><span class="s1">DISALLOW_SIGN</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s5">// &lt;ndashdigit-dimension&gt;</span>
+    <span class="s5">// &lt;ndash-dimension&gt; &lt;signless-integer&gt;</span>
+    <span class="s5">// &lt;n-dimension&gt;</span>
+    <span class="s5">// &lt;n-dimension&gt; &lt;signed-integer&gt;</span>
+    <span class="s5">// &lt;n-dimension&gt; ['+' | '-'] &lt;signless-integer&gt;</span>
+    <span class="s0">else if </span><span class="s1">(token.type === DIMENSION) {</span>
+        <span class="s0">var </span><span class="s1">code = token.value.charCodeAt(</span><span class="s4">0</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">sign = code === PLUSSIGN || code === HYPHENMINUS ? </span><span class="s4">1 </span><span class="s1">: </span><span class="s4">0</span><span class="s3">;</span>
+
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = sign</span><span class="s3">; </span><span class="s1">i &lt; token.value.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+            <span class="s0">if </span><span class="s1">(!isDigit(token.value.charCodeAt(i))) {</span>
+                <span class="s0">break</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(i === sign) {</span>
+            <span class="s5">// Integer is expected</span>
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(!cmpChar(token.value</span><span class="s3">, </span><span class="s1">i</span><span class="s3">, </span><span class="s1">N)) {</span>
+            <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s5">// &lt;n-dimension&gt;</span>
+        <span class="s5">// &lt;n-dimension&gt; &lt;signed-integer&gt;</span>
+        <span class="s5">// &lt;n-dimension&gt; ['+' | '-'] &lt;signless-integer&gt;</span>
+        <span class="s0">if </span><span class="s1">(i + </span><span class="s4">1 </span><span class="s1">=== token.value.length) {</span>
+            <span class="s0">return </span><span class="s1">consumeB(getNextToken(++offset)</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">getNextToken)</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s0">if </span><span class="s1">(token.value.charCodeAt(i + </span><span class="s4">1</span><span class="s1">) !== HYPHENMINUS) {</span>
+                <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s5">// &lt;ndash-dimension&gt; &lt;signless-integer&gt;</span>
+            <span class="s0">if </span><span class="s1">(i + </span><span class="s4">2 </span><span class="s1">=== token.value.length) {</span>
+                <span class="s1">offset = skipSC(getNextToken(++offset)</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">getNextToken)</span><span class="s3">;</span>
+                <span class="s1">token = getNextToken(offset)</span><span class="s3">;</span>
+
+                <span class="s0">return </span><span class="s1">checkInteger(token</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s1">DISALLOW_SIGN</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+            <span class="s5">// &lt;ndashdigit-dimension&gt;</span>
+            <span class="s0">else </span><span class="s1">{</span>
+                <span class="s0">return </span><span class="s1">checkInteger(token</span><span class="s3">, </span><span class="s1">i + </span><span class="s4">2</span><span class="s3">, </span><span class="s1">DISALLOW_SIGN</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

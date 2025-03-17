@@ -1,0 +1,1091 @@
+<html>
+<head>
+<title>xdg-open</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #808080;}
+.s3 { color: #cfd2d5;}
+.s4 { color: #8ea765;}
+.s5 { color: #cc7832; font-weight: bold;}
+.s6 { color: #6897bb;}
+.s7 { color: #cfd2d5;}
+.s8 { color: #c57633;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+xdg-open</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/bin/sh</span>
+<span class="s2">#---------------------------------------------</span>
+<span class="s2">#   xdg-open</span>
+<span class="s2">#</span>
+<span class="s2">#   Utility script to open a URL in the registered default application.</span>
+<span class="s2">#</span>
+<span class="s2">#   Refer to the usage() function below for usage.</span>
+<span class="s2">#</span>
+<span class="s2">#   Copyright 2009-2010, Fathi Boudra &lt;fabo@freedesktop.org&gt;</span>
+<span class="s2">#   Copyright 2009-2010, Rex Dieter &lt;rdieter@fedoraproject.org&gt;</span>
+<span class="s2">#   Copyright 2006, Kevin Krammer &lt;kevin.krammer@gmx.at&gt;</span>
+<span class="s2">#   Copyright 2006, Jeremy White &lt;jwhite@codeweavers.com&gt;</span>
+<span class="s2">#</span>
+<span class="s2">#   LICENSE:</span>
+<span class="s2">#</span>
+<span class="s2">#   Permission is hereby granted, free of charge, to any person obtaining a</span>
+<span class="s2">#   copy of this software and associated documentation files (the &quot;Software&quot;),</span>
+<span class="s2">#   to deal in the Software without restriction, including without limitation</span>
+<span class="s2">#   the rights to use, copy, modify, merge, publish, distribute, sublicense,</span>
+<span class="s2">#   and/or sell copies of the Software, and to permit persons to whom the</span>
+<span class="s2">#   Software is furnished to do so, subject to the following conditions:</span>
+<span class="s2">#</span>
+<span class="s2">#   The above copyright notice and this permission notice shall be included</span>
+<span class="s2">#   in all copies or substantial portions of the Software.</span>
+<span class="s2">#</span>
+<span class="s2">#   THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS</span>
+<span class="s2">#   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</span>
+<span class="s2">#   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL</span>
+<span class="s2">#   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR</span>
+<span class="s2">#   OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,</span>
+<span class="s2">#   ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR</span>
+<span class="s2">#   OTHER DEALINGS IN THE SOFTWARE.</span>
+<span class="s2">#</span>
+<span class="s2">#---------------------------------------------</span>
+
+<span class="s1">manualpage()</span>
+<span class="s1">{</span>
+<span class="s1">cat &lt;&lt; </span><span class="s0">_MANUALPAGE</span>
+<span class="s3">Name 
+ 
+   xdg-open -- opens a file or URL in the user's preferred 
+   application 
+ 
+Synopsis 
+ 
+   xdg-open { file | URL } 
+ 
+   xdg-open { --help | --manual | --version } 
+ 
+Description 
+ 
+   xdg-open opens a file or URL in the user's preferred 
+   application. If a URL is provided the URL will be opened in the 
+   user's preferred web browser. If a file is provided the file 
+   will be opened in the preferred application for files of that 
+   type. xdg-open supports file, ftp, http and https URLs. 
+ 
+   xdg-open is for use inside a desktop session only. It is not 
+   recommended to use xdg-open as root. 
+ 
+Options 
+ 
+   --help 
+          Show command synopsis. 
+ 
+   --manual 
+          Show this manual page. 
+ 
+   --version 
+          Show the xdg-utils version information. 
+ 
+Exit Codes 
+ 
+   An exit code of 0 indicates success while a non-zero exit code 
+   indicates failure. The following failure codes can be returned: 
+ 
+   1 
+          Error in command line syntax. 
+ 
+   2 
+          One of the files passed on the command line did not 
+          exist. 
+ 
+   3 
+          A required tool could not be found. 
+ 
+   4 
+          The action failed. 
+ 
+See Also 
+ 
+   xdg-mime(1), xdg-settings(1), MIME applications associations 
+   specification 
+ 
+Examples 
+ 
+xdg-open 'http://www.freedesktop.org/' 
+ 
+   Opens the freedesktop.org website in the user's default 
+   browser. 
+ 
+xdg-open /tmp/foobar.png 
+ 
+   Opens the PNG image file /tmp/foobar.png in the user's default 
+   image viewing application. 
+</span><span class="s0">_MANUALPAGE</span>
+<span class="s1">}</span>
+
+<span class="s1">usage()</span>
+<span class="s1">{</span>
+<span class="s1">cat &lt;&lt; </span><span class="s0">_USAGE</span>
+   <span class="s3">xdg-open -- opens a file or URL in the user's preferred 
+   application 
+ 
+Synopsis 
+ 
+   xdg-open { file | URL } 
+ 
+   xdg-open { --help | --manual | --version } 
+ 
+</span><span class="s0">_USAGE</span>
+<span class="s1">}</span>
+
+<span class="s2">#@xdg-utils-common@</span>
+
+<span class="s2">#----------------------------------------------------------------------------</span>
+<span class="s2">#   Common utility functions included in all XDG wrapper scripts</span>
+<span class="s2">#----------------------------------------------------------------------------</span>
+
+<span class="s1">DEBUG()</span>
+<span class="s1">{</span>
+  <span class="s1">[ -z </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{XDG_UTILS_DEBUG_LEVEL}</span><span class="s4">&quot; </span><span class="s1">] </span><span class="s5">&amp;&amp; </span><span class="s1">return </span><span class="s6">0</span><span class="s1">;</span>
+  <span class="s1">[ </span><span class="s5">$</span><span class="s1">{XDG_UTILS_DEBUG_LEVEL} -lt </span><span class="s7">$1 </span><span class="s1">] </span><span class="s5">&amp;&amp; </span><span class="s1">return </span><span class="s6">0</span><span class="s1">;</span>
+  <span class="s1">shift</span>
+  <span class="s1">echo </span><span class="s4">&quot;</span><span class="s7">$@</span><span class="s4">&quot; </span><span class="s1">&gt;&amp;</span><span class="s6">2</span>
+<span class="s1">}</span>
+
+<span class="s2"># This handles backslashes but not quote marks.</span>
+<span class="s1">first_word()</span>
+<span class="s1">{</span>
+    <span class="s1">read first rest</span>
+    <span class="s1">echo </span><span class="s4">&quot;</span><span class="s7">$first</span><span class="s4">&quot;</span>
+<span class="s1">}</span>
+
+<span class="s2">#-------------------------------------------------------------</span>
+<span class="s2"># map a binary to a .desktop file</span>
+<span class="s1">binary_to_desktop_file()</span>
+<span class="s1">{</span>
+    <span class="s1">search=</span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{XDG_DATA_HOME:-</span><span class="s7">$HOME</span><span class="s1">/.local/share}</span><span class="s4">:</span><span class="s5">$</span><span class="s1">{XDG_DATA_DIRS:-/usr/local/share:/usr/share}</span><span class="s4">&quot;</span>
+    <span class="s1">binary=</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s1">which </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s4">&quot;</span>
+    <span class="s1">binary=</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s1">readlink -f </span><span class="s4">&quot;</span><span class="s7">$binary</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s4">&quot;</span>
+    <span class="s1">base=</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s1">basename </span><span class="s4">&quot;</span><span class="s7">$binary</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s4">&quot;</span>
+    <span class="s1">IFS=:</span>
+    <span class="s5">for </span><span class="s1">dir </span><span class="s5">in </span><span class="s7">$search</span><span class="s1">; </span><span class="s5">do</span>
+        <span class="s1">unset IFS</span>
+        <span class="s1">[ </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">&quot; </span><span class="s1">] </span><span class="s5">|| </span><span class="s1">continue</span>
+        <span class="s1">[ -d </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">/applications&quot; </span><span class="s1">] </span><span class="s5">|| </span><span class="s1">[ -d </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">/applnk&quot; </span><span class="s1">] </span><span class="s5">|| </span><span class="s1">continue</span>
+        <span class="s5">for </span><span class="s1">file </span><span class="s5">in </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">&quot;</span><span class="s1">/applications/*.desktop </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">&quot;</span><span class="s1">/applications/*/*.desktop </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">&quot;</span><span class="s1">/applnk/*.desktop </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">&quot;</span><span class="s1">/applnk/*/*.desktop; </span><span class="s5">do</span>
+            <span class="s1">[ -r </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot; </span><span class="s1">] </span><span class="s5">|| </span><span class="s1">continue</span>
+            <span class="s2"># Check to make sure it's worth the processing.</span>
+            <span class="s1">grep -q </span><span class="s4">&quot;^Exec.*</span><span class="s7">$base</span><span class="s4">&quot; &quot;</span><span class="s7">$file</span><span class="s4">&quot; </span><span class="s5">|| </span><span class="s1">continue</span>
+            <span class="s2"># Make sure it's a visible desktop file (e.g. not &quot;preferred-web-browser.desktop&quot;).</span>
+            <span class="s1">grep -Eq </span><span class="s4">&quot;^(NoDisplay|Hidden)=true&quot; &quot;</span><span class="s7">$file</span><span class="s4">&quot; </span><span class="s5">&amp;&amp; </span><span class="s1">continue</span>
+            <span class="s1">command=</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s1">grep -E </span><span class="s4">&quot;^Exec(\[[^]=]*])?=&quot; &quot;</span><span class="s7">$file</span><span class="s4">&quot; </span><span class="s1">| cut -d= -f 2- | first_word</span><span class="s8">`</span><span class="s4">&quot;</span>
+            <span class="s1">command=</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s1">which </span><span class="s4">&quot;</span><span class="s7">$command</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s4">&quot;</span>
+            <span class="s5">if </span><span class="s1">[ x</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s1">readlink -f </span><span class="s4">&quot;</span><span class="s7">$command</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s4">&quot; </span><span class="s1">= x</span><span class="s4">&quot;</span><span class="s7">$binary</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+                <span class="s2"># Fix any double slashes that got added path composition</span>
+                <span class="s1">echo </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot; </span><span class="s1">| sed -e </span><span class="s4">'s,//*,/,g'</span>
+                <span class="s1">return</span>
+            <span class="s5">fi</span>
+        <span class="s5">done</span>
+    <span class="s5">done</span>
+<span class="s1">}</span>
+
+<span class="s2">#-------------------------------------------------------------</span>
+<span class="s2"># map a .desktop file to a binary</span>
+<span class="s1">desktop_file_to_binary()</span>
+<span class="s1">{</span>
+    <span class="s1">search=</span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{XDG_DATA_HOME:-</span><span class="s7">$HOME</span><span class="s1">/.local/share}</span><span class="s4">:</span><span class="s5">$</span><span class="s1">{XDG_DATA_DIRS:-/usr/local/share:/usr/share}</span><span class="s4">&quot;</span>
+    <span class="s1">desktop=</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s1">basename </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s4">&quot;</span>
+    <span class="s1">IFS=:</span>
+    <span class="s5">for </span><span class="s1">dir </span><span class="s5">in </span><span class="s7">$search</span><span class="s1">; </span><span class="s5">do</span>
+        <span class="s1">unset IFS</span>
+        <span class="s1">[ </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">&quot; </span><span class="s1">] </span><span class="s5">&amp;&amp; </span><span class="s1">[ -d </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">/applications&quot; </span><span class="s1">] </span><span class="s5">|| </span><span class="s1">[ -d </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">/applnk&quot; </span><span class="s1">] </span><span class="s5">|| </span><span class="s1">continue</span>
+        <span class="s2"># Check if desktop file contains -</span>
+        <span class="s5">if </span><span class="s1">[ </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{desktop#*-}</span><span class="s4">&quot; </span><span class="s1">!= </span><span class="s4">&quot;</span><span class="s7">$desktop</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+            <span class="s1">vendor=</span><span class="s5">$</span><span class="s1">{desktop%-*}</span>
+            <span class="s1">app=</span><span class="s5">$</span><span class="s1">{desktop#*-}</span>
+            <span class="s5">if </span><span class="s1">[ -r </span><span class="s7">$dir</span><span class="s1">/applications/</span><span class="s7">$vendor</span><span class="s1">/</span><span class="s7">$app </span><span class="s1">]; </span><span class="s5">then</span>
+                <span class="s1">file_path=</span><span class="s7">$dir</span><span class="s1">/applications/</span><span class="s7">$vendor</span><span class="s1">/</span><span class="s7">$app</span>
+            <span class="s5">elif </span><span class="s1">[ -r </span><span class="s7">$dir</span><span class="s1">/applnk/</span><span class="s7">$vendor</span><span class="s1">/</span><span class="s7">$app </span><span class="s1">]; </span><span class="s5">then</span>
+                <span class="s1">file_path=</span><span class="s7">$dir</span><span class="s1">/applnk/</span><span class="s7">$vendor</span><span class="s1">/</span><span class="s7">$app</span>
+            <span class="s5">fi</span>
+        <span class="s5">fi</span>
+        <span class="s5">if </span><span class="s8">test </span><span class="s1">-z </span><span class="s4">&quot;</span><span class="s7">$file_path</span><span class="s4">&quot; </span><span class="s1">; </span><span class="s5">then</span>
+            <span class="s5">for </span><span class="s1">indir </span><span class="s5">in </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">&quot;</span><span class="s1">/applications/ </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">&quot;</span><span class="s1">/applications/*/ </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">&quot;</span><span class="s1">/applnk/ </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">&quot;</span><span class="s1">/applnk/*/; </span><span class="s5">do</span>
+                <span class="s1">file=</span><span class="s4">&quot;</span><span class="s7">$indir</span><span class="s4">/</span><span class="s7">$desktop</span><span class="s4">&quot;</span>
+                <span class="s5">if </span><span class="s1">[ -r </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+                    <span class="s1">file_path=</span><span class="s7">$file</span>
+                    <span class="s1">break</span>
+                <span class="s5">fi</span>
+            <span class="s5">done</span>
+        <span class="s5">fi</span>
+        <span class="s5">if </span><span class="s1">[ -r </span><span class="s4">&quot;</span><span class="s7">$file_path</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+            <span class="s2"># Remove any arguments (%F, %f, %U, %u, etc.).</span>
+            <span class="s1">command=</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s1">grep -E </span><span class="s4">&quot;^Exec(\[[^]=]*])?=&quot; &quot;</span><span class="s7">$file_path</span><span class="s4">&quot; </span><span class="s1">| cut -d= -f 2- | first_word</span><span class="s8">`</span><span class="s4">&quot;</span>
+            <span class="s1">command=</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s1">which </span><span class="s4">&quot;</span><span class="s7">$command</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s4">&quot;</span>
+            <span class="s1">readlink -f </span><span class="s4">&quot;</span><span class="s7">$command</span><span class="s4">&quot;</span>
+            <span class="s1">return</span>
+        <span class="s5">fi</span>
+    <span class="s5">done</span>
+<span class="s1">}</span>
+
+<span class="s2">#-------------------------------------------------------------</span>
+<span class="s2"># Exit script on successfully completing the desired operation</span>
+
+<span class="s1">exit_success()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$# </span><span class="s1">-gt </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">echo </span><span class="s4">&quot;</span><span class="s7">$@</span><span class="s4">&quot;</span>
+        <span class="s1">echo</span>
+    <span class="s5">fi</span>
+
+    <span class="s1">exit </span><span class="s6">0</span>
+<span class="s1">}</span>
+
+
+<span class="s2">#-----------------------------------------</span>
+<span class="s2"># Exit script on malformed arguments, not enough arguments</span>
+<span class="s2"># or missing required option.</span>
+<span class="s2"># prints usage information</span>
+
+<span class="s1">exit_failure_syntax()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$# </span><span class="s1">-gt </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">echo </span><span class="s4">&quot;xdg-open: </span><span class="s7">$@</span><span class="s4">&quot; </span><span class="s1">&gt;&amp;</span><span class="s6">2</span>
+        <span class="s1">echo </span><span class="s4">&quot;Try 'xdg-open --help' for more information.&quot; </span><span class="s1">&gt;&amp;</span><span class="s6">2</span>
+    <span class="s5">else</span>
+        <span class="s1">usage</span>
+        <span class="s1">echo </span><span class="s4">&quot;Use 'man xdg-open' or 'xdg-open --manual' for additional info.&quot;</span>
+    <span class="s5">fi</span>
+
+    <span class="s1">exit </span><span class="s6">1</span>
+<span class="s1">}</span>
+
+<span class="s2">#-------------------------------------------------------------</span>
+<span class="s2"># Exit script on missing file specified on command line</span>
+
+<span class="s1">exit_failure_file_missing()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$# </span><span class="s1">-gt </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">echo </span><span class="s4">&quot;xdg-open: </span><span class="s7">$@</span><span class="s4">&quot; </span><span class="s1">&gt;&amp;</span><span class="s6">2</span>
+    <span class="s5">fi</span>
+
+    <span class="s1">exit </span><span class="s6">2</span>
+<span class="s1">}</span>
+
+<span class="s2">#-------------------------------------------------------------</span>
+<span class="s2"># Exit script on failure to locate necessary tool applications</span>
+
+<span class="s1">exit_failure_operation_impossible()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$# </span><span class="s1">-gt </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">echo </span><span class="s4">&quot;xdg-open: </span><span class="s7">$@</span><span class="s4">&quot; </span><span class="s1">&gt;&amp;</span><span class="s6">2</span>
+    <span class="s5">fi</span>
+
+    <span class="s1">exit </span><span class="s6">3</span>
+<span class="s1">}</span>
+
+<span class="s2">#-------------------------------------------------------------</span>
+<span class="s2"># Exit script on failure returned by a tool application</span>
+
+<span class="s1">exit_failure_operation_failed()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$# </span><span class="s1">-gt </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">echo </span><span class="s4">&quot;xdg-open: </span><span class="s7">$@</span><span class="s4">&quot; </span><span class="s1">&gt;&amp;</span><span class="s6">2</span>
+    <span class="s5">fi</span>
+
+    <span class="s1">exit </span><span class="s6">4</span>
+<span class="s1">}</span>
+
+<span class="s2">#------------------------------------------------------------</span>
+<span class="s2"># Exit script on insufficient permission to read a specified file</span>
+
+<span class="s1">exit_failure_file_permission_read()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$# </span><span class="s1">-gt </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">echo </span><span class="s4">&quot;xdg-open: </span><span class="s7">$@</span><span class="s4">&quot; </span><span class="s1">&gt;&amp;</span><span class="s6">2</span>
+    <span class="s5">fi</span>
+
+    <span class="s1">exit </span><span class="s6">5</span>
+<span class="s1">}</span>
+
+<span class="s2">#------------------------------------------------------------</span>
+<span class="s2"># Exit script on insufficient permission to write a specified file</span>
+
+<span class="s1">exit_failure_file_permission_write()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$# </span><span class="s1">-gt </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">echo </span><span class="s4">&quot;xdg-open: </span><span class="s7">$@</span><span class="s4">&quot; </span><span class="s1">&gt;&amp;</span><span class="s6">2</span>
+    <span class="s5">fi</span>
+
+    <span class="s1">exit </span><span class="s6">6</span>
+<span class="s1">}</span>
+
+<span class="s1">check_input_file()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">[ </span><span class="s5">! </span><span class="s1">-e </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">exit_failure_file_missing </span><span class="s4">&quot;file '</span><span class="s7">$1</span><span class="s4">' does not exist&quot;</span>
+    <span class="s5">fi</span>
+    <span class="s5">if </span><span class="s1">[ </span><span class="s5">! </span><span class="s1">-r </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">exit_failure_file_permission_read </span><span class="s4">&quot;no permission to read file '</span><span class="s7">$1</span><span class="s4">'&quot;</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s1">check_vendor_prefix()</span>
+<span class="s1">{</span>
+    <span class="s1">file_label=</span><span class="s4">&quot;</span><span class="s7">$2</span><span class="s4">&quot;</span>
+    <span class="s1">[ -n </span><span class="s4">&quot;</span><span class="s7">$file_label</span><span class="s4">&quot; </span><span class="s1">] </span><span class="s5">|| </span><span class="s1">file_label=</span><span class="s4">&quot;filename&quot;</span>
+    <span class="s1">file=</span><span class="s8">`</span><span class="s1">basename </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span><span class="s8">`</span>
+    <span class="s5">case </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot; </span><span class="s5">in</span>
+       <span class="s1">[[:alpha:]]*-*)</span>
+         <span class="s1">return</span>
+         <span class="s5">;;</span>
+    <span class="s5">esac</span>
+
+    <span class="s1">echo </span><span class="s4">&quot;xdg-open: </span><span class="s7">$file_label </span><span class="s4">'</span><span class="s7">$file</span><span class="s4">' does not have a proper vendor prefix&quot; </span><span class="s1">&gt;&amp;</span><span class="s6">2</span>
+    <span class="s1">echo </span><span class="s4">'A vendor prefix consists of alpha characters ([a-zA-Z]) and is terminated' </span><span class="s1">&gt;&amp;</span><span class="s6">2</span>
+    <span class="s1">echo </span><span class="s4">'with a dash (&quot;-&quot;). An example '&quot;</span><span class="s7">$file_label</span><span class="s4">&quot;' is '&quot;'example-</span><span class="s7">$file</span><span class="s4">'&quot; </span><span class="s1">&gt;&amp;</span><span class="s6">2</span>
+    <span class="s1">echo </span><span class="s4">&quot;Use --novendor to override or 'xdg-open --manual' for additional info.&quot; </span><span class="s1">&gt;&amp;</span><span class="s6">2</span>
+    <span class="s1">exit </span><span class="s6">1</span>
+<span class="s1">}</span>
+
+<span class="s1">check_output_file()</span>
+<span class="s1">{</span>
+    <span class="s2"># if the file exists, check if it is writeable</span>
+    <span class="s2"># if it does not exists, check if we are allowed to write on the directory</span>
+    <span class="s5">if </span><span class="s1">[ -e </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s5">if </span><span class="s1">[ </span><span class="s5">! </span><span class="s1">-w </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+            <span class="s1">exit_failure_file_permission_write </span><span class="s4">&quot;no permission to write to file '</span><span class="s7">$1</span><span class="s4">'&quot;</span>
+        <span class="s5">fi</span>
+    <span class="s5">else</span>
+        <span class="s1">DIR=</span><span class="s8">`</span><span class="s1">dirname </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span><span class="s8">`</span>
+        <span class="s5">if </span><span class="s1">[ </span><span class="s5">! </span><span class="s1">-w </span><span class="s4">&quot;</span><span class="s7">$DIR</span><span class="s4">&quot; </span><span class="s1">] </span><span class="s5">|| </span><span class="s1">[ </span><span class="s5">! </span><span class="s1">-x </span><span class="s4">&quot;</span><span class="s7">$DIR</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+            <span class="s1">exit_failure_file_permission_write </span><span class="s4">&quot;no permission to create file '</span><span class="s7">$1</span><span class="s4">'&quot;</span>
+        <span class="s5">fi</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s2">#----------------------------------------</span>
+<span class="s2"># Checks for shared commands, e.g. --help</span>
+
+<span class="s1">check_common_commands()</span>
+<span class="s1">{</span>
+    <span class="s5">while </span><span class="s1">[ </span><span class="s7">$# </span><span class="s1">-gt </span><span class="s6">0 </span><span class="s1">] ; </span><span class="s5">do</span>
+        <span class="s1">parm=</span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+        <span class="s1">shift</span>
+
+        <span class="s5">case </span><span class="s4">&quot;</span><span class="s7">$parm</span><span class="s4">&quot; </span><span class="s5">in</span>
+            <span class="s1">--help)</span>
+            <span class="s1">usage</span>
+            <span class="s1">echo </span><span class="s4">&quot;Use 'man xdg-open' or 'xdg-open --manual' for additional info.&quot;</span>
+            <span class="s1">exit_success</span>
+            <span class="s5">;;</span>
+
+            <span class="s1">--manual)</span>
+            <span class="s1">manualpage</span>
+            <span class="s1">exit_success</span>
+            <span class="s5">;;</span>
+
+            <span class="s1">--version)</span>
+            <span class="s1">echo </span><span class="s4">&quot;xdg-open 1.1.3&quot;</span>
+            <span class="s1">exit_success</span>
+            <span class="s5">;;</span>
+        <span class="s5">esac</span>
+    <span class="s5">done</span>
+<span class="s1">}</span>
+
+<span class="s1">check_common_commands </span><span class="s4">&quot;</span><span class="s7">$@</span><span class="s4">&quot;</span>
+
+<span class="s1">[ -z </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{XDG_UTILS_DEBUG_LEVEL}</span><span class="s4">&quot; </span><span class="s1">] </span><span class="s5">&amp;&amp; </span><span class="s1">unset XDG_UTILS_DEBUG_LEVEL;</span>
+<span class="s5">if </span><span class="s1">[ </span><span class="s5">$</span><span class="s1">{XDG_UTILS_DEBUG_LEVEL-</span><span class="s6">0</span><span class="s1">} -lt </span><span class="s6">1 </span><span class="s1">]; </span><span class="s5">then</span>
+    <span class="s2"># Be silent</span>
+    <span class="s1">xdg_redirect_output=</span><span class="s4">&quot; &gt; /dev/null 2&gt; /dev/null&quot;</span>
+<span class="s5">else</span>
+    <span class="s2"># All output to stderr</span>
+    <span class="s1">xdg_redirect_output=</span><span class="s4">&quot; &gt;&amp;2&quot;</span>
+<span class="s5">fi</span>
+
+<span class="s2">#--------------------------------------</span>
+<span class="s2"># Checks for known desktop environments</span>
+<span class="s2"># set variable DE to the desktop environments name, lowercase</span>
+
+<span class="s1">detectDE()</span>
+<span class="s1">{</span>
+    <span class="s2"># see https://bugs.freedesktop.org/show_bug.cgi?id=34164</span>
+    <span class="s1">unset GREP_OPTIONS</span>
+
+    <span class="s5">if </span><span class="s1">[ -n </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{XDG_CURRENT_DESKTOP}</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+      <span class="s5">case </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{XDG_CURRENT_DESKTOP}</span><span class="s4">&quot; </span><span class="s5">in</span>
+         <span class="s2"># only recently added to menu-spec, pre-spec X- still in use</span>
+         <span class="s1">Cinnamon|X-Cinnamon)</span>
+           <span class="s1">DE=cinnamon;</span>
+           <span class="s5">;;</span>
+         <span class="s1">ENLIGHTENMENT)</span>
+           <span class="s1">DE=enlightenment;</span>
+           <span class="s5">;;</span>
+         <span class="s2"># GNOME, GNOME-Classic:GNOME, or GNOME-Flashback:GNOME</span>
+         <span class="s1">GNOME*)</span>
+           <span class="s1">DE=gnome;</span>
+           <span class="s5">;;</span>
+         <span class="s1">KDE)</span>
+           <span class="s1">DE=kde;</span>
+           <span class="s5">;;</span>
+         <span class="s2"># Deepin Desktop Environments</span>
+         <span class="s1">DEEPIN|Deepin|deepin)</span>
+           <span class="s1">DE=dde;</span>
+           <span class="s5">;;</span>
+         <span class="s1">LXDE)</span>
+           <span class="s1">DE=lxde;</span>
+           <span class="s5">;;</span>
+         <span class="s1">LXQt)</span>
+           <span class="s1">DE=lxqt;</span>
+           <span class="s5">;;</span>
+         <span class="s1">MATE)</span>
+           <span class="s1">DE=mate;</span>
+           <span class="s5">;;</span>
+         <span class="s1">XFCE)</span>
+           <span class="s1">DE=xfce</span>
+           <span class="s5">;;</span>
+         <span class="s1">X-Generic)</span>
+           <span class="s1">DE=generic</span>
+           <span class="s5">;;</span>
+      <span class="s5">esac</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ x</span><span class="s4">&quot;</span><span class="s7">$DE</span><span class="s4">&quot; </span><span class="s1">= x</span><span class="s4">&quot;&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+      <span class="s2"># classic fallbacks</span>
+      <span class="s5">if </span><span class="s1">[ x</span><span class="s4">&quot;</span><span class="s7">$KDE_FULL_SESSION</span><span class="s4">&quot; </span><span class="s1">!= x</span><span class="s4">&quot;&quot; </span><span class="s1">]; </span><span class="s5">then </span><span class="s1">DE=kde;</span>
+      <span class="s5">elif </span><span class="s1">[ x</span><span class="s4">&quot;</span><span class="s7">$GNOME_DESKTOP_SESSION_ID</span><span class="s4">&quot; </span><span class="s1">!= x</span><span class="s4">&quot;&quot; </span><span class="s1">]; </span><span class="s5">then </span><span class="s1">DE=gnome;</span>
+      <span class="s5">elif </span><span class="s1">[ x</span><span class="s4">&quot;</span><span class="s7">$MATE_DESKTOP_SESSION_ID</span><span class="s4">&quot; </span><span class="s1">!= x</span><span class="s4">&quot;&quot; </span><span class="s1">]; </span><span class="s5">then </span><span class="s1">DE=mate;</span>
+      <span class="s5">elif </span><span class="s8">`</span><span class="s1">dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetNameOwner string:org.gnome.SessionManager </span><span class="s5">&gt; </span><span class="s1">/dev/null </span><span class="s6">2</span><span class="s1">&gt;&amp;</span><span class="s6">1</span><span class="s8">` </span><span class="s1">; </span><span class="s5">then </span><span class="s1">DE=gnome;</span>
+      <span class="s5">elif </span><span class="s1">xprop -root _DT_SAVE_MODE </span><span class="s6">2</span><span class="s5">&gt; </span><span class="s1">/dev/null | grep </span><span class="s4">' = \&quot;xfce4\&quot;$' </span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">2</span><span class="s1">&gt;&amp;</span><span class="s6">1</span><span class="s1">; </span><span class="s5">then </span><span class="s1">DE=xfce;</span>
+      <span class="s5">elif </span><span class="s1">xprop -root </span><span class="s6">2</span><span class="s5">&gt; </span><span class="s1">/dev/null | grep -i </span><span class="s4">'^xfce_desktop_window' </span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">2</span><span class="s1">&gt;&amp;</span><span class="s6">1</span><span class="s1">; </span><span class="s5">then </span><span class="s1">DE=xfce</span>
+      <span class="s5">elif </span><span class="s1">echo </span><span class="s7">$DESKTOP </span><span class="s1">| grep -q </span><span class="s4">'^Enlightenment'</span><span class="s1">; </span><span class="s5">then </span><span class="s1">DE=enlightenment;</span>
+      <span class="s5">elif </span><span class="s1">[ x</span><span class="s4">&quot;</span><span class="s7">$LXQT_SESSION_CONFIG</span><span class="s4">&quot; </span><span class="s1">!= x</span><span class="s4">&quot;&quot; </span><span class="s1">]; </span><span class="s5">then </span><span class="s1">DE=lxqt;</span>
+      <span class="s5">fi</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ x</span><span class="s4">&quot;</span><span class="s7">$DE</span><span class="s4">&quot; </span><span class="s1">= x</span><span class="s4">&quot;&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+      <span class="s2"># fallback to checking $DESKTOP_SESSION</span>
+      <span class="s5">case </span><span class="s4">&quot;</span><span class="s7">$DESKTOP_SESSION</span><span class="s4">&quot; </span><span class="s5">in</span>
+         <span class="s1">gnome)</span>
+           <span class="s1">DE=gnome;</span>
+           <span class="s5">;;</span>
+         <span class="s1">LXDE|Lubuntu)</span>
+           <span class="s1">DE=lxde; </span>
+           <span class="s5">;;</span>
+         <span class="s1">MATE)</span>
+           <span class="s1">DE=mate;</span>
+           <span class="s5">;;</span>
+         <span class="s1">xfce|xfce4|</span><span class="s4">'Xfce Session'</span><span class="s1">)</span>
+           <span class="s1">DE=xfce;</span>
+           <span class="s5">;;</span>
+      <span class="s5">esac</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ x</span><span class="s4">&quot;</span><span class="s7">$DE</span><span class="s4">&quot; </span><span class="s1">= x</span><span class="s4">&quot;&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+      <span class="s2"># fallback to uname output for other platforms</span>
+      <span class="s5">case </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">(uname </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null)</span><span class="s4">&quot; </span><span class="s5">in </span>
+        <span class="s1">CYGWIN*)</span>
+          <span class="s1">DE=cygwin;</span>
+          <span class="s5">;;</span>
+        <span class="s1">Darwin)</span>
+          <span class="s1">DE=darwin;</span>
+          <span class="s5">;;</span>
+      <span class="s5">esac</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ x</span><span class="s4">&quot;</span><span class="s7">$DE</span><span class="s4">&quot; </span><span class="s1">= x</span><span class="s4">&quot;gnome&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+      <span class="s2"># gnome-default-applications-properties is only available in GNOME 2.x</span>
+      <span class="s2"># but not in GNOME 3.x</span>
+      <span class="s1">which gnome-default-applications-properties </span><span class="s5">&gt; </span><span class="s1">/dev/null </span><span class="s6">2</span><span class="s1">&gt;&amp;</span><span class="s6">1  </span><span class="s5">|| </span><span class="s1">DE=</span><span class="s4">&quot;gnome3&quot;</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ -f </span><span class="s4">&quot;</span><span class="s7">$XDG_RUNTIME_DIR</span><span class="s4">/flatpak-info&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+      <span class="s1">DE=</span><span class="s4">&quot;flatpak&quot;</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s2">#----------------------------------------------------------------------------</span>
+<span class="s2"># kfmclient exec/openURL can give bogus exit value in KDE &lt;= 3.5.4</span>
+<span class="s2"># It also always returns 1 in KDE 3.4 and earlier</span>
+<span class="s2"># Simply return 0 in such case</span>
+
+<span class="s1">kfmclient_fix_exit_code()</span>
+<span class="s1">{</span>
+    <span class="s1">version=</span><span class="s8">`</span><span class="s1">LC_ALL=C.UTF-8 kde-config --version </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null | grep </span><span class="s4">'^KDE'</span><span class="s8">`</span>
+    <span class="s1">major=</span><span class="s8">`</span><span class="s1">echo </span><span class="s7">$version </span><span class="s1">| sed </span><span class="s4">'s/KDE.*: \([0-9]\).*/\1/'</span><span class="s8">`</span>
+    <span class="s1">minor=</span><span class="s8">`</span><span class="s1">echo </span><span class="s7">$version </span><span class="s1">| sed </span><span class="s4">'s/KDE.*: [0-9]*\.\([0-9]\).*/\1/'</span><span class="s8">`</span>
+    <span class="s1">release=</span><span class="s8">`</span><span class="s1">echo </span><span class="s7">$version </span><span class="s1">| sed </span><span class="s4">'s/KDE.*: [0-9]*\.[0-9]*\.\([0-9]\).*/\1/'</span><span class="s8">`</span>
+    <span class="s8">test </span><span class="s4">&quot;</span><span class="s7">$major</span><span class="s4">&quot; </span><span class="s1">-gt </span><span class="s6">3 </span><span class="s5">&amp;&amp; </span><span class="s1">return </span><span class="s7">$1</span>
+    <span class="s8">test </span><span class="s4">&quot;</span><span class="s7">$minor</span><span class="s4">&quot; </span><span class="s1">-gt </span><span class="s6">5 </span><span class="s5">&amp;&amp; </span><span class="s1">return </span><span class="s7">$1</span>
+    <span class="s8">test </span><span class="s4">&quot;</span><span class="s7">$release</span><span class="s4">&quot; </span><span class="s1">-gt </span><span class="s6">4 </span><span class="s5">&amp;&amp; </span><span class="s1">return </span><span class="s7">$1</span>
+    <span class="s1">return </span><span class="s6">0</span>
+<span class="s1">}</span>
+
+<span class="s2">#----------------------------------------------------------------------------</span>
+<span class="s2"># Returns true if there is a graphical display attached.</span>
+
+<span class="s1">has_display()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">[ -n </span><span class="s4">&quot;</span><span class="s7">$DISPLAY</span><span class="s4">&quot; </span><span class="s1">] </span><span class="s5">|| </span><span class="s1">[ -n </span><span class="s4">&quot;</span><span class="s7">$WAYLAND_DISPLAY</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">return </span><span class="s6">0</span>
+    <span class="s5">else</span>
+        <span class="s1">return </span><span class="s6">1</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s2"># This handles backslashes but not quote marks.</span>
+<span class="s1">last_word()</span>
+<span class="s1">{</span>
+    <span class="s1">read first rest</span>
+    <span class="s1">echo </span><span class="s4">&quot;</span><span class="s7">$rest</span><span class="s4">&quot;</span>
+<span class="s1">}</span>
+
+<span class="s2"># Get the value of a key in a desktop file's Desktop Entry group.</span>
+<span class="s2"># Example: Use get_key foo.desktop Exec</span>
+<span class="s2"># to get the values of the Exec= key for the Desktop Entry group.</span>
+<span class="s1">get_key()</span>
+<span class="s1">{</span>
+    <span class="s1">local file=</span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{</span><span class="s6">1</span><span class="s1">}</span><span class="s4">&quot;</span>
+    <span class="s1">local key=</span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{</span><span class="s6">2</span><span class="s1">}</span><span class="s4">&quot;</span>
+    <span class="s1">local desktop_entry=</span><span class="s4">&quot;&quot;</span>
+
+    <span class="s1">IFS_=</span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{IFS}</span><span class="s4">&quot;</span>
+    <span class="s1">IFS=</span><span class="s4">&quot;&quot;</span>
+    <span class="s5">while </span><span class="s1">read line</span>
+    <span class="s5">do</span>
+        <span class="s5">case </span><span class="s4">&quot;</span><span class="s7">$line</span><span class="s4">&quot; </span><span class="s5">in</span>
+            <span class="s4">&quot;[Desktop Entry]&quot;</span><span class="s1">)</span>
+                <span class="s1">desktop_entry=</span><span class="s4">&quot;y&quot;</span>
+            <span class="s5">;;</span>
+            <span class="s2"># Reset match flag for other groups</span>
+            <span class="s4">&quot;[&quot;</span><span class="s1">*)</span>
+                <span class="s1">desktop_entry=</span><span class="s4">&quot;&quot;</span>
+            <span class="s5">;;</span>
+            <span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{key}</span><span class="s4">=&quot;</span><span class="s1">*)</span>
+                <span class="s2"># Only match Desktop Entry group</span>
+                <span class="s5">if </span><span class="s1">[ -n </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{desktop_entry}</span><span class="s4">&quot; </span><span class="s1">]</span>
+                <span class="s5">then</span>
+                    <span class="s1">echo </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{line}</span><span class="s4">&quot; </span><span class="s1">| cut -d= -f 2-</span>
+                <span class="s5">fi</span>
+        <span class="s5">esac</span>
+    <span class="s5">done &lt; </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{file}</span><span class="s4">&quot;</span>
+    <span class="s1">IFS=</span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{IFS_}</span><span class="s4">&quot;</span>
+<span class="s1">}</span>
+
+<span class="s2"># Returns true if argument is a file:// URL or path</span>
+<span class="s1">is_file_url_or_path()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">echo </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot; </span><span class="s1">| grep -q </span><span class="s4">'^file://' </span><span class="s1">\ 
+            </span><span class="s5">|| ! </span><span class="s1">echo </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot; </span><span class="s1">| egrep -q </span><span class="s4">'^[[:alpha:]+\.\-]+:'</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">return </span><span class="s6">0</span>
+    <span class="s5">else</span>
+        <span class="s1">return </span><span class="s6">1</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s2"># If argument is a file URL, convert it to a (percent-decoded) path.</span>
+<span class="s2"># If not, leave it as it is.</span>
+<span class="s1">file_url_to_path()</span>
+<span class="s1">{</span>
+    <span class="s1">local file=</span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">if </span><span class="s1">echo </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot; </span><span class="s1">| grep -q </span><span class="s4">'^file:///'</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">file=</span><span class="s5">$</span><span class="s1">{file#file://}</span>
+        <span class="s1">file=</span><span class="s5">$</span><span class="s1">{file%%#*}</span>
+        <span class="s1">file=</span><span class="s5">$</span><span class="s1">(echo </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot; </span><span class="s1">| sed -r </span><span class="s4">'s/\?.*$//'</span><span class="s1">)</span>
+        <span class="s1">local printf=printf</span>
+        <span class="s5">if </span><span class="s1">[ -x /usr/bin/printf ]; </span><span class="s5">then</span>
+            <span class="s1">printf=/usr/bin/printf</span>
+        <span class="s5">fi</span>
+        <span class="s1">file=</span><span class="s5">$</span><span class="s1">(</span><span class="s7">$printf </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">(echo </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot; </span><span class="s1">| sed -e </span><span class="s4">'s@%\([a-f0-9A-F]\{2\}\)@\\x\1@g'</span><span class="s1">)</span><span class="s4">&quot;</span><span class="s1">)</span>
+    <span class="s5">fi</span>
+    <span class="s1">echo </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot;</span>
+<span class="s1">}</span>
+
+<span class="s1">open_cygwin()</span>
+<span class="s1">{</span>
+    <span class="s1">cygstart </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">exit_success</span>
+    <span class="s5">else</span>
+        <span class="s1">exit_failure_operation_failed</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s1">open_darwin()</span>
+<span class="s1">{</span>
+    <span class="s1">open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">exit_success</span>
+    <span class="s5">else</span>
+        <span class="s1">exit_failure_operation_failed</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s1">open_kde()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">[ -n </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{KDE_SESSION_VERSION}</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+      <span class="s5">case </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{KDE_SESSION_VERSION}</span><span class="s4">&quot; </span><span class="s5">in</span>
+        <span class="s1">4)</span>
+          <span class="s1">kde-open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+        <span class="s5">;;</span>
+        <span class="s1">5)</span>
+          <span class="s1">kde-open</span><span class="s5">$</span><span class="s1">{KDE_SESSION_VERSION} </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+        <span class="s5">;;</span>
+      <span class="s5">esac</span>
+    <span class="s5">else</span>
+        <span class="s1">kfmclient exec </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+        <span class="s1">kfmclient_fix_exit_code </span><span class="s7">$?</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">exit_success</span>
+    <span class="s5">else</span>
+        <span class="s1">exit_failure_operation_failed</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s1">open_dde()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">dde-open -version </span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">2</span><span class="s1">&gt;&amp;</span><span class="s6">1</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">dde-open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">else</span>
+        <span class="s1">open_generic </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">exit_success</span>
+    <span class="s5">else</span>
+        <span class="s1">exit_failure_operation_failed</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s1">open_gnome3()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">gio help open </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">1</span><span class="s1">&gt;&amp;</span><span class="s6">2</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">gio open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">elif </span><span class="s1">gvfs-open --help </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">1</span><span class="s1">&gt;&amp;</span><span class="s6">2</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">gvfs-open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">else</span>
+        <span class="s1">open_generic </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">exit_success</span>
+    <span class="s5">else</span>
+        <span class="s1">exit_failure_operation_failed</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s1">open_gnome()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">gio help open </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">1</span><span class="s1">&gt;&amp;</span><span class="s6">2</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">gio open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">elif </span><span class="s1">gvfs-open --help </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">1</span><span class="s1">&gt;&amp;</span><span class="s6">2</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">gvfs-open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">elif </span><span class="s1">gnome-open --help </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">1</span><span class="s1">&gt;&amp;</span><span class="s6">2</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">gnome-open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">else</span>
+        <span class="s1">open_generic </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">exit_success</span>
+    <span class="s5">else</span>
+        <span class="s1">exit_failure_operation_failed</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s1">open_mate()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">gio help open </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">1</span><span class="s1">&gt;&amp;</span><span class="s6">2</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">gio open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">elif </span><span class="s1">gvfs-open --help </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">1</span><span class="s1">&gt;&amp;</span><span class="s6">2</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">gvfs-open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">elif </span><span class="s1">mate-open --help </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">1</span><span class="s1">&gt;&amp;</span><span class="s6">2</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">mate-open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">else</span>
+        <span class="s1">open_generic </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">exit_success</span>
+    <span class="s5">else</span>
+        <span class="s1">exit_failure_operation_failed</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s1">open_xfce()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">exo-open --help </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">1</span><span class="s1">&gt;&amp;</span><span class="s6">2</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">exo-open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">elif </span><span class="s1">gio help open </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">1</span><span class="s1">&gt;&amp;</span><span class="s6">2</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">gio open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">elif </span><span class="s1">gvfs-open --help </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">1</span><span class="s1">&gt;&amp;</span><span class="s6">2</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">gvfs-open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">else</span>
+        <span class="s1">open_generic </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">exit_success</span>
+    <span class="s5">else</span>
+        <span class="s1">exit_failure_operation_failed</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s1">open_enlightenment()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">enlightenment_open --help </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">1</span><span class="s1">&gt;&amp;</span><span class="s6">2</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">enlightenment_open </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">else</span>
+        <span class="s1">open_generic </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">exit_success</span>
+    <span class="s5">else</span>
+        <span class="s1">exit_failure_operation_failed</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s1">open_flatpak()</span>
+<span class="s1">{</span>
+    <span class="s1">gdbus call --session \ 
+        --dest org.freedesktop.portal.Desktop \ 
+        --object-path /org/freedesktop/portal/desktop \ 
+        --method org.freedesktop.portal.OpenURI.OpenURI \ 
+        </span><span class="s4">&quot;&quot; &quot;</span><span class="s7">$1</span><span class="s4">&quot; </span><span class="s1">{}</span>
+
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">exit_success</span>
+    <span class="s5">else</span>
+        <span class="s1">exit_failure_operation_failed</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s2">#-----------------------------------------</span>
+<span class="s2"># Recursively search .desktop file</span>
+
+<span class="s1">search_desktop_file()</span>
+<span class="s1">{</span>
+    <span class="s1">local default=</span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s1">local dir=</span><span class="s4">&quot;</span><span class="s7">$2</span><span class="s4">&quot;</span>
+    <span class="s1">local target=</span><span class="s4">&quot;</span><span class="s7">$3</span><span class="s4">&quot;</span>
+
+    <span class="s1">local file=</span><span class="s4">&quot;&quot;</span>
+    <span class="s2"># look for both vendor-app.desktop, vendor/app.desktop</span>
+    <span class="s5">if </span><span class="s1">[ -r </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">/</span><span class="s7">$default</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+      <span class="s1">file=</span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">/</span><span class="s7">$default</span><span class="s4">&quot;</span>
+    <span class="s5">elif </span><span class="s1">[ -r </span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">/</span><span class="s8">`</span><span class="s1">echo </span><span class="s7">$default </span><span class="s1">| sed -e </span><span class="s4">'s|-|/|'</span><span class="s8">`</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+      <span class="s1">file=</span><span class="s4">&quot;</span><span class="s7">$dir</span><span class="s4">/</span><span class="s8">`</span><span class="s1">echo </span><span class="s7">$default </span><span class="s1">| sed -e </span><span class="s4">'s|-|/|'</span><span class="s8">`</span><span class="s4">&quot;</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ -r </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot; </span><span class="s1">] ; </span><span class="s5">then</span>
+        <span class="s1">command=</span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">(get_key </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{file}</span><span class="s4">&quot; &quot;Exec&quot; </span><span class="s1">| first_word)</span><span class="s4">&quot;</span>
+        <span class="s1">command_exec=</span><span class="s8">`</span><span class="s1">which </span><span class="s7">$command </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null</span><span class="s8">`</span>
+        <span class="s1">icon=</span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">(get_key </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{file}</span><span class="s4">&quot; &quot;Icon&quot;</span><span class="s1">)</span><span class="s4">&quot;</span>
+        <span class="s2"># FIXME: Actually LC_MESSAGES should be used as described in</span>
+        <span class="s2"># http://standards.freedesktop.org/desktop-entry-spec/latest/ar01s04.html</span>
+        <span class="s1">localised_name=</span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">(get_key </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{file}</span><span class="s4">&quot; &quot;Name&quot;</span><span class="s1">)</span><span class="s4">&quot;</span>
+        <span class="s1">set -- </span><span class="s5">$</span><span class="s1">(get_key </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{file}</span><span class="s4">&quot; &quot;Exec&quot; </span><span class="s1">| last_word)</span>
+        <span class="s2"># We need to replace any occurrence of &quot;%f&quot;, &quot;%F&quot; and</span>
+        <span class="s2"># the like by the target file. We examine each</span>
+        <span class="s2"># argument and append the modified argument to the</span>
+        <span class="s2"># end then shift.</span>
+        <span class="s1">local args=</span><span class="s7">$#</span>
+        <span class="s1">local replaced=</span><span class="s6">0</span>
+        <span class="s5">while </span><span class="s1">[ </span><span class="s7">$args </span><span class="s1">-gt </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">do</span>
+            <span class="s5">case </span><span class="s7">$1 </span><span class="s5">in</span>
+                <span class="s1">%[c])</span>
+                    <span class="s1">replaced=</span><span class="s6">1</span>
+                    <span class="s1">arg=</span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{localised_name}</span><span class="s4">&quot;</span>
+                    <span class="s1">shift</span>
+                    <span class="s1">set -- </span><span class="s4">&quot;</span><span class="s7">$@</span><span class="s4">&quot; &quot;</span><span class="s7">$arg</span><span class="s4">&quot;</span>
+                    <span class="s5">;;</span>
+                <span class="s1">%[fFuU])</span>
+                    <span class="s1">replaced=</span><span class="s6">1</span>
+                    <span class="s1">arg=</span><span class="s4">&quot;</span><span class="s7">$target</span><span class="s4">&quot;</span>
+                    <span class="s1">shift</span>
+                    <span class="s1">set -- </span><span class="s4">&quot;</span><span class="s7">$@</span><span class="s4">&quot; &quot;</span><span class="s7">$arg</span><span class="s4">&quot;</span>
+                    <span class="s5">;;</span>
+                <span class="s1">%[i])</span>
+                    <span class="s1">replaced=</span><span class="s6">1</span>
+                    <span class="s1">shift</span>
+                    <span class="s1">set -- </span><span class="s4">&quot;</span><span class="s7">$@</span><span class="s4">&quot; &quot;--icon&quot; &quot;</span><span class="s7">$icon</span><span class="s4">&quot;</span>
+                    <span class="s5">;;</span>
+                <span class="s1">*)</span>
+                    <span class="s1">arg=</span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+                    <span class="s1">shift</span>
+                    <span class="s1">set -- </span><span class="s4">&quot;</span><span class="s7">$@</span><span class="s4">&quot; &quot;</span><span class="s7">$arg</span><span class="s4">&quot;</span>
+                    <span class="s5">;;</span>
+            <span class="s5">esac</span>
+            <span class="s1">args=</span><span class="s5">$</span><span class="s1">(( </span><span class="s7">$args </span><span class="s1">- </span><span class="s6">1 </span><span class="s1">))</span>
+        <span class="s5">done</span>
+        <span class="s1">[ </span><span class="s7">$replaced </span><span class="s1">-eq </span><span class="s6">1 </span><span class="s1">] </span><span class="s5">|| </span><span class="s1">set -- </span><span class="s4">&quot;</span><span class="s7">$@</span><span class="s4">&quot; &quot;</span><span class="s7">$target</span><span class="s4">&quot;</span>
+        <span class="s4">&quot;</span><span class="s7">$command_exec</span><span class="s4">&quot; &quot;</span><span class="s7">$@</span><span class="s4">&quot;</span>
+
+        <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+            <span class="s1">exit_success</span>
+        <span class="s5">fi</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">for </span><span class="s1">d </span><span class="s5">in </span><span class="s7">$dir</span><span class="s1">/*/; </span><span class="s5">do</span>
+        <span class="s1">[ -d </span><span class="s4">&quot;</span><span class="s7">$d</span><span class="s4">&quot; </span><span class="s1">] </span><span class="s5">&amp;&amp; </span><span class="s1">search_desktop_file </span><span class="s4">&quot;</span><span class="s7">$default</span><span class="s4">&quot; &quot;</span><span class="s7">$d</span><span class="s4">&quot; &quot;</span><span class="s7">$target</span><span class="s4">&quot;</span>
+    <span class="s5">done</span>
+<span class="s1">}</span>
+
+
+<span class="s1">open_generic_xdg_mime()</span>
+<span class="s1">{</span>
+    <span class="s1">filetype=</span><span class="s4">&quot;</span><span class="s7">$2</span><span class="s4">&quot;</span>
+    <span class="s1">default=</span><span class="s8">`</span><span class="s1">xdg-mime query default </span><span class="s4">&quot;</span><span class="s7">$filetype</span><span class="s4">&quot;</span><span class="s8">`</span>
+    <span class="s5">if </span><span class="s1">[ -n </span><span class="s4">&quot;</span><span class="s7">$default</span><span class="s4">&quot; </span><span class="s1">] ; </span><span class="s5">then</span>
+        <span class="s1">xdg_user_dir=</span><span class="s4">&quot;</span><span class="s7">$XDG_DATA_HOME</span><span class="s4">&quot;</span>
+        <span class="s1">[ -n </span><span class="s4">&quot;</span><span class="s7">$xdg_user_dir</span><span class="s4">&quot; </span><span class="s1">] </span><span class="s5">|| </span><span class="s1">xdg_user_dir=</span><span class="s4">&quot;</span><span class="s7">$HOME</span><span class="s4">/.local/share&quot;</span>
+
+        <span class="s1">xdg_system_dirs=</span><span class="s4">&quot;</span><span class="s7">$XDG_DATA_DIRS</span><span class="s4">&quot;</span>
+        <span class="s1">[ -n </span><span class="s4">&quot;</span><span class="s7">$xdg_system_dirs</span><span class="s4">&quot; </span><span class="s1">] </span><span class="s5">|| </span><span class="s1">xdg_system_dirs=/usr/local/share/:/usr/share/</span>
+
+<span class="s1">DEBUG </span><span class="s6">3 </span><span class="s4">&quot;</span><span class="s7">$xdg_user_dir</span><span class="s4">:</span><span class="s7">$xdg_system_dirs</span><span class="s4">&quot;</span>
+        <span class="s5">for </span><span class="s1">x </span><span class="s5">in </span><span class="s8">`</span><span class="s1">echo </span><span class="s4">&quot;</span><span class="s7">$xdg_user_dir</span><span class="s4">:</span><span class="s7">$xdg_system_dirs</span><span class="s4">&quot; </span><span class="s1">| sed </span><span class="s4">'s/:/ /g'</span><span class="s8">`</span><span class="s1">; </span><span class="s5">do</span>
+            <span class="s1">search_desktop_file </span><span class="s4">&quot;</span><span class="s7">$default</span><span class="s4">&quot; &quot;</span><span class="s7">$x</span><span class="s4">/applications/&quot; &quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+        <span class="s5">done</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s1">open_generic_xdg_file_mime()</span>
+<span class="s1">{</span>
+    <span class="s1">filetype=</span><span class="s8">`</span><span class="s1">xdg-mime query filetype </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot; </span><span class="s1">| sed </span><span class="s4">&quot;s/;.*//&quot;</span><span class="s8">`</span>
+    <span class="s1">open_generic_xdg_mime </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot; &quot;</span><span class="s7">$filetype</span><span class="s4">&quot;</span>
+<span class="s1">}</span>
+
+<span class="s1">open_generic_xdg_x_scheme_handler()</span>
+<span class="s1">{</span>
+    <span class="s1">scheme=</span><span class="s4">&quot;</span><span class="s8">`</span><span class="s1">echo </span><span class="s7">$1 </span><span class="s1">| sed -n </span><span class="s4">'s/\(^[[:alnum:]+\.-]*\):.*$/\1/p'</span><span class="s8">`</span><span class="s4">&quot;</span>
+    <span class="s5">if </span><span class="s1">[ -n </span><span class="s7">$scheme </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">filetype=</span><span class="s4">&quot;x-scheme-handler/</span><span class="s7">$scheme</span><span class="s4">&quot;</span>
+        <span class="s1">open_generic_xdg_mime </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot; &quot;</span><span class="s7">$filetype</span><span class="s4">&quot;</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s1">has_single_argument()</span>
+<span class="s1">{</span>
+  <span class="s8">test </span><span class="s7">$# </span><span class="s1">= </span><span class="s6">1</span>
+<span class="s1">}</span>
+
+<span class="s1">open_envvar()</span>
+<span class="s1">{</span>
+    <span class="s1">local oldifs=</span><span class="s4">&quot;</span><span class="s7">$IFS</span><span class="s4">&quot;</span>
+    <span class="s1">local browser browser_with_arg</span>
+
+    <span class="s1">IFS=</span><span class="s4">&quot;:&quot;</span>
+    <span class="s5">for </span><span class="s1">browser </span><span class="s5">in </span><span class="s7">$BROWSER</span><span class="s1">; </span><span class="s5">do</span>
+        <span class="s1">IFS=</span><span class="s4">&quot;</span><span class="s7">$oldifs</span><span class="s4">&quot;</span>
+
+        <span class="s5">if </span><span class="s1">[ -z </span><span class="s4">&quot;</span><span class="s7">$browser</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+            <span class="s1">continue</span>
+        <span class="s5">fi</span>
+
+        <span class="s5">if </span><span class="s1">echo </span><span class="s4">&quot;</span><span class="s7">$browser</span><span class="s4">&quot; </span><span class="s1">| grep -q %s; </span><span class="s5">then</span>
+            <span class="s2"># Avoid argument injection.</span>
+            <span class="s2"># See https://bugs.freedesktop.org/show_bug.cgi?id=103807</span>
+            <span class="s2"># URIs don't have IFS characters spaces anyway.</span>
+            <span class="s1">has_single_argument </span><span class="s7">$1 </span><span class="s5">&amp;&amp; $</span><span class="s1">(printf </span><span class="s4">&quot;</span><span class="s7">$browser</span><span class="s4">&quot; &quot;</span><span class="s7">$1</span><span class="s4">&quot;</span><span class="s1">)</span>
+        <span class="s5">else</span>
+            <span class="s7">$browser </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+        <span class="s5">fi</span>
+
+        <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+            <span class="s1">exit_success</span>
+        <span class="s5">fi</span>
+    <span class="s5">done</span>
+<span class="s1">}</span>
+
+<span class="s1">open_generic()</span>
+<span class="s1">{</span>
+    <span class="s5">if </span><span class="s1">is_file_url_or_path </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">local file=</span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">(file_url_to_path </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s4">&quot;</span>
+
+        <span class="s1">check_input_file </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot;</span>
+
+        <span class="s5">if </span><span class="s1">has_display; </span><span class="s5">then</span>
+            <span class="s1">filetype=</span><span class="s8">`</span><span class="s1">xdg-mime query filetype </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot; </span><span class="s1">| sed </span><span class="s4">&quot;s/;.*//&quot;</span><span class="s8">`</span>
+            <span class="s1">open_generic_xdg_mime </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot; &quot;</span><span class="s7">$filetype</span><span class="s4">&quot;</span>
+        <span class="s5">fi</span>
+
+        <span class="s5">if </span><span class="s1">which run-mailcap </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">1</span><span class="s1">&gt;&amp;</span><span class="s6">2</span><span class="s1">; </span><span class="s5">then</span>
+            <span class="s1">run-mailcap --action=view </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot;</span>
+            <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+                <span class="s1">exit_success</span>
+            <span class="s5">fi</span>
+        <span class="s5">fi</span>
+
+        <span class="s5">if </span><span class="s1">has_display </span><span class="s5">&amp;&amp; </span><span class="s1">mimeopen -v </span><span class="s6">2</span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">1</span><span class="s1">&gt;&amp;</span><span class="s6">2</span><span class="s1">; </span><span class="s5">then</span>
+            <span class="s1">mimeopen -L -n </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot;</span>
+            <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+                <span class="s1">exit_success</span>
+            <span class="s5">fi</span>
+        <span class="s5">fi</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">has_display; </span><span class="s5">then</span>
+        <span class="s1">open_generic_xdg_x_scheme_handler </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ -n </span><span class="s4">&quot;</span><span class="s7">$BROWSER</span><span class="s4">&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">open_envvar </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">fi</span>
+
+    <span class="s2"># if BROWSER variable is not set, check some well known browsers instead</span>
+    <span class="s5">if </span><span class="s1">[ x</span><span class="s4">&quot;</span><span class="s7">$BROWSER</span><span class="s4">&quot; </span><span class="s1">= x</span><span class="s4">&quot;&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">BROWSER=www-browser:links2:elinks:links:lynx:w3m</span>
+        <span class="s5">if </span><span class="s1">has_display; </span><span class="s5">then</span>
+            <span class="s1">BROWSER=x-www-browser:firefox:iceweasel:seamonkey:mozilla:epiphany:konqueror:chromium:chromium-browser:google-chrome:microsoft-edge:</span><span class="s7">$BROWSER</span>
+        <span class="s5">fi</span>
+    <span class="s5">fi</span>
+
+    <span class="s1">open_envvar </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+
+    <span class="s1">exit_failure_operation_impossible </span><span class="s4">&quot;no method available for opening '</span><span class="s7">$1</span><span class="s4">'&quot;</span>
+<span class="s1">}</span>
+
+<span class="s1">open_lxde()</span>
+<span class="s1">{</span>
+
+    <span class="s2"># pcmanfm only knows how to handle file:// urls and filepaths, it seems.</span>
+    <span class="s5">if </span><span class="s1">pcmanfm --help </span><span class="s5">&gt;</span><span class="s1">/dev/null </span><span class="s6">2</span><span class="s1">&gt;&amp;</span><span class="s6">1 </span><span class="s5">&amp;&amp; </span><span class="s1">is_file_url_or_path </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span><span class="s1">; </span><span class="s5">then</span>
+        <span class="s1">local file=</span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">(file_url_to_path </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s4">&quot;</span>
+
+        <span class="s2"># handle relative paths</span>
+        <span class="s5">if ! </span><span class="s1">echo </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot; </span><span class="s1">| grep -q ^/; </span><span class="s5">then</span>
+            <span class="s1">file=</span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">(pwd)</span><span class="s4">/</span><span class="s7">$file</span><span class="s4">&quot;</span>
+        <span class="s5">fi</span>
+
+        <span class="s1">pcmanfm </span><span class="s4">&quot;</span><span class="s7">$file</span><span class="s4">&quot;</span>
+    <span class="s5">else</span>
+        <span class="s1">open_generic </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s5">fi</span>
+
+    <span class="s5">if </span><span class="s1">[ </span><span class="s7">$? </span><span class="s1">-eq </span><span class="s6">0 </span><span class="s1">]; </span><span class="s5">then</span>
+        <span class="s1">exit_success</span>
+    <span class="s5">else</span>
+        <span class="s1">exit_failure_operation_failed</span>
+    <span class="s5">fi</span>
+<span class="s1">}</span>
+
+<span class="s1">open_lxqt()</span>
+<span class="s1">{</span>
+    <span class="s1">open_generic </span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+<span class="s1">}</span>
+
+<span class="s1">[ x</span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot; </span><span class="s1">!= x</span><span class="s4">&quot;&quot; </span><span class="s1">] </span><span class="s5">|| </span><span class="s1">exit_failure_syntax</span>
+
+<span class="s1">url=</span>
+<span class="s5">while </span><span class="s1">[ </span><span class="s7">$# </span><span class="s1">-gt </span><span class="s6">0 </span><span class="s1">] ; </span><span class="s5">do</span>
+    <span class="s1">parm=</span><span class="s4">&quot;</span><span class="s7">$1</span><span class="s4">&quot;</span>
+    <span class="s1">shift</span>
+
+    <span class="s5">case </span><span class="s4">&quot;</span><span class="s7">$parm</span><span class="s4">&quot; </span><span class="s5">in</span>
+      <span class="s1">-*)</span>
+        <span class="s1">exit_failure_syntax </span><span class="s4">&quot;unexpected option '</span><span class="s7">$parm</span><span class="s4">'&quot;</span>
+        <span class="s5">;;</span>
+
+      <span class="s1">*)</span>
+        <span class="s5">if </span><span class="s1">[ -n </span><span class="s4">&quot;</span><span class="s7">$url</span><span class="s4">&quot; </span><span class="s1">] ; </span><span class="s5">then</span>
+            <span class="s1">exit_failure_syntax </span><span class="s4">&quot;unexpected argument '</span><span class="s7">$parm</span><span class="s4">'&quot;</span>
+        <span class="s5">fi</span>
+        <span class="s1">url=</span><span class="s4">&quot;</span><span class="s7">$parm</span><span class="s4">&quot;</span>
+        <span class="s5">;;</span>
+    <span class="s5">esac</span>
+<span class="s5">done</span>
+
+<span class="s5">if </span><span class="s1">[ -z </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{url}</span><span class="s4">&quot; </span><span class="s1">] ; </span><span class="s5">then</span>
+    <span class="s1">exit_failure_syntax </span><span class="s4">&quot;file or URL argument missing&quot;</span>
+<span class="s5">fi</span>
+
+<span class="s1">detectDE</span>
+
+<span class="s5">if </span><span class="s1">[ x</span><span class="s4">&quot;</span><span class="s7">$DE</span><span class="s4">&quot; </span><span class="s1">= x</span><span class="s4">&quot;&quot; </span><span class="s1">]; </span><span class="s5">then</span>
+    <span class="s1">DE=generic</span>
+<span class="s5">fi</span>
+
+<span class="s1">DEBUG </span><span class="s6">2 </span><span class="s4">&quot;Selected DE </span><span class="s7">$DE</span><span class="s4">&quot;</span>
+
+<span class="s2"># sanitize BROWSER (avoid caling ourselves in particular)</span>
+<span class="s5">case </span><span class="s4">&quot;</span><span class="s5">$</span><span class="s1">{BROWSER}</span><span class="s4">&quot; </span><span class="s5">in</span>
+    <span class="s1">*:</span><span class="s4">&quot;xdg-open&quot;</span><span class="s1">|</span><span class="s4">&quot;xdg-open&quot;</span><span class="s1">:*)</span>
+        <span class="s1">BROWSER=</span><span class="s5">$</span><span class="s1">(echo </span><span class="s7">$BROWSER </span><span class="s1">| sed -e </span><span class="s4">'s|:xdg-open||g' </span><span class="s1">-e </span><span class="s4">'s|xdg-open:||g'</span><span class="s1">)</span>
+        <span class="s5">;;</span>
+    <span class="s4">&quot;xdg-open&quot;</span><span class="s1">)</span>
+        <span class="s1">BROWSER=</span>
+        <span class="s5">;;</span>
+<span class="s5">esac</span>
+
+<span class="s5">case </span><span class="s4">&quot;</span><span class="s7">$DE</span><span class="s4">&quot; </span><span class="s5">in</span>
+    <span class="s1">kde)</span>
+    <span class="s1">open_kde </span><span class="s4">&quot;</span><span class="s7">$url</span><span class="s4">&quot;</span>
+    <span class="s5">;;</span>
+
+    <span class="s1">dde)</span>
+    <span class="s1">open_dde </span><span class="s4">&quot;</span><span class="s7">$url</span><span class="s4">&quot;</span>
+    <span class="s5">;;</span>
+
+    <span class="s1">gnome3|cinnamon)</span>
+    <span class="s1">open_gnome3 </span><span class="s4">&quot;</span><span class="s7">$url</span><span class="s4">&quot;</span>
+    <span class="s5">;;</span>
+
+    <span class="s1">gnome)</span>
+    <span class="s1">open_gnome </span><span class="s4">&quot;</span><span class="s7">$url</span><span class="s4">&quot;</span>
+    <span class="s5">;;</span>
+
+    <span class="s1">mate)</span>
+    <span class="s1">open_mate </span><span class="s4">&quot;</span><span class="s7">$url</span><span class="s4">&quot;</span>
+    <span class="s5">;;</span>
+
+    <span class="s1">xfce)</span>
+    <span class="s1">open_xfce </span><span class="s4">&quot;</span><span class="s7">$url</span><span class="s4">&quot;</span>
+    <span class="s5">;;</span>
+
+    <span class="s1">lxde)</span>
+    <span class="s1">open_lxde </span><span class="s4">&quot;</span><span class="s7">$url</span><span class="s4">&quot;</span>
+    <span class="s5">;;</span>
+
+    <span class="s1">lxqt)</span>
+    <span class="s1">open_lxqt </span><span class="s4">&quot;</span><span class="s7">$url</span><span class="s4">&quot;</span>
+    <span class="s5">;;</span>
+
+    <span class="s1">enlightenment)</span>
+    <span class="s1">open_enlightenment </span><span class="s4">&quot;</span><span class="s7">$url</span><span class="s4">&quot;</span>
+    <span class="s5">;;</span>
+
+    <span class="s1">cygwin)</span>
+    <span class="s1">open_cygwin </span><span class="s4">&quot;</span><span class="s7">$url</span><span class="s4">&quot;</span>
+    <span class="s5">;;</span>
+
+    <span class="s1">darwin)</span>
+    <span class="s1">open_darwin </span><span class="s4">&quot;</span><span class="s7">$url</span><span class="s4">&quot;</span>
+    <span class="s5">;;</span>
+
+    <span class="s1">flatpak)</span>
+    <span class="s1">open_flatpak </span><span class="s4">&quot;</span><span class="s7">$url</span><span class="s4">&quot;</span>
+    <span class="s5">;;</span>
+
+    <span class="s1">generic)</span>
+    <span class="s1">open_generic </span><span class="s4">&quot;</span><span class="s7">$url</span><span class="s4">&quot;</span>
+    <span class="s5">;;</span>
+
+    <span class="s1">*)</span>
+    <span class="s1">exit_failure_operation_impossible </span><span class="s4">&quot;no method available for opening '</span><span class="s7">$url</span><span class="s4">'&quot;</span>
+    <span class="s5">;;</span>
+<span class="s5">esac</span>
+</pre>
+</body>
+</html>

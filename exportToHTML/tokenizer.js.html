@@ -1,0 +1,76 @@
+<html>
+<head>
+<title>tokenizer.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+tokenizer.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">SyntaxError = require(</span><span class="s2">'./SyntaxError'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">TAB = </span><span class="s4">9</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">N = </span><span class="s4">10</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">F = </span><span class="s4">12</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">R = </span><span class="s4">13</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">SPACE = </span><span class="s4">32</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">Tokenizer = </span><span class="s0">function</span><span class="s1">(str) {</span>
+    <span class="s0">this</span><span class="s1">.str = str</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.pos = </span><span class="s4">0</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">Tokenizer.prototype = {</span>
+    <span class="s1">charCodeAt: </span><span class="s0">function</span><span class="s1">(pos) {</span>
+        <span class="s0">return </span><span class="s1">pos &lt; </span><span class="s0">this</span><span class="s1">.str.length ? </span><span class="s0">this</span><span class="s1">.str.charCodeAt(pos) : </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">charCode: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">return this</span><span class="s1">.charCodeAt(</span><span class="s0">this</span><span class="s1">.pos)</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">nextCharCode: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">return this</span><span class="s1">.charCodeAt(</span><span class="s0">this</span><span class="s1">.pos + </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">nextNonWsCode: </span><span class="s0">function</span><span class="s1">(pos) {</span>
+        <span class="s0">return this</span><span class="s1">.charCodeAt(</span><span class="s0">this</span><span class="s1">.findWsEnd(pos))</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">findWsEnd: </span><span class="s0">function</span><span class="s1">(pos) {</span>
+        <span class="s0">for </span><span class="s1">(</span><span class="s3">; </span><span class="s1">pos &lt; </span><span class="s0">this</span><span class="s1">.str.length</span><span class="s3">; </span><span class="s1">pos++) {</span>
+            <span class="s0">var </span><span class="s1">code = </span><span class="s0">this</span><span class="s1">.str.charCodeAt(pos)</span><span class="s3">;</span>
+            <span class="s0">if </span><span class="s1">(code !== R &amp;&amp; code !== N &amp;&amp; code !== F &amp;&amp; code !== SPACE &amp;&amp; code !== TAB) {</span>
+                <span class="s0">break</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">pos</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">substringToPos: </span><span class="s0">function</span><span class="s1">(end) {</span>
+        <span class="s0">return this</span><span class="s1">.str.substring(</span><span class="s0">this</span><span class="s1">.pos</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.pos = end)</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">eat: </span><span class="s0">function</span><span class="s1">(code) {</span>
+        <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.charCode() !== code) {</span>
+            <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Expect `' </span><span class="s1">+ String.fromCharCode(code) + </span><span class="s2">'`'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">this</span><span class="s1">.pos++</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">peek: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">return this</span><span class="s1">.pos &lt; </span><span class="s0">this</span><span class="s1">.str.length ? </span><span class="s0">this</span><span class="s1">.str.charAt(</span><span class="s0">this</span><span class="s1">.pos++) : </span><span class="s2">''</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">error: </span><span class="s0">function</span><span class="s1">(message) {</span>
+        <span class="s0">throw new </span><span class="s1">SyntaxError(message</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.str</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.pos)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">module.exports = Tokenizer</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

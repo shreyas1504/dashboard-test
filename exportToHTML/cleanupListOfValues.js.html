@@ -1,0 +1,163 @@
+<html>
+<head>
+<title>cleanupListOfValues.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+.s6 { color: #8a8a8a; font-style: italic;}
+.s7 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+cleanupListOfValues.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">exports.type = </span><span class="s0">'perItem'</span><span class="s1">;</span>
+
+<span class="s2">exports.active = </span><span class="s3">false</span><span class="s1">;</span>
+
+<span class="s2">exports.description = </span><span class="s0">'rounds list of values to the fixed precision'</span><span class="s1">;</span>
+
+<span class="s2">exports.params = {</span>
+    <span class="s2">floatPrecision: </span><span class="s4">3</span><span class="s1">,</span>
+    <span class="s2">leadingZero: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">defaultPx: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">convertToPx: </span><span class="s3">true</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">regNumericValues = </span><span class="s4">/^([\-+]?\d*\.?\d+([eE][\-+]?\d+)?)(px|pt|pc|mm|cm|m|in|ft|em|ex|%)?$/</span><span class="s1">,</span>
+    <span class="s2">regSeparator = </span><span class="s4">/\s+,?\s*|,\s*/</span><span class="s1">,</span>
+    <span class="s2">removeLeadingZero = require(</span><span class="s0">'../lib/svgo/tools'</span><span class="s2">).removeLeadingZero</span><span class="s1">,</span>
+    <span class="s2">absoluteLengths = { </span><span class="s5">// relative to px</span>
+        <span class="s2">cm: </span><span class="s4">96</span><span class="s2">/</span><span class="s4">2.54</span><span class="s1">,</span>
+        <span class="s2">mm: </span><span class="s4">96</span><span class="s2">/</span><span class="s4">25.4</span><span class="s1">,</span>
+        <span class="s3">in</span><span class="s2">: </span><span class="s4">96</span><span class="s1">,</span>
+        <span class="s2">pt: </span><span class="s4">4</span><span class="s2">/</span><span class="s4">3</span><span class="s1">,</span>
+        <span class="s2">pc: </span><span class="s4">16</span>
+    <span class="s2">}</span><span class="s1">;</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Round list of values to the fixed precision.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@example</span>
+ <span class="s6">* &lt;svg viewBox=&quot;0 0 200.28423 200.28423&quot; enable-background=&quot;new 0 0 200.28423 200.28423&quot;&gt;</span>
+ <span class="s6">*         ⬇</span>
+ <span class="s6">* &lt;svg viewBox=&quot;0 0 200.284 200.284&quot; enable-background=&quot;new 0 0 200.284 200.284&quot;&gt;</span>
+ <span class="s6">*</span>
+ <span class="s6">*</span>
+ <span class="s6">* &lt;polygon points=&quot;208.250977 77.1308594 223.069336 ... &quot;/&gt;</span>
+ <span class="s6">*         ⬇</span>
+ <span class="s6">* &lt;polygon points=&quot;208.251 77.131 223.069 ... &quot;/&gt;</span>
+ <span class="s6">*</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} item current iteration item</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} params plugin params</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Boolean} if false, item will be filtered out</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@author </span><span class="s6">kiyopikko</span>
+ <span class="s6">*/</span>
+<span class="s2">exports.fn = </span><span class="s3">function</span><span class="s2">(item</span><span class="s1">, </span><span class="s2">params) {</span>
+
+
+    <span class="s3">if </span><span class="s2">( item.hasAttr(</span><span class="s0">'points'</span><span class="s2">) ) {</span>
+        <span class="s2">roundValues(item.attrs.points)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">( item.hasAttr(</span><span class="s0">'enable-background'</span><span class="s2">) ) {</span>
+        <span class="s2">roundValues(item.attrs[</span><span class="s0">'enable-background'</span><span class="s2">])</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">( item.hasAttr(</span><span class="s0">'viewBox'</span><span class="s2">) ) {</span>
+        <span class="s2">roundValues(item.attrs.viewBox)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">( item.hasAttr(</span><span class="s0">'stroke-dasharray'</span><span class="s2">) ) {</span>
+        <span class="s2">roundValues(item.attrs[</span><span class="s0">'stroke-dasharray'</span><span class="s2">])</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">( item.hasAttr(</span><span class="s0">'dx'</span><span class="s2">) ) {</span>
+        <span class="s2">roundValues(item.attrs.dx)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">( item.hasAttr(</span><span class="s0">'dy'</span><span class="s2">) ) {</span>
+        <span class="s2">roundValues(item.attrs.dy)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">( item.hasAttr(</span><span class="s0">'x'</span><span class="s2">) ) {</span>
+        <span class="s2">roundValues(item.attrs.x)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">( item.hasAttr(</span><span class="s0">'y'</span><span class="s2">) ) {</span>
+        <span class="s2">roundValues(item.attrs.y)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+
+    <span class="s3">function </span><span class="s2">roundValues($prop){</span>
+
+        <span class="s3">var </span><span class="s2">num</span><span class="s1">, </span><span class="s2">units</span><span class="s1">,</span>
+            <span class="s2">match</span><span class="s1">,</span>
+            <span class="s2">matchNew</span><span class="s1">,</span>
+            <span class="s2">lists = $prop.value</span><span class="s1">,</span>
+            <span class="s2">listsArr = lists.split(regSeparator)</span><span class="s1">,</span>
+            <span class="s2">roundedListArr = []</span><span class="s1">,</span>
+            <span class="s2">roundedList</span><span class="s1">;</span>
+
+        <span class="s2">listsArr.forEach(</span><span class="s3">function</span><span class="s2">(elem){</span>
+
+            <span class="s2">match = elem.match(regNumericValues)</span><span class="s1">;</span>
+            <span class="s2">matchNew = elem.match(</span><span class="s4">/new/</span><span class="s2">)</span><span class="s1">;</span>
+
+             <span class="s5">// if attribute value matches regNumericValues</span>
+            <span class="s3">if </span><span class="s2">(match) {</span>
+                <span class="s5">// round it to the fixed precision</span>
+                <span class="s2">num = +(+match[</span><span class="s4">1</span><span class="s2">]).toFixed(params.floatPrecision)</span><span class="s1">,</span>
+                <span class="s2">units = match[</span><span class="s4">3</span><span class="s2">] || </span><span class="s0">''</span><span class="s1">;</span>
+
+                <span class="s5">// convert absolute values to pixels</span>
+                <span class="s3">if </span><span class="s2">(params.convertToPx &amp;&amp; units &amp;&amp; (units </span><span class="s3">in </span><span class="s2">absoluteLengths)) {</span>
+                    <span class="s3">var </span><span class="s2">pxNum = +(absoluteLengths[units] * match[</span><span class="s4">1</span><span class="s2">]).toFixed(params.floatPrecision)</span><span class="s1">;</span>
+
+                    <span class="s3">if </span><span class="s2">(String(pxNum).length &lt; match[</span><span class="s4">0</span><span class="s2">].length)</span>
+                        <span class="s2">num = pxNum</span><span class="s1">,</span>
+                        <span class="s2">units = </span><span class="s0">'px'</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+                 <span class="s5">// and remove leading zero</span>
+                <span class="s3">if </span><span class="s2">(params.leadingZero) {</span>
+                    <span class="s2">num = removeLeadingZero(num)</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+                <span class="s5">// remove default 'px' units</span>
+                <span class="s3">if </span><span class="s2">(params.defaultPx &amp;&amp; units === </span><span class="s0">'px'</span><span class="s2">) {</span>
+                    <span class="s2">units = </span><span class="s0">''</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+                <span class="s2">roundedListArr.push(num+units)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+            <span class="s5">// if attribute value is &quot;new&quot;(only enable-background).</span>
+            <span class="s3">else if </span><span class="s2">(matchNew) {</span>
+                <span class="s2">roundedListArr.push(</span><span class="s0">'new'</span><span class="s2">)</span><span class="s1">;</span>
+            <span class="s2">} </span><span class="s3">else if </span><span class="s2">(elem) {</span>
+                <span class="s2">roundedListArr.push(elem)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+
+        <span class="s2">})</span><span class="s1">;</span>
+
+        <span class="s2">roundedList = roundedListArr.join(</span><span class="s0">' '</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">$prop.value = roundedList</span><span class="s1">;</span>
+
+    <span class="s2">}</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

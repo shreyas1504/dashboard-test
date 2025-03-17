@@ -1,0 +1,31 @@
+<html>
+<head>
+<title>prepare-tests</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+prepare-tests</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env sh</span>
+
+<span class="s1">set -e</span>
+
+<span class="s1">mkdir -p .browser</span>
+
+<span class="s1">echo</span>
+<span class="s1">echo Preparing browser tests:</span>
+
+<span class="s1">find spec -type f -name </span><span class="s2">'*.spec.js' </span><span class="s1">| \ 
+xargs -I {} sh -c \ 
+</span><span class="s2">'export f=&quot;{}&quot;; echo $f; browserify $f -t require-globify -t brfs -x ajv -u buffer -o $(echo $f | sed -e &quot;s/spec/.browser/&quot;);'</span>
+</pre>
+</body>
+</html>

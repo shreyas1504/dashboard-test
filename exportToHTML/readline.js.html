@@ -1,0 +1,85 @@
+<html>
+<head>
+<title>readline.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #6897bb;}
+.s4 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+readline.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">readline = require(</span><span class="s2">'readline'</span><span class="s1">)</span>
+<span class="s0">var </span><span class="s1">Promise = require(</span><span class="s2">'any-promise'</span><span class="s1">)</span>
+<span class="s0">var </span><span class="s1">objectAssign = require(</span><span class="s2">'object-assign'</span><span class="s1">)</span>
+<span class="s0">var </span><span class="s1">Interface = readline.Interface</span>
+
+<span class="s0">function </span><span class="s1">wrapCompleter (completer) {</span>
+  <span class="s0">if </span><span class="s1">(completer.length === </span><span class="s3">2</span><span class="s1">) </span><span class="s0">return </span><span class="s1">completer</span>
+
+  <span class="s0">return function </span><span class="s1">(line</span><span class="s4">, </span><span class="s1">cb) {</span>
+    <span class="s0">var </span><span class="s1">result = completer(line)</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">result.then !== </span><span class="s2">'function'</span><span class="s1">) {</span>
+      <span class="s0">return </span><span class="s1">cb(</span><span class="s0">null</span><span class="s4">, </span><span class="s1">result)</span>
+    <span class="s1">}</span>
+
+    <span class="s1">result.catch(cb).then(</span><span class="s0">function </span><span class="s1">(result) {</span>
+      <span class="s1">process.nextTick(</span><span class="s0">function </span><span class="s1">() { cb(</span><span class="s0">null</span><span class="s4">, </span><span class="s1">result) })</span>
+    <span class="s1">})</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">InterfaceAsPromised (input</span><span class="s4">, </span><span class="s1">output</span><span class="s4">, </span><span class="s1">completer</span><span class="s4">, </span><span class="s1">terminal) {</span>
+  <span class="s0">if </span><span class="s1">(arguments.length === </span><span class="s3">1</span><span class="s1">) {</span>
+    <span class="s0">var </span><span class="s1">options = input</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">options.completer === </span><span class="s2">'function'</span><span class="s1">) {</span>
+      <span class="s1">options = objectAssign({}</span><span class="s4">, </span><span class="s1">options</span><span class="s4">, </span><span class="s1">{</span>
+        <span class="s1">completer: wrapCompleter(options.completer)</span>
+      <span class="s1">})</span>
+    <span class="s1">}</span>
+
+    <span class="s1">Interface.call(</span><span class="s0">this</span><span class="s4">, </span><span class="s1">options)</span>
+  <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">completer === </span><span class="s2">'function'</span><span class="s1">) {</span>
+      <span class="s1">completer = wrapCompleter(completer)</span>
+    <span class="s1">}</span>
+
+    <span class="s1">Interface.call(</span><span class="s0">this</span><span class="s4">, </span><span class="s1">input</span><span class="s4">, </span><span class="s1">output</span><span class="s4">, </span><span class="s1">completer</span><span class="s4">, </span><span class="s1">terminal)</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">InterfaceAsPromised.prototype = Object.create(Interface.prototype)</span>
+
+<span class="s1">InterfaceAsPromised.prototype.question = </span><span class="s0">function </span><span class="s1">(question</span><span class="s4">, </span><span class="s1">callback) {</span>
+  <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">callback === </span><span class="s2">'function'</span><span class="s1">) {</span>
+    <span class="s0">return </span><span class="s1">Interface.prototype.question.call(</span><span class="s0">this</span><span class="s4">, </span><span class="s1">question</span><span class="s4">, </span><span class="s1">callback)</span>
+  <span class="s1">}</span>
+
+  <span class="s0">var </span><span class="s1">self = </span><span class="s0">this</span>
+  <span class="s0">return new </span><span class="s1">Promise(</span><span class="s0">function </span><span class="s1">(resolve) {</span>
+    <span class="s1">Interface.prototype.question.call(self</span><span class="s4">, </span><span class="s1">question</span><span class="s4">, </span><span class="s1">resolve)</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s1">objectAssign(exports</span><span class="s4">, </span><span class="s1">readline</span><span class="s4">, </span><span class="s1">{</span>
+  <span class="s1">Interface: InterfaceAsPromised</span><span class="s4">,</span>
+  <span class="s1">createInterface: </span><span class="s0">function </span><span class="s1">(input</span><span class="s4">, </span><span class="s1">output</span><span class="s4">, </span><span class="s1">completer</span><span class="s4">, </span><span class="s1">terminal) {</span>
+    <span class="s0">if </span><span class="s1">(arguments.length === </span><span class="s3">1</span><span class="s1">) {</span>
+      <span class="s0">return new </span><span class="s1">InterfaceAsPromised(input)</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return new </span><span class="s1">InterfaceAsPromised(input</span><span class="s4">, </span><span class="s1">output</span><span class="s4">, </span><span class="s1">completer</span><span class="s4">, </span><span class="s1">terminal)</span>
+  <span class="s1">}</span>
+<span class="s1">})</span>
+</pre>
+</body>
+</html>

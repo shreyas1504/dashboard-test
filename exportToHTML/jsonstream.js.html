@@ -1,0 +1,116 @@
+<html>
+<head>
+<title>jsonstream.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+jsonstream.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span>
+
+<span class="s2">const </span><span class="s1">assert = require(</span><span class="s0">'chai'</span><span class="s1">).assert</span>
+<span class="s2">const </span><span class="s1">spooks = require(</span><span class="s0">'spooks'</span><span class="s1">)</span>
+
+<span class="s2">const </span><span class="s1">modulePath = </span><span class="s0">'../../src/jsonstream'</span>
+
+<span class="s1">suite(</span><span class="s0">'jsonstream:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+  <span class="s2">let </span><span class="s1">log</span>
+
+  <span class="s1">setup(() =&gt; {</span>
+    <span class="s1">log = {}</span>
+  <span class="s1">})</span>
+
+  <span class="s1">test(</span><span class="s0">'require does not throw'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">assert.doesNotThrow(() =&gt; {</span>
+      <span class="s1">require(modulePath)</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+
+  <span class="s1">test(</span><span class="s0">'require returns function'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">assert.isFunction(require(modulePath))</span>
+  <span class="s1">})</span>
+
+  <span class="s1">suite(</span><span class="s0">'require:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s2">let </span><span class="s1">Stream</span>
+
+    <span class="s1">setup(() =&gt; {</span>
+      <span class="s1">Stream = require(modulePath)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'Stream expects two arguments'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.lengthOf(Stream</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'calling Stream with function argument doesNotThrow'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.doesNotThrow(() =&gt; {</span>
+        <span class="s1">Stream(() =&gt; {})</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'calling Stream with object argument throws'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.throws(() =&gt; {</span>
+        <span class="s1">Stream({ read: () =&gt; {} })</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'calling Stream with new returns Stream instance'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.instanceOf(</span><span class="s2">new </span><span class="s1">Stream(() =&gt; {})</span><span class="s3">, </span><span class="s1">Stream)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'calling Stream with new returns Readable instance'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.instanceOf(</span><span class="s2">new </span><span class="s1">Stream(() =&gt; {})</span><span class="s3">, </span><span class="s1">require(</span><span class="s0">'stream'</span><span class="s1">).Readable)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'calling Stream without new returns Stream instance'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.instanceOf(Stream(() =&gt; {})</span><span class="s3">, </span><span class="s1">Stream)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'instantiate:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">jsonstream</span>
+
+      <span class="s1">setup(() =&gt; {</span>
+        <span class="s1">jsonstream = </span><span class="s2">new </span><span class="s1">Stream(spooks.fn({ name: </span><span class="s0">'read'</span><span class="s3">, </span><span class="s1">log: log }))</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'jsonstream has _read method'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isFunction(jsonstream._read)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'_read expects no arguments'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(jsonstream._read</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'read was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.read</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">suite(</span><span class="s0">'jsonstream._read:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">setup(() =&gt; {</span>
+          <span class="s1">jsonstream._read()</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'read was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.strictEqual(log.counts.read</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+          <span class="s1">assert.isUndefined(log.these.read[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'read was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.lengthOf(log.args.read[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+<span class="s1">})</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,508 @@
+<html>
+<head>
+<title>sync.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #cc7832; font-weight: bold;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+sync.js</font>
+</center></td></tr></table>
+<pre><span class="s0">module.exports = globSync</span>
+<span class="s0">globSync.GlobSync = GlobSync</span>
+
+<span class="s1">var </span><span class="s0">rp = require(</span><span class="s2">'fs.realpath'</span><span class="s0">)</span>
+<span class="s1">var </span><span class="s0">minimatch = require(</span><span class="s2">'minimatch'</span><span class="s0">)</span>
+<span class="s1">var </span><span class="s0">Minimatch = minimatch.Minimatch</span>
+<span class="s1">var </span><span class="s0">Glob = require(</span><span class="s2">'./glob.js'</span><span class="s0">).Glob</span>
+<span class="s1">var </span><span class="s0">util = require(</span><span class="s2">'util'</span><span class="s0">)</span>
+<span class="s1">var </span><span class="s0">path = require(</span><span class="s2">'path'</span><span class="s0">)</span>
+<span class="s1">var </span><span class="s0">assert = require(</span><span class="s2">'assert'</span><span class="s0">)</span>
+<span class="s1">var </span><span class="s0">isAbsolute = require(</span><span class="s2">'path-is-absolute'</span><span class="s0">)</span>
+<span class="s1">var </span><span class="s0">common = require(</span><span class="s2">'./common.js'</span><span class="s0">)</span>
+<span class="s1">var </span><span class="s0">setopts = common.setopts</span>
+<span class="s1">var </span><span class="s0">ownProp = common.ownProp</span>
+<span class="s1">var </span><span class="s0">childrenIgnored = common.childrenIgnored</span>
+<span class="s1">var </span><span class="s0">isIgnored = common.isIgnored</span>
+
+<span class="s1">function </span><span class="s0">globSync (pattern</span><span class="s3">, </span><span class="s0">options) {</span>
+  <span class="s1">if </span><span class="s0">(</span><span class="s1">typeof </span><span class="s0">options === </span><span class="s2">'function' </span><span class="s0">|| arguments.length === </span><span class="s4">3</span><span class="s0">)</span>
+    <span class="s1">throw new </span><span class="s0">TypeError(</span><span class="s2">'callback provided to sync glob</span><span class="s3">\n</span><span class="s2">'</span><span class="s0">+</span>
+                        <span class="s2">'See: https://github.com/isaacs/node-glob/issues/167'</span><span class="s0">)</span>
+
+  <span class="s1">return new </span><span class="s0">GlobSync(pattern</span><span class="s3">, </span><span class="s0">options).found</span>
+<span class="s0">}</span>
+
+<span class="s1">function </span><span class="s0">GlobSync (pattern</span><span class="s3">, </span><span class="s0">options) {</span>
+  <span class="s1">if </span><span class="s0">(!pattern)</span>
+    <span class="s1">throw new </span><span class="s0">Error(</span><span class="s2">'must provide pattern'</span><span class="s0">)</span>
+
+  <span class="s1">if </span><span class="s0">(</span><span class="s1">typeof </span><span class="s0">options === </span><span class="s2">'function' </span><span class="s0">|| arguments.length === </span><span class="s4">3</span><span class="s0">)</span>
+    <span class="s1">throw new </span><span class="s0">TypeError(</span><span class="s2">'callback provided to sync glob</span><span class="s3">\n</span><span class="s2">'</span><span class="s0">+</span>
+                        <span class="s2">'See: https://github.com/isaacs/node-glob/issues/167'</span><span class="s0">)</span>
+
+  <span class="s1">if </span><span class="s0">(!(</span><span class="s1">this instanceof </span><span class="s0">GlobSync))</span>
+    <span class="s1">return new </span><span class="s0">GlobSync(pattern</span><span class="s3">, </span><span class="s0">options)</span>
+
+  <span class="s0">setopts(</span><span class="s1">this</span><span class="s3">, </span><span class="s0">pattern</span><span class="s3">, </span><span class="s0">options)</span>
+
+  <span class="s1">if </span><span class="s0">(</span><span class="s1">this</span><span class="s0">.noprocess)</span>
+    <span class="s1">return this</span>
+
+  <span class="s1">var </span><span class="s0">n = </span><span class="s1">this</span><span class="s0">.minimatch.set.length</span>
+  <span class="s1">this</span><span class="s0">.matches = </span><span class="s1">new </span><span class="s0">Array(n)</span>
+  <span class="s1">for </span><span class="s0">(</span><span class="s1">var </span><span class="s0">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s0">i &lt; n</span><span class="s3">; </span><span class="s0">i ++) {</span>
+    <span class="s1">this</span><span class="s0">._process(</span><span class="s1">this</span><span class="s0">.minimatch.set[i]</span><span class="s3">, </span><span class="s0">i</span><span class="s3">, </span><span class="s1">false</span><span class="s0">)</span>
+  <span class="s0">}</span>
+  <span class="s1">this</span><span class="s0">._finish()</span>
+<span class="s0">}</span>
+
+<span class="s0">GlobSync.prototype._finish = </span><span class="s1">function </span><span class="s0">() {</span>
+  <span class="s0">assert.ok(</span><span class="s1">this instanceof </span><span class="s0">GlobSync)</span>
+  <span class="s1">if </span><span class="s0">(</span><span class="s1">this</span><span class="s0">.realpath) {</span>
+    <span class="s1">var </span><span class="s0">self = </span><span class="s1">this</span>
+    <span class="s1">this</span><span class="s0">.matches.forEach(</span><span class="s1">function </span><span class="s0">(matchset</span><span class="s3">, </span><span class="s0">index) {</span>
+      <span class="s1">var </span><span class="s0">set = self.matches[index] = Object.create(</span><span class="s1">null</span><span class="s0">)</span>
+      <span class="s1">for </span><span class="s0">(</span><span class="s1">var </span><span class="s0">p </span><span class="s1">in </span><span class="s0">matchset) {</span>
+        <span class="s1">try </span><span class="s0">{</span>
+          <span class="s0">p = self._makeAbs(p)</span>
+          <span class="s1">var </span><span class="s0">real = rp.realpathSync(p</span><span class="s3">, </span><span class="s0">self.realpathCache)</span>
+          <span class="s0">set[real] = </span><span class="s1">true</span>
+        <span class="s0">} </span><span class="s1">catch </span><span class="s0">(er) {</span>
+          <span class="s1">if </span><span class="s0">(er.syscall === </span><span class="s2">'stat'</span><span class="s0">)</span>
+            <span class="s0">set[self._makeAbs(p)] = </span><span class="s1">true</span>
+          <span class="s1">else</span>
+            <span class="s1">throw </span><span class="s0">er</span>
+        <span class="s0">}</span>
+      <span class="s0">}</span>
+    <span class="s0">})</span>
+  <span class="s0">}</span>
+  <span class="s0">common.finish(</span><span class="s1">this</span><span class="s0">)</span>
+<span class="s0">}</span>
+
+
+<span class="s0">GlobSync.prototype._process = </span><span class="s1">function </span><span class="s0">(pattern</span><span class="s3">, </span><span class="s0">index</span><span class="s3">, </span><span class="s0">inGlobStar) {</span>
+  <span class="s0">assert.ok(</span><span class="s1">this instanceof </span><span class="s0">GlobSync)</span>
+
+  <span class="s5">// Get the first [n] parts of pattern that are all strings.</span>
+  <span class="s1">var </span><span class="s0">n = </span><span class="s4">0</span>
+  <span class="s1">while </span><span class="s0">(</span><span class="s1">typeof </span><span class="s0">pattern[n] === </span><span class="s2">'string'</span><span class="s0">) {</span>
+    <span class="s0">n ++</span>
+  <span class="s0">}</span>
+  <span class="s5">// now n is the index of the first one that is *not* a string.</span>
+
+  <span class="s5">// See if there's anything else</span>
+  <span class="s1">var </span><span class="s0">prefix</span>
+  <span class="s1">switch </span><span class="s0">(n) {</span>
+    <span class="s5">// if not, then this is rather simple</span>
+    <span class="s1">case </span><span class="s0">pattern.length:</span>
+      <span class="s1">this</span><span class="s0">._processSimple(pattern.join(</span><span class="s2">'/'</span><span class="s0">)</span><span class="s3">, </span><span class="s0">index)</span>
+      <span class="s1">return</span>
+
+    <span class="s1">case </span><span class="s4">0</span><span class="s0">:</span>
+      <span class="s5">// pattern *starts* with some non-trivial item.</span>
+      <span class="s5">// going to readdir(cwd), but not include the prefix in matches.</span>
+      <span class="s0">prefix = </span><span class="s1">null</span>
+      <span class="s1">break</span>
+
+    <span class="s1">default</span><span class="s0">:</span>
+      <span class="s5">// pattern has some string bits in the front.</span>
+      <span class="s5">// whatever it starts with, whether that's 'absolute' like /foo/bar,</span>
+      <span class="s5">// or 'relative' like '../baz'</span>
+      <span class="s0">prefix = pattern.slice(</span><span class="s4">0</span><span class="s3">, </span><span class="s0">n).join(</span><span class="s2">'/'</span><span class="s0">)</span>
+      <span class="s1">break</span>
+  <span class="s0">}</span>
+
+  <span class="s1">var </span><span class="s0">remain = pattern.slice(n)</span>
+
+  <span class="s5">// get the list of entries.</span>
+  <span class="s1">var </span><span class="s0">read</span>
+  <span class="s1">if </span><span class="s0">(prefix === </span><span class="s1">null</span><span class="s0">)</span>
+    <span class="s0">read = </span><span class="s2">'.'</span>
+  <span class="s1">else if </span><span class="s0">(isAbsolute(prefix) ||</span>
+      <span class="s0">isAbsolute(pattern.map(</span><span class="s1">function </span><span class="s0">(p) {</span>
+        <span class="s1">return typeof </span><span class="s0">p === </span><span class="s2">'string' </span><span class="s0">? p : </span><span class="s2">'[*]'</span>
+      <span class="s0">}).join(</span><span class="s2">'/'</span><span class="s0">))) {</span>
+    <span class="s1">if </span><span class="s0">(!prefix || !isAbsolute(prefix))</span>
+      <span class="s0">prefix = </span><span class="s2">'/' </span><span class="s0">+ prefix</span>
+    <span class="s0">read = prefix</span>
+  <span class="s0">} </span><span class="s1">else</span>
+    <span class="s0">read = prefix</span>
+
+  <span class="s1">var </span><span class="s0">abs = </span><span class="s1">this</span><span class="s0">._makeAbs(read)</span>
+
+  <span class="s5">//if ignored, skip processing</span>
+  <span class="s1">if </span><span class="s0">(childrenIgnored(</span><span class="s1">this</span><span class="s3">, </span><span class="s0">read))</span>
+    <span class="s1">return</span>
+
+  <span class="s1">var </span><span class="s0">isGlobStar = remain[</span><span class="s4">0</span><span class="s0">] === minimatch.GLOBSTAR</span>
+  <span class="s1">if </span><span class="s0">(isGlobStar)</span>
+    <span class="s1">this</span><span class="s0">._processGlobStar(prefix</span><span class="s3">, </span><span class="s0">read</span><span class="s3">, </span><span class="s0">abs</span><span class="s3">, </span><span class="s0">remain</span><span class="s3">, </span><span class="s0">index</span><span class="s3">, </span><span class="s0">inGlobStar)</span>
+  <span class="s1">else</span>
+    <span class="s1">this</span><span class="s0">._processReaddir(prefix</span><span class="s3">, </span><span class="s0">read</span><span class="s3">, </span><span class="s0">abs</span><span class="s3">, </span><span class="s0">remain</span><span class="s3">, </span><span class="s0">index</span><span class="s3">, </span><span class="s0">inGlobStar)</span>
+<span class="s0">}</span>
+
+
+<span class="s0">GlobSync.prototype._processReaddir = </span><span class="s1">function </span><span class="s0">(prefix</span><span class="s3">, </span><span class="s0">read</span><span class="s3">, </span><span class="s0">abs</span><span class="s3">, </span><span class="s0">remain</span><span class="s3">, </span><span class="s0">index</span><span class="s3">, </span><span class="s0">inGlobStar) {</span>
+  <span class="s1">var </span><span class="s0">entries = </span><span class="s1">this</span><span class="s0">._readdir(abs</span><span class="s3">, </span><span class="s0">inGlobStar)</span>
+
+  <span class="s5">// if the abs isn't a dir, then nothing can match!</span>
+  <span class="s1">if </span><span class="s0">(!entries)</span>
+    <span class="s1">return</span>
+
+  <span class="s5">// It will only match dot entries if it starts with a dot, or if</span>
+  <span class="s5">// dot is set.  Stuff like @(.foo|.bar) isn't allowed.</span>
+  <span class="s1">var </span><span class="s0">pn = remain[</span><span class="s4">0</span><span class="s0">]</span>
+  <span class="s1">var </span><span class="s0">negate = !!</span><span class="s1">this</span><span class="s0">.minimatch.negate</span>
+  <span class="s1">var </span><span class="s0">rawGlob = pn._glob</span>
+  <span class="s1">var </span><span class="s0">dotOk = </span><span class="s1">this</span><span class="s0">.dot || rawGlob.charAt(</span><span class="s4">0</span><span class="s0">) === </span><span class="s2">'.'</span>
+
+  <span class="s1">var </span><span class="s0">matchedEntries = []</span>
+  <span class="s1">for </span><span class="s0">(</span><span class="s1">var </span><span class="s0">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s0">i &lt; entries.length</span><span class="s3">; </span><span class="s0">i++) {</span>
+    <span class="s1">var </span><span class="s0">e = entries[i]</span>
+    <span class="s1">if </span><span class="s0">(e.charAt(</span><span class="s4">0</span><span class="s0">) !== </span><span class="s2">'.' </span><span class="s0">|| dotOk) {</span>
+      <span class="s1">var </span><span class="s0">m</span>
+      <span class="s1">if </span><span class="s0">(negate &amp;&amp; !prefix) {</span>
+        <span class="s0">m = !e.match(pn)</span>
+      <span class="s0">} </span><span class="s1">else </span><span class="s0">{</span>
+        <span class="s0">m = e.match(pn)</span>
+      <span class="s0">}</span>
+      <span class="s1">if </span><span class="s0">(m)</span>
+        <span class="s0">matchedEntries.push(e)</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span>
+
+  <span class="s1">var </span><span class="s0">len = matchedEntries.length</span>
+  <span class="s5">// If there are no matched entries, then nothing matches.</span>
+  <span class="s1">if </span><span class="s0">(len === </span><span class="s4">0</span><span class="s0">)</span>
+    <span class="s1">return</span>
+
+  <span class="s5">// if this is the last remaining pattern bit, then no need for</span>
+  <span class="s5">// an additional stat *unless* the user has specified mark or</span>
+  <span class="s5">// stat explicitly.  We know they exist, since readdir returned</span>
+  <span class="s5">// them.</span>
+
+  <span class="s1">if </span><span class="s0">(remain.length === </span><span class="s4">1 </span><span class="s0">&amp;&amp; !</span><span class="s1">this</span><span class="s0">.mark &amp;&amp; !</span><span class="s1">this</span><span class="s0">.stat) {</span>
+    <span class="s1">if </span><span class="s0">(!</span><span class="s1">this</span><span class="s0">.matches[index])</span>
+      <span class="s1">this</span><span class="s0">.matches[index] = Object.create(</span><span class="s1">null</span><span class="s0">)</span>
+
+    <span class="s1">for </span><span class="s0">(</span><span class="s1">var </span><span class="s0">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s0">i &lt; len</span><span class="s3">; </span><span class="s0">i ++) {</span>
+      <span class="s1">var </span><span class="s0">e = matchedEntries[i]</span>
+      <span class="s1">if </span><span class="s0">(prefix) {</span>
+        <span class="s1">if </span><span class="s0">(prefix.slice(-</span><span class="s4">1</span><span class="s0">) !== </span><span class="s2">'/'</span><span class="s0">)</span>
+          <span class="s0">e = prefix + </span><span class="s2">'/' </span><span class="s0">+ e</span>
+        <span class="s1">else</span>
+          <span class="s0">e = prefix + e</span>
+      <span class="s0">}</span>
+
+      <span class="s1">if </span><span class="s0">(e.charAt(</span><span class="s4">0</span><span class="s0">) === </span><span class="s2">'/' </span><span class="s0">&amp;&amp; !</span><span class="s1">this</span><span class="s0">.nomount) {</span>
+        <span class="s0">e = path.join(</span><span class="s1">this</span><span class="s0">.root</span><span class="s3">, </span><span class="s0">e)</span>
+      <span class="s0">}</span>
+      <span class="s1">this</span><span class="s0">._emitMatch(index</span><span class="s3">, </span><span class="s0">e)</span>
+    <span class="s0">}</span>
+    <span class="s5">// This was the last one, and no stats were needed</span>
+    <span class="s1">return</span>
+  <span class="s0">}</span>
+
+  <span class="s5">// now test all matched entries as stand-ins for that part</span>
+  <span class="s5">// of the pattern.</span>
+  <span class="s0">remain.shift()</span>
+  <span class="s1">for </span><span class="s0">(</span><span class="s1">var </span><span class="s0">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s0">i &lt; len</span><span class="s3">; </span><span class="s0">i ++) {</span>
+    <span class="s1">var </span><span class="s0">e = matchedEntries[i]</span>
+    <span class="s1">var </span><span class="s0">newPattern</span>
+    <span class="s1">if </span><span class="s0">(prefix)</span>
+      <span class="s0">newPattern = [prefix</span><span class="s3">, </span><span class="s0">e]</span>
+    <span class="s1">else</span>
+      <span class="s0">newPattern = [e]</span>
+    <span class="s1">this</span><span class="s0">._process(newPattern.concat(remain)</span><span class="s3">, </span><span class="s0">index</span><span class="s3">, </span><span class="s0">inGlobStar)</span>
+  <span class="s0">}</span>
+<span class="s0">}</span>
+
+
+<span class="s0">GlobSync.prototype._emitMatch = </span><span class="s1">function </span><span class="s0">(index</span><span class="s3">, </span><span class="s0">e) {</span>
+  <span class="s1">if </span><span class="s0">(isIgnored(</span><span class="s1">this</span><span class="s3">, </span><span class="s0">e))</span>
+    <span class="s1">return</span>
+
+  <span class="s1">var </span><span class="s0">abs = </span><span class="s1">this</span><span class="s0">._makeAbs(e)</span>
+
+  <span class="s1">if </span><span class="s0">(</span><span class="s1">this</span><span class="s0">.mark)</span>
+    <span class="s0">e = </span><span class="s1">this</span><span class="s0">._mark(e)</span>
+
+  <span class="s1">if </span><span class="s0">(</span><span class="s1">this</span><span class="s0">.absolute) {</span>
+    <span class="s0">e = abs</span>
+  <span class="s0">}</span>
+
+  <span class="s1">if </span><span class="s0">(</span><span class="s1">this</span><span class="s0">.matches[index][e])</span>
+    <span class="s1">return</span>
+
+  <span class="s1">if </span><span class="s0">(</span><span class="s1">this</span><span class="s0">.nodir) {</span>
+    <span class="s1">var </span><span class="s0">c = </span><span class="s1">this</span><span class="s0">.cache[abs]</span>
+    <span class="s1">if </span><span class="s0">(c === </span><span class="s2">'DIR' </span><span class="s0">|| Array.isArray(c))</span>
+      <span class="s1">return</span>
+  <span class="s0">}</span>
+
+  <span class="s1">this</span><span class="s0">.matches[index][e] = </span><span class="s1">true</span>
+
+  <span class="s1">if </span><span class="s0">(</span><span class="s1">this</span><span class="s0">.stat)</span>
+    <span class="s1">this</span><span class="s0">._stat(e)</span>
+<span class="s0">}</span>
+
+
+<span class="s0">GlobSync.prototype._readdirInGlobStar = </span><span class="s1">function </span><span class="s0">(abs) {</span>
+  <span class="s5">// follow all symlinked directories forever</span>
+  <span class="s5">// just proceed as if this is a non-globstar situation</span>
+  <span class="s1">if </span><span class="s0">(</span><span class="s1">this</span><span class="s0">.follow)</span>
+    <span class="s1">return this</span><span class="s0">._readdir(abs</span><span class="s3">, </span><span class="s1">false</span><span class="s0">)</span>
+
+  <span class="s1">var </span><span class="s0">entries</span>
+  <span class="s1">var </span><span class="s0">lstat</span>
+  <span class="s1">var </span><span class="s0">stat</span>
+  <span class="s1">try </span><span class="s0">{</span>
+    <span class="s0">lstat = </span><span class="s1">this</span><span class="s0">.fs.lstatSync(abs)</span>
+  <span class="s0">} </span><span class="s1">catch </span><span class="s0">(er) {</span>
+    <span class="s1">if </span><span class="s0">(er.code === </span><span class="s2">'ENOENT'</span><span class="s0">) {</span>
+      <span class="s5">// lstat failed, doesn't exist</span>
+      <span class="s1">return null</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span>
+
+  <span class="s1">var </span><span class="s0">isSym = lstat &amp;&amp; lstat.isSymbolicLink()</span>
+  <span class="s1">this</span><span class="s0">.symlinks[abs] = isSym</span>
+
+  <span class="s5">// If it's not a symlink or a dir, then it's definitely a regular file.</span>
+  <span class="s5">// don't bother doing a readdir in that case.</span>
+  <span class="s1">if </span><span class="s0">(!isSym &amp;&amp; lstat &amp;&amp; !lstat.isDirectory())</span>
+    <span class="s1">this</span><span class="s0">.cache[abs] = </span><span class="s2">'FILE'</span>
+  <span class="s1">else</span>
+    <span class="s0">entries = </span><span class="s1">this</span><span class="s0">._readdir(abs</span><span class="s3">, </span><span class="s1">false</span><span class="s0">)</span>
+
+  <span class="s1">return </span><span class="s0">entries</span>
+<span class="s0">}</span>
+
+<span class="s0">GlobSync.prototype._readdir = </span><span class="s1">function </span><span class="s0">(abs</span><span class="s3">, </span><span class="s0">inGlobStar) {</span>
+  <span class="s1">var </span><span class="s0">entries</span>
+
+  <span class="s1">if </span><span class="s0">(inGlobStar &amp;&amp; !ownProp(</span><span class="s1">this</span><span class="s0">.symlinks</span><span class="s3">, </span><span class="s0">abs))</span>
+    <span class="s1">return this</span><span class="s0">._readdirInGlobStar(abs)</span>
+
+  <span class="s1">if </span><span class="s0">(ownProp(</span><span class="s1">this</span><span class="s0">.cache</span><span class="s3">, </span><span class="s0">abs)) {</span>
+    <span class="s1">var </span><span class="s0">c = </span><span class="s1">this</span><span class="s0">.cache[abs]</span>
+    <span class="s1">if </span><span class="s0">(!c || c === </span><span class="s2">'FILE'</span><span class="s0">)</span>
+      <span class="s1">return null</span>
+
+    <span class="s1">if </span><span class="s0">(Array.isArray(c))</span>
+      <span class="s1">return </span><span class="s0">c</span>
+  <span class="s0">}</span>
+
+  <span class="s1">try </span><span class="s0">{</span>
+    <span class="s1">return this</span><span class="s0">._readdirEntries(abs</span><span class="s3">, </span><span class="s1">this</span><span class="s0">.fs.readdirSync(abs))</span>
+  <span class="s0">} </span><span class="s1">catch </span><span class="s0">(er) {</span>
+    <span class="s1">this</span><span class="s0">._readdirError(abs</span><span class="s3">, </span><span class="s0">er)</span>
+    <span class="s1">return null</span>
+  <span class="s0">}</span>
+<span class="s0">}</span>
+
+<span class="s0">GlobSync.prototype._readdirEntries = </span><span class="s1">function </span><span class="s0">(abs</span><span class="s3">, </span><span class="s0">entries) {</span>
+  <span class="s5">// if we haven't asked to stat everything, then just</span>
+  <span class="s5">// assume that everything in there exists, so we can avoid</span>
+  <span class="s5">// having to stat it a second time.</span>
+  <span class="s1">if </span><span class="s0">(!</span><span class="s1">this</span><span class="s0">.mark &amp;&amp; !</span><span class="s1">this</span><span class="s0">.stat) {</span>
+    <span class="s1">for </span><span class="s0">(</span><span class="s1">var </span><span class="s0">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s0">i &lt; entries.length</span><span class="s3">; </span><span class="s0">i ++) {</span>
+      <span class="s1">var </span><span class="s0">e = entries[i]</span>
+      <span class="s1">if </span><span class="s0">(abs === </span><span class="s2">'/'</span><span class="s0">)</span>
+        <span class="s0">e = abs + e</span>
+      <span class="s1">else</span>
+        <span class="s0">e = abs + </span><span class="s2">'/' </span><span class="s0">+ e</span>
+      <span class="s1">this</span><span class="s0">.cache[e] = </span><span class="s1">true</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span>
+
+  <span class="s1">this</span><span class="s0">.cache[abs] = entries</span>
+
+  <span class="s5">// mark and cache dir-ness</span>
+  <span class="s1">return </span><span class="s0">entries</span>
+<span class="s0">}</span>
+
+<span class="s0">GlobSync.prototype._readdirError = </span><span class="s1">function </span><span class="s0">(f</span><span class="s3">, </span><span class="s0">er) {</span>
+  <span class="s5">// handle errors, and cache the information</span>
+  <span class="s1">switch </span><span class="s0">(er.code) {</span>
+    <span class="s1">case </span><span class="s2">'ENOTSUP'</span><span class="s0">: </span><span class="s5">// https://github.com/isaacs/node-glob/issues/205</span>
+    <span class="s1">case </span><span class="s2">'ENOTDIR'</span><span class="s0">: </span><span class="s5">// totally normal. means it *does* exist.</span>
+      <span class="s1">var </span><span class="s0">abs = </span><span class="s1">this</span><span class="s0">._makeAbs(f)</span>
+      <span class="s1">this</span><span class="s0">.cache[abs] = </span><span class="s2">'FILE'</span>
+      <span class="s1">if </span><span class="s0">(abs === </span><span class="s1">this</span><span class="s0">.cwdAbs) {</span>
+        <span class="s1">var </span><span class="s0">error = </span><span class="s1">new </span><span class="s0">Error(er.code + </span><span class="s2">' invalid cwd ' </span><span class="s0">+ </span><span class="s1">this</span><span class="s0">.cwd)</span>
+        <span class="s0">error.path = </span><span class="s1">this</span><span class="s0">.cwd</span>
+        <span class="s0">error.code = er.code</span>
+        <span class="s1">throw </span><span class="s0">error</span>
+      <span class="s0">}</span>
+      <span class="s1">break</span>
+
+    <span class="s1">case </span><span class="s2">'ENOENT'</span><span class="s0">: </span><span class="s5">// not terribly unusual</span>
+    <span class="s1">case </span><span class="s2">'ELOOP'</span><span class="s0">:</span>
+    <span class="s1">case </span><span class="s2">'ENAMETOOLONG'</span><span class="s0">:</span>
+    <span class="s1">case </span><span class="s2">'UNKNOWN'</span><span class="s0">:</span>
+      <span class="s1">this</span><span class="s0">.cache[</span><span class="s1">this</span><span class="s0">._makeAbs(f)] = </span><span class="s1">false</span>
+      <span class="s1">break</span>
+
+    <span class="s1">default</span><span class="s0">: </span><span class="s5">// some unusual error.  Treat as failure.</span>
+      <span class="s1">this</span><span class="s0">.cache[</span><span class="s1">this</span><span class="s0">._makeAbs(f)] = </span><span class="s1">false</span>
+      <span class="s1">if </span><span class="s0">(</span><span class="s1">this</span><span class="s0">.strict)</span>
+        <span class="s1">throw </span><span class="s0">er</span>
+      <span class="s1">if </span><span class="s0">(!</span><span class="s1">this</span><span class="s0">.silent)</span>
+        <span class="s0">console.error(</span><span class="s2">'glob error'</span><span class="s3">, </span><span class="s0">er)</span>
+      <span class="s1">break</span>
+  <span class="s0">}</span>
+<span class="s0">}</span>
+
+<span class="s0">GlobSync.prototype._processGlobStar = </span><span class="s1">function </span><span class="s0">(prefix</span><span class="s3">, </span><span class="s0">read</span><span class="s3">, </span><span class="s0">abs</span><span class="s3">, </span><span class="s0">remain</span><span class="s3">, </span><span class="s0">index</span><span class="s3">, </span><span class="s0">inGlobStar) {</span>
+
+  <span class="s1">var </span><span class="s0">entries = </span><span class="s1">this</span><span class="s0">._readdir(abs</span><span class="s3">, </span><span class="s0">inGlobStar)</span>
+
+  <span class="s5">// no entries means not a dir, so it can never have matches</span>
+  <span class="s5">// foo.txt/** doesn't match foo.txt</span>
+  <span class="s1">if </span><span class="s0">(!entries)</span>
+    <span class="s1">return</span>
+
+  <span class="s5">// test without the globstar, and with every child both below</span>
+  <span class="s5">// and replacing the globstar.</span>
+  <span class="s1">var </span><span class="s0">remainWithoutGlobStar = remain.slice(</span><span class="s4">1</span><span class="s0">)</span>
+  <span class="s1">var </span><span class="s0">gspref = prefix ? [ prefix ] : []</span>
+  <span class="s1">var </span><span class="s0">noGlobStar = gspref.concat(remainWithoutGlobStar)</span>
+
+  <span class="s5">// the noGlobStar pattern exits the inGlobStar state</span>
+  <span class="s1">this</span><span class="s0">._process(noGlobStar</span><span class="s3">, </span><span class="s0">index</span><span class="s3">, </span><span class="s1">false</span><span class="s0">)</span>
+
+  <span class="s1">var </span><span class="s0">len = entries.length</span>
+  <span class="s1">var </span><span class="s0">isSym = </span><span class="s1">this</span><span class="s0">.symlinks[abs]</span>
+
+  <span class="s5">// If it's a symlink, and we're in a globstar, then stop</span>
+  <span class="s1">if </span><span class="s0">(isSym &amp;&amp; inGlobStar)</span>
+    <span class="s1">return</span>
+
+  <span class="s1">for </span><span class="s0">(</span><span class="s1">var </span><span class="s0">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s0">i &lt; len</span><span class="s3">; </span><span class="s0">i++) {</span>
+    <span class="s1">var </span><span class="s0">e = entries[i]</span>
+    <span class="s1">if </span><span class="s0">(e.charAt(</span><span class="s4">0</span><span class="s0">) === </span><span class="s2">'.' </span><span class="s0">&amp;&amp; !</span><span class="s1">this</span><span class="s0">.dot)</span>
+      <span class="s1">continue</span>
+
+    <span class="s5">// these two cases enter the inGlobStar state</span>
+    <span class="s1">var </span><span class="s0">instead = gspref.concat(entries[i]</span><span class="s3">, </span><span class="s0">remainWithoutGlobStar)</span>
+    <span class="s1">this</span><span class="s0">._process(instead</span><span class="s3">, </span><span class="s0">index</span><span class="s3">, </span><span class="s1">true</span><span class="s0">)</span>
+
+    <span class="s1">var </span><span class="s0">below = gspref.concat(entries[i]</span><span class="s3">, </span><span class="s0">remain)</span>
+    <span class="s1">this</span><span class="s0">._process(below</span><span class="s3">, </span><span class="s0">index</span><span class="s3">, </span><span class="s1">true</span><span class="s0">)</span>
+  <span class="s0">}</span>
+<span class="s0">}</span>
+
+<span class="s0">GlobSync.prototype._processSimple = </span><span class="s1">function </span><span class="s0">(prefix</span><span class="s3">, </span><span class="s0">index) {</span>
+  <span class="s5">// XXX review this.  Shouldn't it be doing the mounting etc</span>
+  <span class="s5">// before doing stat?  kinda weird?</span>
+  <span class="s1">var </span><span class="s0">exists = </span><span class="s1">this</span><span class="s0">._stat(prefix)</span>
+
+  <span class="s1">if </span><span class="s0">(!</span><span class="s1">this</span><span class="s0">.matches[index])</span>
+    <span class="s1">this</span><span class="s0">.matches[index] = Object.create(</span><span class="s1">null</span><span class="s0">)</span>
+
+  <span class="s5">// If it doesn't exist, then just mark the lack of results</span>
+  <span class="s1">if </span><span class="s0">(!exists)</span>
+    <span class="s1">return</span>
+
+  <span class="s1">if </span><span class="s0">(prefix &amp;&amp; isAbsolute(prefix) &amp;&amp; !</span><span class="s1">this</span><span class="s0">.nomount) {</span>
+    <span class="s1">var </span><span class="s0">trail = </span><span class="s4">/[\/\\]$/</span><span class="s0">.test(prefix)</span>
+    <span class="s1">if </span><span class="s0">(prefix.charAt(</span><span class="s4">0</span><span class="s0">) === </span><span class="s2">'/'</span><span class="s0">) {</span>
+      <span class="s0">prefix = path.join(</span><span class="s1">this</span><span class="s0">.root</span><span class="s3">, </span><span class="s0">prefix)</span>
+    <span class="s0">} </span><span class="s1">else </span><span class="s0">{</span>
+      <span class="s0">prefix = path.resolve(</span><span class="s1">this</span><span class="s0">.root</span><span class="s3">, </span><span class="s0">prefix)</span>
+      <span class="s1">if </span><span class="s0">(trail)</span>
+        <span class="s0">prefix += </span><span class="s2">'/'</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span>
+
+  <span class="s1">if </span><span class="s0">(process.platform === </span><span class="s2">'win32'</span><span class="s0">)</span>
+    <span class="s0">prefix = prefix.replace(</span><span class="s4">/\\/g</span><span class="s3">, </span><span class="s2">'/'</span><span class="s0">)</span>
+
+  <span class="s5">// Mark this as a match</span>
+  <span class="s1">this</span><span class="s0">._emitMatch(index</span><span class="s3">, </span><span class="s0">prefix)</span>
+<span class="s0">}</span>
+
+<span class="s5">// Returns either 'DIR', 'FILE', or false</span>
+<span class="s0">GlobSync.prototype._stat = </span><span class="s1">function </span><span class="s0">(f) {</span>
+  <span class="s1">var </span><span class="s0">abs = </span><span class="s1">this</span><span class="s0">._makeAbs(f)</span>
+  <span class="s1">var </span><span class="s0">needDir = f.slice(-</span><span class="s4">1</span><span class="s0">) === </span><span class="s2">'/'</span>
+
+  <span class="s1">if </span><span class="s0">(f.length &gt; </span><span class="s1">this</span><span class="s0">.maxLength)</span>
+    <span class="s1">return false</span>
+
+  <span class="s1">if </span><span class="s0">(!</span><span class="s1">this</span><span class="s0">.stat &amp;&amp; ownProp(</span><span class="s1">this</span><span class="s0">.cache</span><span class="s3">, </span><span class="s0">abs)) {</span>
+    <span class="s1">var </span><span class="s0">c = </span><span class="s1">this</span><span class="s0">.cache[abs]</span>
+
+    <span class="s1">if </span><span class="s0">(Array.isArray(c))</span>
+      <span class="s0">c = </span><span class="s2">'DIR'</span>
+
+    <span class="s5">// It exists, but maybe not how we need it</span>
+    <span class="s1">if </span><span class="s0">(!needDir || c === </span><span class="s2">'DIR'</span><span class="s0">)</span>
+      <span class="s1">return </span><span class="s0">c</span>
+
+    <span class="s1">if </span><span class="s0">(needDir &amp;&amp; c === </span><span class="s2">'FILE'</span><span class="s0">)</span>
+      <span class="s1">return false</span>
+
+    <span class="s5">// otherwise we have to stat, because maybe c=true</span>
+    <span class="s5">// if we know it exists, but not what it is.</span>
+  <span class="s0">}</span>
+
+  <span class="s1">var </span><span class="s0">exists</span>
+  <span class="s1">var </span><span class="s0">stat = </span><span class="s1">this</span><span class="s0">.statCache[abs]</span>
+  <span class="s1">if </span><span class="s0">(!stat) {</span>
+    <span class="s1">var </span><span class="s0">lstat</span>
+    <span class="s1">try </span><span class="s0">{</span>
+      <span class="s0">lstat = </span><span class="s1">this</span><span class="s0">.fs.lstatSync(abs)</span>
+    <span class="s0">} </span><span class="s1">catch </span><span class="s0">(er) {</span>
+      <span class="s1">if </span><span class="s0">(er &amp;&amp; (er.code === </span><span class="s2">'ENOENT' </span><span class="s0">|| er.code === </span><span class="s2">'ENOTDIR'</span><span class="s0">)) {</span>
+        <span class="s1">this</span><span class="s0">.statCache[abs] = </span><span class="s1">false</span>
+        <span class="s1">return false</span>
+      <span class="s0">}</span>
+    <span class="s0">}</span>
+
+    <span class="s1">if </span><span class="s0">(lstat &amp;&amp; lstat.isSymbolicLink()) {</span>
+      <span class="s1">try </span><span class="s0">{</span>
+        <span class="s0">stat = </span><span class="s1">this</span><span class="s0">.fs.statSync(abs)</span>
+      <span class="s0">} </span><span class="s1">catch </span><span class="s0">(er) {</span>
+        <span class="s0">stat = lstat</span>
+      <span class="s0">}</span>
+    <span class="s0">} </span><span class="s1">else </span><span class="s0">{</span>
+      <span class="s0">stat = lstat</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span>
+
+  <span class="s1">this</span><span class="s0">.statCache[abs] = stat</span>
+
+  <span class="s1">var </span><span class="s0">c = </span><span class="s1">true</span>
+  <span class="s1">if </span><span class="s0">(stat)</span>
+    <span class="s0">c = stat.isDirectory() ? </span><span class="s2">'DIR' </span><span class="s0">: </span><span class="s2">'FILE'</span>
+
+  <span class="s1">this</span><span class="s0">.cache[abs] = </span><span class="s1">this</span><span class="s0">.cache[abs] || c</span>
+
+  <span class="s1">if </span><span class="s0">(needDir &amp;&amp; c === </span><span class="s2">'FILE'</span><span class="s0">)</span>
+    <span class="s1">return false</span>
+
+  <span class="s1">return </span><span class="s0">c</span>
+<span class="s0">}</span>
+
+<span class="s0">GlobSync.prototype._mark = </span><span class="s1">function </span><span class="s0">(p) {</span>
+  <span class="s1">return </span><span class="s0">common.mark(</span><span class="s1">this</span><span class="s3">, </span><span class="s0">p)</span>
+<span class="s0">}</span>
+
+<span class="s0">GlobSync.prototype._makeAbs = </span><span class="s1">function </span><span class="s0">(f) {</span>
+  <span class="s1">return </span><span class="s0">common.makeAbs(</span><span class="s1">this</span><span class="s3">, </span><span class="s0">f)</span>
+<span class="s0">}</span>
+</pre>
+</body>
+</html>

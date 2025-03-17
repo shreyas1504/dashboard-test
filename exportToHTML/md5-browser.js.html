@@ -1,0 +1,246 @@
+<html>
+<head>
+<title>md5-browser.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #8a8a8a;}
+.s6 { color: #808080;}
+.s7 { color: #8a8a8a; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+md5-browser.js</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;use strict&quot;</span><span class="s1">;</span>
+
+<span class="s2">Object.defineProperty(exports</span><span class="s1">, </span><span class="s0">&quot;__esModule&quot;</span><span class="s1">, </span><span class="s2">{</span>
+  <span class="s2">value: </span><span class="s3">true</span>
+<span class="s2">})</span><span class="s1">;</span>
+<span class="s2">exports.default = </span><span class="s3">void </span><span class="s4">0</span><span class="s1">;</span>
+
+<span class="s5">/* 
+ * Browser-compatible JavaScript MD5 
+ * 
+ * Modification of JavaScript MD5 
+ * https://github.com/blueimp/JavaScript-MD5 
+ * 
+ * Copyright 2011, Sebastian Tschan 
+ * https://blueimp.net 
+ * 
+ * Licensed under the MIT license: 
+ * https://opensource.org/licenses/MIT 
+ * 
+ * Based on 
+ * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message 
+ * Digest Algorithm, as defined in RFC 1321. 
+ * Version 2.2 Copyright (C) Paul Johnston 1999 - 2009 
+ * Other contributors: Greg Holt, Andrew Kepert, Ydnar, Lostinet 
+ * Distributed under the BSD License 
+ * See http://pajhome.org.uk/crypt/md5 for more info. 
+ */</span>
+<span class="s3">function </span><span class="s2">md5(bytes) {</span>
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">bytes === </span><span class="s0">'string'</span><span class="s2">) {</span>
+    <span class="s3">const </span><span class="s2">msg = unescape(encodeURIComponent(bytes))</span><span class="s1">; </span><span class="s6">// UTF8 escape</span>
+
+    <span class="s2">bytes = </span><span class="s3">new </span><span class="s2">Uint8Array(msg.length)</span><span class="s1">;</span>
+
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">let </span><span class="s2">i = </span><span class="s4">0</span><span class="s1">; </span><span class="s2">i &lt; msg.length</span><span class="s1">; </span><span class="s2">++i) {</span>
+      <span class="s2">bytes[i] = msg.charCodeAt(i)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">md5ToHexEncodedArray(wordsToMd5(bytesToWords(bytes)</span><span class="s1">, </span><span class="s2">bytes.length * </span><span class="s4">8</span><span class="s2">))</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s5">/* 
+ * Convert an array of little-endian words to an array of bytes 
+ */</span>
+
+
+<span class="s3">function </span><span class="s2">md5ToHexEncodedArray(input) {</span>
+  <span class="s3">const </span><span class="s2">output = []</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">length32 = input.length * </span><span class="s4">32</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">hexTab = </span><span class="s0">'0123456789abcdef'</span><span class="s1">;</span>
+
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">let </span><span class="s2">i = </span><span class="s4">0</span><span class="s1">; </span><span class="s2">i &lt; length32</span><span class="s1">; </span><span class="s2">i += </span><span class="s4">8</span><span class="s2">) {</span>
+    <span class="s3">const </span><span class="s2">x = input[i &gt;&gt; </span><span class="s4">5</span><span class="s2">] &gt;&gt;&gt; i % </span><span class="s4">32 </span><span class="s2">&amp; </span><span class="s4">0xff</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">hex = parseInt(hexTab.charAt(x &gt;&gt;&gt; </span><span class="s4">4 </span><span class="s2">&amp; </span><span class="s4">0x0f</span><span class="s2">) + hexTab.charAt(x &amp; </span><span class="s4">0x0f</span><span class="s2">)</span><span class="s1">, </span><span class="s4">16</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">output.push(hex)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">output</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s7">/**</span>
+ <span class="s7">* Calculate output length with padding and bit length</span>
+ <span class="s7">*/</span>
+
+
+<span class="s3">function </span><span class="s2">getOutputLength(inputLength8) {</span>
+  <span class="s3">return </span><span class="s2">(inputLength8 + </span><span class="s4">64 </span><span class="s2">&gt;&gt;&gt; </span><span class="s4">9 </span><span class="s2">&lt;&lt; </span><span class="s4">4</span><span class="s2">) + </span><span class="s4">14 </span><span class="s2">+ </span><span class="s4">1</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s5">/* 
+ * Calculate the MD5 of an array of little-endian words, and a bit length. 
+ */</span>
+
+
+<span class="s3">function </span><span class="s2">wordsToMd5(x</span><span class="s1">, </span><span class="s2">len) {</span>
+  <span class="s5">/* append padding */</span>
+  <span class="s2">x[len &gt;&gt; </span><span class="s4">5</span><span class="s2">] |= </span><span class="s4">0x80 </span><span class="s2">&lt;&lt; len % </span><span class="s4">32</span><span class="s1">;</span>
+  <span class="s2">x[getOutputLength(len) - </span><span class="s4">1</span><span class="s2">] = len</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">a = </span><span class="s4">1732584193</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">b = -</span><span class="s4">271733879</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">c = -</span><span class="s4">1732584194</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">d = </span><span class="s4">271733878</span><span class="s1">;</span>
+
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">let </span><span class="s2">i = </span><span class="s4">0</span><span class="s1">; </span><span class="s2">i &lt; x.length</span><span class="s1">; </span><span class="s2">i += </span><span class="s4">16</span><span class="s2">) {</span>
+    <span class="s3">const </span><span class="s2">olda = a</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">oldb = b</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">oldc = c</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">oldd = d</span><span class="s1">;</span>
+    <span class="s2">a = md5ff(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i]</span><span class="s1">, </span><span class="s4">7</span><span class="s1">, </span><span class="s2">-</span><span class="s4">680876936</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5ff(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">1</span><span class="s2">]</span><span class="s1">, </span><span class="s4">12</span><span class="s1">, </span><span class="s2">-</span><span class="s4">389564586</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5ff(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">2</span><span class="s2">]</span><span class="s1">, </span><span class="s4">17</span><span class="s1">, </span><span class="s4">606105819</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5ff(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">3</span><span class="s2">]</span><span class="s1">, </span><span class="s4">22</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1044525330</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5ff(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">4</span><span class="s2">]</span><span class="s1">, </span><span class="s4">7</span><span class="s1">, </span><span class="s2">-</span><span class="s4">176418897</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5ff(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">5</span><span class="s2">]</span><span class="s1">, </span><span class="s4">12</span><span class="s1">, </span><span class="s4">1200080426</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5ff(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">6</span><span class="s2">]</span><span class="s1">, </span><span class="s4">17</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1473231341</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5ff(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">7</span><span class="s2">]</span><span class="s1">, </span><span class="s4">22</span><span class="s1">, </span><span class="s2">-</span><span class="s4">45705983</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5ff(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">8</span><span class="s2">]</span><span class="s1">, </span><span class="s4">7</span><span class="s1">, </span><span class="s4">1770035416</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5ff(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">9</span><span class="s2">]</span><span class="s1">, </span><span class="s4">12</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1958414417</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5ff(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">10</span><span class="s2">]</span><span class="s1">, </span><span class="s4">17</span><span class="s1">, </span><span class="s2">-</span><span class="s4">42063</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5ff(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">11</span><span class="s2">]</span><span class="s1">, </span><span class="s4">22</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1990404162</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5ff(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">12</span><span class="s2">]</span><span class="s1">, </span><span class="s4">7</span><span class="s1">, </span><span class="s4">1804603682</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5ff(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">13</span><span class="s2">]</span><span class="s1">, </span><span class="s4">12</span><span class="s1">, </span><span class="s2">-</span><span class="s4">40341101</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5ff(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">14</span><span class="s2">]</span><span class="s1">, </span><span class="s4">17</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1502002290</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5ff(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">15</span><span class="s2">]</span><span class="s1">, </span><span class="s4">22</span><span class="s1">, </span><span class="s4">1236535329</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5gg(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">1</span><span class="s2">]</span><span class="s1">, </span><span class="s4">5</span><span class="s1">, </span><span class="s2">-</span><span class="s4">165796510</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5gg(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">6</span><span class="s2">]</span><span class="s1">, </span><span class="s4">9</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1069501632</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5gg(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">11</span><span class="s2">]</span><span class="s1">, </span><span class="s4">14</span><span class="s1">, </span><span class="s4">643717713</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5gg(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i]</span><span class="s1">, </span><span class="s4">20</span><span class="s1">, </span><span class="s2">-</span><span class="s4">373897302</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5gg(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">5</span><span class="s2">]</span><span class="s1">, </span><span class="s4">5</span><span class="s1">, </span><span class="s2">-</span><span class="s4">701558691</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5gg(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">10</span><span class="s2">]</span><span class="s1">, </span><span class="s4">9</span><span class="s1">, </span><span class="s4">38016083</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5gg(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">15</span><span class="s2">]</span><span class="s1">, </span><span class="s4">14</span><span class="s1">, </span><span class="s2">-</span><span class="s4">660478335</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5gg(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">4</span><span class="s2">]</span><span class="s1">, </span><span class="s4">20</span><span class="s1">, </span><span class="s2">-</span><span class="s4">405537848</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5gg(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">9</span><span class="s2">]</span><span class="s1">, </span><span class="s4">5</span><span class="s1">, </span><span class="s4">568446438</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5gg(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">14</span><span class="s2">]</span><span class="s1">, </span><span class="s4">9</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1019803690</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5gg(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">3</span><span class="s2">]</span><span class="s1">, </span><span class="s4">14</span><span class="s1">, </span><span class="s2">-</span><span class="s4">187363961</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5gg(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">8</span><span class="s2">]</span><span class="s1">, </span><span class="s4">20</span><span class="s1">, </span><span class="s4">1163531501</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5gg(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">13</span><span class="s2">]</span><span class="s1">, </span><span class="s4">5</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1444681467</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5gg(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">2</span><span class="s2">]</span><span class="s1">, </span><span class="s4">9</span><span class="s1">, </span><span class="s2">-</span><span class="s4">51403784</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5gg(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">7</span><span class="s2">]</span><span class="s1">, </span><span class="s4">14</span><span class="s1">, </span><span class="s4">1735328473</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5gg(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">12</span><span class="s2">]</span><span class="s1">, </span><span class="s4">20</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1926607734</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5hh(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">5</span><span class="s2">]</span><span class="s1">, </span><span class="s4">4</span><span class="s1">, </span><span class="s2">-</span><span class="s4">378558</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5hh(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">8</span><span class="s2">]</span><span class="s1">, </span><span class="s4">11</span><span class="s1">, </span><span class="s2">-</span><span class="s4">2022574463</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5hh(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">11</span><span class="s2">]</span><span class="s1">, </span><span class="s4">16</span><span class="s1">, </span><span class="s4">1839030562</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5hh(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">14</span><span class="s2">]</span><span class="s1">, </span><span class="s4">23</span><span class="s1">, </span><span class="s2">-</span><span class="s4">35309556</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5hh(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">1</span><span class="s2">]</span><span class="s1">, </span><span class="s4">4</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1530992060</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5hh(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">4</span><span class="s2">]</span><span class="s1">, </span><span class="s4">11</span><span class="s1">, </span><span class="s4">1272893353</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5hh(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">7</span><span class="s2">]</span><span class="s1">, </span><span class="s4">16</span><span class="s1">, </span><span class="s2">-</span><span class="s4">155497632</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5hh(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">10</span><span class="s2">]</span><span class="s1">, </span><span class="s4">23</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1094730640</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5hh(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">13</span><span class="s2">]</span><span class="s1">, </span><span class="s4">4</span><span class="s1">, </span><span class="s4">681279174</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5hh(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i]</span><span class="s1">, </span><span class="s4">11</span><span class="s1">, </span><span class="s2">-</span><span class="s4">358537222</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5hh(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">3</span><span class="s2">]</span><span class="s1">, </span><span class="s4">16</span><span class="s1">, </span><span class="s2">-</span><span class="s4">722521979</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5hh(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">6</span><span class="s2">]</span><span class="s1">, </span><span class="s4">23</span><span class="s1">, </span><span class="s4">76029189</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5hh(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">9</span><span class="s2">]</span><span class="s1">, </span><span class="s4">4</span><span class="s1">, </span><span class="s2">-</span><span class="s4">640364487</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5hh(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">12</span><span class="s2">]</span><span class="s1">, </span><span class="s4">11</span><span class="s1">, </span><span class="s2">-</span><span class="s4">421815835</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5hh(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">15</span><span class="s2">]</span><span class="s1">, </span><span class="s4">16</span><span class="s1">, </span><span class="s4">530742520</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5hh(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">2</span><span class="s2">]</span><span class="s1">, </span><span class="s4">23</span><span class="s1">, </span><span class="s2">-</span><span class="s4">995338651</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5ii(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i]</span><span class="s1">, </span><span class="s4">6</span><span class="s1">, </span><span class="s2">-</span><span class="s4">198630844</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5ii(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">7</span><span class="s2">]</span><span class="s1">, </span><span class="s4">10</span><span class="s1">, </span><span class="s4">1126891415</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5ii(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">14</span><span class="s2">]</span><span class="s1">, </span><span class="s4">15</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1416354905</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5ii(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">5</span><span class="s2">]</span><span class="s1">, </span><span class="s4">21</span><span class="s1">, </span><span class="s2">-</span><span class="s4">57434055</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5ii(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">12</span><span class="s2">]</span><span class="s1">, </span><span class="s4">6</span><span class="s1">, </span><span class="s4">1700485571</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5ii(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">3</span><span class="s2">]</span><span class="s1">, </span><span class="s4">10</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1894986606</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5ii(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">10</span><span class="s2">]</span><span class="s1">, </span><span class="s4">15</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1051523</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5ii(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">1</span><span class="s2">]</span><span class="s1">, </span><span class="s4">21</span><span class="s1">, </span><span class="s2">-</span><span class="s4">2054922799</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5ii(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">8</span><span class="s2">]</span><span class="s1">, </span><span class="s4">6</span><span class="s1">, </span><span class="s4">1873313359</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5ii(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">15</span><span class="s2">]</span><span class="s1">, </span><span class="s4">10</span><span class="s1">, </span><span class="s2">-</span><span class="s4">30611744</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5ii(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">6</span><span class="s2">]</span><span class="s1">, </span><span class="s4">15</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1560198380</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5ii(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">13</span><span class="s2">]</span><span class="s1">, </span><span class="s4">21</span><span class="s1">, </span><span class="s4">1309151649</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = md5ii(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">4</span><span class="s2">]</span><span class="s1">, </span><span class="s4">6</span><span class="s1">, </span><span class="s2">-</span><span class="s4">145523070</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">d = md5ii(d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">11</span><span class="s2">]</span><span class="s1">, </span><span class="s4">10</span><span class="s1">, </span><span class="s2">-</span><span class="s4">1120210379</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">c = md5ii(c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">2</span><span class="s2">]</span><span class="s1">, </span><span class="s4">15</span><span class="s1">, </span><span class="s4">718787259</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">b = md5ii(b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">x[i + </span><span class="s4">9</span><span class="s2">]</span><span class="s1">, </span><span class="s4">21</span><span class="s1">, </span><span class="s2">-</span><span class="s4">343485551</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">a = safeAdd(a</span><span class="s1">, </span><span class="s2">olda)</span><span class="s1">;</span>
+    <span class="s2">b = safeAdd(b</span><span class="s1">, </span><span class="s2">oldb)</span><span class="s1">;</span>
+    <span class="s2">c = safeAdd(c</span><span class="s1">, </span><span class="s2">oldc)</span><span class="s1">;</span>
+    <span class="s2">d = safeAdd(d</span><span class="s1">, </span><span class="s2">oldd)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">[a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d]</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s5">/* 
+ * Convert an array bytes to an array of little-endian words 
+ * Characters &gt;255 have their high-byte silently ignored. 
+ */</span>
+
+
+<span class="s3">function </span><span class="s2">bytesToWords(input) {</span>
+  <span class="s3">if </span><span class="s2">(input.length === </span><span class="s4">0</span><span class="s2">) {</span>
+    <span class="s3">return </span><span class="s2">[]</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">const </span><span class="s2">length8 = input.length * </span><span class="s4">8</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">output = </span><span class="s3">new </span><span class="s2">Uint32Array(getOutputLength(length8))</span><span class="s1">;</span>
+
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">let </span><span class="s2">i = </span><span class="s4">0</span><span class="s1">; </span><span class="s2">i &lt; length8</span><span class="s1">; </span><span class="s2">i += </span><span class="s4">8</span><span class="s2">) {</span>
+    <span class="s2">output[i &gt;&gt; </span><span class="s4">5</span><span class="s2">] |= (input[i / </span><span class="s4">8</span><span class="s2">] &amp; </span><span class="s4">0xff</span><span class="s2">) &lt;&lt; i % </span><span class="s4">32</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">output</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s5">/* 
+ * Add integers, wrapping at 2^32. This uses 16-bit operations internally 
+ * to work around bugs in some JS interpreters. 
+ */</span>
+
+
+<span class="s3">function </span><span class="s2">safeAdd(x</span><span class="s1">, </span><span class="s2">y) {</span>
+  <span class="s3">const </span><span class="s2">lsw = (x &amp; </span><span class="s4">0xffff</span><span class="s2">) + (y &amp; </span><span class="s4">0xffff</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">msw = (x &gt;&gt; </span><span class="s4">16</span><span class="s2">) + (y &gt;&gt; </span><span class="s4">16</span><span class="s2">) + (lsw &gt;&gt; </span><span class="s4">16</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">msw &lt;&lt; </span><span class="s4">16 </span><span class="s2">| lsw &amp; </span><span class="s4">0xffff</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s5">/* 
+ * Bitwise rotate a 32-bit number to the left. 
+ */</span>
+
+
+<span class="s3">function </span><span class="s2">bitRotateLeft(num</span><span class="s1">, </span><span class="s2">cnt) {</span>
+  <span class="s3">return </span><span class="s2">num &lt;&lt; cnt | num &gt;&gt;&gt; </span><span class="s4">32 </span><span class="s2">- cnt</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s5">/* 
+ * These functions implement the four basic operations the algorithm uses. 
+ */</span>
+
+
+<span class="s3">function </span><span class="s2">md5cmn(q</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x</span><span class="s1">, </span><span class="s2">s</span><span class="s1">, </span><span class="s2">t) {</span>
+  <span class="s3">return </span><span class="s2">safeAdd(bitRotateLeft(safeAdd(safeAdd(a</span><span class="s1">, </span><span class="s2">q)</span><span class="s1">, </span><span class="s2">safeAdd(x</span><span class="s1">, </span><span class="s2">t))</span><span class="s1">, </span><span class="s2">s)</span><span class="s1">, </span><span class="s2">b)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">md5ff(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x</span><span class="s1">, </span><span class="s2">s</span><span class="s1">, </span><span class="s2">t) {</span>
+  <span class="s3">return </span><span class="s2">md5cmn(b &amp; c | ~b &amp; d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x</span><span class="s1">, </span><span class="s2">s</span><span class="s1">, </span><span class="s2">t)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">md5gg(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x</span><span class="s1">, </span><span class="s2">s</span><span class="s1">, </span><span class="s2">t) {</span>
+  <span class="s3">return </span><span class="s2">md5cmn(b &amp; d | c &amp; ~d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x</span><span class="s1">, </span><span class="s2">s</span><span class="s1">, </span><span class="s2">t)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">md5hh(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x</span><span class="s1">, </span><span class="s2">s</span><span class="s1">, </span><span class="s2">t) {</span>
+  <span class="s3">return </span><span class="s2">md5cmn(b ^ c ^ d</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x</span><span class="s1">, </span><span class="s2">s</span><span class="s1">, </span><span class="s2">t)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">md5ii(a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">c</span><span class="s1">, </span><span class="s2">d</span><span class="s1">, </span><span class="s2">x</span><span class="s1">, </span><span class="s2">s</span><span class="s1">, </span><span class="s2">t) {</span>
+  <span class="s3">return </span><span class="s2">md5cmn(c ^ (b | ~d)</span><span class="s1">, </span><span class="s2">a</span><span class="s1">, </span><span class="s2">b</span><span class="s1">, </span><span class="s2">x</span><span class="s1">, </span><span class="s2">s</span><span class="s1">, </span><span class="s2">t)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">var </span><span class="s2">_default = md5</span><span class="s1">;</span>
+<span class="s2">exports.default = _default</span><span class="s1">;</span></pre>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<html>
+<head>
+<title>defaults.def</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+defaults.def</font>
+</center></td></tr></table>
+<pre><span class="s0">{{## def.assignDefault:</span>
+  <span class="s0">{{? it.compositeRule }}</span>
+    <span class="s0">{{</span>
+      <span class="s0">if (it.opts.strictDefaults) {</span>
+        <span class="s0">var $defaultMsg = 'default is ignored for: ' + $passData;</span>
+        <span class="s0">if (it.opts.strictDefaults === 'log') it.logger.warn($defaultMsg);</span>
+        <span class="s0">else throw new Error($defaultMsg);</span>
+      <span class="s0">}</span>
+    <span class="s0">}}</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">if ({{=$passData}} === undefined</span>
+      <span class="s0">{{? it.opts.useDefaults == 'empty' }}</span>
+        <span class="s0">|| {{=$passData}} === null</span>
+        <span class="s0">|| {{=$passData}} === ''</span>
+      <span class="s0">{{?}}</span>
+    <span class="s0">)</span>
+      <span class="s0">{{=$passData}} = {{? it.opts.useDefaults == 'shared' }}</span>
+                         <span class="s0">{{= it.useDefault($sch.default) }}</span>
+                       <span class="s0">{{??}}</span>
+                         <span class="s0">{{= JSON.stringify($sch.default) }}</span>
+                       <span class="s0">{{?}};</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.defaultProperties:</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $schema = it.schema.properties</span>
+      <span class="s0">, $schemaKeys = Object.keys($schema); }}</span>
+  <span class="s0">{{~ $schemaKeys:$propertyKey }}</span>
+    <span class="s0">{{ var $sch = $schema[$propertyKey]; }}</span>
+    <span class="s0">{{? $sch.default !== undefined }}</span>
+      <span class="s0">{{ var $passData = $data + it.util.getProperty($propertyKey); }}</span>
+      <span class="s0">{{# def.assignDefault }}</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{~}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.defaultItems:</span>
+  <span class="s0">{{~ it.schema.items:$sch:$i }}</span>
+    <span class="s0">{{? $sch.default !== undefined }}</span>
+      <span class="s0">{{ var $passData = $data + '[' + $i + ']'; }}</span>
+      <span class="s0">{{# def.assignDefault }}</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{~}}</span>
+<span class="s0">#}}</span>
+</pre>
+</body>
+</html>

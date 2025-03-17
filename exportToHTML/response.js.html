@@ -1,0 +1,122 @@
+<html>
+<head>
+<title>response.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #808080;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #cc7832;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+response.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span>
+
+<span class="s2">// NOTE: Mostly copy paste from node</span>
+<span class="s1">exports.writeHead = </span><span class="s3">function </span><span class="s1">writeHead (statusCode</span><span class="s4">, </span><span class="s1">reason</span><span class="s4">, </span><span class="s1">obj) {</span>
+  <span class="s3">var </span><span class="s1">headers</span>
+
+  <span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">reason === </span><span class="s0">'string'</span><span class="s1">) {</span>
+    <span class="s2">// writeHead(statusCode, reasonPhrase[, headers])</span>
+    <span class="s3">this</span><span class="s1">.statusMessage = reason</span>
+  <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+    <span class="s2">// writeHead(statusCode[, headers])</span>
+    <span class="s3">this</span><span class="s1">.statusMessage =</span>
+      <span class="s3">this</span><span class="s1">.statusMessage || </span><span class="s0">'unknown'</span>
+    <span class="s1">obj = reason</span>
+  <span class="s1">}</span>
+  <span class="s3">this</span><span class="s1">.statusCode = statusCode</span>
+
+  <span class="s3">if </span><span class="s1">(</span><span class="s3">this</span><span class="s1">._headers) {</span>
+    <span class="s2">// Slow-case: when progressive API and header fields are passed.</span>
+    <span class="s3">if </span><span class="s1">(obj) {</span>
+      <span class="s3">var </span><span class="s1">keys = Object.keys(obj)</span>
+      <span class="s3">for </span><span class="s1">(</span><span class="s3">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s4">; </span><span class="s1">i &lt; keys.length</span><span class="s4">; </span><span class="s1">i++) {</span>
+        <span class="s3">var </span><span class="s1">k = keys[i]</span>
+        <span class="s3">if </span><span class="s1">(k) </span><span class="s3">this</span><span class="s1">.setHeader(k</span><span class="s4">, </span><span class="s1">obj[k])</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s2">// only progressive api is used</span>
+    <span class="s1">headers = </span><span class="s3">this</span><span class="s1">._renderHeaders()</span>
+  <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+    <span class="s2">// only writeHead() called</span>
+    <span class="s1">headers = obj</span>
+  <span class="s1">}</span>
+
+  <span class="s3">if </span><span class="s1">(statusCode === </span><span class="s5">204 </span><span class="s1">|| statusCode === </span><span class="s5">304 </span><span class="s1">||</span>
+      <span class="s1">(statusCode &gt;= </span><span class="s5">100 </span><span class="s1">&amp;&amp; statusCode &lt;= </span><span class="s5">199</span><span class="s1">)) {</span>
+    <span class="s2">// RFC 2616, 10.2.5:</span>
+    <span class="s2">// The 204 response MUST NOT include a message-body, and thus is always</span>
+    <span class="s2">// terminated by the first empty line after the header fields.</span>
+    <span class="s2">// RFC 2616, 10.3.5:</span>
+    <span class="s2">// The 304 response MUST NOT contain a message-body, and thus is always</span>
+    <span class="s2">// terminated by the first empty line after the header fields.</span>
+    <span class="s2">// RFC 2616, 10.1 Informational 1xx:</span>
+    <span class="s2">// This class of status code indicates a provisional response,</span>
+    <span class="s2">// consisting only of the Status-Line and optional headers, and is</span>
+    <span class="s2">// terminated by an empty line.</span>
+    <span class="s3">this</span><span class="s1">._hasBody = </span><span class="s3">false</span>
+  <span class="s1">}</span>
+
+  <span class="s2">// don't keep alive connections where the client expects 100 Continue</span>
+  <span class="s2">// but we sent a final status; they may put extra bytes on the wire.</span>
+  <span class="s3">if </span><span class="s1">(</span><span class="s3">this</span><span class="s1">._expect_continue &amp;&amp; !</span><span class="s3">this</span><span class="s1">._sent100) {</span>
+    <span class="s3">this</span><span class="s1">.shouldKeepAlive = </span><span class="s3">false</span>
+  <span class="s1">}</span>
+
+  <span class="s2">// Implicit headers sent!</span>
+  <span class="s3">this</span><span class="s1">._header = </span><span class="s3">true</span>
+  <span class="s3">this</span><span class="s1">._headerSent = </span><span class="s3">true</span>
+
+  <span class="s3">if </span><span class="s1">(</span><span class="s3">this</span><span class="s1">.socket._handle) { </span><span class="s3">this</span><span class="s1">.socket._handle._spdyState.stream.respond(</span><span class="s3">this</span><span class="s1">.statusCode</span><span class="s4">, </span><span class="s1">headers) }</span>
+<span class="s1">}</span>
+
+<span class="s1">exports.end = </span><span class="s3">function </span><span class="s1">end (data</span><span class="s4">, </span><span class="s1">encoding</span><span class="s4">, </span><span class="s1">callback) {</span>
+  <span class="s3">if </span><span class="s1">(!</span><span class="s3">this</span><span class="s1">._headerSent) {</span>
+    <span class="s3">this</span><span class="s1">.writeHead(</span><span class="s3">this</span><span class="s1">.statusCode)</span>
+  <span class="s1">}</span>
+
+  <span class="s3">if </span><span class="s1">(!</span><span class="s3">this</span><span class="s1">.socket._handle) {</span>
+    <span class="s3">return</span>
+  <span class="s1">}</span>
+
+  <span class="s2">// Compatibility with Node.js core</span>
+  <span class="s3">this</span><span class="s1">.finished = </span><span class="s3">true</span>
+
+  <span class="s3">var </span><span class="s1">self = </span><span class="s3">this</span>
+  <span class="s3">var </span><span class="s1">handle = </span><span class="s3">this</span><span class="s1">.socket._handle</span>
+  <span class="s1">handle._spdyState.ending = </span><span class="s3">true</span>
+  <span class="s3">this</span><span class="s1">.socket.end(data</span><span class="s4">, </span><span class="s1">encoding</span><span class="s4">, </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s1">self.constructor.prototype.end.call(self</span><span class="s4">, </span><span class="s0">''</span><span class="s4">, </span><span class="s0">'utf8'</span><span class="s4">, </span><span class="s1">callback)</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s1">exports.push = </span><span class="s3">function </span><span class="s1">push (path</span><span class="s4">, </span><span class="s1">headers</span><span class="s4">, </span><span class="s1">callback) {</span>
+  <span class="s3">var </span><span class="s1">frame = {</span>
+    <span class="s1">path: path</span><span class="s4">,</span>
+    <span class="s1">method: headers.method ? headers.method.toString() : </span><span class="s0">'GET'</span><span class="s4">,</span>
+    <span class="s1">status: headers.status ? parseInt(headers.status</span><span class="s4">, </span><span class="s5">10</span><span class="s1">) : </span><span class="s5">200</span><span class="s4">,</span>
+    <span class="s1">host: </span><span class="s3">this</span><span class="s1">._req.headers.host</span><span class="s4">,</span>
+    <span class="s1">headers: headers.request</span><span class="s4">,</span>
+    <span class="s1">response: headers.response</span>
+  <span class="s1">}</span>
+
+  <span class="s3">var </span><span class="s1">stream = </span><span class="s3">this</span><span class="s1">.spdyStream</span>
+  <span class="s3">return </span><span class="s1">stream.pushPromise(frame</span><span class="s4">, </span><span class="s1">callback)</span>
+<span class="s1">}</span>
+
+<span class="s1">exports.writeContinue = </span><span class="s3">function </span><span class="s1">writeContinue (callback) {</span>
+  <span class="s3">if </span><span class="s1">(</span><span class="s3">this</span><span class="s1">.socket._handle) {</span>
+    <span class="s3">this</span><span class="s1">.socket._handle._spdyState.stream.respond(</span><span class="s5">100</span><span class="s4">, </span><span class="s1">{}</span><span class="s4">, </span><span class="s1">callback)</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

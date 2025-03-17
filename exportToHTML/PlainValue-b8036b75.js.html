@@ -1,0 +1,1300 @@
+<html>
+<head>
+<title>PlainValue-b8036b75.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s7 { color: #808080;}
+.s8 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+PlainValue-b8036b75.js</font>
+</center></td></tr></table>
+<pre><span class="s0">function </span><span class="s1">_typeof(obj) {</span>
+  <span class="s2">&quot;@babel/helpers - typeof&quot;</span><span class="s3">;</span>
+
+  <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">Symbol === </span><span class="s2">&quot;function&quot; </span><span class="s1">&amp;&amp; </span><span class="s0">typeof </span><span class="s1">Symbol.iterator === </span><span class="s2">&quot;symbol&quot;</span><span class="s1">) {</span>
+    <span class="s1">_typeof = </span><span class="s0">function </span><span class="s1">(obj) {</span>
+      <span class="s0">return typeof </span><span class="s1">obj</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">;</span>
+  <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+    <span class="s1">_typeof = </span><span class="s0">function </span><span class="s1">(obj) {</span>
+      <span class="s0">return </span><span class="s1">obj &amp;&amp; </span><span class="s0">typeof </span><span class="s1">Symbol === </span><span class="s2">&quot;function&quot; </span><span class="s1">&amp;&amp; obj.constructor === Symbol &amp;&amp; obj !== Symbol.prototype ? </span><span class="s2">&quot;symbol&quot; </span><span class="s1">: </span><span class="s0">typeof </span><span class="s1">obj</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">_typeof(obj)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_classCallCheck(instance</span><span class="s3">, </span><span class="s1">Constructor) {</span>
+  <span class="s0">if </span><span class="s1">(!(instance </span><span class="s0">instanceof </span><span class="s1">Constructor)) {</span>
+    <span class="s0">throw new </span><span class="s1">TypeError(</span><span class="s2">&quot;Cannot call a class as a function&quot;</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_defineProperties(target</span><span class="s3">, </span><span class="s1">props) {</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; props.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+    <span class="s0">var </span><span class="s1">descriptor = props[i]</span><span class="s3">;</span>
+    <span class="s1">descriptor.enumerable = descriptor.enumerable || </span><span class="s0">false</span><span class="s3">;</span>
+    <span class="s1">descriptor.configurable = </span><span class="s0">true</span><span class="s3">;</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s2">&quot;value&quot; </span><span class="s0">in </span><span class="s1">descriptor) descriptor.writable = </span><span class="s0">true</span><span class="s3">;</span>
+    <span class="s1">Object.defineProperty(target</span><span class="s3">, </span><span class="s1">descriptor.key</span><span class="s3">, </span><span class="s1">descriptor)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_createClass(Constructor</span><span class="s3">, </span><span class="s1">protoProps</span><span class="s3">, </span><span class="s1">staticProps) {</span>
+  <span class="s0">if </span><span class="s1">(protoProps) _defineProperties(Constructor.prototype</span><span class="s3">, </span><span class="s1">protoProps)</span><span class="s3">;</span>
+  <span class="s0">if </span><span class="s1">(staticProps) _defineProperties(Constructor</span><span class="s3">, </span><span class="s1">staticProps)</span><span class="s3">;</span>
+  <span class="s0">return </span><span class="s1">Constructor</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_defineProperty(obj</span><span class="s3">, </span><span class="s1">key</span><span class="s3">, </span><span class="s1">value) {</span>
+  <span class="s0">if </span><span class="s1">(key </span><span class="s0">in </span><span class="s1">obj) {</span>
+    <span class="s1">Object.defineProperty(obj</span><span class="s3">, </span><span class="s1">key</span><span class="s3">, </span><span class="s1">{</span>
+      <span class="s1">value: value</span><span class="s3">,</span>
+      <span class="s1">enumerable: </span><span class="s0">true</span><span class="s3">,</span>
+      <span class="s1">configurable: </span><span class="s0">true</span><span class="s3">,</span>
+      <span class="s1">writable: </span><span class="s0">true</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+    <span class="s1">obj[key] = value</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">obj</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_inherits(subClass</span><span class="s3">, </span><span class="s1">superClass) {</span>
+  <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">superClass !== </span><span class="s2">&quot;function&quot; </span><span class="s1">&amp;&amp; superClass !== </span><span class="s0">null</span><span class="s1">) {</span>
+    <span class="s0">throw new </span><span class="s1">TypeError(</span><span class="s2">&quot;Super expression must either be null or a function&quot;</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">subClass.prototype = Object.create(superClass &amp;&amp; superClass.prototype</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">constructor: {</span>
+      <span class="s1">value: subClass</span><span class="s3">,</span>
+      <span class="s1">writable: </span><span class="s0">true</span><span class="s3">,</span>
+      <span class="s1">configurable: </span><span class="s0">true</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span><span class="s3">;</span>
+  <span class="s0">if </span><span class="s1">(superClass) _setPrototypeOf(subClass</span><span class="s3">, </span><span class="s1">superClass)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_getPrototypeOf(o) {</span>
+  <span class="s1">_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : </span><span class="s0">function </span><span class="s1">_getPrototypeOf(o) {</span>
+    <span class="s0">return </span><span class="s1">o.__proto__ || Object.getPrototypeOf(o)</span><span class="s3">;</span>
+  <span class="s1">}</span><span class="s3">;</span>
+  <span class="s0">return </span><span class="s1">_getPrototypeOf(o)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_setPrototypeOf(o</span><span class="s3">, </span><span class="s1">p) {</span>
+  <span class="s1">_setPrototypeOf = Object.setPrototypeOf || </span><span class="s0">function </span><span class="s1">_setPrototypeOf(o</span><span class="s3">, </span><span class="s1">p) {</span>
+    <span class="s1">o.__proto__ = p</span><span class="s3">;</span>
+    <span class="s0">return </span><span class="s1">o</span><span class="s3">;</span>
+  <span class="s1">}</span><span class="s3">;</span>
+
+  <span class="s0">return </span><span class="s1">_setPrototypeOf(o</span><span class="s3">, </span><span class="s1">p)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_isNativeReflectConstruct() {</span>
+  <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">Reflect === </span><span class="s2">&quot;undefined&quot; </span><span class="s1">|| !Reflect.construct) </span><span class="s0">return false</span><span class="s3">;</span>
+  <span class="s0">if </span><span class="s1">(Reflect.construct.sham) </span><span class="s0">return false</span><span class="s3">;</span>
+  <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">Proxy === </span><span class="s2">&quot;function&quot;</span><span class="s1">) </span><span class="s0">return true</span><span class="s3">;</span>
+
+  <span class="s0">try </span><span class="s1">{</span>
+    <span class="s1">Boolean.prototype.valueOf.call(Reflect.construct(Boolean</span><span class="s3">, </span><span class="s1">[]</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {}))</span><span class="s3">;</span>
+    <span class="s0">return true</span><span class="s3">;</span>
+  <span class="s1">} </span><span class="s0">catch </span><span class="s1">(e) {</span>
+    <span class="s0">return false</span><span class="s3">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_construct(Parent</span><span class="s3">, </span><span class="s1">args</span><span class="s3">, </span><span class="s1">Class) {</span>
+  <span class="s0">if </span><span class="s1">(_isNativeReflectConstruct()) {</span>
+    <span class="s1">_construct = Reflect.construct</span><span class="s3">;</span>
+  <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+    <span class="s1">_construct = </span><span class="s0">function </span><span class="s1">_construct(Parent</span><span class="s3">, </span><span class="s1">args</span><span class="s3">, </span><span class="s1">Class) {</span>
+      <span class="s0">var </span><span class="s1">a = [</span><span class="s0">null</span><span class="s1">]</span><span class="s3">;</span>
+      <span class="s1">a.push.apply(a</span><span class="s3">, </span><span class="s1">args)</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">Constructor = Function.bind.apply(Parent</span><span class="s3">, </span><span class="s1">a)</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">instance = </span><span class="s0">new </span><span class="s1">Constructor()</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(Class) _setPrototypeOf(instance</span><span class="s3">, </span><span class="s1">Class.prototype)</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">instance</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">_construct.apply(</span><span class="s0">null</span><span class="s3">, </span><span class="s1">arguments)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_isNativeFunction(fn) {</span>
+  <span class="s0">return </span><span class="s1">Function.toString.call(fn).indexOf(</span><span class="s2">&quot;[native code]&quot;</span><span class="s1">) !== -</span><span class="s4">1</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_wrapNativeSuper(Class) {</span>
+  <span class="s0">var </span><span class="s1">_cache = </span><span class="s0">typeof </span><span class="s1">Map === </span><span class="s2">&quot;function&quot; </span><span class="s1">? </span><span class="s0">new </span><span class="s1">Map() : undefined</span><span class="s3">;</span>
+
+  <span class="s1">_wrapNativeSuper = </span><span class="s0">function </span><span class="s1">_wrapNativeSuper(Class) {</span>
+    <span class="s0">if </span><span class="s1">(Class === </span><span class="s0">null </span><span class="s1">|| !_isNativeFunction(Class)) </span><span class="s0">return </span><span class="s1">Class</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">Class !== </span><span class="s2">&quot;function&quot;</span><span class="s1">) {</span>
+      <span class="s0">throw new </span><span class="s1">TypeError(</span><span class="s2">&quot;Super expression must either be null or a function&quot;</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">_cache !== </span><span class="s2">&quot;undefined&quot;</span><span class="s1">) {</span>
+      <span class="s0">if </span><span class="s1">(_cache.has(Class)) </span><span class="s0">return </span><span class="s1">_cache.get(Class)</span><span class="s3">;</span>
+
+      <span class="s1">_cache.set(Class</span><span class="s3">, </span><span class="s1">Wrapper)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">function </span><span class="s1">Wrapper() {</span>
+      <span class="s0">return </span><span class="s1">_construct(Class</span><span class="s3">, </span><span class="s1">arguments</span><span class="s3">, </span><span class="s1">_getPrototypeOf(</span><span class="s0">this</span><span class="s1">).constructor)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">Wrapper.prototype = Object.create(Class.prototype</span><span class="s3">, </span><span class="s1">{</span>
+      <span class="s1">constructor: {</span>
+        <span class="s1">value: Wrapper</span><span class="s3">,</span>
+        <span class="s1">enumerable: </span><span class="s0">false</span><span class="s3">,</span>
+        <span class="s1">writable: </span><span class="s0">true</span><span class="s3">,</span>
+        <span class="s1">configurable: </span><span class="s0">true</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span><span class="s3">;</span>
+    <span class="s0">return </span><span class="s1">_setPrototypeOf(Wrapper</span><span class="s3">, </span><span class="s1">Class)</span><span class="s3">;</span>
+  <span class="s1">}</span><span class="s3">;</span>
+
+  <span class="s0">return </span><span class="s1">_wrapNativeSuper(Class)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_assertThisInitialized(self) {</span>
+  <span class="s0">if </span><span class="s1">(self === </span><span class="s0">void </span><span class="s4">0</span><span class="s1">) {</span>
+    <span class="s0">throw new </span><span class="s1">ReferenceError(</span><span class="s2">&quot;this hasn't been initialised - super() hasn't been called&quot;</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">self</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_possibleConstructorReturn(self</span><span class="s3">, </span><span class="s1">call) {</span>
+  <span class="s0">if </span><span class="s1">(call &amp;&amp; (</span><span class="s0">typeof </span><span class="s1">call === </span><span class="s2">&quot;object&quot; </span><span class="s1">|| </span><span class="s0">typeof </span><span class="s1">call === </span><span class="s2">&quot;function&quot;</span><span class="s1">)) {</span>
+    <span class="s0">return </span><span class="s1">call</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">_assertThisInitialized(self)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_createSuper(Derived) {</span>
+  <span class="s0">var </span><span class="s1">hasNativeReflectConstruct = _isNativeReflectConstruct()</span><span class="s3">;</span>
+
+  <span class="s0">return function </span><span class="s1">_createSuperInternal() {</span>
+    <span class="s0">var </span><span class="s1">Super = _getPrototypeOf(Derived)</span><span class="s3">,</span>
+        <span class="s1">result</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(hasNativeReflectConstruct) {</span>
+      <span class="s0">var </span><span class="s1">NewTarget = _getPrototypeOf(</span><span class="s0">this</span><span class="s1">).constructor</span><span class="s3">;</span>
+
+      <span class="s1">result = Reflect.construct(Super</span><span class="s3">, </span><span class="s1">arguments</span><span class="s3">, </span><span class="s1">NewTarget)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+      <span class="s1">result = Super.apply(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">arguments)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">_possibleConstructorReturn(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">result)</span><span class="s3">;</span>
+  <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_superPropBase(object</span><span class="s3">, </span><span class="s1">property) {</span>
+  <span class="s0">while </span><span class="s1">(!Object.prototype.hasOwnProperty.call(object</span><span class="s3">, </span><span class="s1">property)) {</span>
+    <span class="s1">object = _getPrototypeOf(object)</span><span class="s3">;</span>
+    <span class="s0">if </span><span class="s1">(object === </span><span class="s0">null</span><span class="s1">) </span><span class="s0">break</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">object</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_get(target</span><span class="s3">, </span><span class="s1">property</span><span class="s3">, </span><span class="s1">receiver) {</span>
+  <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">Reflect !== </span><span class="s2">&quot;undefined&quot; </span><span class="s1">&amp;&amp; Reflect.get) {</span>
+    <span class="s1">_get = Reflect.get</span><span class="s3">;</span>
+  <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+    <span class="s1">_get = </span><span class="s0">function </span><span class="s1">_get(target</span><span class="s3">, </span><span class="s1">property</span><span class="s3">, </span><span class="s1">receiver) {</span>
+      <span class="s0">var </span><span class="s1">base = _superPropBase(target</span><span class="s3">, </span><span class="s1">property)</span><span class="s3">;</span>
+
+      <span class="s0">if </span><span class="s1">(!base) </span><span class="s0">return</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">desc = Object.getOwnPropertyDescriptor(base</span><span class="s3">, </span><span class="s1">property)</span><span class="s3">;</span>
+
+      <span class="s0">if </span><span class="s1">(desc.get) {</span>
+        <span class="s0">return </span><span class="s1">desc.get.call(receiver)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">desc.value</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">_get(target</span><span class="s3">, </span><span class="s1">property</span><span class="s3">, </span><span class="s1">receiver || target)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_slicedToArray(arr</span><span class="s3">, </span><span class="s1">i) {</span>
+  <span class="s0">return </span><span class="s1">_arrayWithHoles(arr) || _iterableToArrayLimit(arr</span><span class="s3">, </span><span class="s1">i) || _unsupportedIterableToArray(arr</span><span class="s3">, </span><span class="s1">i) || _nonIterableRest()</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_toArray(arr) {</span>
+  <span class="s0">return </span><span class="s1">_arrayWithHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableRest()</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_arrayWithHoles(arr) {</span>
+  <span class="s0">if </span><span class="s1">(Array.isArray(arr)) </span><span class="s0">return </span><span class="s1">arr</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_iterableToArray(iter) {</span>
+  <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">Symbol !== </span><span class="s2">&quot;undefined&quot; </span><span class="s1">&amp;&amp; Symbol.iterator </span><span class="s0">in </span><span class="s1">Object(iter)) </span><span class="s0">return </span><span class="s1">Array.from(iter)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_iterableToArrayLimit(arr</span><span class="s3">, </span><span class="s1">i) {</span>
+  <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">Symbol === </span><span class="s2">&quot;undefined&quot; </span><span class="s1">|| !(Symbol.iterator </span><span class="s0">in </span><span class="s1">Object(arr))) </span><span class="s0">return</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">_arr = []</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">_n = </span><span class="s0">true</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">_d = </span><span class="s0">false</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">_e = undefined</span><span class="s3">;</span>
+
+  <span class="s0">try </span><span class="s1">{</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">_i = arr[Symbol.iterator]()</span><span class="s3">, </span><span class="s1">_s</span><span class="s3">; </span><span class="s1">!(_n = (_s = _i.next()).done)</span><span class="s3">; </span><span class="s1">_n = </span><span class="s0">true</span><span class="s1">) {</span>
+      <span class="s1">_arr.push(_s.value)</span><span class="s3">;</span>
+
+      <span class="s0">if </span><span class="s1">(i &amp;&amp; _arr.length === i) </span><span class="s0">break</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">} </span><span class="s0">catch </span><span class="s1">(err) {</span>
+    <span class="s1">_d = </span><span class="s0">true</span><span class="s3">;</span>
+    <span class="s1">_e = err</span><span class="s3">;</span>
+  <span class="s1">} </span><span class="s0">finally </span><span class="s1">{</span>
+    <span class="s0">try </span><span class="s1">{</span>
+      <span class="s0">if </span><span class="s1">(!_n &amp;&amp; _i[</span><span class="s2">&quot;return&quot;</span><span class="s1">] != </span><span class="s0">null</span><span class="s1">) _i[</span><span class="s2">&quot;return&quot;</span><span class="s1">]()</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s0">finally </span><span class="s1">{</span>
+      <span class="s0">if </span><span class="s1">(_d) </span><span class="s0">throw </span><span class="s1">_e</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">_arr</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_unsupportedIterableToArray(o</span><span class="s3">, </span><span class="s1">minLen) {</span>
+  <span class="s0">if </span><span class="s1">(!o) </span><span class="s0">return</span><span class="s3">;</span>
+  <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">o === </span><span class="s2">&quot;string&quot;</span><span class="s1">) </span><span class="s0">return </span><span class="s1">_arrayLikeToArray(o</span><span class="s3">, </span><span class="s1">minLen)</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">n = Object.prototype.toString.call(o).slice(</span><span class="s4">8</span><span class="s3">, </span><span class="s1">-</span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s0">if </span><span class="s1">(n === </span><span class="s2">&quot;Object&quot; </span><span class="s1">&amp;&amp; o.constructor) n = o.constructor.name</span><span class="s3">;</span>
+  <span class="s0">if </span><span class="s1">(n === </span><span class="s2">&quot;Map&quot; </span><span class="s1">|| n === </span><span class="s2">&quot;Set&quot;</span><span class="s1">) </span><span class="s0">return </span><span class="s1">Array.from(o)</span><span class="s3">;</span>
+  <span class="s0">if </span><span class="s1">(n === </span><span class="s2">&quot;Arguments&quot; </span><span class="s1">|| </span><span class="s4">/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/</span><span class="s1">.test(n)) </span><span class="s0">return </span><span class="s1">_arrayLikeToArray(o</span><span class="s3">, </span><span class="s1">minLen)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_arrayLikeToArray(arr</span><span class="s3">, </span><span class="s1">len) {</span>
+  <span class="s0">if </span><span class="s1">(len == </span><span class="s0">null </span><span class="s1">|| len &gt; arr.length) len = arr.length</span><span class="s3">;</span>
+
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">, </span><span class="s1">arr2 = </span><span class="s0">new </span><span class="s1">Array(len)</span><span class="s3">; </span><span class="s1">i &lt; len</span><span class="s3">; </span><span class="s1">i++) arr2[i] = arr[i]</span><span class="s3">;</span>
+
+  <span class="s0">return </span><span class="s1">arr2</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_nonIterableRest() {</span>
+  <span class="s0">throw new </span><span class="s1">TypeError(</span><span class="s2">&quot;Invalid attempt to destructure non-iterable instance.</span><span class="s3">\n</span><span class="s2">In order to be iterable, non-array objects must have a [Symbol.iterator]() method.&quot;</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">_createForOfIteratorHelper(o</span><span class="s3">, </span><span class="s1">allowArrayLike) {</span>
+  <span class="s0">var </span><span class="s1">it</span><span class="s3">;</span>
+
+  <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">Symbol === </span><span class="s2">&quot;undefined&quot; </span><span class="s1">|| o[Symbol.iterator] == </span><span class="s0">null</span><span class="s1">) {</span>
+    <span class="s0">if </span><span class="s1">(Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike &amp;&amp; o &amp;&amp; </span><span class="s0">typeof </span><span class="s1">o.length === </span><span class="s2">&quot;number&quot;</span><span class="s1">) {</span>
+      <span class="s0">if </span><span class="s1">(it) o = it</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">;</span>
+
+      <span class="s0">var </span><span class="s1">F = </span><span class="s0">function </span><span class="s1">() {}</span><span class="s3">;</span>
+
+      <span class="s0">return </span><span class="s1">{</span>
+        <span class="s1">s: F</span><span class="s3">,</span>
+        <span class="s1">n: </span><span class="s0">function </span><span class="s1">() {</span>
+          <span class="s0">if </span><span class="s1">(i &gt;= o.length) </span><span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">done: </span><span class="s0">true</span>
+          <span class="s1">}</span><span class="s3">;</span>
+          <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">done: </span><span class="s0">false</span><span class="s3">,</span>
+            <span class="s1">value: o[i++]</span>
+          <span class="s1">}</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">,</span>
+        <span class="s1">e: </span><span class="s0">function </span><span class="s1">(e) {</span>
+          <span class="s0">throw </span><span class="s1">e</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">,</span>
+        <span class="s1">f: F</span>
+      <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">throw new </span><span class="s1">TypeError(</span><span class="s2">&quot;Invalid attempt to iterate non-iterable instance.</span><span class="s3">\n</span><span class="s2">In order to be iterable, non-array objects must have a [Symbol.iterator]() method.&quot;</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">var </span><span class="s1">normalCompletion = </span><span class="s0">true</span><span class="s3">,</span>
+      <span class="s1">didErr = </span><span class="s0">false</span><span class="s3">,</span>
+      <span class="s1">err</span><span class="s3">;</span>
+  <span class="s0">return </span><span class="s1">{</span>
+    <span class="s1">s: </span><span class="s0">function </span><span class="s1">() {</span>
+      <span class="s1">it = o[Symbol.iterator]()</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">n: </span><span class="s0">function </span><span class="s1">() {</span>
+      <span class="s0">var </span><span class="s1">step = it.next()</span><span class="s3">;</span>
+      <span class="s1">normalCompletion = step.done</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">step</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">e: </span><span class="s0">function </span><span class="s1">(e) {</span>
+      <span class="s1">didErr = </span><span class="s0">true</span><span class="s3">;</span>
+      <span class="s1">err = e</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">f: </span><span class="s0">function </span><span class="s1">() {</span>
+      <span class="s0">try </span><span class="s1">{</span>
+        <span class="s0">if </span><span class="s1">(!normalCompletion &amp;&amp; it.return != </span><span class="s0">null</span><span class="s1">) it.return()</span><span class="s3">;</span>
+      <span class="s1">} </span><span class="s0">finally </span><span class="s1">{</span>
+        <span class="s0">if </span><span class="s1">(didErr) </span><span class="s0">throw </span><span class="s1">err</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">var </span><span class="s1">Char = {</span>
+  <span class="s1">ANCHOR: </span><span class="s2">'&amp;'</span><span class="s3">,</span>
+  <span class="s1">COMMENT: </span><span class="s2">'#'</span><span class="s3">,</span>
+  <span class="s1">TAG: </span><span class="s2">'!'</span><span class="s3">,</span>
+  <span class="s1">DIRECTIVES_END: </span><span class="s2">'-'</span><span class="s3">,</span>
+  <span class="s1">DOCUMENT_END: </span><span class="s2">'.'</span>
+<span class="s1">}</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">Type = {</span>
+  <span class="s1">ALIAS: </span><span class="s2">'ALIAS'</span><span class="s3">,</span>
+  <span class="s1">BLANK_LINE: </span><span class="s2">'BLANK_LINE'</span><span class="s3">,</span>
+  <span class="s1">BLOCK_FOLDED: </span><span class="s2">'BLOCK_FOLDED'</span><span class="s3">,</span>
+  <span class="s1">BLOCK_LITERAL: </span><span class="s2">'BLOCK_LITERAL'</span><span class="s3">,</span>
+  <span class="s1">COMMENT: </span><span class="s2">'COMMENT'</span><span class="s3">,</span>
+  <span class="s1">DIRECTIVE: </span><span class="s2">'DIRECTIVE'</span><span class="s3">,</span>
+  <span class="s1">DOCUMENT: </span><span class="s2">'DOCUMENT'</span><span class="s3">,</span>
+  <span class="s1">FLOW_MAP: </span><span class="s2">'FLOW_MAP'</span><span class="s3">,</span>
+  <span class="s1">FLOW_SEQ: </span><span class="s2">'FLOW_SEQ'</span><span class="s3">,</span>
+  <span class="s1">MAP: </span><span class="s2">'MAP'</span><span class="s3">,</span>
+  <span class="s1">MAP_KEY: </span><span class="s2">'MAP_KEY'</span><span class="s3">,</span>
+  <span class="s1">MAP_VALUE: </span><span class="s2">'MAP_VALUE'</span><span class="s3">,</span>
+  <span class="s1">PLAIN: </span><span class="s2">'PLAIN'</span><span class="s3">,</span>
+  <span class="s1">QUOTE_DOUBLE: </span><span class="s2">'QUOTE_DOUBLE'</span><span class="s3">,</span>
+  <span class="s1">QUOTE_SINGLE: </span><span class="s2">'QUOTE_SINGLE'</span><span class="s3">,</span>
+  <span class="s1">SEQ: </span><span class="s2">'SEQ'</span><span class="s3">,</span>
+  <span class="s1">SEQ_ITEM: </span><span class="s2">'SEQ_ITEM'</span>
+<span class="s1">}</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">defaultTagPrefix = </span><span class="s2">'tag:yaml.org,2002:'</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">defaultTags = {</span>
+  <span class="s1">MAP: </span><span class="s2">'tag:yaml.org,2002:map'</span><span class="s3">,</span>
+  <span class="s1">SEQ: </span><span class="s2">'tag:yaml.org,2002:seq'</span><span class="s3">,</span>
+  <span class="s1">STR: </span><span class="s2">'tag:yaml.org,2002:str'</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">findLineStarts(src) {</span>
+  <span class="s0">var </span><span class="s1">ls = [</span><span class="s4">0</span><span class="s1">]</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">offset = src.indexOf(</span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">)</span><span class="s3">;</span>
+
+  <span class="s0">while </span><span class="s1">(offset !== -</span><span class="s4">1</span><span class="s1">) {</span>
+    <span class="s1">offset += </span><span class="s4">1</span><span class="s3">;</span>
+    <span class="s1">ls.push(offset)</span><span class="s3">;</span>
+    <span class="s1">offset = src.indexOf(</span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">ls</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">getSrcInfo(cst) {</span>
+  <span class="s0">var </span><span class="s1">lineStarts</span><span class="s3">, </span><span class="s1">src</span><span class="s3">;</span>
+
+  <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">cst === </span><span class="s2">'string'</span><span class="s1">) {</span>
+    <span class="s1">lineStarts = findLineStarts(cst)</span><span class="s3">;</span>
+    <span class="s1">src = cst</span><span class="s3">;</span>
+  <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+    <span class="s0">if </span><span class="s1">(Array.isArray(cst)) cst = cst[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(cst &amp;&amp; cst.context) {</span>
+      <span class="s0">if </span><span class="s1">(!cst.lineStarts) cst.lineStarts = findLineStarts(cst.context.src)</span><span class="s3">;</span>
+      <span class="s1">lineStarts = cst.lineStarts</span><span class="s3">;</span>
+      <span class="s1">src = cst.context.src</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">{</span>
+    <span class="s1">lineStarts: lineStarts</span><span class="s3">,</span>
+    <span class="s1">src: src</span>
+  <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span>
+<span class="s5">/**</span>
+ <span class="s5">* </span><span class="s6">@typedef </span><span class="s5">{Object} LinePos - One-indexed position in the source</span>
+ <span class="s5">* </span><span class="s6">@property </span><span class="s5">{number} line</span>
+ <span class="s5">* </span><span class="s6">@property </span><span class="s5">{number} col</span>
+ <span class="s5">*/</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Determine the line/col position matching a character offset.</span>
+ <span class="s5">*</span>
+ <span class="s5">* Accepts a source string or a CST document as the second parameter. With</span>
+ <span class="s5">* the latter, starting indices for lines are cached in the document as</span>
+ <span class="s5">* `lineStarts: number[]`.</span>
+ <span class="s5">*</span>
+ <span class="s5">* Returns a one-indexed `{ line, col }` location if found, or</span>
+ <span class="s5">* `undefined` otherwise.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{number} offset</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{string|Document|Document[]} cst</span>
+ <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{?LinePos}</span>
+ <span class="s5">*/</span>
+
+
+<span class="s0">function </span><span class="s1">getLinePos(offset</span><span class="s3">, </span><span class="s1">cst) {</span>
+  <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">offset !== </span><span class="s2">'number' </span><span class="s1">|| offset &lt; </span><span class="s4">0</span><span class="s1">) </span><span class="s0">return null</span><span class="s3">;</span>
+
+  <span class="s0">var </span><span class="s1">_getSrcInfo = getSrcInfo(cst)</span><span class="s3">,</span>
+      <span class="s1">lineStarts = _getSrcInfo.lineStarts</span><span class="s3">,</span>
+      <span class="s1">src = _getSrcInfo.src</span><span class="s3">;</span>
+
+  <span class="s0">if </span><span class="s1">(!lineStarts || !src || offset &gt; src.length) </span><span class="s0">return null</span><span class="s3">;</span>
+
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; lineStarts.length</span><span class="s3">; </span><span class="s1">++i) {</span>
+    <span class="s0">var </span><span class="s1">start = lineStarts[i]</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(offset &lt; start) {</span>
+      <span class="s0">return </span><span class="s1">{</span>
+        <span class="s1">line: i</span><span class="s3">,</span>
+        <span class="s1">col: offset - lineStarts[i - </span><span class="s4">1</span><span class="s1">] + </span><span class="s4">1</span>
+      <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(offset === start) </span><span class="s0">return </span><span class="s1">{</span>
+      <span class="s1">line: i + </span><span class="s4">1</span><span class="s3">,</span>
+      <span class="s1">col: </span><span class="s4">1</span>
+    <span class="s1">}</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">var </span><span class="s1">line = lineStarts.length</span><span class="s3">;</span>
+  <span class="s0">return </span><span class="s1">{</span>
+    <span class="s1">line: line</span><span class="s3">,</span>
+    <span class="s1">col: offset - lineStarts[line - </span><span class="s4">1</span><span class="s1">] + </span><span class="s4">1</span>
+  <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span>
+<span class="s5">/**</span>
+ <span class="s5">* Get a specified line from the source.</span>
+ <span class="s5">*</span>
+ <span class="s5">* Accepts a source string or a CST document as the second parameter. With</span>
+ <span class="s5">* the latter, starting indices for lines are cached in the document as</span>
+ <span class="s5">* `lineStarts: number[]`.</span>
+ <span class="s5">*</span>
+ <span class="s5">* Returns the line as a string if found, or `null` otherwise.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{number} line One-indexed line number</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{string|Document|Document[]} cst</span>
+ <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{?string}</span>
+ <span class="s5">*/</span>
+
+<span class="s0">function </span><span class="s1">getLine(line</span><span class="s3">, </span><span class="s1">cst) {</span>
+  <span class="s0">var </span><span class="s1">_getSrcInfo2 = getSrcInfo(cst)</span><span class="s3">,</span>
+      <span class="s1">lineStarts = _getSrcInfo2.lineStarts</span><span class="s3">,</span>
+      <span class="s1">src = _getSrcInfo2.src</span><span class="s3">;</span>
+
+  <span class="s0">if </span><span class="s1">(!lineStarts || !(line &gt;= </span><span class="s4">1</span><span class="s1">) || line &gt; lineStarts.length) </span><span class="s0">return null</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">start = lineStarts[line - </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">end = lineStarts[line]</span><span class="s3">; </span><span class="s7">// undefined for last line; that's ok for slice()</span>
+
+  <span class="s0">while </span><span class="s1">(end &amp;&amp; end &gt; start &amp;&amp; src[end - </span><span class="s4">1</span><span class="s1">] === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) {</span>
+    <span class="s1">--end</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">src.slice(start</span><span class="s3">, </span><span class="s1">end)</span><span class="s3">;</span>
+<span class="s1">}</span>
+<span class="s5">/**</span>
+ <span class="s5">* Pretty-print the starting line from the source indicated by the range `pos`</span>
+ <span class="s5">*</span>
+ <span class="s5">* Trims output to `maxWidth` chars while keeping the starting column visible,</span>
+ <span class="s5">* using `…` at either end to indicate dropped characters.</span>
+ <span class="s5">*</span>
+ <span class="s5">* Returns a two-line string (or `null`) with `\n` as separator; the second line</span>
+ <span class="s5">* will hold appropriately indented `^` marks indicating the column range.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Object} pos</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{LinePos} pos.start</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{LinePos} [pos.end]</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{string|Document|Document[]*} cst</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{number} [maxWidth=80]</span>
+ <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{?string}</span>
+ <span class="s5">*/</span>
+
+<span class="s0">function </span><span class="s1">getPrettyContext(_ref</span><span class="s3">, </span><span class="s1">cst) {</span>
+  <span class="s0">var </span><span class="s1">start = _ref.start</span><span class="s3">,</span>
+      <span class="s1">end = _ref.end</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">maxWidth = arguments.length &gt; </span><span class="s4">2 </span><span class="s1">&amp;&amp; arguments[</span><span class="s4">2</span><span class="s1">] !== undefined ? arguments[</span><span class="s4">2</span><span class="s1">] : </span><span class="s4">80</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">src = getLine(start.line</span><span class="s3">, </span><span class="s1">cst)</span><span class="s3">;</span>
+  <span class="s0">if </span><span class="s1">(!src) </span><span class="s0">return null</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">col = start.col</span><span class="s3">;</span>
+
+  <span class="s0">if </span><span class="s1">(src.length &gt; maxWidth) {</span>
+    <span class="s0">if </span><span class="s1">(col &lt;= maxWidth - </span><span class="s4">10</span><span class="s1">) {</span>
+      <span class="s1">src = src.substr(</span><span class="s4">0</span><span class="s3">, </span><span class="s1">maxWidth - </span><span class="s4">1</span><span class="s1">) + </span><span class="s2">'…'</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+      <span class="s0">var </span><span class="s1">halfWidth = Math.round(maxWidth / </span><span class="s4">2</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(src.length &gt; col + halfWidth) src = src.substr(</span><span class="s4">0</span><span class="s3">, </span><span class="s1">col + halfWidth - </span><span class="s4">1</span><span class="s1">) + </span><span class="s2">'…'</span><span class="s3">;</span>
+      <span class="s1">col -= src.length - maxWidth</span><span class="s3">;</span>
+      <span class="s1">src = </span><span class="s2">'…' </span><span class="s1">+ src.substr(</span><span class="s4">1 </span><span class="s1">- maxWidth)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s0">var </span><span class="s1">errLen = </span><span class="s4">1</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">errEnd = </span><span class="s2">''</span><span class="s3">;</span>
+
+  <span class="s0">if </span><span class="s1">(end) {</span>
+    <span class="s0">if </span><span class="s1">(end.line === start.line &amp;&amp; col + (end.col - start.col) &lt;= maxWidth + </span><span class="s4">1</span><span class="s1">) {</span>
+      <span class="s1">errLen = end.col - start.col</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+      <span class="s1">errLen = Math.min(src.length + </span><span class="s4">1</span><span class="s3">, </span><span class="s1">maxWidth) - col</span><span class="s3">;</span>
+      <span class="s1">errEnd = </span><span class="s2">'…'</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s0">var </span><span class="s1">offset = col &gt; </span><span class="s4">1 </span><span class="s1">? </span><span class="s2">' '</span><span class="s1">.repeat(col - </span><span class="s4">1</span><span class="s1">) : </span><span class="s2">''</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">err = </span><span class="s2">'^'</span><span class="s1">.repeat(errLen)</span><span class="s3">;</span>
+  <span class="s0">return </span><span class="s2">&quot;&quot;</span><span class="s1">.concat(src</span><span class="s3">, </span><span class="s2">&quot;</span><span class="s3">\n</span><span class="s2">&quot;</span><span class="s1">).concat(offset).concat(err).concat(errEnd)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">var </span><span class="s1">Range = </span><span class="s8">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s0">function </span><span class="s1">Range(start</span><span class="s3">, </span><span class="s1">end) {</span>
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">Range)</span><span class="s3">;</span>
+
+    <span class="s0">this</span><span class="s1">.start = start</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.end = end || start</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(Range</span><span class="s3">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s2">&quot;isEmpty&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">isEmpty() {</span>
+      <span class="s0">return typeof this</span><span class="s1">.start !== </span><span class="s2">'number' </span><span class="s1">|| !</span><span class="s0">this</span><span class="s1">.end || </span><span class="s0">this</span><span class="s1">.end &lt;= </span><span class="s0">this</span><span class="s1">.start</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s5">/**</span>
+     <span class="s5">* Set `origStart` and `origEnd` to point to the original source range for</span>
+     <span class="s5">* this node, which may differ due to dropped CR characters.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{number[]} cr - Positions of dropped CR characters</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{number} offset - Starting index of `cr` from the last call</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{number} - The next offset, matching the one found for `origStart`</span>
+     <span class="s5">*/</span>
+
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;setOrigRange&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">setOrigRange(cr</span><span class="s3">, </span><span class="s1">offset) {</span>
+      <span class="s0">var </span><span class="s1">start = </span><span class="s0">this</span><span class="s1">.start</span><span class="s3">,</span>
+          <span class="s1">end = </span><span class="s0">this</span><span class="s1">.end</span><span class="s3">;</span>
+
+      <span class="s0">if </span><span class="s1">(cr.length === </span><span class="s4">0 </span><span class="s1">|| end &lt;= cr[</span><span class="s4">0</span><span class="s1">]) {</span>
+        <span class="s0">this</span><span class="s1">.origStart = start</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.origEnd = end</span><span class="s3">;</span>
+        <span class="s0">return </span><span class="s1">offset</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">var </span><span class="s1">i = offset</span><span class="s3">;</span>
+
+      <span class="s0">while </span><span class="s1">(i &lt; cr.length) {</span>
+        <span class="s0">if </span><span class="s1">(cr[i] &gt; start) </span><span class="s0">break</span><span class="s3">;</span><span class="s0">else </span><span class="s1">++i</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">this</span><span class="s1">.origStart = start + i</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">nextOffset = i</span><span class="s3">;</span>
+
+      <span class="s0">while </span><span class="s1">(i &lt; cr.length) {</span>
+        <span class="s7">// if end was at \n, it should now be at \r</span>
+        <span class="s0">if </span><span class="s1">(cr[i] &gt;= end) </span><span class="s0">break</span><span class="s3">;</span><span class="s0">else </span><span class="s1">++i</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">this</span><span class="s1">.origEnd = end + i</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">nextOffset</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}]</span><span class="s3">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s2">&quot;copy&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">copy(orig) {</span>
+      <span class="s0">return new </span><span class="s1">Range(orig.start</span><span class="s3">, </span><span class="s1">orig.end)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s3">;</span>
+
+  <span class="s0">return </span><span class="s1">Range</span><span class="s3">;</span>
+<span class="s1">}()</span><span class="s3">;</span>
+
+<span class="s5">/** Root class of all nodes */</span>
+
+<span class="s0">var </span><span class="s1">Node = </span><span class="s8">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s0">function </span><span class="s1">Node(type</span><span class="s3">, </span><span class="s1">props</span><span class="s3">, </span><span class="s1">context) {</span>
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">Node)</span><span class="s3">;</span>
+
+    <span class="s1">Object.defineProperty(</span><span class="s0">this</span><span class="s3">, </span><span class="s2">'context'</span><span class="s3">, </span><span class="s1">{</span>
+      <span class="s1">value: context || </span><span class="s0">null</span><span class="s3">,</span>
+      <span class="s1">writable: </span><span class="s0">true</span>
+    <span class="s1">})</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.error = </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.range = </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.valueRange = </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.props = props || []</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.type = type</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.value = </span><span class="s0">null</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(Node</span><span class="s3">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s2">&quot;getPropValue&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">getPropValue(idx</span><span class="s3">, </span><span class="s1">key</span><span class="s3">, </span><span class="s1">skipKey) {</span>
+      <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.context) </span><span class="s0">return null</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">prop = </span><span class="s0">this</span><span class="s1">.props[idx]</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">prop &amp;&amp; src[prop.start] === key ? src.slice(prop.start + (skipKey ? </span><span class="s4">1 </span><span class="s1">: </span><span class="s4">0</span><span class="s1">)</span><span class="s3">, </span><span class="s1">prop.end) : </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;anchor&quot;</span><span class="s3">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s0">this</span><span class="s1">.props.length</span><span class="s3">; </span><span class="s1">++i) {</span>
+        <span class="s0">var </span><span class="s1">anchor = </span><span class="s0">this</span><span class="s1">.getPropValue(i</span><span class="s3">, </span><span class="s1">Char.ANCHOR</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(anchor != </span><span class="s0">null</span><span class="s1">) </span><span class="s0">return </span><span class="s1">anchor</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return null</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;comment&quot;</span><span class="s3">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">var </span><span class="s1">comments = []</span><span class="s3">;</span>
+
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s0">this</span><span class="s1">.props.length</span><span class="s3">; </span><span class="s1">++i) {</span>
+        <span class="s0">var </span><span class="s1">comment = </span><span class="s0">this</span><span class="s1">.getPropValue(i</span><span class="s3">, </span><span class="s1">Char.COMMENT</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(comment != </span><span class="s0">null</span><span class="s1">) comments.push(comment)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">comments.length &gt; </span><span class="s4">0 </span><span class="s1">? comments.join(</span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) : </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;commentHasRequiredWhitespace&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">commentHasRequiredWhitespace(start) {</span>
+      <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.header &amp;&amp; start === </span><span class="s0">this</span><span class="s1">.header.end) </span><span class="s0">return false</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.valueRange) </span><span class="s0">return false</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">end = </span><span class="s0">this</span><span class="s1">.valueRange.end</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">start !== end || Node.atBlank(src</span><span class="s3">, </span><span class="s1">end - </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;hasComment&quot;</span><span class="s3">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.context) {</span>
+        <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s3">;</span>
+
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s0">this</span><span class="s1">.props.length</span><span class="s3">; </span><span class="s1">++i) {</span>
+          <span class="s0">if </span><span class="s1">(src[</span><span class="s0">this</span><span class="s1">.props[i].start] === Char.COMMENT) </span><span class="s0">return true</span><span class="s3">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return false</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;hasProps&quot;</span><span class="s3">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.context) {</span>
+        <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s3">;</span>
+
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s0">this</span><span class="s1">.props.length</span><span class="s3">; </span><span class="s1">++i) {</span>
+          <span class="s0">if </span><span class="s1">(src[</span><span class="s0">this</span><span class="s1">.props[i].start] !== Char.COMMENT) </span><span class="s0">return true</span><span class="s3">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return false</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;includesTrailingLines&quot;</span><span class="s3">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">return false</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;jsonLike&quot;</span><span class="s3">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">var </span><span class="s1">jsonLikeTypes = [Type.FLOW_MAP</span><span class="s3">, </span><span class="s1">Type.FLOW_SEQ</span><span class="s3">, </span><span class="s1">Type.QUOTE_DOUBLE</span><span class="s3">, </span><span class="s1">Type.QUOTE_SINGLE]</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">jsonLikeTypes.indexOf(</span><span class="s0">this</span><span class="s1">.type) !== -</span><span class="s4">1</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;rangeAsLinePos&quot;</span><span class="s3">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.range || !</span><span class="s0">this</span><span class="s1">.context) </span><span class="s0">return </span><span class="s1">undefined</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">start = getLinePos(</span><span class="s0">this</span><span class="s1">.range.start</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.context.root)</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(!start) </span><span class="s0">return </span><span class="s1">undefined</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">end = getLinePos(</span><span class="s0">this</span><span class="s1">.range.end</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.context.root)</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">{</span>
+        <span class="s1">start: start</span><span class="s3">,</span>
+        <span class="s1">end: end</span>
+      <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;rawValue&quot;</span><span class="s3">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.valueRange || !</span><span class="s0">this</span><span class="s1">.context) </span><span class="s0">return null</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">_this$valueRange = </span><span class="s0">this</span><span class="s1">.valueRange</span><span class="s3">,</span>
+          <span class="s1">start = _this$valueRange.start</span><span class="s3">,</span>
+          <span class="s1">end = _this$valueRange.end</span><span class="s3">;</span>
+      <span class="s0">return this</span><span class="s1">.context.src.slice(start</span><span class="s3">, </span><span class="s1">end)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;tag&quot;</span><span class="s3">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s0">this</span><span class="s1">.props.length</span><span class="s3">; </span><span class="s1">++i) {</span>
+        <span class="s0">var </span><span class="s1">tag = </span><span class="s0">this</span><span class="s1">.getPropValue(i</span><span class="s3">, </span><span class="s1">Char.TAG</span><span class="s3">, </span><span class="s0">false</span><span class="s1">)</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(tag != </span><span class="s0">null</span><span class="s1">) {</span>
+          <span class="s0">if </span><span class="s1">(tag[</span><span class="s4">1</span><span class="s1">] === </span><span class="s2">'&lt;'</span><span class="s1">) {</span>
+            <span class="s0">return </span><span class="s1">{</span>
+              <span class="s1">verbatim: tag.slice(</span><span class="s4">2</span><span class="s3">, </span><span class="s1">-</span><span class="s4">1</span><span class="s1">)</span>
+            <span class="s1">}</span><span class="s3">;</span>
+          <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s7">// eslint-disable-next-line no-unused-vars</span>
+            <span class="s0">var </span><span class="s1">_tag$match = tag.match(</span><span class="s4">/^(.*!)([^!]*)$/</span><span class="s1">)</span><span class="s3">,</span>
+                <span class="s1">_tag$match2 = _slicedToArray(_tag$match</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span><span class="s3">;</span>
+                <span class="s1">_tag$match2[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">;</span>
+                <span class="s0">var </span><span class="s1">handle = _tag$match2[</span><span class="s4">1</span><span class="s1">]</span><span class="s3">,</span>
+                <span class="s1">suffix = _tag$match2[</span><span class="s4">2</span><span class="s1">]</span><span class="s3">;</span>
+
+            <span class="s0">return </span><span class="s1">{</span>
+              <span class="s1">handle: handle</span><span class="s3">,</span>
+              <span class="s1">suffix: suffix</span>
+            <span class="s1">}</span><span class="s3">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return null</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;valueRangeContainsNewline&quot;</span><span class="s3">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.valueRange || !</span><span class="s0">this</span><span class="s1">.context) </span><span class="s0">return false</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">_this$valueRange2 = </span><span class="s0">this</span><span class="s1">.valueRange</span><span class="s3">,</span>
+          <span class="s1">start = _this$valueRange2.start</span><span class="s3">,</span>
+          <span class="s1">end = _this$valueRange2.end</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s3">;</span>
+
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = start</span><span class="s3">; </span><span class="s1">i &lt; end</span><span class="s3">; </span><span class="s1">++i) {</span>
+        <span class="s0">if </span><span class="s1">(src[i] === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) </span><span class="s0">return true</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return false</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;parseComment&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parseComment(start) {</span>
+      <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s3">;</span>
+
+      <span class="s0">if </span><span class="s1">(src[start] === Char.COMMENT) {</span>
+        <span class="s0">var </span><span class="s1">end = Node.endOfLine(src</span><span class="s3">, </span><span class="s1">start + </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">commentRange = </span><span class="s0">new </span><span class="s1">Range(start</span><span class="s3">, </span><span class="s1">end)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.props.push(commentRange)</span><span class="s3">;</span>
+        <span class="s0">return </span><span class="s1">end</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">start</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s5">/**</span>
+     <span class="s5">* Populates the `origStart` and `origEnd` values of all ranges for this</span>
+     <span class="s5">* node. Extended by child classes to handle descendant nodes.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{number[]} cr - Positions of dropped CR characters</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{number} offset - Starting index of `cr` from the last call</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{number} - The next offset, matching the one found for `origStart`</span>
+     <span class="s5">*/</span>
+
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;setOrigRanges&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">setOrigRanges(cr</span><span class="s3">, </span><span class="s1">offset) {</span>
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.range) offset = </span><span class="s0">this</span><span class="s1">.range.setOrigRange(cr</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.valueRange) </span><span class="s0">this</span><span class="s1">.valueRange.setOrigRange(cr</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+      <span class="s0">this</span><span class="s1">.props.forEach(</span><span class="s0">function </span><span class="s1">(prop) {</span>
+        <span class="s0">return </span><span class="s1">prop.setOrigRange(cr</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+      <span class="s1">})</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;toString&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">toString() {</span>
+      <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s3">,</span>
+          <span class="s1">range = </span><span class="s0">this</span><span class="s1">.range</span><span class="s3">,</span>
+          <span class="s1">value = </span><span class="s0">this</span><span class="s1">.value</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(value != </span><span class="s0">null</span><span class="s1">) </span><span class="s0">return </span><span class="s1">value</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">str = src.slice(range.start</span><span class="s3">, </span><span class="s1">range.end)</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">Node.addStringTerminator(src</span><span class="s3">, </span><span class="s1">range.end</span><span class="s3">, </span><span class="s1">str)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}]</span><span class="s3">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s2">&quot;addStringTerminator&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">addStringTerminator(src</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">str) {</span>
+      <span class="s0">if </span><span class="s1">(str[str.length - </span><span class="s4">1</span><span class="s1">] === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) </span><span class="s0">return </span><span class="s1">str</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">next = Node.endOfWhiteSpace(src</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">next &gt;= src.length || src[next] === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">? str + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">: str</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s7">// ^(---|...)</span>
+
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;atDocumentBoundary&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">atDocumentBoundary(src</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">sep) {</span>
+      <span class="s0">var </span><span class="s1">ch0 = src[offset]</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(!ch0) </span><span class="s0">return true</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">prev = src[offset - </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(prev &amp;&amp; prev !== </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) </span><span class="s0">return false</span><span class="s3">;</span>
+
+      <span class="s0">if </span><span class="s1">(sep) {</span>
+        <span class="s0">if </span><span class="s1">(ch0 !== sep) </span><span class="s0">return false</span><span class="s3">;</span>
+      <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+        <span class="s0">if </span><span class="s1">(ch0 !== Char.DIRECTIVES_END &amp;&amp; ch0 !== Char.DOCUMENT_END) </span><span class="s0">return false</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">var </span><span class="s1">ch1 = src[offset + </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">ch2 = src[offset + </span><span class="s4">2</span><span class="s1">]</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(ch1 !== ch0 || ch2 !== ch0) </span><span class="s0">return false</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">ch3 = src[offset + </span><span class="s4">3</span><span class="s1">]</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">!ch3 || ch3 === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">|| ch3 === </span><span class="s2">'</span><span class="s3">\t</span><span class="s2">' </span><span class="s1">|| ch3 === </span><span class="s2">' '</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;endOfIdentifier&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">endOfIdentifier(src</span><span class="s3">, </span><span class="s1">offset) {</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">isVerbatim = ch === </span><span class="s2">'&lt;'</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">notOk = isVerbatim ? [</span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">, </span><span class="s2">'</span><span class="s3">\t</span><span class="s2">'</span><span class="s3">, </span><span class="s2">' '</span><span class="s3">, </span><span class="s2">'&gt;'</span><span class="s1">] : [</span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">, </span><span class="s2">'</span><span class="s3">\t</span><span class="s2">'</span><span class="s3">, </span><span class="s2">' '</span><span class="s3">, </span><span class="s2">'['</span><span class="s3">, </span><span class="s2">']'</span><span class="s3">, </span><span class="s2">'{'</span><span class="s3">, </span><span class="s2">'}'</span><span class="s3">, </span><span class="s2">','</span><span class="s1">]</span><span class="s3">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch &amp;&amp; notOk.indexOf(ch) === -</span><span class="s4">1</span><span class="s1">) {</span>
+        <span class="s1">ch = src[offset += </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">if </span><span class="s1">(isVerbatim &amp;&amp; ch === </span><span class="s2">'&gt;'</span><span class="s1">) offset += </span><span class="s4">1</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">offset</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;endOfIndent&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">endOfIndent(src</span><span class="s3">, </span><span class="s1">offset) {</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s3">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch === </span><span class="s2">' '</span><span class="s1">) {</span>
+        <span class="s1">ch = src[offset += </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">offset</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;endOfLine&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">endOfLine(src</span><span class="s3">, </span><span class="s1">offset) {</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s3">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch &amp;&amp; ch !== </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) {</span>
+        <span class="s1">ch = src[offset += </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">offset</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;endOfWhiteSpace&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">endOfWhiteSpace(src</span><span class="s3">, </span><span class="s1">offset) {</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s3">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch === </span><span class="s2">'</span><span class="s3">\t</span><span class="s2">' </span><span class="s1">|| ch === </span><span class="s2">' '</span><span class="s1">) {</span>
+        <span class="s1">ch = src[offset += </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">offset</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;startOfLine&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">startOfLine(src</span><span class="s3">, </span><span class="s1">offset) {</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset - </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(ch === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) </span><span class="s0">return </span><span class="s1">offset</span><span class="s3">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch &amp;&amp; ch !== </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) {</span>
+        <span class="s1">ch = src[offset -= </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">offset + </span><span class="s4">1</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s5">/**</span>
+     <span class="s5">* End of indentation, or null if the line's indent level is not more</span>
+     <span class="s5">* than `indent`</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{string} src</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{number} indent</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{number} lineStart</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{?number}</span>
+     <span class="s5">*/</span>
+
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;endOfBlockIndent&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">endOfBlockIndent(src</span><span class="s3">, </span><span class="s1">indent</span><span class="s3">, </span><span class="s1">lineStart) {</span>
+      <span class="s0">var </span><span class="s1">inEnd = Node.endOfIndent(src</span><span class="s3">, </span><span class="s1">lineStart)</span><span class="s3">;</span>
+
+      <span class="s0">if </span><span class="s1">(inEnd &gt; lineStart + indent) {</span>
+        <span class="s0">return </span><span class="s1">inEnd</span><span class="s3">;</span>
+      <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+        <span class="s0">var </span><span class="s1">wsEnd = Node.endOfWhiteSpace(src</span><span class="s3">, </span><span class="s1">inEnd)</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">ch = src[wsEnd]</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(!ch || ch === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) </span><span class="s0">return </span><span class="s1">wsEnd</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return null</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;atBlank&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">atBlank(src</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">endAsBlank) {</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">ch === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">|| ch === </span><span class="s2">'</span><span class="s3">\t</span><span class="s2">' </span><span class="s1">|| ch === </span><span class="s2">' ' </span><span class="s1">|| endAsBlank &amp;&amp; !ch</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;nextNodeIsIndented&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">nextNodeIsIndented(ch</span><span class="s3">, </span><span class="s1">indentDiff</span><span class="s3">, </span><span class="s1">indicatorAsIndent) {</span>
+      <span class="s0">if </span><span class="s1">(!ch || indentDiff &lt; </span><span class="s4">0</span><span class="s1">) </span><span class="s0">return false</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(indentDiff &gt; </span><span class="s4">0</span><span class="s1">) </span><span class="s0">return true</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">indicatorAsIndent &amp;&amp; ch === </span><span class="s2">'-'</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s7">// should be at line or string end, or at next non-whitespace char</span>
+
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;normalizeOffset&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">normalizeOffset(src</span><span class="s3">, </span><span class="s1">offset) {</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">!ch ? offset : ch !== </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">&amp;&amp; src[offset - </span><span class="s4">1</span><span class="s1">] === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">? offset - </span><span class="s4">1 </span><span class="s1">: Node.endOfWhiteSpace(src</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s7">// fold single newline into space, multiple newlines to N - 1 newlines</span>
+    <span class="s7">// presumes src[offset] === '\n'</span>
+
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;foldNewline&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">foldNewline(src</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">indent) {</span>
+      <span class="s0">var </span><span class="s1">inCount = </span><span class="s4">0</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">error = </span><span class="s0">false</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">fold = </span><span class="s2">''</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset + </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch === </span><span class="s2">' ' </span><span class="s1">|| ch === </span><span class="s2">'</span><span class="s3">\t</span><span class="s2">' </span><span class="s1">|| ch === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) {</span>
+        <span class="s0">switch </span><span class="s1">(ch) {</span>
+          <span class="s0">case </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">:</span>
+            <span class="s1">inCount = </span><span class="s4">0</span><span class="s3">;</span>
+            <span class="s1">offset += </span><span class="s4">1</span><span class="s3">;</span>
+            <span class="s1">fold += </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+            <span class="s0">break</span><span class="s3">;</span>
+
+          <span class="s0">case </span><span class="s2">'</span><span class="s3">\t</span><span class="s2">'</span><span class="s1">:</span>
+            <span class="s0">if </span><span class="s1">(inCount &lt;= indent) error = </span><span class="s0">true</span><span class="s3">;</span>
+            <span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s3">, </span><span class="s1">offset + </span><span class="s4">2</span><span class="s1">) - </span><span class="s4">1</span><span class="s3">;</span>
+            <span class="s0">break</span><span class="s3">;</span>
+
+          <span class="s0">case </span><span class="s2">' '</span><span class="s1">:</span>
+            <span class="s1">inCount += </span><span class="s4">1</span><span class="s3">;</span>
+            <span class="s1">offset += </span><span class="s4">1</span><span class="s3">;</span>
+            <span class="s0">break</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">ch = src[offset + </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">if </span><span class="s1">(!fold) fold = </span><span class="s2">' '</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(ch &amp;&amp; inCount &lt;= indent) error = </span><span class="s0">true</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">{</span>
+        <span class="s1">fold: fold</span><span class="s3">,</span>
+        <span class="s1">offset: offset</span><span class="s3">,</span>
+        <span class="s1">error: error</span>
+      <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s3">;</span>
+
+  <span class="s0">return </span><span class="s1">Node</span><span class="s3">;</span>
+<span class="s1">}()</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">YAMLError = </span><span class="s8">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_Error) {</span>
+  <span class="s1">_inherits(YAMLError</span><span class="s3">, </span><span class="s1">_Error)</span><span class="s3">;</span>
+
+  <span class="s0">var </span><span class="s1">_super = _createSuper(YAMLError)</span><span class="s3">;</span>
+
+  <span class="s0">function </span><span class="s1">YAMLError(name</span><span class="s3">, </span><span class="s1">source</span><span class="s3">, </span><span class="s1">message) {</span>
+    <span class="s0">var </span><span class="s1">_this</span><span class="s3">;</span>
+
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">YAMLError)</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(!message || !(source </span><span class="s0">instanceof </span><span class="s1">Node)) </span><span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">&quot;Invalid arguments for new &quot;</span><span class="s1">.concat(name))</span><span class="s3">;</span>
+    <span class="s1">_this = _super.call(</span><span class="s0">this</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">_this.name = name</span><span class="s3">;</span>
+    <span class="s1">_this.message = message</span><span class="s3">;</span>
+    <span class="s1">_this.source = source</span><span class="s3">;</span>
+    <span class="s0">return </span><span class="s1">_this</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(YAMLError</span><span class="s3">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s2">&quot;makePretty&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">makePretty() {</span>
+      <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.source) </span><span class="s0">return</span><span class="s3">;</span>
+      <span class="s0">this</span><span class="s1">.nodeType = </span><span class="s0">this</span><span class="s1">.source.type</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">cst = </span><span class="s0">this</span><span class="s1">.source.context &amp;&amp; </span><span class="s0">this</span><span class="s1">.source.context.root</span><span class="s3">;</span>
+
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof this</span><span class="s1">.offset === </span><span class="s2">'number'</span><span class="s1">) {</span>
+        <span class="s0">this</span><span class="s1">.range = </span><span class="s0">new </span><span class="s1">Range(</span><span class="s0">this</span><span class="s1">.offset</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.offset + </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">start = cst &amp;&amp; getLinePos(</span><span class="s0">this</span><span class="s1">.offset</span><span class="s3">, </span><span class="s1">cst)</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(start) {</span>
+          <span class="s0">var </span><span class="s1">end = {</span>
+            <span class="s1">line: start.line</span><span class="s3">,</span>
+            <span class="s1">col: start.col + </span><span class="s4">1</span>
+          <span class="s1">}</span><span class="s3">;</span>
+          <span class="s0">this</span><span class="s1">.linePos = {</span>
+            <span class="s1">start: start</span><span class="s3">,</span>
+            <span class="s1">end: end</span>
+          <span class="s1">}</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">delete this</span><span class="s1">.offset</span><span class="s3">;</span>
+      <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+        <span class="s0">this</span><span class="s1">.range = </span><span class="s0">this</span><span class="s1">.source.range</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.linePos = </span><span class="s0">this</span><span class="s1">.source.rangeAsLinePos</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.linePos) {</span>
+        <span class="s0">var </span><span class="s1">_this$linePos$start = </span><span class="s0">this</span><span class="s1">.linePos.start</span><span class="s3">,</span>
+            <span class="s1">line = _this$linePos$start.line</span><span class="s3">,</span>
+            <span class="s1">col = _this$linePos$start.col</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.message += </span><span class="s2">&quot; at line &quot;</span><span class="s1">.concat(line</span><span class="s3">, </span><span class="s2">&quot;, column &quot;</span><span class="s1">).concat(col)</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">ctx = cst &amp;&amp; getPrettyContext(</span><span class="s0">this</span><span class="s1">.linePos</span><span class="s3">, </span><span class="s1">cst)</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(ctx) </span><span class="s0">this</span><span class="s1">.message += </span><span class="s2">&quot;:</span><span class="s3">\n\n</span><span class="s2">&quot;</span><span class="s1">.concat(ctx</span><span class="s3">, </span><span class="s2">&quot;</span><span class="s3">\n</span><span class="s2">&quot;</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">delete this</span><span class="s1">.source</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s3">;</span>
+
+  <span class="s0">return </span><span class="s1">YAMLError</span><span class="s3">;</span>
+<span class="s1">}( </span><span class="s8">/*#__PURE__*/</span><span class="s1">_wrapNativeSuper(Error))</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">YAMLReferenceError = </span><span class="s8">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_YAMLError) {</span>
+  <span class="s1">_inherits(YAMLReferenceError</span><span class="s3">, </span><span class="s1">_YAMLError)</span><span class="s3">;</span>
+
+  <span class="s0">var </span><span class="s1">_super2 = _createSuper(YAMLReferenceError)</span><span class="s3">;</span>
+
+  <span class="s0">function </span><span class="s1">YAMLReferenceError(source</span><span class="s3">, </span><span class="s1">message) {</span>
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">YAMLReferenceError)</span><span class="s3">;</span>
+
+    <span class="s0">return </span><span class="s1">_super2.call(</span><span class="s0">this</span><span class="s3">, </span><span class="s2">'YAMLReferenceError'</span><span class="s3">, </span><span class="s1">source</span><span class="s3">, </span><span class="s1">message)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">YAMLReferenceError</span><span class="s3">;</span>
+<span class="s1">}(YAMLError)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">YAMLSemanticError = </span><span class="s8">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_YAMLError2) {</span>
+  <span class="s1">_inherits(YAMLSemanticError</span><span class="s3">, </span><span class="s1">_YAMLError2)</span><span class="s3">;</span>
+
+  <span class="s0">var </span><span class="s1">_super3 = _createSuper(YAMLSemanticError)</span><span class="s3">;</span>
+
+  <span class="s0">function </span><span class="s1">YAMLSemanticError(source</span><span class="s3">, </span><span class="s1">message) {</span>
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">YAMLSemanticError)</span><span class="s3">;</span>
+
+    <span class="s0">return </span><span class="s1">_super3.call(</span><span class="s0">this</span><span class="s3">, </span><span class="s2">'YAMLSemanticError'</span><span class="s3">, </span><span class="s1">source</span><span class="s3">, </span><span class="s1">message)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">YAMLSemanticError</span><span class="s3">;</span>
+<span class="s1">}(YAMLError)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">YAMLSyntaxError = </span><span class="s8">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_YAMLError3) {</span>
+  <span class="s1">_inherits(YAMLSyntaxError</span><span class="s3">, </span><span class="s1">_YAMLError3)</span><span class="s3">;</span>
+
+  <span class="s0">var </span><span class="s1">_super4 = _createSuper(YAMLSyntaxError)</span><span class="s3">;</span>
+
+  <span class="s0">function </span><span class="s1">YAMLSyntaxError(source</span><span class="s3">, </span><span class="s1">message) {</span>
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">YAMLSyntaxError)</span><span class="s3">;</span>
+
+    <span class="s0">return </span><span class="s1">_super4.call(</span><span class="s0">this</span><span class="s3">, </span><span class="s2">'YAMLSyntaxError'</span><span class="s3">, </span><span class="s1">source</span><span class="s3">, </span><span class="s1">message)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">YAMLSyntaxError</span><span class="s3">;</span>
+<span class="s1">}(YAMLError)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">YAMLWarning = </span><span class="s8">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_YAMLError4) {</span>
+  <span class="s1">_inherits(YAMLWarning</span><span class="s3">, </span><span class="s1">_YAMLError4)</span><span class="s3">;</span>
+
+  <span class="s0">var </span><span class="s1">_super5 = _createSuper(YAMLWarning)</span><span class="s3">;</span>
+
+  <span class="s0">function </span><span class="s1">YAMLWarning(source</span><span class="s3">, </span><span class="s1">message) {</span>
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">YAMLWarning)</span><span class="s3">;</span>
+
+    <span class="s0">return </span><span class="s1">_super5.call(</span><span class="s0">this</span><span class="s3">, </span><span class="s2">'YAMLWarning'</span><span class="s3">, </span><span class="s1">source</span><span class="s3">, </span><span class="s1">message)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">YAMLWarning</span><span class="s3">;</span>
+<span class="s1">}(YAMLError)</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">PlainValue = </span><span class="s8">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">(_Node) {</span>
+  <span class="s1">_inherits(PlainValue</span><span class="s3">, </span><span class="s1">_Node)</span><span class="s3">;</span>
+
+  <span class="s0">var </span><span class="s1">_super = _createSuper(PlainValue)</span><span class="s3">;</span>
+
+  <span class="s0">function </span><span class="s1">PlainValue() {</span>
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">PlainValue)</span><span class="s3">;</span>
+
+    <span class="s0">return </span><span class="s1">_super.apply(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">arguments)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(PlainValue</span><span class="s3">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s2">&quot;strValue&quot;</span><span class="s3">,</span>
+    <span class="s1">get: </span><span class="s0">function </span><span class="s1">get() {</span>
+      <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.valueRange || !</span><span class="s0">this</span><span class="s1">.context) </span><span class="s0">return null</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">_this$valueRange = </span><span class="s0">this</span><span class="s1">.valueRange</span><span class="s3">,</span>
+          <span class="s1">start = _this$valueRange.start</span><span class="s3">,</span>
+          <span class="s1">end = _this$valueRange.end</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">src = </span><span class="s0">this</span><span class="s1">.context.src</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">ch = src[end - </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+
+      <span class="s0">while </span><span class="s1">(start &lt; end &amp;&amp; (ch === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">|| ch === </span><span class="s2">'</span><span class="s3">\t</span><span class="s2">' </span><span class="s1">|| ch === </span><span class="s2">' '</span><span class="s1">)) {</span>
+        <span class="s1">ch = src[--end - </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">var </span><span class="s1">str = </span><span class="s2">''</span><span class="s3">;</span>
+
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = start</span><span class="s3">; </span><span class="s1">i &lt; end</span><span class="s3">; </span><span class="s1">++i) {</span>
+        <span class="s0">var </span><span class="s1">_ch = src[i]</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(_ch === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) {</span>
+          <span class="s0">var </span><span class="s1">_Node$foldNewline = Node.foldNewline(src</span><span class="s3">, </span><span class="s1">i</span><span class="s3">, </span><span class="s1">-</span><span class="s4">1</span><span class="s1">)</span><span class="s3">,</span>
+              <span class="s1">fold = _Node$foldNewline.fold</span><span class="s3">,</span>
+              <span class="s1">offset = _Node$foldNewline.offset</span><span class="s3">;</span>
+
+          <span class="s1">str += fold</span><span class="s3">;</span>
+          <span class="s1">i = offset</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else if </span><span class="s1">(_ch === </span><span class="s2">' ' </span><span class="s1">|| _ch === </span><span class="s2">'</span><span class="s3">\t</span><span class="s2">'</span><span class="s1">) {</span>
+          <span class="s7">// trim trailing whitespace</span>
+          <span class="s0">var </span><span class="s1">wsStart = i</span><span class="s3">;</span>
+          <span class="s0">var </span><span class="s1">next = src[i + </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+
+          <span class="s0">while </span><span class="s1">(i &lt; end &amp;&amp; (next === </span><span class="s2">' ' </span><span class="s1">|| next === </span><span class="s2">'</span><span class="s3">\t</span><span class="s2">'</span><span class="s1">)) {</span>
+            <span class="s1">i += </span><span class="s4">1</span><span class="s3">;</span>
+            <span class="s1">next = src[i + </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+          <span class="s1">}</span>
+
+          <span class="s0">if </span><span class="s1">(next !== </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) str += i &gt; wsStart ? src.slice(wsStart</span><span class="s3">, </span><span class="s1">i + </span><span class="s4">1</span><span class="s1">) : _ch</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+          <span class="s1">str += _ch</span><span class="s3">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">var </span><span class="s1">ch0 = src[start]</span><span class="s3">;</span>
+
+      <span class="s0">switch </span><span class="s1">(ch0) {</span>
+        <span class="s0">case </span><span class="s2">'</span><span class="s3">\t</span><span class="s2">'</span><span class="s1">:</span>
+          <span class="s1">{</span>
+            <span class="s0">var </span><span class="s1">msg = </span><span class="s2">'Plain value cannot start with a tab character'</span><span class="s3">;</span>
+            <span class="s0">var </span><span class="s1">errors = [</span><span class="s0">new </span><span class="s1">YAMLSemanticError(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">msg)]</span><span class="s3">;</span>
+            <span class="s0">return </span><span class="s1">{</span>
+              <span class="s1">errors: errors</span><span class="s3">,</span>
+              <span class="s1">str: str</span>
+            <span class="s1">}</span><span class="s3">;</span>
+          <span class="s1">}</span>
+
+        <span class="s0">case </span><span class="s2">'@'</span><span class="s1">:</span>
+        <span class="s0">case </span><span class="s2">'`'</span><span class="s1">:</span>
+          <span class="s1">{</span>
+            <span class="s0">var </span><span class="s1">_msg = </span><span class="s2">&quot;Plain value cannot start with reserved character &quot;</span><span class="s1">.concat(ch0)</span><span class="s3">;</span>
+
+            <span class="s0">var </span><span class="s1">_errors = [</span><span class="s0">new </span><span class="s1">YAMLSemanticError(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">_msg)]</span><span class="s3">;</span>
+            <span class="s0">return </span><span class="s1">{</span>
+              <span class="s1">errors: _errors</span><span class="s3">,</span>
+              <span class="s1">str: str</span>
+            <span class="s1">}</span><span class="s3">;</span>
+          <span class="s1">}</span>
+
+        <span class="s0">default</span><span class="s1">:</span>
+          <span class="s0">return </span><span class="s1">str</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;parseBlockValue&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parseBlockValue(start) {</span>
+      <span class="s0">var </span><span class="s1">_this$context = </span><span class="s0">this</span><span class="s1">.context</span><span class="s3">,</span>
+          <span class="s1">indent = _this$context.indent</span><span class="s3">,</span>
+          <span class="s1">inFlow = _this$context.inFlow</span><span class="s3">,</span>
+          <span class="s1">src = _this$context.src</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">offset = start</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">valueEnd = start</span><span class="s3">;</span>
+
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s3">; </span><span class="s1">ch === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">; </span><span class="s1">ch = src[offset]) {</span>
+        <span class="s0">if </span><span class="s1">(Node.atDocumentBoundary(src</span><span class="s3">, </span><span class="s1">offset + </span><span class="s4">1</span><span class="s1">)) </span><span class="s0">break</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">end = Node.endOfBlockIndent(src</span><span class="s3">, </span><span class="s1">indent</span><span class="s3">, </span><span class="s1">offset + </span><span class="s4">1</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(end === </span><span class="s0">null </span><span class="s1">|| src[end] === </span><span class="s2">'#'</span><span class="s1">) </span><span class="s0">break</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(src[end] === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) {</span>
+          <span class="s1">offset = end</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+          <span class="s1">valueEnd = PlainValue.endOfLine(src</span><span class="s3">, </span><span class="s1">end</span><span class="s3">, </span><span class="s1">inFlow)</span><span class="s3">;</span>
+          <span class="s1">offset = valueEnd</span><span class="s3">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.valueRange.isEmpty()) </span><span class="s0">this</span><span class="s1">.valueRange.start = start</span><span class="s3">;</span>
+      <span class="s0">this</span><span class="s1">.valueRange.end = valueEnd</span><span class="s3">;</span>
+      <span class="s0">return </span><span class="s1">valueEnd</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s5">/**</span>
+     <span class="s5">* Parses a plain value from the source</span>
+     <span class="s5">*</span>
+     <span class="s5">* Accepted forms are:</span>
+     <span class="s5">* ```</span>
+     <span class="s5">* #comment</span>
+     <span class="s5">*</span>
+     <span class="s5">* first line</span>
+     <span class="s5">*</span>
+     <span class="s5">* first line #comment</span>
+     <span class="s5">*</span>
+     <span class="s5">* first line</span>
+     <span class="s5">* block</span>
+     <span class="s5">* lines</span>
+     <span class="s5">*</span>
+     <span class="s5">* #comment</span>
+     <span class="s5">* block</span>
+     <span class="s5">* lines</span>
+     <span class="s5">* ```</span>
+     <span class="s5">* where block lines are empty or have an indent level greater than `indent`.</span>
+     <span class="s5">*</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{ParseContext} context</span>
+     <span class="s5">* </span><span class="s6">@param </span><span class="s5">{number} start - Index of first character</span>
+     <span class="s5">* </span><span class="s6">@returns </span><span class="s5">{number} - Index of the character after this scalar, may be `\n`</span>
+     <span class="s5">*/</span>
+
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s2">&quot;parse&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">parse(context</span><span class="s3">, </span><span class="s1">start) {</span>
+      <span class="s0">this</span><span class="s1">.context = context</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">inFlow = context.inFlow</span><span class="s3">,</span>
+          <span class="s1">src = context.src</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">offset = start</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">ch = src[offset]</span><span class="s3">;</span>
+
+      <span class="s0">if </span><span class="s1">(ch &amp;&amp; ch !== </span><span class="s2">'#' </span><span class="s1">&amp;&amp; ch !== </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) {</span>
+        <span class="s1">offset = PlainValue.endOfLine(src</span><span class="s3">, </span><span class="s1">start</span><span class="s3">, </span><span class="s1">inFlow)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">this</span><span class="s1">.valueRange = </span><span class="s0">new </span><span class="s1">Range(start</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+      <span class="s1">offset = Node.endOfWhiteSpace(src</span><span class="s3">, </span><span class="s1">offset)</span><span class="s3">;</span>
+      <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseComment(offset)</span><span class="s3">;</span>
+
+      <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.hasComment || </span><span class="s0">this</span><span class="s1">.valueRange.isEmpty()) {</span>
+        <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.parseBlockValue(offset)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">offset</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}]</span><span class="s3">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s2">&quot;endOfLine&quot;</span><span class="s3">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">endOfLine(src</span><span class="s3">, </span><span class="s1">start</span><span class="s3">, </span><span class="s1">inFlow) {</span>
+      <span class="s0">var </span><span class="s1">ch = src[start]</span><span class="s3">;</span>
+      <span class="s0">var </span><span class="s1">offset = start</span><span class="s3">;</span>
+
+      <span class="s0">while </span><span class="s1">(ch &amp;&amp; ch !== </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">) {</span>
+        <span class="s0">if </span><span class="s1">(inFlow &amp;&amp; (ch === </span><span class="s2">'[' </span><span class="s1">|| ch === </span><span class="s2">']' </span><span class="s1">|| ch === </span><span class="s2">'{' </span><span class="s1">|| ch === </span><span class="s2">'}' </span><span class="s1">|| ch === </span><span class="s2">','</span><span class="s1">)) </span><span class="s0">break</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">next = src[offset + </span><span class="s4">1</span><span class="s1">]</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(ch === </span><span class="s2">':' </span><span class="s1">&amp;&amp; (!next || next === </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">|| next === </span><span class="s2">'</span><span class="s3">\t</span><span class="s2">' </span><span class="s1">|| next === </span><span class="s2">' ' </span><span class="s1">|| inFlow &amp;&amp; next === </span><span class="s2">','</span><span class="s1">)) </span><span class="s0">break</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">((ch === </span><span class="s2">' ' </span><span class="s1">|| ch === </span><span class="s2">'</span><span class="s3">\t</span><span class="s2">'</span><span class="s1">) &amp;&amp; next === </span><span class="s2">'#'</span><span class="s1">) </span><span class="s0">break</span><span class="s3">;</span>
+        <span class="s1">offset += </span><span class="s4">1</span><span class="s3">;</span>
+        <span class="s1">ch = next</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">return </span><span class="s1">offset</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s3">;</span>
+
+  <span class="s0">return </span><span class="s1">PlainValue</span><span class="s3">;</span>
+<span class="s1">}(Node)</span><span class="s3">;</span>
+
+<span class="s0">export </span><span class="s1">{ Char as C</span><span class="s3">, </span><span class="s1">Node as N</span><span class="s3">, </span><span class="s1">PlainValue as P</span><span class="s3">, </span><span class="s1">Range as R</span><span class="s3">, </span><span class="s1">Type as T</span><span class="s3">, </span><span class="s1">YAMLSyntaxError as Y</span><span class="s3">, </span><span class="s1">_createForOfIteratorHelper as _</span><span class="s3">, </span><span class="s1">_typeof as a</span><span class="s3">, </span><span class="s1">_createClass as b</span><span class="s3">, </span><span class="s1">_classCallCheck as c</span><span class="s3">, </span><span class="s1">defaultTagPrefix as d</span><span class="s3">, </span><span class="s1">_defineProperty as e</span><span class="s3">, </span><span class="s1">YAMLWarning as f</span><span class="s3">, </span><span class="s1">YAMLSemanticError as g</span><span class="s3">, </span><span class="s1">_slicedToArray as h</span><span class="s3">, </span><span class="s1">YAMLError as i</span><span class="s3">, </span><span class="s1">_inherits as j</span><span class="s3">, </span><span class="s1">_createSuper as k</span><span class="s3">, </span><span class="s1">_get as l</span><span class="s3">, </span><span class="s1">_getPrototypeOf as m</span><span class="s3">, </span><span class="s1">defaultTags as n</span><span class="s3">, </span><span class="s1">YAMLReferenceError as o</span><span class="s3">, </span><span class="s1">_assertThisInitialized as p</span><span class="s3">, </span><span class="s1">_toArray as q</span><span class="s3">, </span><span class="s1">_possibleConstructorReturn as r }</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

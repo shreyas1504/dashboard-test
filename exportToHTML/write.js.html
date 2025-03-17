@@ -1,0 +1,281 @@
+<html>
+<head>
+<title>write.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+write.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span>
+
+<span class="s2">const </span><span class="s1">assert = require(</span><span class="s0">'chai'</span><span class="s1">).assert</span>
+<span class="s2">const </span><span class="s1">proxyquire = require(</span><span class="s0">'proxyquire'</span><span class="s1">)</span>
+<span class="s2">const </span><span class="s1">spooks = require(</span><span class="s0">'spooks'</span><span class="s1">)</span>
+<span class="s2">const </span><span class="s1">Promise = require(</span><span class="s0">'bluebird'</span><span class="s1">)</span>
+
+<span class="s2">const </span><span class="s1">modulePath = </span><span class="s0">'../../src/write'</span>
+
+<span class="s1">suite(</span><span class="s0">'write:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+  <span class="s1">test(</span><span class="s0">'require does not throw'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">assert.doesNotThrow(() =&gt; {</span>
+      <span class="s1">require(modulePath)</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+
+  <span class="s1">test(</span><span class="s0">'require returns function'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">assert.isFunction(require(modulePath))</span>
+  <span class="s1">})</span>
+
+  <span class="s1">suite(</span><span class="s0">'require:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s2">let </span><span class="s1">log</span><span class="s3">, </span><span class="s1">results</span><span class="s3">, </span><span class="s1">write</span>
+
+    <span class="s1">setup(() =&gt; {</span>
+      <span class="s1">log = {}</span>
+      <span class="s1">results = {</span>
+        <span class="s1">createWriteStream: [ {} ]</span>
+      <span class="s1">}</span>
+
+      <span class="s1">write = proxyquire(modulePath</span><span class="s3">, </span><span class="s1">{</span>
+        <span class="s0">'fs'</span><span class="s1">: {</span>
+          <span class="s1">createWriteStream: spooks.fn({</span>
+            <span class="s1">name: </span><span class="s0">'createWriteStream'</span><span class="s3">,</span>
+            <span class="s1">log: log</span><span class="s3">,</span>
+            <span class="s1">results: results.createWriteStream</span>
+          <span class="s1">})</span>
+        <span class="s1">}</span><span class="s3">,</span>
+        <span class="s0">'./streamify'</span><span class="s1">: spooks.fn({</span>
+          <span class="s1">name: </span><span class="s0">'streamify'</span><span class="s3">,</span>
+          <span class="s1">log: log</span><span class="s3">,</span>
+          <span class="s1">results: [</span>
+            <span class="s1">{</span>
+              <span class="s1">pipe: spooks.fn({ name: </span><span class="s0">'pipe'</span><span class="s3">, </span><span class="s1">log: log</span><span class="s3">, </span><span class="s1">chain: </span><span class="s2">true </span><span class="s1">})</span><span class="s3">,</span>
+              <span class="s1">on: spooks.fn({ name: </span><span class="s0">'on'</span><span class="s3">, </span><span class="s1">log: log</span><span class="s3">, </span><span class="s1">chain: </span><span class="s2">true </span><span class="s1">})</span>
+            <span class="s1">}</span>
+          <span class="s1">]</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'write expects three arguments'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.lengthOf(write</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'write does not throw'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.doesNotThrow(() =&gt; {</span>
+        <span class="s1">write()</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'streamify was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.strictEqual(log.counts.streamify</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'fs.createWriteStream was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.strictEqual(log.counts.createWriteStream</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'stream.pipe was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.strictEqual(log.counts.pipe</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'stream.on was not called'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.strictEqual(log.counts.on</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'write:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s2">let </span><span class="s1">path</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options</span><span class="s3">, </span><span class="s1">result</span>
+
+      <span class="s1">setup(() =&gt; {</span>
+        <span class="s1">path = {}</span>
+        <span class="s1">data = {}</span>
+        <span class="s1">options = {}</span>
+        <span class="s1">result = write(path</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'streamify was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.streamify</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.isUndefined(log.these.streamify[</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'streamify was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.streamify[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.streamify[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">data)</span>
+        <span class="s1">assert.lengthOf(Object.keys(log.args.streamify[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.streamify[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">options)</span>
+        <span class="s1">assert.lengthOf(Object.keys(log.args.streamify[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'fs.createWriteStream was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.createWriteStream</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'fs.createWriteStream was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.createWriteStream[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.createWriteStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">path)</span>
+        <span class="s1">assert.lengthOf(Object.keys(log.args.createWriteStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.createWriteStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">options)</span>
+        <span class="s1">assert.lengthOf(Object.keys(log.args.createWriteStream[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'stream.pipe was called once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.pipe</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'stream.pipe was called correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.pipe[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.pipe[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">results.createWriteStream[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s1">assert.lengthOf(Object.keys(log.args.pipe[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'stream.on was called three times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.on</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'stream.on was called correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.on[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'finish'</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.on[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'stream.on was called correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.on[</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'error'</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.on[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+        <span class="s1">assert.notStrictEqual(log.args.on[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">log.args.on[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'stream.on was called correctly third time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.on[</span><span class="s4">2</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'dataError'</span><span class="s1">)</span>
+        <span class="s1">assert.isFunction(log.args.on[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+        <span class="s1">assert.notStrictEqual(log.args.on[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">log.args.on[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+        <span class="s1">assert.strictEqual(log.args.on[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">log.args.on[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">1</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'promise was returned'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.instanceOf(result</span><span class="s3">, </span><span class="s1">Promise)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">suite(</span><span class="s0">'dispatch finish event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s2">let </span><span class="s1">resolved</span><span class="s3">, </span><span class="s1">error</span><span class="s3">, </span><span class="s1">passed</span><span class="s3">, </span><span class="s1">failed</span>
+
+        <span class="s1">setup(done =&gt; {</span>
+          <span class="s1">passed = failed = </span><span class="s2">false</span>
+
+          <span class="s1">result.then(res =&gt; {</span>
+            <span class="s1">resolved = res</span>
+            <span class="s1">passed = </span><span class="s2">true</span>
+            <span class="s1">done()</span>
+          <span class="s1">}).catch(err =&gt; {</span>
+            <span class="s1">error = err</span>
+            <span class="s1">failed = </span><span class="s2">true</span>
+            <span class="s1">done()</span>
+          <span class="s1">})</span>
+          <span class="s1">log.args.on[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'foo'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'promise was resolved'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.isTrue(passed)</span>
+          <span class="s1">assert.isFalse(failed)</span>
+          <span class="s1">assert.isUndefined(resolved)</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">suite(</span><span class="s0">'dispatch error event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s2">let </span><span class="s1">resolved</span><span class="s3">, </span><span class="s1">error</span><span class="s3">, </span><span class="s1">passed</span><span class="s3">, </span><span class="s1">failed</span>
+
+        <span class="s1">setup(done =&gt; {</span>
+          <span class="s1">passed = failed = </span><span class="s2">false</span>
+
+          <span class="s1">result.then(r =&gt; {</span>
+            <span class="s1">resolved = r</span>
+            <span class="s1">passed = </span><span class="s2">true</span>
+            <span class="s1">done()</span>
+          <span class="s1">}).catch(e =&gt; {</span>
+            <span class="s1">error = e</span>
+            <span class="s1">failed = </span><span class="s2">true</span>
+            <span class="s1">done()</span>
+          <span class="s1">})</span>
+          <span class="s1">log.args.on[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'foo'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'promise was rejected'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.isTrue(failed)</span>
+          <span class="s1">assert.isFalse(passed)</span>
+          <span class="s1">assert.strictEqual(error</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">suite(</span><span class="s0">'dispatch dataError event:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s2">let </span><span class="s1">resolved</span><span class="s3">, </span><span class="s1">error</span><span class="s3">, </span><span class="s1">passed</span><span class="s3">, </span><span class="s1">failed</span>
+
+        <span class="s1">setup(done =&gt; {</span>
+          <span class="s1">passed = failed = </span><span class="s2">false</span>
+
+          <span class="s1">result.then(r =&gt; {</span>
+            <span class="s1">resolved = r</span>
+            <span class="s1">passed = </span><span class="s2">true</span>
+            <span class="s1">done()</span>
+          <span class="s1">}).catch(e =&gt; {</span>
+            <span class="s1">error = e</span>
+            <span class="s1">failed = </span><span class="s2">true</span>
+            <span class="s1">done()</span>
+          <span class="s1">})</span>
+          <span class="s1">log.args.on[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">1</span><span class="s1">](</span><span class="s0">'wibble'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">test(</span><span class="s0">'promise was rejected'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s1">assert.isTrue(failed)</span>
+          <span class="s1">assert.isFalse(passed)</span>
+          <span class="s1">assert.strictEqual(error</span><span class="s3">, </span><span class="s0">'wibble'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+<span class="s1">})</span>
+
+<span class="s1">suite(</span><span class="s0">'write with error thrown by fs.createWriteStream:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+  <span class="s2">let </span><span class="s1">write</span>
+
+  <span class="s1">setup(() =&gt; {</span>
+    <span class="s1">write = proxyquire(modulePath</span><span class="s3">, </span><span class="s1">{</span>
+      <span class="s1">fs: {</span>
+        <span class="s1">createWriteStream () {</span>
+          <span class="s2">throw new </span><span class="s1">Error(</span><span class="s0">'foo'</span><span class="s1">)</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span><span class="s3">,</span>
+      <span class="s0">'./streamify'</span><span class="s1">: () =&gt; ({</span>
+        <span class="s1">pipe: spooks.fn({ name: </span><span class="s0">'pipe'</span><span class="s3">, </span><span class="s1">log: {}</span><span class="s3">, </span><span class="s1">chain: </span><span class="s2">true </span><span class="s1">})</span><span class="s3">,</span>
+        <span class="s1">on: spooks.fn({ name: </span><span class="s0">'on'</span><span class="s3">, </span><span class="s1">log: {}</span><span class="s3">, </span><span class="s1">chain: </span><span class="s2">true </span><span class="s1">})</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+
+  <span class="s1">test(</span><span class="s0">'write does not throw'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">assert.doesNotThrow(() =&gt; {</span>
+      <span class="s1">write().catch(() =&gt; {})</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+
+  <span class="s1">test(</span><span class="s0">'write rejects'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">write()</span>
+      <span class="s1">.then(() =&gt; assert.fail(</span><span class="s0">'write should reject'</span><span class="s1">))</span>
+      <span class="s1">.catch(error =&gt; {</span>
+        <span class="s1">assert.instanceOf(error</span><span class="s3">, </span><span class="s1">Error)</span>
+        <span class="s1">assert.equal(error.message</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+  <span class="s1">})</span>
+<span class="s1">})</span>
+</pre>
+</body>
+</html>

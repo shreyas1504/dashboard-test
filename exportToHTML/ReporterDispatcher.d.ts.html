@@ -1,0 +1,43 @@
+<html>
+<head>
+<title>ReporterDispatcher.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a; font-style: italic;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ReporterDispatcher.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">/**</span>
+ <span class="s0">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s0">*</span>
+ <span class="s0">* This source code is licensed under the MIT license found in the</span>
+ <span class="s0">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s0">*/</span>
+<span class="s2">import </span><span class="s1">type { Reporter</span><span class="s3">, </span><span class="s1">ReporterOnStartOptions } from </span><span class="s4">'@jest/reporters'</span><span class="s3">;</span>
+<span class="s2">import </span><span class="s1">type { AggregatedResult</span><span class="s3">, </span><span class="s1">Test</span><span class="s3">, </span><span class="s1">TestCaseResult</span><span class="s3">, </span><span class="s1">TestResult } from </span><span class="s4">'@jest/test-result'</span><span class="s3">;</span>
+<span class="s2">import </span><span class="s1">type { Context } from </span><span class="s4">'jest-runtime'</span><span class="s3">;</span>
+<span class="s2">export default class </span><span class="s1">ReporterDispatcher {</span>
+    <span class="s2">private </span><span class="s1">_reporters</span><span class="s3">;</span>
+    <span class="s1">constructor()</span><span class="s3">;</span>
+    <span class="s1">register(reporter: Reporter): </span><span class="s2">void</span><span class="s3">;</span>
+    <span class="s1">unregister(ReporterClass: Function): </span><span class="s2">void</span><span class="s3">;</span>
+    <span class="s1">onTestFileResult(test: Test</span><span class="s3">, </span><span class="s1">testResult: TestResult</span><span class="s3">, </span><span class="s1">results: AggregatedResult): Promise&lt;</span><span class="s2">void</span><span class="s1">&gt;</span><span class="s3">;</span>
+    <span class="s1">onTestFileStart(test: Test): Promise&lt;</span><span class="s2">void</span><span class="s1">&gt;</span><span class="s3">;</span>
+    <span class="s1">onRunStart(results: AggregatedResult</span><span class="s3">, </span><span class="s1">options: ReporterOnStartOptions): Promise&lt;</span><span class="s2">void</span><span class="s1">&gt;</span><span class="s3">;</span>
+    <span class="s1">onTestCaseResult(test: Test</span><span class="s3">, </span><span class="s1">testCaseResult: TestCaseResult): Promise&lt;</span><span class="s2">void</span><span class="s1">&gt;</span><span class="s3">;</span>
+    <span class="s1">onRunComplete(contexts: Set&lt;Context&gt;</span><span class="s3">, </span><span class="s1">results: AggregatedResult): Promise&lt;</span><span class="s2">void</span><span class="s1">&gt;</span><span class="s3">;</span>
+    <span class="s1">getErrors(): Array&lt;Error&gt;</span><span class="s3">;</span>
+    <span class="s1">hasErrors(): boolean</span><span class="s3">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

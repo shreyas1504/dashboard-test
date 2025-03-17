@@ -1,0 +1,102 @@
+<html>
+<head>
+<title>ref.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ref.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+
+<span class="s0">{{## def._validateRef:_v:</span>
+  <span class="s0">{{? it.opts.passContext }}</span>
+    <span class="s0">{{=_v}}.call(this,</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">{{=_v}}(</span>
+  <span class="s0">{{?}}</span>
+    <span class="s0">{{=$data}}, {{# def.dataPath }}{{# def.passParentData }}, rootData)</span>
+<span class="s0">#}}</span>
+
+<span class="s0">{{ var $async, $refCode; }}</span>
+<span class="s0">{{? $schema == '#' || $schema == '#/' }}</span>
+  <span class="s0">{{</span>
+    <span class="s0">if (it.isRoot) {</span>
+      <span class="s0">$async = it.async;</span>
+      <span class="s0">$refCode = 'validate';</span>
+    <span class="s0">} else {</span>
+      <span class="s0">$async = it.root.schema.$async === true;</span>
+      <span class="s0">$refCode = 'root.refVal[0]';</span>
+    <span class="s0">}</span>
+  <span class="s0">}}</span>
+<span class="s0">{{??}}</span>
+  <span class="s0">{{ var $refVal = it.resolveRef(it.baseId, $schema, it.isRoot); }}</span>
+  <span class="s0">{{? $refVal === undefined }}</span>
+    <span class="s0">{{ var $message = it.MissingRefError.message(it.baseId, $schema); }}</span>
+    <span class="s0">{{? it.opts.missingRefs == 'fail' }}</span>
+      <span class="s0">{{ it.logger.error($message); }}</span>
+      <span class="s0">{{# def.error:'$ref' }}</span>
+      <span class="s0">{{? $breakOnError }} if (false) { {{?}}</span>
+    <span class="s0">{{?? it.opts.missingRefs == 'ignore' }}</span>
+      <span class="s0">{{ it.logger.warn($message); }}</span>
+      <span class="s0">{{? $breakOnError }} if (true) { {{?}}</span>
+    <span class="s0">{{??}}</span>
+      <span class="s0">{{ throw new it.MissingRefError(it.baseId, $schema, $message); }}</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{?? $refVal.inline }}</span>
+    <span class="s0">{{# def.setupNextLevel }}</span>
+    <span class="s0">{{</span>
+      <span class="s0">$it.schema = $refVal.schema;</span>
+      <span class="s0">$it.schemaPath = '';</span>
+      <span class="s0">$it.errSchemaPath = $schema;</span>
+    <span class="s0">}}</span>
+    <span class="s0">{{ var $code = it.validate($it).replace(/validate\.schema/g, $refVal.code); }}</span>
+    <span class="s0">{{= $code }}</span>
+    <span class="s0">{{? $breakOnError}}</span>
+      <span class="s0">if ({{=$nextValid}}) {</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">{{</span>
+      <span class="s0">$async = $refVal.$async === true || (it.async &amp;&amp; $refVal.$async !== false);</span>
+      <span class="s0">$refCode = $refVal.code;</span>
+    <span class="s0">}}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{? $refCode }}</span>
+  <span class="s0">{{# def.beginDefOut}}</span>
+    <span class="s0">{{# def._validateRef:$refCode }}</span>
+  <span class="s0">{{# def.storeDefOut:__callValidate }}</span>
+
+  <span class="s0">{{? $async }}</span>
+    <span class="s0">{{ if (!it.async) throw new Error('async schema referenced by sync schema'); }}</span>
+    <span class="s0">{{? $breakOnError }} var {{=$valid}}; {{?}}</span>
+    <span class="s0">try {</span>
+      <span class="s0">await {{=__callValidate}};</span>
+      <span class="s0">{{? $breakOnError }} {{=$valid}} = true; {{?}}</span>
+    <span class="s0">} catch (e) {</span>
+      <span class="s0">if (!(e instanceof ValidationError)) throw e;</span>
+      <span class="s0">if (vErrors === null) vErrors = e.errors;</span>
+      <span class="s0">else vErrors = vErrors.concat(e.errors);</span>
+      <span class="s0">errors = vErrors.length;</span>
+      <span class="s0">{{? $breakOnError }} {{=$valid}} = false; {{?}}</span>
+    <span class="s0">}</span>
+    <span class="s0">{{? $breakOnError }} if ({{=$valid}}) { {{?}}</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">if (!{{=__callValidate}}) {</span>
+      <span class="s0">if (vErrors === null) vErrors = {{=$refCode}}.errors;</span>
+      <span class="s0">else vErrors = vErrors.concat({{=$refCode}}.errors);</span>
+      <span class="s0">errors = vErrors.length;</span>
+    <span class="s0">} {{? $breakOnError }} else { {{?}}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{?}}</span>
+</pre>
+</body>
+</html>

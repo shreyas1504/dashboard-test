@@ -1,0 +1,92 @@
+<html>
+<head>
+<title>clone.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+clone.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">{ FunctionCov</span><span class="s2">, </span><span class="s1">ProcessCov</span><span class="s2">, </span><span class="s1">RangeCov</span><span class="s2">, </span><span class="s1">ScriptCov } from </span><span class="s3">&quot;./types&quot;</span><span class="s2">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Creates a deep copy of a process coverage.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">processCov Process coverage to clone.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">Cloned process coverage.</span>
+ <span class="s4">*/</span>
+<span class="s0">export function </span><span class="s1">cloneProcessCov(processCov: Readonly&lt;ProcessCov&gt;): ProcessCov {</span>
+  <span class="s0">const </span><span class="s1">result: ScriptCov[] = []</span><span class="s2">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">scriptCov of processCov.result) {</span>
+    <span class="s1">result.push(cloneScriptCov(scriptCov))</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">{</span>
+    <span class="s1">result</span><span class="s2">,</span>
+  <span class="s1">}</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Creates a deep copy of a script coverage.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">scriptCov Script coverage to clone.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">Cloned script coverage.</span>
+ <span class="s4">*/</span>
+<span class="s0">export function </span><span class="s1">cloneScriptCov(scriptCov: Readonly&lt;ScriptCov&gt;): ScriptCov {</span>
+  <span class="s0">const </span><span class="s1">functions: FunctionCov[] = []</span><span class="s2">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">functionCov of scriptCov.functions) {</span>
+    <span class="s1">functions.push(cloneFunctionCov(functionCov))</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">{</span>
+    <span class="s1">scriptId: scriptCov.scriptId</span><span class="s2">,</span>
+    <span class="s1">url: scriptCov.url</span><span class="s2">,</span>
+    <span class="s1">functions</span><span class="s2">,</span>
+  <span class="s1">}</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Creates a deep copy of a function coverage.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">functionCov Function coverage to clone.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">Cloned function coverage.</span>
+ <span class="s4">*/</span>
+<span class="s0">export function </span><span class="s1">cloneFunctionCov(functionCov: Readonly&lt;FunctionCov&gt;): FunctionCov {</span>
+  <span class="s0">const </span><span class="s1">ranges: RangeCov[] = []</span><span class="s2">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">rangeCov of functionCov.ranges) {</span>
+    <span class="s1">ranges.push(cloneRangeCov(rangeCov))</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">{</span>
+    <span class="s1">functionName: functionCov.functionName</span><span class="s2">,</span>
+    <span class="s1">ranges</span><span class="s2">,</span>
+    <span class="s1">isBlockCoverage: functionCov.isBlockCoverage</span><span class="s2">,</span>
+  <span class="s1">}</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Creates a deep copy of a function coverage.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">rangeCov Range coverage to clone.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">Cloned range coverage.</span>
+ <span class="s4">*/</span>
+<span class="s0">export function </span><span class="s1">cloneRangeCov(rangeCov: Readonly&lt;RangeCov&gt;): RangeCov {</span>
+  <span class="s0">return </span><span class="s1">{</span>
+    <span class="s1">startOffset: rangeCov.startOffset</span><span class="s2">,</span>
+    <span class="s1">endOffset: rangeCov.endOffset</span><span class="s2">,</span>
+    <span class="s1">count: rangeCov.count</span><span class="s2">,</span>
+  <span class="s1">}</span><span class="s2">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

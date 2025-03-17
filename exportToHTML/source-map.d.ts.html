@@ -1,0 +1,118 @@
+<html>
+<head>
+<title>source-map.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+source-map.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">export interface </span><span class="s1">StartOfSourceMap {</span>
+    <span class="s1">file?: string</span><span class="s2">;</span>
+    <span class="s1">sourceRoot?: string</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export interface </span><span class="s1">RawSourceMap </span><span class="s0">extends </span><span class="s1">StartOfSourceMap {</span>
+    <span class="s1">version: string</span><span class="s2">;</span>
+    <span class="s1">sources: string[]</span><span class="s2">;</span>
+    <span class="s1">names: string[]</span><span class="s2">;</span>
+    <span class="s1">sourcesContent?: string[]</span><span class="s2">;</span>
+    <span class="s1">mappings: string</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export interface </span><span class="s1">Position {</span>
+    <span class="s1">line: number</span><span class="s2">;</span>
+    <span class="s1">column: number</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export interface </span><span class="s1">LineRange </span><span class="s0">extends </span><span class="s1">Position {</span>
+    <span class="s1">lastColumn: number</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export interface </span><span class="s1">FindPosition </span><span class="s0">extends </span><span class="s1">Position {</span>
+    <span class="s3">// SourceMapConsumer.GREATEST_LOWER_BOUND or SourceMapConsumer.LEAST_UPPER_BOUND</span>
+    <span class="s1">bias?: number</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export interface </span><span class="s1">SourceFindPosition </span><span class="s0">extends </span><span class="s1">FindPosition {</span>
+    <span class="s1">source: string</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export interface </span><span class="s1">MappedPosition </span><span class="s0">extends </span><span class="s1">Position {</span>
+    <span class="s1">source: string</span><span class="s2">;</span>
+    <span class="s1">name?: string</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export interface </span><span class="s1">MappingItem {</span>
+    <span class="s1">source: string</span><span class="s2">;</span>
+    <span class="s1">generatedLine: number</span><span class="s2">;</span>
+    <span class="s1">generatedColumn: number</span><span class="s2">;</span>
+    <span class="s1">originalLine: number</span><span class="s2">;</span>
+    <span class="s1">originalColumn: number</span><span class="s2">;</span>
+    <span class="s1">name: string</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export class </span><span class="s1">SourceMapConsumer {</span>
+    <span class="s0">static </span><span class="s1">GENERATED_ORDER: number</span><span class="s2">;</span>
+    <span class="s0">static </span><span class="s1">ORIGINAL_ORDER: number</span><span class="s2">;</span>
+
+    <span class="s0">static </span><span class="s1">GREATEST_LOWER_BOUND: number</span><span class="s2">;</span>
+    <span class="s0">static </span><span class="s1">LEAST_UPPER_BOUND: number</span><span class="s2">;</span>
+
+    <span class="s1">constructor(rawSourceMap: RawSourceMap)</span><span class="s2">;</span>
+    <span class="s1">computeColumnSpans(): </span><span class="s0">void</span><span class="s2">;</span>
+    <span class="s1">originalPositionFor(generatedPosition: FindPosition): MappedPosition</span><span class="s2">;</span>
+    <span class="s1">generatedPositionFor(originalPosition: SourceFindPosition): LineRange</span><span class="s2">;</span>
+    <span class="s1">allGeneratedPositionsFor(originalPosition: MappedPosition): Position[]</span><span class="s2">;</span>
+    <span class="s1">hasContentsOfAllSources(): boolean</span><span class="s2">;</span>
+    <span class="s1">sourceContentFor(source: string</span><span class="s2">, </span><span class="s1">returnNullOnMissing?: boolean): string</span><span class="s2">;</span>
+    <span class="s1">eachMapping(callback: (mapping: MappingItem) =&gt; </span><span class="s0">void</span><span class="s2">, </span><span class="s1">context?: any</span><span class="s2">, </span><span class="s1">order?: number): </span><span class="s0">void</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export interface </span><span class="s1">Mapping {</span>
+    <span class="s1">generated: Position</span><span class="s2">;</span>
+    <span class="s1">original: Position</span><span class="s2">;</span>
+    <span class="s1">source: string</span><span class="s2">;</span>
+    <span class="s1">name?: string</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export class </span><span class="s1">SourceMapGenerator {</span>
+    <span class="s1">constructor(startOfSourceMap?: StartOfSourceMap)</span><span class="s2">;</span>
+    <span class="s0">static </span><span class="s1">fromSourceMap(sourceMapConsumer: SourceMapConsumer): SourceMapGenerator</span><span class="s2">;</span>
+    <span class="s1">addMapping(mapping: Mapping): </span><span class="s0">void</span><span class="s2">;</span>
+    <span class="s1">setSourceContent(sourceFile: string</span><span class="s2">, </span><span class="s1">sourceContent: string): </span><span class="s0">void</span><span class="s2">;</span>
+    <span class="s1">applySourceMap(sourceMapConsumer: SourceMapConsumer</span><span class="s2">, </span><span class="s1">sourceFile?: string</span><span class="s2">, </span><span class="s1">sourceMapPath?: string): </span><span class="s0">void</span><span class="s2">;</span>
+    <span class="s1">toString(): string</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export interface </span><span class="s1">CodeWithSourceMap {</span>
+    <span class="s1">code: string</span><span class="s2">;</span>
+    <span class="s1">map: SourceMapGenerator</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export class </span><span class="s1">SourceNode {</span>
+    <span class="s1">constructor()</span><span class="s2">;</span>
+    <span class="s1">constructor(line: number</span><span class="s2">, </span><span class="s1">column: number</span><span class="s2">, </span><span class="s1">source: string)</span><span class="s2">;</span>
+    <span class="s1">constructor(line: number</span><span class="s2">, </span><span class="s1">column: number</span><span class="s2">, </span><span class="s1">source: string</span><span class="s2">, </span><span class="s1">chunk?: string</span><span class="s2">, </span><span class="s1">name?: string)</span><span class="s2">;</span>
+    <span class="s0">static </span><span class="s1">fromStringWithSourceMap(code: string</span><span class="s2">, </span><span class="s1">sourceMapConsumer: SourceMapConsumer</span><span class="s2">, </span><span class="s1">relativePath?: string): SourceNode</span><span class="s2">;</span>
+    <span class="s1">add(chunk: string): </span><span class="s0">void</span><span class="s2">;</span>
+    <span class="s1">prepend(chunk: string): </span><span class="s0">void</span><span class="s2">;</span>
+    <span class="s1">setSourceContent(sourceFile: string</span><span class="s2">, </span><span class="s1">sourceContent: string): </span><span class="s0">void</span><span class="s2">;</span>
+    <span class="s1">walk(fn: (chunk: string</span><span class="s2">, </span><span class="s1">mapping: MappedPosition) =&gt; </span><span class="s0">void</span><span class="s1">): </span><span class="s0">void</span><span class="s2">;</span>
+    <span class="s1">walkSourceContents(fn: (file: string</span><span class="s2">, </span><span class="s1">content: string) =&gt; </span><span class="s0">void</span><span class="s1">): </span><span class="s0">void</span><span class="s2">;</span>
+    <span class="s1">join(sep: string): SourceNode</span><span class="s2">;</span>
+    <span class="s1">replaceRight(pattern: string</span><span class="s2">, </span><span class="s1">replacement: string): SourceNode</span><span class="s2">;</span>
+    <span class="s1">toString(): string</span><span class="s2">;</span>
+    <span class="s1">toStringWithSourceMap(startOfSourceMap?: StartOfSourceMap): CodeWithSourceMap</span><span class="s2">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<html>
+<head>
+<title>propertyNames.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+propertyNames.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+<span class="s0">{{# def.setupNextLevel }}</span>
+
+<span class="s0">var {{=$errs}} = errors;</span>
+
+<span class="s0">{{? {{# def.nonEmptySchema:$schema }} }}</span>
+  <span class="s0">{{</span>
+    <span class="s0">$it.schema = $schema;</span>
+    <span class="s0">$it.schemaPath = $schemaPath;</span>
+    <span class="s0">$it.errSchemaPath = $errSchemaPath;</span>
+  <span class="s0">}}</span>
+
+  <span class="s0">{{</span>
+    <span class="s0">var $key = 'key' + $lvl</span>
+      <span class="s0">, $idx = 'idx' + $lvl</span>
+      <span class="s0">, $i = 'i' + $lvl</span>
+      <span class="s0">, $invalidName = '\' + ' + $key + ' + \''</span>
+      <span class="s0">, $dataNxt = $it.dataLevel = it.dataLevel + 1</span>
+      <span class="s0">, $nextData = 'data' + $dataNxt</span>
+      <span class="s0">, $dataProperties = 'dataProperties' + $lvl</span>
+      <span class="s0">, $ownProperties = it.opts.ownProperties</span>
+      <span class="s0">, $currentBaseId = it.baseId;</span>
+  <span class="s0">}}</span>
+
+  <span class="s0">{{? $ownProperties }}</span>
+    <span class="s0">var {{=$dataProperties}} = undefined;</span>
+  <span class="s0">{{?}}</span>
+  <span class="s0">{{# def.iterateProperties }}</span>
+    <span class="s0">var startErrs{{=$lvl}} = errors;</span>
+
+    <span class="s0">{{ var $passData = $key; }}</span>
+    <span class="s0">{{# def.setCompositeRule }}</span>
+    <span class="s0">{{# def.generateSubschemaCode }}</span>
+    <span class="s0">{{# def.optimizeValidate }}</span>
+    <span class="s0">{{# def.resetCompositeRule }}</span>
+
+    <span class="s0">if (!{{=$nextValid}}) {</span>
+      <span class="s0">for (var {{=$i}}=startErrs{{=$lvl}}; {{=$i}}&lt;errors; {{=$i}}++) {</span>
+        <span class="s0">vErrors[{{=$i}}].propertyName = {{=$key}};</span>
+      <span class="s0">}</span>
+      <span class="s0">{{# def.extraError:'propertyNames' }}</span>
+      <span class="s0">{{? $breakOnError }} break; {{?}}</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{? $breakOnError }}</span>
+  <span class="s0">{{= $closingBraces }}</span>
+  <span class="s0">if ({{=$errs}} == errors) {</span>
+<span class="s0">{{?}}</span>
+</pre>
+</body>
+</html>

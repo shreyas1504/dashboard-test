@@ -1,0 +1,86 @@
+<html>
+<head>
+<title>multicast-dns</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #6897bb;}
+.s5 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+multicast-dns</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+
+<span class="s2">var </span><span class="s1">mdns = require(</span><span class="s3">'./'</span><span class="s1">)()</span>
+<span class="s2">var </span><span class="s1">path = require(</span><span class="s3">'path'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">os = require(</span><span class="s3">'os'</span><span class="s1">)</span>
+
+<span class="s2">var </span><span class="s1">announcing = process.argv.indexOf(</span><span class="s3">'--announce'</span><span class="s1">) &gt; -</span><span class="s4">1</span>
+
+<span class="s2">if </span><span class="s1">(process.argv.length &lt; </span><span class="s4">3</span><span class="s1">) {</span>
+  <span class="s1">console.error(</span><span class="s3">'Usage: %s &lt;hostname&gt;'</span><span class="s5">, </span><span class="s1">path.basename(process.argv[</span><span class="s4">1</span><span class="s1">]))</span>
+  <span class="s1">process.exit(</span><span class="s4">1</span><span class="s1">)</span>
+<span class="s1">}</span>
+<span class="s2">var </span><span class="s1">hostname = process.argv[</span><span class="s4">2</span><span class="s1">]</span>
+
+<span class="s2">if </span><span class="s1">(announcing) {</span>
+  <span class="s2">var </span><span class="s1">ip = getIp()</span>
+  <span class="s1">mdns.on(</span><span class="s3">'query'</span><span class="s5">, </span><span class="s2">function </span><span class="s1">(query</span><span class="s5">, </span><span class="s1">rinfo) {</span>
+    <span class="s1">query.questions.forEach(</span><span class="s2">function </span><span class="s1">(q) {</span>
+      <span class="s2">if </span><span class="s1">(q.name === hostname) {</span>
+        <span class="s1">console.log(</span><span class="s3">'Responding %s -&gt; %s'</span><span class="s5">, </span><span class="s1">q.name</span><span class="s5">, </span><span class="s1">ip)</span>
+        <span class="s1">mdns.respond({</span>
+          <span class="s1">answers: [{</span>
+            <span class="s1">type: </span><span class="s3">'A'</span><span class="s5">,</span>
+            <span class="s1">name: q.name</span><span class="s5">,</span>
+            <span class="s1">data: ip</span>
+          <span class="s1">}]</span>
+        <span class="s1">}</span><span class="s5">, </span><span class="s1">{port: rinfo.port})</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+<span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+  <span class="s1">mdns.on(</span><span class="s3">'response'</span><span class="s5">, </span><span class="s2">function </span><span class="s1">(response) {</span>
+    <span class="s1">response.answers.forEach(</span><span class="s2">function </span><span class="s1">(answer) {</span>
+      <span class="s2">if </span><span class="s1">(answer.name === hostname) {</span>
+        <span class="s1">console.log(answer.data)</span>
+        <span class="s1">process.exit()</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+
+  <span class="s1">mdns.query(hostname</span><span class="s5">, </span><span class="s3">'A'</span><span class="s1">)</span>
+
+  <span class="s0">// Give responses 3 seconds to respond</span>
+  <span class="s1">setTimeout(</span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">console.error(</span><span class="s3">'Hostname not found'</span><span class="s1">)</span>
+    <span class="s1">process.exit(</span><span class="s4">1</span><span class="s1">)</span>
+  <span class="s1">}</span><span class="s5">, </span><span class="s4">3000</span><span class="s1">)</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">getIp () {</span>
+  <span class="s2">var </span><span class="s1">networks = os.networkInterfaces()</span>
+  <span class="s2">var </span><span class="s1">found = </span><span class="s3">'127.0.0.1'</span>
+
+  <span class="s1">Object.keys(networks).forEach(</span><span class="s2">function </span><span class="s1">(k) {</span>
+    <span class="s2">var </span><span class="s1">n = networks[k]</span>
+    <span class="s1">n.forEach(</span><span class="s2">function </span><span class="s1">(addr) {</span>
+      <span class="s2">if </span><span class="s1">(addr.family === </span><span class="s3">'IPv4' </span><span class="s1">&amp;&amp; !addr.internal) {</span>
+        <span class="s1">found = addr.address</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+
+  <span class="s2">return </span><span class="s1">found</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

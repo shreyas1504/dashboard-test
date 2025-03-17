@@ -1,0 +1,174 @@
+<html>
+<head>
+<title>removeUnknownsAndDefaults.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #808080;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s7 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+removeUnknownsAndDefaults.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">exports.type = </span><span class="s0">'perItem'</span><span class="s1">;</span>
+
+<span class="s2">exports.active = </span><span class="s3">true</span><span class="s1">;</span>
+
+<span class="s2">exports.description = </span><span class="s0">'removes unknown elements content and attributes, removes attrs with default values'</span><span class="s1">;</span>
+
+<span class="s2">exports.params = {</span>
+    <span class="s2">unknownContent: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">unknownAttrs: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">defaultAttrs: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">uselessOverrides: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">keepDataAttrs: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">keepAriaAttrs: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">keepRoleAttr: </span><span class="s3">false</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">collections = require(</span><span class="s0">'./_collections'</span><span class="s2">)</span><span class="s1">,</span>
+    <span class="s2">elems = collections.elems</span><span class="s1">,</span>
+    <span class="s2">attrsGroups = collections.attrsGroups</span><span class="s1">,</span>
+    <span class="s2">elemsGroups = collections.elemsGroups</span><span class="s1">,</span>
+    <span class="s2">attrsGroupsDefaults = collections.attrsGroupsDefaults</span><span class="s1">,</span>
+    <span class="s2">attrsInheritable = collections.inheritableAttrs</span><span class="s1">,</span>
+    <span class="s2">applyGroups = collections.presentationNonInheritableGroupAttrs</span><span class="s1">;</span>
+
+<span class="s4">// collect and extend all references</span>
+<span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">elem </span><span class="s3">in </span><span class="s2">elems) {</span>
+    <span class="s2">elem = elems[elem]</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(elem.attrsGroups) {</span>
+        <span class="s2">elem.attrs = elem.attrs || []</span><span class="s1">;</span>
+
+        <span class="s2">elem.attrsGroups.forEach(</span><span class="s3">function</span><span class="s2">(attrsGroupName) {</span>
+            <span class="s2">elem.attrs = elem.attrs.concat(attrsGroups[attrsGroupName])</span><span class="s1">;</span>
+
+            <span class="s3">var </span><span class="s2">groupDefaults = attrsGroupsDefaults[attrsGroupName]</span><span class="s1">;</span>
+
+            <span class="s3">if </span><span class="s2">(groupDefaults) {</span>
+                <span class="s2">elem.defaults = elem.defaults || {}</span><span class="s1">;</span>
+
+                <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">attrName </span><span class="s3">in </span><span class="s2">groupDefaults) {</span>
+                    <span class="s2">elem.defaults[attrName] = groupDefaults[attrName]</span><span class="s1">;</span>
+                <span class="s2">}</span>
+            <span class="s2">}</span>
+        <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(elem.contentGroups) {</span>
+        <span class="s2">elem.content = elem.content || []</span><span class="s1">;</span>
+
+        <span class="s2">elem.contentGroups.forEach(</span><span class="s3">function</span><span class="s2">(contentGroupName) {</span>
+            <span class="s2">elem.content = elem.content.concat(elemsGroups[contentGroupName])</span><span class="s1">;</span>
+        <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Remove unknown elements content and attributes,</span>
+ <span class="s5">* remove attributes with default values.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Object} item current iteration item</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Object} params plugin params</span>
+ <span class="s5">* </span><span class="s6">@return </span><span class="s5">{Boolean} if false, item will be filtered out</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@author </span><span class="s5">Kir Belevich</span>
+ <span class="s5">*/</span>
+<span class="s2">exports.fn = </span><span class="s3">function</span><span class="s2">(item</span><span class="s1">, </span><span class="s2">params) {</span>
+
+    <span class="s4">// elems w/o namespace prefix</span>
+    <span class="s3">if </span><span class="s2">(item.isElem() &amp;&amp; !item.prefix) {</span>
+
+        <span class="s3">var </span><span class="s2">elem = item.elem</span><span class="s1">;</span>
+
+        <span class="s4">// remove unknown element's content</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.unknownContent &amp;&amp;</span>
+            <span class="s2">!item.isEmpty() &amp;&amp;</span>
+            <span class="s2">elems[elem] &amp;&amp; </span><span class="s4">// make sure we know of this element before checking its children</span>
+            <span class="s2">elem !== </span><span class="s0">'foreignObject' </span><span class="s4">// Don't check foreignObject</span>
+        <span class="s2">) {</span>
+            <span class="s2">item.content.forEach(</span><span class="s3">function</span><span class="s2">(content</span><span class="s1">, </span><span class="s2">i) {</span>
+                <span class="s3">if </span><span class="s2">(</span>
+                    <span class="s2">content.isElem() &amp;&amp;</span>
+                    <span class="s2">!content.prefix &amp;&amp;</span>
+                    <span class="s2">(</span>
+                        <span class="s2">(</span>
+                            <span class="s2">elems[elem].content &amp;&amp; </span><span class="s4">// Do we have a record of its permitted content?</span>
+                            <span class="s2">elems[elem].content.indexOf(content.elem) === -</span><span class="s7">1</span>
+                        <span class="s2">) ||</span>
+                        <span class="s2">(</span>
+                            <span class="s2">!elems[elem].content &amp;&amp; </span><span class="s4">// we dont know about its permitted content</span>
+                            <span class="s2">!elems[content.elem] </span><span class="s4">// check that we know about the element at all</span>
+                        <span class="s2">)</span>
+                    <span class="s2">)</span>
+                <span class="s2">) {</span>
+                    <span class="s2">item.content.splice(i</span><span class="s1">, </span><span class="s7">1</span><span class="s2">)</span><span class="s1">;</span>
+                <span class="s2">}</span>
+            <span class="s2">})</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s4">// remove element's unknown attrs and attrs with default values</span>
+        <span class="s3">if </span><span class="s2">(elems[elem] &amp;&amp; elems[elem].attrs) {</span>
+
+            <span class="s2">item.eachAttr(</span><span class="s3">function</span><span class="s2">(attr) {</span>
+
+                <span class="s3">if </span><span class="s2">(</span>
+                    <span class="s2">attr.name !== </span><span class="s0">'xmlns' </span><span class="s2">&amp;&amp;</span>
+                    <span class="s2">(attr.prefix === </span><span class="s0">'xml' </span><span class="s2">|| !attr.prefix) &amp;&amp;</span>
+                    <span class="s2">(!params.keepDataAttrs || attr.name.indexOf(</span><span class="s0">'data-'</span><span class="s2">) != </span><span class="s7">0</span><span class="s2">) &amp;&amp;</span>
+                    <span class="s2">(!params.keepAriaAttrs || attr.name.indexOf(</span><span class="s0">'aria-'</span><span class="s2">) != </span><span class="s7">0</span><span class="s2">) &amp;&amp;</span>
+                    <span class="s2">(!params.keepRoleAttr || attr.name != </span><span class="s0">'role'</span><span class="s2">)</span>
+                <span class="s2">) {</span>
+                    <span class="s3">if </span><span class="s2">(</span>
+                        <span class="s4">// unknown attrs</span>
+                        <span class="s2">(</span>
+                            <span class="s2">params.unknownAttrs &amp;&amp;</span>
+                            <span class="s2">elems[elem].attrs.indexOf(attr.name) === -</span><span class="s7">1</span>
+                        <span class="s2">) ||</span>
+                        <span class="s4">// attrs with default values</span>
+                        <span class="s2">(</span>
+                            <span class="s2">params.defaultAttrs &amp;&amp;</span>
+                            <span class="s2">!item.hasAttr(</span><span class="s0">'id'</span><span class="s2">) &amp;&amp;</span>
+                            <span class="s2">elems[elem].defaults &amp;&amp;</span>
+                            <span class="s2">elems[elem].defaults[attr.name] === attr.value &amp;&amp; (</span>
+                                <span class="s2">attrsInheritable.indexOf(attr.name) &lt; </span><span class="s7">0 </span><span class="s2">||</span>
+                                <span class="s2">!item.parentNode.computedAttr(attr.name)</span>
+                            <span class="s2">)</span>
+                        <span class="s2">) ||</span>
+                        <span class="s4">// useless overrides</span>
+                        <span class="s2">(</span>
+                            <span class="s2">params.uselessOverrides &amp;&amp;</span>
+                            <span class="s2">!item.hasAttr(</span><span class="s0">'id'</span><span class="s2">) &amp;&amp;</span>
+                            <span class="s2">applyGroups.indexOf(attr.name) &lt; </span><span class="s7">0 </span><span class="s2">&amp;&amp;</span>
+                            <span class="s2">attrsInheritable.indexOf(attr.name) &gt; -</span><span class="s7">1 </span><span class="s2">&amp;&amp;</span>
+                            <span class="s2">item.parentNode.computedAttr(attr.name</span><span class="s1">, </span><span class="s2">attr.value)</span>
+                        <span class="s2">)</span>
+                    <span class="s2">) {</span>
+                        <span class="s2">item.removeAttr(attr.name)</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+                <span class="s2">}</span>
+
+            <span class="s2">})</span><span class="s1">;</span>
+
+        <span class="s2">}</span>
+
+    <span class="s2">}</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

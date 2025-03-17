@@ -1,0 +1,108 @@
+<html>
+<head>
+<title>7-mergeRuleset.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #8a8a8a;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+7-mergeRuleset.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">walk = require(</span><span class="s2">'css-tree'</span><span class="s1">).walk</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">utils = require(</span><span class="s2">'./utils'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">/* 
+    At this step all rules has single simple selector. We try to join by equal 
+    declaration blocks to first rule, e.g. 
+ 
+    .a { color: red } 
+    b { ... } 
+    .b { color: red } 
+    -&gt; 
+    .a, .b { color: red } 
+    b { ... } 
+*/</span>
+
+<span class="s0">function </span><span class="s1">processRule(node</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">list) {</span>
+    <span class="s0">var </span><span class="s1">selectors = node.prelude.children</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">declarations = node.block.children</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">nodeCompareMarker = selectors.first().compareMarker</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">skippedCompareMarkers = {}</span><span class="s3">;</span>
+
+    <span class="s1">list.nextUntil(item.next</span><span class="s3">, </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">nextItem) {</span>
+        <span class="s5">// skip non-ruleset node if safe</span>
+        <span class="s0">if </span><span class="s1">(next.type !== </span><span class="s2">'Rule'</span><span class="s1">) {</span>
+            <span class="s0">return </span><span class="s1">utils.unsafeToSkipNode.call(selectors</span><span class="s3">, </span><span class="s1">next)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(node.pseudoSignature !== next.pseudoSignature) {</span>
+            <span class="s0">return true</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">var </span><span class="s1">nextFirstSelector = next.prelude.children.head</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">nextDeclarations = next.block.children</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">nextCompareMarker = nextFirstSelector.data.compareMarker</span><span class="s3">;</span>
+
+        <span class="s5">// if next ruleset has same marked as one of skipped then stop joining</span>
+        <span class="s0">if </span><span class="s1">(nextCompareMarker </span><span class="s0">in </span><span class="s1">skippedCompareMarkers) {</span>
+            <span class="s0">return true</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s5">// try to join by selectors</span>
+        <span class="s0">if </span><span class="s1">(selectors.head === selectors.tail) {</span>
+            <span class="s0">if </span><span class="s1">(selectors.first().id === nextFirstSelector.data.id) {</span>
+                <span class="s1">declarations.appendList(nextDeclarations)</span><span class="s3">;</span>
+                <span class="s1">list.remove(nextItem)</span><span class="s3">;</span>
+                <span class="s0">return</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s5">// try to join by properties</span>
+        <span class="s0">if </span><span class="s1">(utils.isEqualDeclarations(declarations</span><span class="s3">, </span><span class="s1">nextDeclarations)) {</span>
+            <span class="s0">var </span><span class="s1">nextStr = nextFirstSelector.data.id</span><span class="s3">;</span>
+
+            <span class="s1">selectors.some(</span><span class="s0">function</span><span class="s1">(data</span><span class="s3">, </span><span class="s1">item) {</span>
+                <span class="s0">var </span><span class="s1">curStr = data.id</span><span class="s3">;</span>
+
+                <span class="s0">if </span><span class="s1">(nextStr &lt; curStr) {</span>
+                    <span class="s1">selectors.insert(nextFirstSelector</span><span class="s3">, </span><span class="s1">item)</span><span class="s3">;</span>
+                    <span class="s0">return true</span><span class="s3">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">if </span><span class="s1">(!item.next) {</span>
+                    <span class="s1">selectors.insert(nextFirstSelector)</span><span class="s3">;</span>
+                    <span class="s0">return true</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s1">})</span><span class="s3">;</span>
+
+            <span class="s1">list.remove(nextItem)</span><span class="s3">;</span>
+            <span class="s0">return</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s5">// go to next ruleset if current one can be skipped (has no equal specificity nor element selector)</span>
+        <span class="s0">if </span><span class="s1">(nextCompareMarker === nodeCompareMarker) {</span>
+            <span class="s0">return true</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">skippedCompareMarkers[nextCompareMarker] = </span><span class="s0">true</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">mergeRule(ast) {</span>
+    <span class="s1">walk(ast</span><span class="s3">, </span><span class="s1">{</span>
+        <span class="s1">visit: </span><span class="s2">'Rule'</span><span class="s3">,</span>
+        <span class="s1">enter: processRule</span>
+    <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

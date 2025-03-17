@@ -1,0 +1,125 @@
+<html>
+<head>
+<title>if.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+if.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+<span class="s2">module.exports = </span><span class="s3">function </span><span class="s2">generate_if(it</span><span class="s1">, </span><span class="s2">$keyword</span><span class="s1">, </span><span class="s2">$ruleType) {</span>
+  <span class="s3">var </span><span class="s2">out = </span><span class="s0">' '</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$lvl = it.level</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$dataLvl = it.dataLevel</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$schema = it.schema[$keyword]</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$schemaPath = it.schemaPath + it.util.getProperty($keyword)</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$errSchemaPath = it.errSchemaPath + </span><span class="s0">'/' </span><span class="s2">+ $keyword</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$breakOnError = !it.opts.allErrors</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$data = </span><span class="s0">'data' </span><span class="s2">+ ($dataLvl || </span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$valid = </span><span class="s0">'valid' </span><span class="s2">+ $lvl</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$errs = </span><span class="s0">'errs__' </span><span class="s2">+ $lvl</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$it = it.util.copy(it)</span><span class="s1">;</span>
+  <span class="s2">$it.level++</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$nextValid = </span><span class="s0">'valid' </span><span class="s2">+ $it.level</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$thenSch = it.schema[</span><span class="s0">'then'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">$elseSch = it.schema[</span><span class="s0">'else'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">$thenPresent = $thenSch !== undefined &amp;&amp; (it.opts.strictKeywords ? (</span><span class="s3">typeof </span><span class="s2">$thenSch == </span><span class="s0">'object' </span><span class="s2">&amp;&amp; Object.keys($thenSch).length &gt; </span><span class="s4">0</span><span class="s2">) || $thenSch === </span><span class="s3">false </span><span class="s2">: it.util.schemaHasRules($thenSch</span><span class="s1">, </span><span class="s2">it.RULES.all))</span><span class="s1">,</span>
+    <span class="s2">$elsePresent = $elseSch !== undefined &amp;&amp; (it.opts.strictKeywords ? (</span><span class="s3">typeof </span><span class="s2">$elseSch == </span><span class="s0">'object' </span><span class="s2">&amp;&amp; Object.keys($elseSch).length &gt; </span><span class="s4">0</span><span class="s2">) || $elseSch === </span><span class="s3">false </span><span class="s2">: it.util.schemaHasRules($elseSch</span><span class="s1">, </span><span class="s2">it.RULES.all))</span><span class="s1">,</span>
+    <span class="s2">$currentBaseId = $it.baseId</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">($thenPresent || $elsePresent) {</span>
+    <span class="s3">var </span><span class="s2">$ifClause</span><span class="s1">;</span>
+    <span class="s2">$it.createErrors = </span><span class="s3">false</span><span class="s1">;</span>
+    <span class="s2">$it.schema = $schema</span><span class="s1">;</span>
+    <span class="s2">$it.schemaPath = $schemaPath</span><span class="s1">;</span>
+    <span class="s2">$it.errSchemaPath = $errSchemaPath</span><span class="s1">;</span>
+    <span class="s2">out += </span><span class="s0">' var ' </span><span class="s2">+ ($errs) + </span><span class="s0">' = errors; var ' </span><span class="s2">+ ($valid) + </span><span class="s0">' = true;  '</span><span class="s1">;</span>
+    <span class="s3">var </span><span class="s2">$wasComposite = it.compositeRule</span><span class="s1">;</span>
+    <span class="s2">it.compositeRule = $it.compositeRule = </span><span class="s3">true</span><span class="s1">;</span>
+    <span class="s2">out += </span><span class="s0">'  ' </span><span class="s2">+ (it.validate($it)) + </span><span class="s0">' '</span><span class="s1">;</span>
+    <span class="s2">$it.baseId = $currentBaseId</span><span class="s1">;</span>
+    <span class="s2">$it.createErrors = </span><span class="s3">true</span><span class="s1">;</span>
+    <span class="s2">out += </span><span class="s0">'  errors = ' </span><span class="s2">+ ($errs) + </span><span class="s0">'; if (vErrors !== null) { if (' </span><span class="s2">+ ($errs) + </span><span class="s0">') vErrors.length = ' </span><span class="s2">+ ($errs) + </span><span class="s0">'; else vErrors = null; }  '</span><span class="s1">;</span>
+    <span class="s2">it.compositeRule = $it.compositeRule = $wasComposite</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">($thenPresent) {</span>
+      <span class="s2">out += </span><span class="s0">' if (' </span><span class="s2">+ ($nextValid) + </span><span class="s0">') {  '</span><span class="s1">;</span>
+      <span class="s2">$it.schema = it.schema[</span><span class="s0">'then'</span><span class="s2">]</span><span class="s1">;</span>
+      <span class="s2">$it.schemaPath = it.schemaPath + </span><span class="s0">'.then'</span><span class="s1">;</span>
+      <span class="s2">$it.errSchemaPath = it.errSchemaPath + </span><span class="s0">'/then'</span><span class="s1">;</span>
+      <span class="s2">out += </span><span class="s0">'  ' </span><span class="s2">+ (it.validate($it)) + </span><span class="s0">' '</span><span class="s1">;</span>
+      <span class="s2">$it.baseId = $currentBaseId</span><span class="s1">;</span>
+      <span class="s2">out += </span><span class="s0">' ' </span><span class="s2">+ ($valid) + </span><span class="s0">' = ' </span><span class="s2">+ ($nextValid) + </span><span class="s0">'; '</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">($thenPresent &amp;&amp; $elsePresent) {</span>
+        <span class="s2">$ifClause = </span><span class="s0">'ifClause' </span><span class="s2">+ $lvl</span><span class="s1">;</span>
+        <span class="s2">out += </span><span class="s0">' var ' </span><span class="s2">+ ($ifClause) + </span><span class="s0">' = </span><span class="s1">\'</span><span class="s0">then</span><span class="s1">\'</span><span class="s0">; '</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s2">$ifClause = </span><span class="s0">'</span><span class="s1">\'</span><span class="s0">then</span><span class="s1">\'</span><span class="s0">'</span><span class="s1">;</span>
+      <span class="s2">}</span>
+      <span class="s2">out += </span><span class="s0">' } '</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">($elsePresent) {</span>
+        <span class="s2">out += </span><span class="s0">' else { '</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">out += </span><span class="s0">' if (!' </span><span class="s2">+ ($nextValid) + </span><span class="s0">') { '</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s3">if </span><span class="s2">($elsePresent) {</span>
+      <span class="s2">$it.schema = it.schema[</span><span class="s0">'else'</span><span class="s2">]</span><span class="s1">;</span>
+      <span class="s2">$it.schemaPath = it.schemaPath + </span><span class="s0">'.else'</span><span class="s1">;</span>
+      <span class="s2">$it.errSchemaPath = it.errSchemaPath + </span><span class="s0">'/else'</span><span class="s1">;</span>
+      <span class="s2">out += </span><span class="s0">'  ' </span><span class="s2">+ (it.validate($it)) + </span><span class="s0">' '</span><span class="s1">;</span>
+      <span class="s2">$it.baseId = $currentBaseId</span><span class="s1">;</span>
+      <span class="s2">out += </span><span class="s0">' ' </span><span class="s2">+ ($valid) + </span><span class="s0">' = ' </span><span class="s2">+ ($nextValid) + </span><span class="s0">'; '</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">($thenPresent &amp;&amp; $elsePresent) {</span>
+        <span class="s2">$ifClause = </span><span class="s0">'ifClause' </span><span class="s2">+ $lvl</span><span class="s1">;</span>
+        <span class="s2">out += </span><span class="s0">' var ' </span><span class="s2">+ ($ifClause) + </span><span class="s0">' = </span><span class="s1">\'</span><span class="s0">else</span><span class="s1">\'</span><span class="s0">; '</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s2">$ifClause = </span><span class="s0">'</span><span class="s1">\'</span><span class="s0">else</span><span class="s1">\'</span><span class="s0">'</span><span class="s1">;</span>
+      <span class="s2">}</span>
+      <span class="s2">out += </span><span class="s0">' } '</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">out += </span><span class="s0">' if (!' </span><span class="s2">+ ($valid) + </span><span class="s0">') {   var err =   '</span><span class="s1">; </span><span class="s5">/* istanbul ignore else */</span>
+    <span class="s3">if </span><span class="s2">(it.createErrors !== </span><span class="s3">false</span><span class="s2">) {</span>
+      <span class="s2">out += </span><span class="s0">' { keyword: </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ (</span><span class="s0">'if'</span><span class="s2">) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">, dataPath: (dataPath || </span><span class="s1">\'\'</span><span class="s0">) + ' </span><span class="s2">+ (it.errorPath) + </span><span class="s0">' , schemaPath: ' </span><span class="s2">+ (it.util.toQuotedString($errSchemaPath)) + </span><span class="s0">' , params: { failingKeyword: ' </span><span class="s2">+ ($ifClause) + </span><span class="s0">' } '</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(it.opts.messages !== </span><span class="s3">false</span><span class="s2">) {</span>
+        <span class="s2">out += </span><span class="s0">' , message: </span><span class="s1">\'</span><span class="s0">should match &quot;</span><span class="s1">\' </span><span class="s0">+ ' </span><span class="s2">+ ($ifClause) + </span><span class="s0">' + </span><span class="s1">\'</span><span class="s0">&quot; schema</span><span class="s1">\' </span><span class="s0">'</span><span class="s1">;</span>
+      <span class="s2">}</span>
+      <span class="s3">if </span><span class="s2">(it.opts.verbose) {</span>
+        <span class="s2">out += </span><span class="s0">' , schema: validate.schema' </span><span class="s2">+ ($schemaPath) + </span><span class="s0">' , parentSchema: validate.schema' </span><span class="s2">+ (it.schemaPath) + </span><span class="s0">' , data: ' </span><span class="s2">+ ($data) + </span><span class="s0">' '</span><span class="s1">;</span>
+      <span class="s2">}</span>
+      <span class="s2">out += </span><span class="s0">' } '</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">out += </span><span class="s0">' {} '</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">out += </span><span class="s0">';  if (vErrors === null) vErrors = [err]; else vErrors.push(err); errors++; '</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(!it.compositeRule &amp;&amp; $breakOnError) {</span>
+      <span class="s5">/* istanbul ignore if */</span>
+      <span class="s3">if </span><span class="s2">(it.async) {</span>
+        <span class="s2">out += </span><span class="s0">' throw new ValidationError(vErrors); '</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s2">out += </span><span class="s0">' validate.errors = vErrors; return false; '</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+    <span class="s2">out += </span><span class="s0">' }   '</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">($breakOnError) {</span>
+      <span class="s2">out += </span><span class="s0">' else { '</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s3">if </span><span class="s2">($breakOnError) {</span>
+      <span class="s2">out += </span><span class="s0">' if (true) { '</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">out</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

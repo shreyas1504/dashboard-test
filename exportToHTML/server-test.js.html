@@ -1,0 +1,510 @@
+<html>
+<head>
+<title>server-test.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #6897bb;}
+.s6 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+server-test.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* eslint-env mocha */</span>
+
+<span class="s2">var </span><span class="s1">assert = require(</span><span class="s3">'assert'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">tls = require(</span><span class="s3">'tls'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">net = require(</span><span class="s3">'net'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">https = require(</span><span class="s3">'https'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">transport = require(</span><span class="s3">'spdy-transport'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">util = require(</span><span class="s3">'util'</span><span class="s1">)</span>
+
+<span class="s2">var </span><span class="s1">fixtures = require(</span><span class="s3">'./fixtures'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">spdy = require(</span><span class="s3">'../'</span><span class="s1">)</span>
+
+<span class="s1">describe(</span><span class="s3">'SPDY Server'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s1">fixtures.everyConfig(</span><span class="s2">function </span><span class="s1">(protocol</span><span class="s4">, </span><span class="s1">alpn</span><span class="s4">, </span><span class="s1">version</span><span class="s4">, </span><span class="s1">plain) {</span>
+    <span class="s2">var </span><span class="s1">server</span>
+    <span class="s2">var </span><span class="s1">client</span>
+
+    <span class="s1">beforeEach(</span><span class="s2">function </span><span class="s1">(done) {</span>
+      <span class="s1">server = spdy.createServer(Object.assign({</span>
+        <span class="s1">spdy: {</span>
+          <span class="s3">'x-forwarded-for'</span><span class="s1">: </span><span class="s2">true</span><span class="s4">,</span>
+          <span class="s1">plain: plain</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s1">fixtures.keys))</span>
+
+      <span class="s1">server.listen(fixtures.port</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+        <span class="s2">var </span><span class="s1">socket = (plain ? net : tls).connect({</span>
+          <span class="s1">rejectUnauthorized: </span><span class="s2">false</span><span class="s4">,</span>
+          <span class="s1">port: fixtures.port</span><span class="s4">,</span>
+          <span class="s1">ALPNProtocols: [alpn]</span>
+        <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">client = transport.connection.create(socket</span><span class="s4">, </span><span class="s1">{</span>
+            <span class="s1">protocol: protocol</span><span class="s4">,</span>
+            <span class="s1">isServer: </span><span class="s2">false</span>
+          <span class="s1">})</span>
+          <span class="s1">client.start(version)</span>
+          <span class="s1">done()</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">afterEach(</span><span class="s2">function </span><span class="s1">(done) {</span>
+      <span class="s1">client.socket.destroy()</span>
+      <span class="s1">server.close(done)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">it(</span><span class="s3">'should process GET request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(done) {</span>
+      <span class="s2">var </span><span class="s1">stream = client.request({</span>
+        <span class="s1">method: </span><span class="s3">'GET'</span><span class="s4">,</span>
+        <span class="s1">path: </span><span class="s3">'/get'</span><span class="s4">,</span>
+        <span class="s1">headers: {</span>
+          <span class="s1">a: </span><span class="s3">'b'</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+        <span class="s1">assert(!err)</span>
+
+        <span class="s1">stream.on(</span><span class="s3">'error'</span><span class="s4">, </span><span class="s1">(err) =&gt; {</span>
+          <span class="s1">done(err)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">stream.on(</span><span class="s3">'response'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(status</span><span class="s4">, </span><span class="s1">headers) {</span>
+          <span class="s1">assert.strictEqual(status</span><span class="s4">, </span><span class="s5">200</span><span class="s1">)</span>
+          <span class="s1">assert.strictEqual(headers.ok</span><span class="s4">, </span><span class="s3">'yes'</span><span class="s1">)</span>
+
+          <span class="s1">fixtures.expectData(stream</span><span class="s4">, </span><span class="s3">'response'</span><span class="s4">, </span><span class="s1">done)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">stream.end()</span>
+      <span class="s1">})</span>
+
+      <span class="s1">server.on(</span><span class="s3">'request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(req</span><span class="s4">, </span><span class="s1">res) {</span>
+        <span class="s1">assert.strictEqual(req.isSpdy</span><span class="s4">, </span><span class="s1">res.isSpdy)</span>
+        <span class="s1">assert.strictEqual(req.spdyVersion</span><span class="s4">, </span><span class="s1">res.spdyVersion)</span>
+        <span class="s1">assert(req.isSpdy)</span>
+        <span class="s2">if </span><span class="s1">(!plain) {</span>
+          <span class="s1">assert(req.socket.encrypted)</span>
+          <span class="s1">assert(req.socket.getPeerCertificate())</span>
+        <span class="s1">}</span>
+
+        <span class="s6">// Auto-detection</span>
+        <span class="s2">if </span><span class="s1">(version === </span><span class="s5">3.1</span><span class="s1">) {</span>
+          <span class="s1">assert(req.spdyVersion &gt;= </span><span class="s5">3 </span><span class="s1">&amp;&amp; req.spdyVersion &lt;= </span><span class="s5">3.1</span><span class="s1">)</span>
+        <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+          <span class="s1">assert.strictEqual(req.spdyVersion</span><span class="s4">, </span><span class="s1">version)</span>
+        <span class="s1">}</span>
+        <span class="s1">assert(req.spdyStream)</span>
+        <span class="s1">assert(res.spdyStream)</span>
+
+        <span class="s1">assert.strictEqual(req.method</span><span class="s4">, </span><span class="s3">'GET'</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(req.url</span><span class="s4">, </span><span class="s3">'/get'</span><span class="s1">)</span>
+        <span class="s1">assert.deepStrictEqual(req.headers</span><span class="s4">, </span><span class="s1">{ a: </span><span class="s3">'b'</span><span class="s4">, </span><span class="s1">host: </span><span class="s3">'localhost' </span><span class="s1">})</span>
+
+        <span class="s1">req.on(</span><span class="s3">'end'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">res.writeHead(</span><span class="s5">200</span><span class="s4">, </span><span class="s1">{</span>
+            <span class="s1">ok: </span><span class="s3">'yes'</span>
+          <span class="s1">})</span>
+          <span class="s1">res.end(</span><span class="s3">'response'</span><span class="s1">)</span>
+          <span class="s1">assert(res.finished</span><span class="s4">, </span><span class="s3">'res.finished should be set'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+        <span class="s1">req.resume()</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">it(</span><span class="s3">'should process POST request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(done) {</span>
+      <span class="s2">var </span><span class="s1">stream = client.request({</span>
+        <span class="s1">method: </span><span class="s3">'POST'</span><span class="s4">,</span>
+        <span class="s1">path: </span><span class="s3">'/post'</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+        <span class="s1">assert(!err)</span>
+
+        <span class="s1">stream.on(</span><span class="s3">'response'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(status</span><span class="s4">, </span><span class="s1">headers) {</span>
+          <span class="s1">assert.strictEqual(status</span><span class="s4">, </span><span class="s5">200</span><span class="s1">)</span>
+          <span class="s1">assert.strictEqual(headers.ok</span><span class="s4">, </span><span class="s3">'yes'</span><span class="s1">)</span>
+
+          <span class="s1">fixtures.expectData(stream</span><span class="s4">, </span><span class="s3">'response'</span><span class="s4">, </span><span class="s1">next)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">stream.end(</span><span class="s3">'request'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">server.on(</span><span class="s3">'request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(req</span><span class="s4">, </span><span class="s1">res) {</span>
+        <span class="s1">assert.strictEqual(req.method</span><span class="s4">, </span><span class="s3">'POST'</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(req.url</span><span class="s4">, </span><span class="s3">'/post'</span><span class="s1">)</span>
+
+        <span class="s1">res.writeHead(</span><span class="s5">200</span><span class="s4">, </span><span class="s1">{</span>
+          <span class="s1">ok: </span><span class="s3">'yes'</span>
+        <span class="s1">})</span>
+        <span class="s1">res.end(</span><span class="s3">'response'</span><span class="s1">)</span>
+
+        <span class="s1">fixtures.expectData(req</span><span class="s4">, </span><span class="s3">'request'</span><span class="s4">, </span><span class="s1">next)</span>
+      <span class="s1">})</span>
+
+      <span class="s2">var </span><span class="s1">waiting = </span><span class="s5">2</span>
+      <span class="s2">function </span><span class="s1">next () {</span>
+        <span class="s2">if </span><span class="s1">(--waiting === </span><span class="s5">0</span><span class="s1">) {</span>
+          <span class="s2">return </span><span class="s1">done()</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span>
+
+    <span class="s1">it(</span><span class="s3">'should process expect-continue request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(done) {</span>
+      <span class="s2">var </span><span class="s1">stream = client.request({</span>
+        <span class="s1">method: </span><span class="s3">'GET'</span><span class="s4">,</span>
+        <span class="s1">path: </span><span class="s3">'/get'</span><span class="s4">,</span>
+        <span class="s1">headers: {</span>
+          <span class="s1">Expect: </span><span class="s3">'100-continue'</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+        <span class="s1">assert(!err)</span>
+
+        <span class="s1">stream.on(</span><span class="s3">'response'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(status</span><span class="s4">, </span><span class="s1">headers) {</span>
+          <span class="s1">assert.strictEqual(status</span><span class="s4">, </span><span class="s5">100</span><span class="s1">)</span>
+
+          <span class="s1">fixtures.expectData(stream</span><span class="s4">, </span><span class="s3">'response'</span><span class="s4">, </span><span class="s1">done)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">stream.end()</span>
+      <span class="s1">})</span>
+
+      <span class="s1">server.on(</span><span class="s3">'request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(req</span><span class="s4">, </span><span class="s1">res) {</span>
+        <span class="s1">req.on(</span><span class="s3">'end'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">res.end(</span><span class="s3">'response'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+        <span class="s1">req.resume()</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">it(</span><span class="s3">'should emit `checkContinue` request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(done) {</span>
+      <span class="s2">var </span><span class="s1">stream = client.request({</span>
+        <span class="s1">method: </span><span class="s3">'GET'</span><span class="s4">,</span>
+        <span class="s1">path: </span><span class="s3">'/get'</span><span class="s4">,</span>
+        <span class="s1">headers: {</span>
+          <span class="s1">Expect: </span><span class="s3">'100-continue'</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+        <span class="s1">assert(!err)</span>
+
+        <span class="s1">stream.on(</span><span class="s3">'response'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(status</span><span class="s4">, </span><span class="s1">headers) {</span>
+          <span class="s1">assert.strictEqual(status</span><span class="s4">, </span><span class="s5">100</span><span class="s1">)</span>
+
+          <span class="s1">fixtures.expectData(stream</span><span class="s4">, </span><span class="s3">'response'</span><span class="s4">, </span><span class="s1">done)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">stream.end()</span>
+      <span class="s1">})</span>
+
+      <span class="s1">server.on(</span><span class="s3">'checkContinue'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(req</span><span class="s4">, </span><span class="s1">res) {</span>
+        <span class="s1">req.on(</span><span class="s3">'end'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">res.writeContinue()</span>
+          <span class="s1">res.end(</span><span class="s3">'response'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+        <span class="s1">req.resume()</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">it(</span><span class="s3">'should send PUSH_PROMISE'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(done) {</span>
+      <span class="s2">var </span><span class="s1">stream = client.request({</span>
+        <span class="s1">method: </span><span class="s3">'POST'</span><span class="s4">,</span>
+        <span class="s1">path: </span><span class="s3">'/page'</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+        <span class="s1">assert(!err)</span>
+
+        <span class="s1">stream.on(</span><span class="s3">'pushPromise'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(push) {</span>
+          <span class="s1">assert.strictEqual(push.path</span><span class="s4">, </span><span class="s3">'/push'</span><span class="s1">)</span>
+          <span class="s1">assert.strictEqual(push.headers.yes</span><span class="s4">, </span><span class="s3">'push'</span><span class="s1">)</span>
+
+          <span class="s1">fixtures.expectData(push</span><span class="s4">, </span><span class="s3">'push'</span><span class="s4">, </span><span class="s1">next)</span>
+          <span class="s1">fixtures.expectData(stream</span><span class="s4">, </span><span class="s3">'response'</span><span class="s4">, </span><span class="s1">next)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">stream.end(</span><span class="s3">'request'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">server.on(</span><span class="s3">'request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(req</span><span class="s4">, </span><span class="s1">res) {</span>
+        <span class="s1">assert.strictEqual(req.method</span><span class="s4">, </span><span class="s3">'POST'</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(req.url</span><span class="s4">, </span><span class="s3">'/page'</span><span class="s1">)</span>
+
+        <span class="s1">res.writeHead(</span><span class="s5">200</span><span class="s4">, </span><span class="s1">{</span>
+          <span class="s1">ok: </span><span class="s3">'yes'</span>
+        <span class="s1">})</span>
+
+        <span class="s2">var </span><span class="s1">push = res.push(</span><span class="s3">'/push'</span><span class="s4">, </span><span class="s1">{</span>
+          <span class="s1">request: {</span>
+            <span class="s1">yes: </span><span class="s3">'push'</span>
+          <span class="s1">}</span>
+        <span class="s1">})</span>
+        <span class="s1">push.end(</span><span class="s3">'push'</span><span class="s1">)</span>
+
+        <span class="s1">res.end(</span><span class="s3">'response'</span><span class="s1">)</span>
+
+        <span class="s1">fixtures.expectData(req</span><span class="s4">, </span><span class="s3">'request'</span><span class="s4">, </span><span class="s1">next)</span>
+      <span class="s1">})</span>
+
+      <span class="s2">var </span><span class="s1">waiting = </span><span class="s5">3</span>
+      <span class="s2">function </span><span class="s1">next () {</span>
+        <span class="s2">if </span><span class="s1">(--waiting === </span><span class="s5">0</span><span class="s1">) {</span>
+          <span class="s2">return </span><span class="s1">done()</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span>
+
+    <span class="s1">it(</span><span class="s3">'should receive trailing headers'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(done) {</span>
+      <span class="s2">var </span><span class="s1">stream = client.request({</span>
+        <span class="s1">method: </span><span class="s3">'POST'</span><span class="s4">,</span>
+        <span class="s1">path: </span><span class="s3">'/post'</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+        <span class="s1">assert(!err)</span>
+
+        <span class="s1">stream.sendHeaders({ trai: </span><span class="s3">'ler' </span><span class="s1">})</span>
+        <span class="s1">stream.end()</span>
+
+        <span class="s1">stream.on(</span><span class="s3">'response'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(status</span><span class="s4">, </span><span class="s1">headers) {</span>
+          <span class="s1">assert.strictEqual(status</span><span class="s4">, </span><span class="s5">200</span><span class="s1">)</span>
+          <span class="s1">assert.strictEqual(headers.ok</span><span class="s4">, </span><span class="s3">'yes'</span><span class="s1">)</span>
+
+          <span class="s1">fixtures.expectData(stream</span><span class="s4">, </span><span class="s3">'response'</span><span class="s4">, </span><span class="s1">done)</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">server.on(</span><span class="s3">'request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(req</span><span class="s4">, </span><span class="s1">res) {</span>
+        <span class="s2">var </span><span class="s1">gotHeaders = </span><span class="s2">false</span>
+        <span class="s1">req.on(</span><span class="s3">'trailers'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(headers) {</span>
+          <span class="s1">gotHeaders = </span><span class="s2">true</span>
+          <span class="s1">assert.strictEqual(headers.trai</span><span class="s4">, </span><span class="s3">'ler'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">req.on(</span><span class="s3">'end'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">assert(gotHeaders)</span>
+
+          <span class="s1">res.writeHead(</span><span class="s5">200</span><span class="s4">, </span><span class="s1">{</span>
+            <span class="s1">ok: </span><span class="s3">'yes'</span>
+          <span class="s1">})</span>
+          <span class="s1">res.end(</span><span class="s3">'response'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+        <span class="s1">req.resume()</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">it(</span><span class="s3">'should call .writeHead() automatically'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(done) {</span>
+      <span class="s2">var </span><span class="s1">stream = client.request({</span>
+        <span class="s1">method: </span><span class="s3">'POST'</span><span class="s4">,</span>
+        <span class="s1">path: </span><span class="s3">'/post'</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+        <span class="s1">assert(!err)</span>
+
+        <span class="s1">stream.on(</span><span class="s3">'response'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(status</span><span class="s4">, </span><span class="s1">headers) {</span>
+          <span class="s1">assert.strictEqual(status</span><span class="s4">, </span><span class="s5">300</span><span class="s1">)</span>
+
+          <span class="s1">fixtures.expectData(stream</span><span class="s4">, </span><span class="s3">'response'</span><span class="s4">, </span><span class="s1">done)</span>
+        <span class="s1">})</span>
+        <span class="s1">stream.end()</span>
+      <span class="s1">})</span>
+
+      <span class="s1">server.on(</span><span class="s3">'request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(req</span><span class="s4">, </span><span class="s1">res) {</span>
+        <span class="s1">req.on(</span><span class="s3">'end'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">res.statusCode = </span><span class="s5">300</span>
+          <span class="s1">res.end(</span><span class="s3">'response'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+        <span class="s1">req.resume()</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">it(</span><span class="s3">'should not crash on .writeHead() after socket close'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(done) {</span>
+      <span class="s2">var </span><span class="s1">stream = client.request({</span>
+        <span class="s1">method: </span><span class="s3">'POST'</span><span class="s4">,</span>
+        <span class="s1">path: </span><span class="s3">'/post'</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+        <span class="s1">assert(!err)</span>
+
+        <span class="s1">setTimeout(</span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">client.socket.destroy()</span>
+        <span class="s1">}</span><span class="s4">, </span><span class="s5">50</span><span class="s1">)</span>
+        <span class="s1">stream.on(</span><span class="s3">'error'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {})</span>
+        <span class="s1">stream.end()</span>
+      <span class="s1">})</span>
+
+      <span class="s1">server.on(</span><span class="s3">'request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(req</span><span class="s4">, </span><span class="s1">res) {</span>
+        <span class="s1">req.connection.on(</span><span class="s3">'close'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">assert.doesNotThrow(</span><span class="s2">function </span><span class="s1">() {</span>
+            <span class="s1">res.writeHead(</span><span class="s5">200</span><span class="s1">)</span>
+            <span class="s1">res.end(</span><span class="s3">'response'</span><span class="s1">)</span>
+          <span class="s1">})</span>
+          <span class="s1">done()</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">it(</span><span class="s3">'should not crash on .push() after socket close'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(done) {</span>
+      <span class="s2">var </span><span class="s1">stream = client.request({</span>
+        <span class="s1">method: </span><span class="s3">'POST'</span><span class="s4">,</span>
+        <span class="s1">path: </span><span class="s3">'/post'</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+        <span class="s1">assert(!err)</span>
+
+        <span class="s1">setTimeout(</span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">client.socket.destroy()</span>
+        <span class="s1">}</span><span class="s4">, </span><span class="s5">50</span><span class="s1">)</span>
+        <span class="s1">stream.on(</span><span class="s3">'error'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {})</span>
+        <span class="s1">stream.end()</span>
+      <span class="s1">})</span>
+
+      <span class="s1">server.on(</span><span class="s3">'request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(req</span><span class="s4">, </span><span class="s1">res) {</span>
+        <span class="s1">req.connection.on(</span><span class="s3">'close'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">assert.doesNotThrow(</span><span class="s2">function </span><span class="s1">() {</span>
+            <span class="s1">assert.strictEqual(res.push(</span><span class="s3">'/push'</span><span class="s4">, </span><span class="s1">{})</span><span class="s4">, </span><span class="s1">undefined)</span>
+            <span class="s1">res.end(</span><span class="s3">'response'</span><span class="s1">)</span>
+          <span class="s1">})</span>
+          <span class="s1">done()</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">it(</span><span class="s3">'should end response after writing everything down'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(done) {</span>
+      <span class="s2">var </span><span class="s1">stream = client.request({</span>
+        <span class="s1">method: </span><span class="s3">'GET'</span><span class="s4">,</span>
+        <span class="s1">path: </span><span class="s3">'/post'</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+        <span class="s1">assert(!err)</span>
+
+        <span class="s1">stream.on(</span><span class="s3">'response'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(status</span><span class="s4">, </span><span class="s1">headers) {</span>
+          <span class="s1">assert.strictEqual(status</span><span class="s4">, </span><span class="s5">200</span><span class="s1">)</span>
+
+          <span class="s1">fixtures.expectData(stream</span><span class="s4">, </span><span class="s3">'hello world, what</span><span class="s4">\'</span><span class="s3">s up?'</span><span class="s4">, </span><span class="s1">done)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">stream.end()</span>
+      <span class="s1">})</span>
+
+      <span class="s1">server.on(</span><span class="s3">'request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(req</span><span class="s4">, </span><span class="s1">res) {</span>
+        <span class="s1">req.resume()</span>
+        <span class="s1">res.writeHead(</span><span class="s5">200</span><span class="s1">)</span>
+        <span class="s1">res.write(</span><span class="s3">'hello '</span><span class="s1">)</span>
+        <span class="s1">res.write(</span><span class="s3">'world'</span><span class="s1">)</span>
+        <span class="s1">res.write(</span><span class="s3">', what</span><span class="s4">\'</span><span class="s3">s'</span><span class="s1">)</span>
+        <span class="s1">res.write(</span><span class="s3">' up?'</span><span class="s1">)</span>
+        <span class="s1">res.end()</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">it(</span><span class="s3">'should handle x-forwarded-for'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(done) {</span>
+      <span class="s1">client.sendXForwardedFor(</span><span class="s3">'1.2.3.4'</span><span class="s1">)</span>
+
+      <span class="s2">var </span><span class="s1">stream = client.request({</span>
+        <span class="s1">method: </span><span class="s3">'GET'</span><span class="s4">,</span>
+        <span class="s1">path: </span><span class="s3">'/post'</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+        <span class="s1">assert(!err)</span>
+
+        <span class="s1">stream.resume()</span>
+        <span class="s1">stream.on(</span><span class="s3">'end'</span><span class="s4">, </span><span class="s1">done)</span>
+        <span class="s1">stream.end()</span>
+      <span class="s1">})</span>
+
+      <span class="s1">server.on(</span><span class="s3">'request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(req</span><span class="s4">, </span><span class="s1">res) {</span>
+        <span class="s1">assert.strictEqual(req.headers[</span><span class="s3">'x-forwarded-for'</span><span class="s1">]</span><span class="s4">, </span><span class="s3">'1.2.3.4'</span><span class="s1">)</span>
+        <span class="s1">req.resume()</span>
+        <span class="s1">res.end()</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">it(</span><span class="s3">'should destroy request after end'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(done) {</span>
+      <span class="s2">var </span><span class="s1">stream = client.request({</span>
+        <span class="s1">method: </span><span class="s3">'POST'</span><span class="s4">,</span>
+        <span class="s1">path: </span><span class="s3">'/post'</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+        <span class="s1">assert(!err)</span>
+      <span class="s1">})</span>
+      <span class="s1">stream.end()</span>
+      <span class="s1">stream.on(</span><span class="s3">'error'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {})</span>
+
+      <span class="s1">server.on(</span><span class="s3">'request'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(req</span><span class="s4">, </span><span class="s1">res) {</span>
+        <span class="s1">res.end()</span>
+        <span class="s1">res.destroy()</span>
+        <span class="s1">res.socket.on(</span><span class="s3">'close'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">done()</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+
+  <span class="s1">it(</span><span class="s3">'should respond to http/1.1'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(done) {</span>
+    <span class="s2">var </span><span class="s1">server = spdy.createServer(fixtures.keys</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(req</span><span class="s4">, </span><span class="s1">res) {</span>
+      <span class="s1">assert.strictEqual(req.isSpdy</span><span class="s4">, </span><span class="s1">res.isSpdy)</span>
+      <span class="s1">assert.strictEqual(req.spdyVersion</span><span class="s4">, </span><span class="s1">res.spdyVersion)</span>
+      <span class="s1">assert(!req.isSpdy)</span>
+      <span class="s1">assert.strictEqual(req.spdyVersion</span><span class="s4">, </span><span class="s5">1</span><span class="s1">)</span>
+
+      <span class="s1">res.writeHead(</span><span class="s5">200</span><span class="s1">)</span>
+      <span class="s1">res.end()</span>
+    <span class="s1">})</span>
+
+    <span class="s1">server.listen(fixtures.port</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s2">var </span><span class="s1">req = https.request({</span>
+        <span class="s1">agent: </span><span class="s2">false</span><span class="s4">,</span>
+        <span class="s1">rejectUnauthorized: </span><span class="s2">false</span><span class="s4">,</span>
+        <span class="s1">NPNProtocols: [</span><span class="s3">'http/1.1'</span><span class="s1">]</span><span class="s4">,</span>
+        <span class="s1">port: fixtures.port</span><span class="s4">,</span>
+        <span class="s1">method: </span><span class="s3">'GET'</span><span class="s4">,</span>
+        <span class="s1">path: </span><span class="s3">'/'</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(res) {</span>
+        <span class="s1">assert.strictEqual(res.statusCode</span><span class="s4">, </span><span class="s5">200</span><span class="s1">)</span>
+        <span class="s1">res.resume()</span>
+        <span class="s1">res.on(</span><span class="s3">'end'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">server.close(done)</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">req.end()</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+
+  <span class="s1">it(</span><span class="s3">'should support custom base'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(done) {</span>
+    <span class="s2">function </span><span class="s1">Pseuver (options</span><span class="s4">, </span><span class="s1">listener) {</span>
+      <span class="s1">https.Server.call(</span><span class="s2">this</span><span class="s4">, </span><span class="s1">options</span><span class="s4">, </span><span class="s1">listener)</span>
+    <span class="s1">}</span>
+    <span class="s1">util.inherits(Pseuver</span><span class="s4">, </span><span class="s1">https.Server)</span>
+
+    <span class="s2">var </span><span class="s1">server = spdy.createServer(Pseuver</span><span class="s4">, </span><span class="s1">fixtures.keys</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(req</span><span class="s4">, </span><span class="s1">res) {</span>
+      <span class="s1">assert.strictEqual(req.isSpdy</span><span class="s4">, </span><span class="s1">res.isSpdy)</span>
+      <span class="s1">assert.strictEqual(req.spdyVersion</span><span class="s4">, </span><span class="s1">res.spdyVersion)</span>
+      <span class="s1">assert(!req.isSpdy)</span>
+      <span class="s1">assert.strictEqual(req.spdyVersion</span><span class="s4">, </span><span class="s5">1</span><span class="s1">)</span>
+
+      <span class="s1">res.writeHead(</span><span class="s5">200</span><span class="s1">)</span>
+      <span class="s1">res.end()</span>
+    <span class="s1">})</span>
+
+    <span class="s1">server.listen(fixtures.port</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s2">var </span><span class="s1">req = https.request({</span>
+        <span class="s1">agent: </span><span class="s2">false</span><span class="s4">,</span>
+        <span class="s1">rejectUnauthorized: </span><span class="s2">false</span><span class="s4">,</span>
+        <span class="s1">NPNProtocols: [</span><span class="s3">'http/1.1'</span><span class="s1">]</span><span class="s4">,</span>
+        <span class="s1">port: fixtures.port</span><span class="s4">,</span>
+        <span class="s1">method: </span><span class="s3">'GET'</span><span class="s4">,</span>
+        <span class="s1">path: </span><span class="s3">'/'</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(res) {</span>
+        <span class="s1">assert.strictEqual(res.statusCode</span><span class="s4">, </span><span class="s5">200</span><span class="s1">)</span>
+        <span class="s1">res.resume()</span>
+        <span class="s1">res.on(</span><span class="s3">'end'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+          <span class="s1">server.close(done)</span>
+        <span class="s1">})</span>
+      <span class="s1">})</span>
+
+      <span class="s1">req.end()</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+<span class="s1">})</span>
+</pre>
+</body>
+</html>

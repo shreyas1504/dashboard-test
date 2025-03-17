@@ -1,0 +1,226 @@
+<html>
+<head>
+<title>debug.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #8a8a8a; font-style: italic;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #6897bb;}
+.s7 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+debug.js</font>
+</center></td></tr></table>
+<pre>
+<span class="s1">/**</span>
+ <span class="s1">* This is the common logic for both the Node.js and web browser</span>
+ <span class="s1">* implementations of `debug()`.</span>
+ <span class="s1">*</span>
+ <span class="s1">* Expose `debug()` as the module.</span>
+ <span class="s1">*/</span>
+
+<span class="s0">exports = module.exports = createDebug.debug = createDebug[</span><span class="s2">'default'</span><span class="s0">] = createDebug</span><span class="s3">;</span>
+<span class="s0">exports.coerce = coerce</span><span class="s3">;</span>
+<span class="s0">exports.disable = disable</span><span class="s3">;</span>
+<span class="s0">exports.enable = enable</span><span class="s3">;</span>
+<span class="s0">exports.enabled = enabled</span><span class="s3">;</span>
+<span class="s0">exports.humanize = require(</span><span class="s2">'ms'</span><span class="s0">)</span><span class="s3">;</span>
+
+<span class="s1">/**</span>
+ <span class="s1">* The currently active debug mode names, and names to skip.</span>
+ <span class="s1">*/</span>
+
+<span class="s0">exports.names = []</span><span class="s3">;</span>
+<span class="s0">exports.skips = []</span><span class="s3">;</span>
+
+<span class="s1">/**</span>
+ <span class="s1">* Map of special &quot;%n&quot; handling functions, for the debug &quot;format&quot; argument.</span>
+ <span class="s1">*</span>
+ <span class="s1">* Valid key names are a single, lower or upper-case letter, i.e. &quot;n&quot; and &quot;N&quot;.</span>
+ <span class="s1">*/</span>
+
+<span class="s0">exports.formatters = {}</span><span class="s3">;</span>
+
+<span class="s1">/**</span>
+ <span class="s1">* Previous log timestamp.</span>
+ <span class="s1">*/</span>
+
+<span class="s4">var </span><span class="s0">prevTime</span><span class="s3">;</span>
+
+<span class="s1">/**</span>
+ <span class="s1">* Select a color.</span>
+ <span class="s1">* </span><span class="s5">@param </span><span class="s1">{String} namespace</span>
+ <span class="s1">* </span><span class="s5">@return </span><span class="s1">{Number}</span>
+ <span class="s1">* </span><span class="s5">@api </span><span class="s1">private</span>
+ <span class="s1">*/</span>
+
+<span class="s4">function </span><span class="s0">selectColor(namespace) {</span>
+  <span class="s4">var </span><span class="s0">hash = </span><span class="s6">0</span><span class="s3">, </span><span class="s0">i</span><span class="s3">;</span>
+
+  <span class="s4">for </span><span class="s0">(i </span><span class="s4">in </span><span class="s0">namespace) {</span>
+    <span class="s0">hash  = ((hash &lt;&lt; </span><span class="s6">5</span><span class="s0">) - hash) + namespace.charCodeAt(i)</span><span class="s3">;</span>
+    <span class="s0">hash |= </span><span class="s6">0</span><span class="s3">; </span><span class="s7">// Convert to 32bit integer</span>
+  <span class="s0">}</span>
+
+  <span class="s4">return </span><span class="s0">exports.colors[Math.abs(hash) % exports.colors.length]</span><span class="s3">;</span>
+<span class="s0">}</span>
+
+<span class="s1">/**</span>
+ <span class="s1">* Create a debugger with the given `namespace`.</span>
+ <span class="s1">*</span>
+ <span class="s1">* </span><span class="s5">@param </span><span class="s1">{String} namespace</span>
+ <span class="s1">* </span><span class="s5">@return </span><span class="s1">{Function}</span>
+ <span class="s1">* </span><span class="s5">@api </span><span class="s1">public</span>
+ <span class="s1">*/</span>
+
+<span class="s4">function </span><span class="s0">createDebug(namespace) {</span>
+
+  <span class="s4">function </span><span class="s0">debug() {</span>
+    <span class="s7">// disabled?</span>
+    <span class="s4">if </span><span class="s0">(!debug.enabled) </span><span class="s4">return</span><span class="s3">;</span>
+
+    <span class="s4">var </span><span class="s0">self = debug</span><span class="s3">;</span>
+
+    <span class="s7">// set `diff` timestamp</span>
+    <span class="s4">var </span><span class="s0">curr = +</span><span class="s4">new </span><span class="s0">Date()</span><span class="s3">;</span>
+    <span class="s4">var </span><span class="s0">ms = curr - (prevTime || curr)</span><span class="s3">;</span>
+    <span class="s0">self.diff = ms</span><span class="s3">;</span>
+    <span class="s0">self.prev = prevTime</span><span class="s3">;</span>
+    <span class="s0">self.curr = curr</span><span class="s3">;</span>
+    <span class="s0">prevTime = curr</span><span class="s3">;</span>
+
+    <span class="s7">// turn the `arguments` into a proper Array</span>
+    <span class="s4">var </span><span class="s0">args = </span><span class="s4">new </span><span class="s0">Array(arguments.length)</span><span class="s3">;</span>
+    <span class="s4">for </span><span class="s0">(</span><span class="s4">var </span><span class="s0">i = </span><span class="s6">0</span><span class="s3">; </span><span class="s0">i &lt; args.length</span><span class="s3">; </span><span class="s0">i++) {</span>
+      <span class="s0">args[i] = arguments[i]</span><span class="s3">;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">args[</span><span class="s6">0</span><span class="s0">] = exports.coerce(args[</span><span class="s6">0</span><span class="s0">])</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s0">(</span><span class="s2">'string' </span><span class="s0">!== </span><span class="s4">typeof </span><span class="s0">args[</span><span class="s6">0</span><span class="s0">]) {</span>
+      <span class="s7">// anything else let's inspect with %O</span>
+      <span class="s0">args.unshift(</span><span class="s2">'%O'</span><span class="s0">)</span><span class="s3">;</span>
+    <span class="s0">}</span>
+
+    <span class="s7">// apply any `formatters` transformations</span>
+    <span class="s4">var </span><span class="s0">index = </span><span class="s6">0</span><span class="s3">;</span>
+    <span class="s0">args[</span><span class="s6">0</span><span class="s0">] = args[</span><span class="s6">0</span><span class="s0">].replace(</span><span class="s6">/%([a-zA-Z%])/g</span><span class="s3">, </span><span class="s4">function</span><span class="s0">(match</span><span class="s3">, </span><span class="s0">format) {</span>
+      <span class="s7">// if we encounter an escaped % then don't increase the array index</span>
+      <span class="s4">if </span><span class="s0">(match === </span><span class="s2">'%%'</span><span class="s0">) </span><span class="s4">return </span><span class="s0">match</span><span class="s3">;</span>
+      <span class="s0">index++</span><span class="s3">;</span>
+      <span class="s4">var </span><span class="s0">formatter = exports.formatters[format]</span><span class="s3">;</span>
+      <span class="s4">if </span><span class="s0">(</span><span class="s2">'function' </span><span class="s0">=== </span><span class="s4">typeof </span><span class="s0">formatter) {</span>
+        <span class="s4">var </span><span class="s0">val = args[index]</span><span class="s3">;</span>
+        <span class="s0">match = formatter.call(self</span><span class="s3">, </span><span class="s0">val)</span><span class="s3">;</span>
+
+        <span class="s7">// now we need to remove `args[index]` since it's inlined in the `format`</span>
+        <span class="s0">args.splice(index</span><span class="s3">, </span><span class="s6">1</span><span class="s0">)</span><span class="s3">;</span>
+        <span class="s0">index--</span><span class="s3">;</span>
+      <span class="s0">}</span>
+      <span class="s4">return </span><span class="s0">match</span><span class="s3">;</span>
+    <span class="s0">})</span><span class="s3">;</span>
+
+    <span class="s7">// apply env-specific formatting (colors, etc.)</span>
+    <span class="s0">exports.formatArgs.call(self</span><span class="s3">, </span><span class="s0">args)</span><span class="s3">;</span>
+
+    <span class="s4">var </span><span class="s0">logFn = debug.log || exports.log || console.log.bind(console)</span><span class="s3">;</span>
+    <span class="s0">logFn.apply(self</span><span class="s3">, </span><span class="s0">args)</span><span class="s3">;</span>
+  <span class="s0">}</span>
+
+  <span class="s0">debug.namespace = namespace</span><span class="s3">;</span>
+  <span class="s0">debug.enabled = exports.enabled(namespace)</span><span class="s3">;</span>
+  <span class="s0">debug.useColors = exports.useColors()</span><span class="s3">;</span>
+  <span class="s0">debug.color = selectColor(namespace)</span><span class="s3">;</span>
+
+  <span class="s7">// env-specific initialization logic for debug instances</span>
+  <span class="s4">if </span><span class="s0">(</span><span class="s2">'function' </span><span class="s0">=== </span><span class="s4">typeof </span><span class="s0">exports.init) {</span>
+    <span class="s0">exports.init(debug)</span><span class="s3">;</span>
+  <span class="s0">}</span>
+
+  <span class="s4">return </span><span class="s0">debug</span><span class="s3">;</span>
+<span class="s0">}</span>
+
+<span class="s1">/**</span>
+ <span class="s1">* Enables a debug mode by namespaces. This can include modes</span>
+ <span class="s1">* separated by a colon and wildcards.</span>
+ <span class="s1">*</span>
+ <span class="s1">* </span><span class="s5">@param </span><span class="s1">{String} namespaces</span>
+ <span class="s1">* </span><span class="s5">@api </span><span class="s1">public</span>
+ <span class="s1">*/</span>
+
+<span class="s4">function </span><span class="s0">enable(namespaces) {</span>
+  <span class="s0">exports.save(namespaces)</span><span class="s3">;</span>
+
+  <span class="s0">exports.names = []</span><span class="s3">;</span>
+  <span class="s0">exports.skips = []</span><span class="s3">;</span>
+
+  <span class="s4">var </span><span class="s0">split = (</span><span class="s4">typeof </span><span class="s0">namespaces === </span><span class="s2">'string' </span><span class="s0">? namespaces : </span><span class="s2">''</span><span class="s0">).split(</span><span class="s6">/[\s,]+/</span><span class="s0">)</span><span class="s3">;</span>
+  <span class="s4">var </span><span class="s0">len = split.length</span><span class="s3">;</span>
+
+  <span class="s4">for </span><span class="s0">(</span><span class="s4">var </span><span class="s0">i = </span><span class="s6">0</span><span class="s3">; </span><span class="s0">i &lt; len</span><span class="s3">; </span><span class="s0">i++) {</span>
+    <span class="s4">if </span><span class="s0">(!split[i]) </span><span class="s4">continue</span><span class="s3">; </span><span class="s7">// ignore empty strings</span>
+    <span class="s0">namespaces = split[i].replace(</span><span class="s6">/\*/g</span><span class="s3">, </span><span class="s2">'.*?'</span><span class="s0">)</span><span class="s3">;</span>
+    <span class="s4">if </span><span class="s0">(namespaces[</span><span class="s6">0</span><span class="s0">] === </span><span class="s2">'-'</span><span class="s0">) {</span>
+      <span class="s0">exports.skips.push(</span><span class="s4">new </span><span class="s0">RegExp(</span><span class="s2">'^' </span><span class="s0">+ namespaces.substr(</span><span class="s6">1</span><span class="s0">) + </span><span class="s2">'$'</span><span class="s0">))</span><span class="s3">;</span>
+    <span class="s0">} </span><span class="s4">else </span><span class="s0">{</span>
+      <span class="s0">exports.names.push(</span><span class="s4">new </span><span class="s0">RegExp(</span><span class="s2">'^' </span><span class="s0">+ namespaces + </span><span class="s2">'$'</span><span class="s0">))</span><span class="s3">;</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span>
+<span class="s0">}</span>
+
+<span class="s1">/**</span>
+ <span class="s1">* Disable debug output.</span>
+ <span class="s1">*</span>
+ <span class="s1">* </span><span class="s5">@api </span><span class="s1">public</span>
+ <span class="s1">*/</span>
+
+<span class="s4">function </span><span class="s0">disable() {</span>
+  <span class="s0">exports.enable(</span><span class="s2">''</span><span class="s0">)</span><span class="s3">;</span>
+<span class="s0">}</span>
+
+<span class="s1">/**</span>
+ <span class="s1">* Returns true if the given mode name is enabled, false otherwise.</span>
+ <span class="s1">*</span>
+ <span class="s1">* </span><span class="s5">@param </span><span class="s1">{String} name</span>
+ <span class="s1">* </span><span class="s5">@return </span><span class="s1">{Boolean}</span>
+ <span class="s1">* </span><span class="s5">@api </span><span class="s1">public</span>
+ <span class="s1">*/</span>
+
+<span class="s4">function </span><span class="s0">enabled(name) {</span>
+  <span class="s4">var </span><span class="s0">i</span><span class="s3">, </span><span class="s0">len</span><span class="s3">;</span>
+  <span class="s4">for </span><span class="s0">(i = </span><span class="s6">0</span><span class="s3">, </span><span class="s0">len = exports.skips.length</span><span class="s3">; </span><span class="s0">i &lt; len</span><span class="s3">; </span><span class="s0">i++) {</span>
+    <span class="s4">if </span><span class="s0">(exports.skips[i].test(name)) {</span>
+      <span class="s4">return false</span><span class="s3">;</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span>
+  <span class="s4">for </span><span class="s0">(i = </span><span class="s6">0</span><span class="s3">, </span><span class="s0">len = exports.names.length</span><span class="s3">; </span><span class="s0">i &lt; len</span><span class="s3">; </span><span class="s0">i++) {</span>
+    <span class="s4">if </span><span class="s0">(exports.names[i].test(name)) {</span>
+      <span class="s4">return true</span><span class="s3">;</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span>
+  <span class="s4">return false</span><span class="s3">;</span>
+<span class="s0">}</span>
+
+<span class="s1">/**</span>
+ <span class="s1">* Coerce `val`.</span>
+ <span class="s1">*</span>
+ <span class="s1">* </span><span class="s5">@param </span><span class="s1">{Mixed} val</span>
+ <span class="s1">* </span><span class="s5">@return </span><span class="s1">{Mixed}</span>
+ <span class="s1">* </span><span class="s5">@api </span><span class="s1">private</span>
+ <span class="s1">*/</span>
+
+<span class="s4">function </span><span class="s0">coerce(val) {</span>
+  <span class="s4">if </span><span class="s0">(val </span><span class="s4">instanceof </span><span class="s0">Error) </span><span class="s4">return </span><span class="s0">val.stack || val.message</span><span class="s3">;</span>
+  <span class="s4">return </span><span class="s0">val</span><span class="s3">;</span>
+<span class="s0">}</span>
+</pre>
+</body>
+</html>

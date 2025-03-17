@@ -1,0 +1,86 @@
+<html>
+<head>
+<title>create.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+create.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">sourceMap = require(</span><span class="s2">'./sourceMap'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">hasOwnProperty = Object.prototype.hasOwnProperty</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">processChildren(node</span><span class="s3">, </span><span class="s1">delimeter) {</span>
+    <span class="s0">var </span><span class="s1">list = node.children</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">prev = </span><span class="s0">null</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">delimeter !== </span><span class="s2">'function'</span><span class="s1">) {</span>
+        <span class="s1">list.forEach(</span><span class="s0">this</span><span class="s1">.node</span><span class="s3">, </span><span class="s0">this</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+        <span class="s1">list.forEach(</span><span class="s0">function</span><span class="s1">(node) {</span>
+            <span class="s0">if </span><span class="s1">(prev !== </span><span class="s0">null</span><span class="s1">) {</span>
+                <span class="s1">delimeter.call(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">prev)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">this</span><span class="s1">.node(node)</span><span class="s3">;</span>
+            <span class="s1">prev = node</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">, </span><span class="s0">this</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">createGenerator(config) {</span>
+    <span class="s0">function </span><span class="s1">processNode(node) {</span>
+        <span class="s0">if </span><span class="s1">(hasOwnProperty.call(types</span><span class="s3">, </span><span class="s1">node.type)) {</span>
+            <span class="s1">types[node.type].call(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">node)</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">'Unknown node type: ' </span><span class="s1">+ node.type)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">types = {}</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(config.node) {</span>
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">name </span><span class="s0">in </span><span class="s1">config.node) {</span>
+            <span class="s1">types[name] = config.node[name].generate</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return function</span><span class="s1">(node</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">var </span><span class="s1">buffer = </span><span class="s2">''</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">handlers = {</span>
+            <span class="s1">children: processChildren</span><span class="s3">,</span>
+            <span class="s1">node: processNode</span><span class="s3">,</span>
+            <span class="s1">chunk: </span><span class="s0">function</span><span class="s1">(chunk) {</span>
+                <span class="s1">buffer += chunk</span><span class="s3">;</span>
+            <span class="s1">}</span><span class="s3">,</span>
+            <span class="s1">result: </span><span class="s0">function</span><span class="s1">() {</span>
+                <span class="s0">return </span><span class="s1">buffer</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(options) {</span>
+            <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">options.decorator === </span><span class="s2">'function'</span><span class="s1">) {</span>
+                <span class="s1">handlers = options.decorator(handlers)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">if </span><span class="s1">(options.sourceMap) {</span>
+                <span class="s1">handlers = sourceMap(handlers)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s1">handlers.node(node)</span><span class="s3">;</span>
+
+        <span class="s0">return </span><span class="s1">handlers.result()</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

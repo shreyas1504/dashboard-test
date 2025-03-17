@@ -1,0 +1,64 @@
+<html>
+<head>
+<title>bash_completion.sh</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #808080;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #6897bb;}
+.s6 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+bash_completion.sh</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/bin/bash</span>
+
+<span class="s2"># http://stackoverflow.com/a/246128</span>
+<span class="s1">SOURCE=</span><span class="s3">&quot;</span><span class="s4">$</span><span class="s1">{BASH_SOURCE[</span><span class="s5">0</span><span class="s1">]}</span><span class="s3">&quot;</span>
+<span class="s4">while </span><span class="s1">[ -h </span><span class="s3">&quot;</span><span class="s6">$SOURCE</span><span class="s3">&quot; </span><span class="s1">]; </span><span class="s4">do </span><span class="s2"># resolve $SOURCE until the file is no longer a symlink</span>
+  <span class="s1">DIR=</span><span class="s3">&quot;</span><span class="s4">$</span><span class="s1">( cd -P </span><span class="s3">&quot;</span><span class="s4">$</span><span class="s1">( dirname </span><span class="s3">&quot;</span><span class="s6">$SOURCE</span><span class="s3">&quot; </span><span class="s1">)</span><span class="s3">&quot; </span><span class="s4">&amp;&amp; </span><span class="s1">pwd )</span><span class="s3">&quot;</span>
+  <span class="s1">SOURCE=</span><span class="s3">&quot;</span><span class="s4">$</span><span class="s1">(readlink </span><span class="s3">&quot;</span><span class="s6">$SOURCE</span><span class="s3">&quot;</span><span class="s1">)</span><span class="s3">&quot;</span>
+  <span class="s4">[[ </span><span class="s6">$SOURCE </span><span class="s1">!= /* </span><span class="s4">]] &amp;&amp; </span><span class="s1">SOURCE=</span><span class="s3">&quot;</span><span class="s6">$DIR</span><span class="s3">/</span><span class="s6">$SOURCE</span><span class="s3">&quot; </span><span class="s2"># if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located</span>
+<span class="s4">done</span>
+<span class="s1">JAKE_BIN_DIR=</span><span class="s3">&quot;</span><span class="s4">$</span><span class="s1">( cd -P </span><span class="s3">&quot;</span><span class="s4">$</span><span class="s1">( dirname </span><span class="s3">&quot;</span><span class="s6">$SOURCE</span><span class="s3">&quot; </span><span class="s1">)</span><span class="s3">&quot; </span><span class="s4">&amp;&amp; </span><span class="s1">pwd )</span><span class="s3">&quot;</span>
+
+<span class="s2"># http://stackoverflow.com/a/12495480</span>
+<span class="s2"># http://stackoverflow.com/a/28647824</span>
+<span class="s1">_auto_jake()</span>
+<span class="s1">{</span>
+    <span class="s1">local cur</span>
+    <span class="s1">local -a COMPGEN=()</span>
+    <span class="s1">_get_comp_words_by_ref -n : -c cur</span>
+    
+    <span class="s2"># run auto-completions in jake via our auto_complete.js wrapper</span>
+    <span class="s1">local -a auto_complete_info=( </span><span class="s4">$</span><span class="s1">(export COMP_LINE=</span><span class="s3">&quot;</span><span class="s4">$</span><span class="s1">{COMP_LINE}</span><span class="s3">&quot; </span><span class="s4">&amp;&amp; $</span><span class="s1">{JAKE_BIN_DIR}/auto_complete.js </span><span class="s3">&quot;</span><span class="s6">$cur</span><span class="s3">&quot; &quot;</span><span class="s4">$</span><span class="s1">{</span><span class="s5">3</span><span class="s1">}</span><span class="s3">&quot;</span><span class="s1">) )</span>
+    <span class="s2"># check reply flag</span>
+    <span class="s1">local reply_flag=</span><span class="s3">&quot;</span><span class="s4">$</span><span class="s1">{auto_complete_info[</span><span class="s5">0</span><span class="s1">]}</span><span class="s3">&quot;</span>
+    <span class="s4">if [[ </span><span class="s3">&quot;</span><span class="s4">$</span><span class="s1">{reply_flag}</span><span class="s3">&quot; </span><span class="s4">== </span><span class="s3">&quot;no-complete&quot; </span><span class="s4">]]</span><span class="s1">; </span><span class="s4">then</span>
+        <span class="s1">return </span><span class="s5">1</span>
+    <span class="s4">fi</span>
+    <span class="s1">local auto_completions=(</span><span class="s3">&quot;</span><span class="s4">$</span><span class="s1">{auto_complete_info[@]:</span><span class="s5">1</span><span class="s1">}</span><span class="s3">&quot;</span><span class="s1">)</span>
+    <span class="s1">COMPGEN=( </span><span class="s4">$</span><span class="s1">(compgen -W </span><span class="s3">&quot;</span><span class="s4">$</span><span class="s1">{auto_completions[*]}</span><span class="s3">&quot; </span><span class="s1">-- </span><span class="s3">&quot;</span><span class="s6">$cur</span><span class="s3">&quot;</span><span class="s1">) )</span>
+    <span class="s1">COMPREPLY=( </span><span class="s3">&quot;</span><span class="s4">$</span><span class="s1">{COMPGEN[@]}</span><span class="s3">&quot; </span><span class="s1">)</span>
+    
+    <span class="s1">__ltrim_colon_completions </span><span class="s3">&quot;</span><span class="s6">$cur</span><span class="s3">&quot;</span>
+    
+    <span class="s2"># do we need another space??</span>
+    <span class="s4">if [[ </span><span class="s3">&quot;</span><span class="s4">$</span><span class="s1">{reply_flag}</span><span class="s3">&quot; </span><span class="s4">== </span><span class="s3">&quot;yes-space&quot; </span><span class="s4">]]</span><span class="s1">; </span><span class="s4">then</span>
+        <span class="s1">COMPREPLY=( </span><span class="s3">&quot;</span><span class="s4">$</span><span class="s1">{COMPGEN[@]}</span><span class="s3">&quot; &quot; &quot; </span><span class="s1">)</span>
+    <span class="s4">fi</span>
+    
+    <span class="s1">return </span><span class="s5">0</span>
+<span class="s1">} </span>
+
+<span class="s1">complete -o default -F _auto_jake jake</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<html>
+<head>
+<title>esparse</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8a8a8a;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #cc7832;}
+.s5 { color: #8ea765;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+esparse</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+<span class="s2">/* 
+  Copyright JS Foundation and other contributors, https://js.foundation/ 
+ 
+  Redistribution and use in source and binary forms, with or without 
+  modification, are permitted provided that the following conditions are met: 
+ 
+    * Redistributions of source code must retain the above copyright 
+      notice, this list of conditions and the following disclaimer. 
+    * Redistributions in binary form must reproduce the above copyright 
+      notice, this list of conditions and the following disclaimer in the 
+      documentation and/or other materials provided with the distribution. 
+ 
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; 
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+  ARE DISCLAIMED. IN NO EVENT SHALL &lt;COPYRIGHT HOLDER&gt; BE LIABLE FOR ANY 
+  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND 
+  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
+  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+*/</span>
+
+<span class="s2">/*jslint sloppy:true node:true rhino:true */</span>
+
+<span class="s3">var </span><span class="s1">fs</span><span class="s4">, </span><span class="s1">esprima</span><span class="s4">, </span><span class="s1">fname</span><span class="s4">, </span><span class="s1">forceFile</span><span class="s4">, </span><span class="s1">content</span><span class="s4">, </span><span class="s1">options</span><span class="s4">, </span><span class="s1">syntax</span><span class="s4">;</span>
+
+<span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">require === </span><span class="s5">'function'</span><span class="s1">) {</span>
+    <span class="s1">fs = require(</span><span class="s5">'fs'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s3">try </span><span class="s1">{</span>
+        <span class="s1">esprima = require(</span><span class="s5">'esprima'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s3">catch </span><span class="s1">(e) {</span>
+        <span class="s1">esprima = require(</span><span class="s5">'../'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+<span class="s1">} </span><span class="s3">else if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">load === </span><span class="s5">'function'</span><span class="s1">) {</span>
+    <span class="s3">try </span><span class="s1">{</span>
+        <span class="s1">load(</span><span class="s5">'esprima.js'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s3">catch </span><span class="s1">(e) {</span>
+        <span class="s1">load(</span><span class="s5">'../esprima.js'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s0">// Shims to Node.js objects when running under Rhino.</span>
+<span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">console === </span><span class="s5">'undefined' </span><span class="s1">&amp;&amp; </span><span class="s3">typeof </span><span class="s1">process === </span><span class="s5">'undefined'</span><span class="s1">) {</span>
+    <span class="s1">console = { log: print }</span><span class="s4">;</span>
+    <span class="s1">fs = { readFileSync: readFile }</span><span class="s4">;</span>
+    <span class="s1">process = { argv: arguments</span><span class="s4">, </span><span class="s1">exit: quit }</span><span class="s4">;</span>
+    <span class="s1">process.argv.unshift(</span><span class="s5">'esparse.js'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">process.argv.unshift(</span><span class="s5">'rhino'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">showUsage() {</span>
+    <span class="s1">console.log(</span><span class="s5">'Usage:'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">console.log(</span><span class="s5">'   esparse [options] [file.js]'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">console.log()</span><span class="s4">;</span>
+    <span class="s1">console.log(</span><span class="s5">'Available options:'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">console.log()</span><span class="s4">;</span>
+    <span class="s1">console.log(</span><span class="s5">'  --comment      Gather all line and block comments in an array'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">console.log(</span><span class="s5">'  --loc          Include line-column location info for each syntax node'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">console.log(</span><span class="s5">'  --range        Include index-based range for each syntax node'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">console.log(</span><span class="s5">'  --raw          Display the raw value of literals'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">console.log(</span><span class="s5">'  --tokens       List all tokens in an array'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">console.log(</span><span class="s5">'  --tolerant     Tolerate errors on a best-effort basis (experimental)'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">console.log(</span><span class="s5">'  -v, --version  Shows program version'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">console.log()</span><span class="s4">;</span>
+    <span class="s1">process.exit(</span><span class="s6">1</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s1">options = {}</span><span class="s4">;</span>
+
+<span class="s1">process.argv.splice(</span><span class="s6">2</span><span class="s1">).forEach(</span><span class="s3">function </span><span class="s1">(entry) {</span>
+
+    <span class="s3">if </span><span class="s1">(forceFile || entry === </span><span class="s5">'-' </span><span class="s1">|| entry.slice(</span><span class="s6">0</span><span class="s4">, </span><span class="s6">1</span><span class="s1">) !== </span><span class="s5">'-'</span><span class="s1">) {</span>
+        <span class="s3">if </span><span class="s1">(</span><span class="s3">typeof </span><span class="s1">fname === </span><span class="s5">'string'</span><span class="s1">) {</span>
+            <span class="s1">console.log(</span><span class="s5">'Error: more than one input file.'</span><span class="s1">)</span><span class="s4">;</span>
+            <span class="s1">process.exit(</span><span class="s6">1</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+            <span class="s1">fname = entry</span><span class="s4">;</span>
+        <span class="s1">}</span>
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(entry === </span><span class="s5">'-h' </span><span class="s1">|| entry === </span><span class="s5">'--help'</span><span class="s1">) {</span>
+        <span class="s1">showUsage()</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(entry === </span><span class="s5">'-v' </span><span class="s1">|| entry === </span><span class="s5">'--version'</span><span class="s1">) {</span>
+        <span class="s1">console.log(</span><span class="s5">'ECMAScript Parser (using Esprima version'</span><span class="s4">, </span><span class="s1">esprima.version</span><span class="s4">, </span><span class="s5">')'</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">console.log()</span><span class="s4">;</span>
+        <span class="s1">process.exit(</span><span class="s6">0</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(entry === </span><span class="s5">'--comment'</span><span class="s1">) {</span>
+        <span class="s1">options.comment = </span><span class="s3">true</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(entry === </span><span class="s5">'--loc'</span><span class="s1">) {</span>
+        <span class="s1">options.loc = </span><span class="s3">true</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(entry === </span><span class="s5">'--range'</span><span class="s1">) {</span>
+        <span class="s1">options.range = </span><span class="s3">true</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(entry === </span><span class="s5">'--raw'</span><span class="s1">) {</span>
+        <span class="s1">options.raw = </span><span class="s3">true</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(entry === </span><span class="s5">'--tokens'</span><span class="s1">) {</span>
+        <span class="s1">options.tokens = </span><span class="s3">true</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(entry === </span><span class="s5">'--tolerant'</span><span class="s1">) {</span>
+        <span class="s1">options.tolerant = </span><span class="s3">true</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s3">else if </span><span class="s1">(entry === </span><span class="s5">'--'</span><span class="s1">) {</span>
+        <span class="s1">forceFile = </span><span class="s3">true</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+        <span class="s1">console.log(</span><span class="s5">'Error: unknown option ' </span><span class="s1">+ entry + </span><span class="s5">'.'</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">process.exit(</span><span class="s6">1</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+<span class="s1">})</span><span class="s4">;</span>
+
+<span class="s0">// Special handling for regular expression literal since we need to</span>
+<span class="s0">// convert it to a string literal, otherwise it will be decoded</span>
+<span class="s0">// as object &quot;{}&quot; and the regular expression would be lost.</span>
+<span class="s3">function </span><span class="s1">adjustRegexLiteral(key</span><span class="s4">, </span><span class="s1">value) {</span>
+    <span class="s3">if </span><span class="s1">(key === </span><span class="s5">'value' </span><span class="s1">&amp;&amp; value </span><span class="s3">instanceof </span><span class="s1">RegExp) {</span>
+        <span class="s1">value = value.toString()</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s3">return </span><span class="s1">value</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">run(content) {</span>
+    <span class="s1">syntax = esprima.parse(content</span><span class="s4">, </span><span class="s1">options)</span><span class="s4">;</span>
+    <span class="s1">console.log(JSON.stringify(syntax</span><span class="s4">, </span><span class="s1">adjustRegexLiteral</span><span class="s4">, </span><span class="s6">4</span><span class="s1">))</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s3">try </span><span class="s1">{</span>
+    <span class="s3">if </span><span class="s1">(fname &amp;&amp; (fname !== </span><span class="s5">'-' </span><span class="s1">|| forceFile)) {</span>
+        <span class="s1">run(fs.readFileSync(fname</span><span class="s4">, </span><span class="s5">'utf-8'</span><span class="s1">))</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+        <span class="s3">var </span><span class="s1">content = </span><span class="s5">''</span><span class="s4">;</span>
+        <span class="s1">process.stdin.resume()</span><span class="s4">;</span>
+        <span class="s1">process.stdin.on(</span><span class="s5">'data'</span><span class="s4">, </span><span class="s3">function</span><span class="s1">(chunk) {</span>
+            <span class="s1">content += chunk</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+        <span class="s1">process.stdin.on(</span><span class="s5">'end'</span><span class="s4">, </span><span class="s3">function</span><span class="s1">() {</span>
+            <span class="s1">run(content)</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+    <span class="s1">}</span>
+<span class="s1">} </span><span class="s3">catch </span><span class="s1">(e) {</span>
+    <span class="s1">console.log(</span><span class="s5">'Error: ' </span><span class="s1">+ e.message)</span><span class="s4">;</span>
+    <span class="s1">process.exit(</span><span class="s6">1</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

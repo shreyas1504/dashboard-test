@@ -1,0 +1,153 @@
+<html>
+<head>
+<title>at-rules.schema.json</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #8ea765;}
+.s2 { color: #cc7832;}
+.s3 { color: #6897bb;}
+.s4 { color: #cc7832; font-weight: bold;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+at-rules.schema.json</font>
+</center></td></tr></table>
+<pre><span class="s0">{</span>
+  <span class="s1">&quot;definitions&quot;</span><span class="s2">: </span><span class="s0">{</span>
+    <span class="s1">&quot;stringOrPropertyList&quot;</span><span class="s2">: </span><span class="s0">{</span>
+      <span class="s1">&quot;oneOf&quot;</span><span class="s2">: </span><span class="s0">[</span>
+        <span class="s0">{</span>
+          <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;string&quot;</span>
+        <span class="s0">}</span><span class="s2">,</span>
+        <span class="s0">{</span>
+          <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;array&quot;</span><span class="s2">,</span>
+          <span class="s1">&quot;minItems&quot;</span><span class="s2">: </span><span class="s3">1</span><span class="s2">,</span>
+          <span class="s1">&quot;uniqueItems&quot;</span><span class="s2">: </span><span class="s4">true</span><span class="s2">,</span>
+          <span class="s1">&quot;items&quot;</span><span class="s2">: </span><span class="s0">{</span>
+            <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;string&quot;</span><span class="s2">,</span>
+            <span class="s1">&quot;property-reference&quot;</span><span class="s2">: </span><span class="s0">{</span>
+              <span class="s1">&quot;comment&quot;</span><span class="s2">: </span><span class="s1">&quot;property-reference is an extension to the JSON schema validator. Here it jumps 3 levels up in the hierarchy and tests if a value is an existing key in descriptors. See test/validate-schema.js for implementation details.&quot;</span><span class="s2">,</span>
+              <span class="s1">&quot;$data&quot;</span><span class="s2">: </span><span class="s1">&quot;3&quot;</span>
+            <span class="s0">}</span>
+          <span class="s0">}</span>
+        <span class="s0">}</span>
+      <span class="s0">]</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span><span class="s2">,</span>
+  <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;object&quot;</span><span class="s2">,</span>
+  <span class="s1">&quot;additionalProperties&quot;</span><span class="s2">: </span><span class="s0">{</span>
+    <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;object&quot;</span><span class="s2">,</span>
+    <span class="s1">&quot;additionalProperties&quot;</span><span class="s2">: </span><span class="s4">false</span><span class="s2">,</span>
+    <span class="s1">&quot;properties&quot;</span><span class="s2">: </span><span class="s0">{</span>
+      <span class="s1">&quot;syntax&quot;</span><span class="s2">: </span><span class="s0">{</span>
+        <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;string&quot;</span>
+      <span class="s0">}</span><span class="s2">,</span>
+      <span class="s1">&quot;interfaces&quot;</span><span class="s2">: </span><span class="s0">{</span>
+        <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;array&quot;</span><span class="s2">,</span>
+        <span class="s1">&quot;items&quot;</span><span class="s2">: </span><span class="s0">{</span>
+          <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;string&quot;</span>
+        <span class="s0">}</span>
+      <span class="s0">}</span><span class="s2">,</span>
+      <span class="s1">&quot;groups&quot;</span><span class="s2">: </span><span class="s0">{</span>
+        <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;array&quot;</span><span class="s2">,</span>
+        <span class="s1">&quot;minitems&quot;</span><span class="s2">: </span><span class="s3">1</span><span class="s2">,</span>
+        <span class="s1">&quot;uniqueItems&quot;</span><span class="s2">: </span><span class="s4">true</span><span class="s2">,</span>
+        <span class="s1">&quot;items&quot;</span><span class="s2">: </span><span class="s0">{</span>
+          <span class="s1">&quot;$ref&quot;</span><span class="s2">: </span><span class="s1">&quot;definitions.json#/groupList&quot;</span>
+        <span class="s0">}</span>
+      <span class="s0">}</span><span class="s2">,</span>
+      <span class="s1">&quot;descriptors&quot;</span><span class="s2">: </span><span class="s0">{</span>
+        <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;object&quot;</span><span class="s2">,</span>
+        <span class="s1">&quot;additionalProperties&quot;</span><span class="s2">: </span><span class="s0">{</span>
+          <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;object&quot;</span><span class="s2">,</span>
+          <span class="s1">&quot;additionalProperties&quot;</span><span class="s2">: </span><span class="s4">false</span><span class="s2">,</span>
+          <span class="s1">&quot;properties&quot;</span><span class="s2">: </span><span class="s0">{</span>
+            <span class="s1">&quot;syntax&quot;</span><span class="s2">: </span><span class="s0">{</span>
+              <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;string&quot;</span>
+            <span class="s0">}</span><span class="s2">,</span>
+            <span class="s1">&quot;media&quot;</span><span class="s2">: </span><span class="s0">{</span>
+              <span class="s1">&quot;oneOf&quot;</span><span class="s2">: </span><span class="s0">[</span>
+                <span class="s0">{</span>
+                  <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;string&quot;</span><span class="s2">,</span>
+                  <span class="s1">&quot;enum&quot;</span><span class="s2">: </span><span class="s0">[</span>
+                    <span class="s1">&quot;all&quot;</span><span class="s2">,</span>
+                    <span class="s1">&quot;continuous&quot;</span><span class="s2">,</span>
+                    <span class="s1">&quot;paged&quot;</span><span class="s2">,</span>
+                    <span class="s1">&quot;visual&quot;</span>
+                  <span class="s0">]</span>
+                <span class="s0">}</span><span class="s2">,</span>
+                <span class="s0">{</span>
+                  <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;array&quot;</span><span class="s2">,</span>
+                  <span class="s1">&quot;minItems&quot;</span><span class="s2">: </span><span class="s3">2</span><span class="s2">,</span>
+                  <span class="s1">&quot;uniqueItems&quot;</span><span class="s2">: </span><span class="s4">true</span><span class="s2">,</span>
+                  <span class="s1">&quot;items&quot;</span><span class="s2">: </span><span class="s0">{</span>
+                    <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;string&quot;</span><span class="s2">,</span>
+                    <span class="s1">&quot;enum&quot;</span><span class="s2">: </span><span class="s0">[</span>
+                      <span class="s1">&quot;continuous&quot;</span><span class="s2">,</span>
+                      <span class="s1">&quot;paged&quot;</span><span class="s2">,</span>
+                      <span class="s1">&quot;visual&quot;</span>
+                    <span class="s0">]</span>
+                  <span class="s0">}</span>
+                <span class="s0">}</span>
+              <span class="s0">]</span>
+            <span class="s0">}</span><span class="s2">,</span>
+            <span class="s1">&quot;initial&quot;</span><span class="s2">: </span><span class="s0">{</span>
+              <span class="s1">&quot;$ref&quot;</span><span class="s2">: </span><span class="s1">&quot;#/definitions/stringOrPropertyList&quot;</span>
+            <span class="s0">}</span><span class="s2">,</span>
+            <span class="s1">&quot;percentages&quot;</span><span class="s2">: </span><span class="s0">{</span>
+              <span class="s1">&quot;$ref&quot;</span><span class="s2">: </span><span class="s1">&quot;#/definitions/stringOrPropertyList&quot;</span>
+            <span class="s0">}</span><span class="s2">,</span>
+            <span class="s1">&quot;computed&quot;</span><span class="s2">: </span><span class="s0">{</span>
+              <span class="s1">&quot;$ref&quot;</span><span class="s2">: </span><span class="s1">&quot;#/definitions/stringOrPropertyList&quot;</span>
+            <span class="s0">}</span><span class="s2">,</span>
+            <span class="s1">&quot;order&quot;</span><span class="s2">: </span><span class="s0">{</span>
+              <span class="s1">&quot;enum&quot;</span><span class="s2">: </span><span class="s0">[</span>
+                <span class="s1">&quot;orderOfAppearance&quot;</span><span class="s2">,</span>
+                <span class="s1">&quot;uniqueOrder&quot;</span>
+              <span class="s0">]</span>
+            <span class="s0">}</span><span class="s2">,</span>
+            <span class="s1">&quot;status&quot;</span><span class="s2">: </span><span class="s0">{</span>
+              <span class="s1">&quot;enum&quot;</span><span class="s2">: </span><span class="s0">[</span>
+                <span class="s1">&quot;standard&quot;</span><span class="s2">,</span>
+                <span class="s1">&quot;nonstandard&quot;</span><span class="s2">,</span>
+                <span class="s1">&quot;experimental&quot;</span>
+              <span class="s0">]</span>
+            <span class="s0">}</span>
+          <span class="s0">}</span><span class="s2">,</span>
+          <span class="s1">&quot;required&quot;</span><span class="s2">: </span><span class="s0">[</span>
+            <span class="s1">&quot;syntax&quot;</span><span class="s2">,</span>
+            <span class="s1">&quot;media&quot;</span><span class="s2">,</span>
+            <span class="s1">&quot;initial&quot;</span><span class="s2">,</span>
+            <span class="s1">&quot;percentages&quot;</span><span class="s2">,</span>
+            <span class="s1">&quot;computed&quot;</span><span class="s2">,</span>
+            <span class="s1">&quot;order&quot;</span><span class="s2">,</span>
+            <span class="s1">&quot;status&quot;</span>
+          <span class="s0">]</span>
+        <span class="s0">}</span>
+      <span class="s0">}</span><span class="s2">,</span>
+      <span class="s1">&quot;status&quot;</span><span class="s2">: </span><span class="s0">{</span>
+        <span class="s1">&quot;enum&quot;</span><span class="s2">: </span><span class="s0">[</span>
+          <span class="s1">&quot;standard&quot;</span><span class="s2">,</span>
+          <span class="s1">&quot;nonstandard&quot;</span><span class="s2">,</span>
+          <span class="s1">&quot;experimental&quot;</span>
+        <span class="s0">]</span>
+      <span class="s0">}</span><span class="s2">,</span>
+      <span class="s1">&quot;mdn_url&quot;</span><span class="s2">: </span><span class="s0">{</span>
+        <span class="s1">&quot;type&quot;</span><span class="s2">: </span><span class="s1">&quot;string&quot;</span><span class="s2">,</span>
+        <span class="s1">&quot;pattern&quot;</span><span class="s2">: </span><span class="s1">&quot;^https://developer.mozilla.org/docs/Web/CSS/&quot;</span>
+      <span class="s0">}</span>
+    <span class="s0">}</span><span class="s2">,</span>
+    <span class="s1">&quot;required&quot;</span><span class="s2">: </span><span class="s0">[</span>
+      <span class="s1">&quot;syntax&quot;</span><span class="s2">,</span>
+      <span class="s1">&quot;groups&quot;</span><span class="s2">,</span>
+      <span class="s1">&quot;status&quot;</span>
+    <span class="s0">]</span>
+  <span class="s0">}</span>
+<span class="s0">}</span>
+</pre>
+</body>
+</html>

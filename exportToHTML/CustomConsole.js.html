@@ -1,0 +1,261 @@
+<html>
+<head>
+<title>CustomConsole.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+CustomConsole.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">Object.defineProperty(exports</span><span class="s1">, </span><span class="s0">'__esModule'</span><span class="s1">, </span><span class="s2">{</span>
+  <span class="s2">value: </span><span class="s3">true</span>
+<span class="s2">})</span><span class="s1">;</span>
+<span class="s2">exports.default = </span><span class="s3">void </span><span class="s4">0</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">_assert() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'assert'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_assert = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_console() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'console'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_console = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_util() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_util = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_chalk() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'chalk'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_chalk = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestUtil() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestUtil = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireDefault(obj) {</span>
+  <span class="s3">return </span><span class="s2">obj &amp;&amp; obj.__esModule ? obj : {</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_defineProperty(obj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">value) {</span>
+  <span class="s3">if </span><span class="s2">(key </span><span class="s3">in </span><span class="s2">obj) {</span>
+    <span class="s2">Object.defineProperty(obj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">value: value</span><span class="s1">,</span>
+      <span class="s2">enumerable: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">configurable: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">writable: </span><span class="s3">true</span>
+    <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s2">obj[key] = value</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">obj</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">class </span><span class="s2">CustomConsole </span><span class="s3">extends </span><span class="s2">_console().Console {</span>
+  <span class="s2">constructor(stdout</span><span class="s1">, </span><span class="s2">stderr</span><span class="s1">, </span><span class="s2">formatBuffer = (_type</span><span class="s1">, </span><span class="s2">message) =&gt; message) {</span>
+    <span class="s3">super</span><span class="s2">(stdout</span><span class="s1">, </span><span class="s2">stderr)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_stdout'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_stderr'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_formatBuffer'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_counters'</span><span class="s1">, </span><span class="s2">{})</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_timers'</span><span class="s1">, </span><span class="s2">{})</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_groupDepth'</span><span class="s1">, </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'Console'</span><span class="s1">, </span><span class="s2">_console().Console)</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._stdout = stdout</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._stderr = stderr</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._formatBuffer = formatBuffer</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_log(type</span><span class="s1">, </span><span class="s2">message) {</span>
+    <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_jestUtil().clearLine)(</span><span class="s3">this</span><span class="s2">._stdout)</span><span class="s1">;</span>
+    <span class="s3">super</span><span class="s2">.log(</span>
+      <span class="s3">this</span><span class="s2">._formatBuffer(type</span><span class="s1">, </span><span class="s0">'  '</span><span class="s2">.repeat(</span><span class="s3">this</span><span class="s2">._groupDepth) + message)</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_logError(type</span><span class="s1">, </span><span class="s2">message) {</span>
+    <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_jestUtil().clearLine)(</span><span class="s3">this</span><span class="s2">._stderr)</span><span class="s1">;</span>
+    <span class="s3">super</span><span class="s2">.error(</span>
+      <span class="s3">this</span><span class="s2">._formatBuffer(type</span><span class="s1">, </span><span class="s0">'  '</span><span class="s2">.repeat(</span><span class="s3">this</span><span class="s2">._groupDepth) + message)</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">assert(value</span><span class="s1">, </span><span class="s2">message) {</span>
+    <span class="s3">try </span><span class="s2">{</span>
+      <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_assert().default)(value</span><span class="s1">, </span><span class="s2">message)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">catch </span><span class="s2">(error) {</span>
+      <span class="s3">this</span><span class="s2">._logError(</span><span class="s0">'assert'</span><span class="s1">, </span><span class="s2">error.toString())</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">count(label = </span><span class="s0">'default'</span><span class="s2">) {</span>
+    <span class="s3">if </span><span class="s2">(!</span><span class="s3">this</span><span class="s2">._counters[label]) {</span>
+      <span class="s3">this</span><span class="s2">._counters[label] = </span><span class="s4">0</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">this</span><span class="s2">._log(</span>
+      <span class="s0">'count'</span><span class="s1">,</span>
+      <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_util().format)(</span><span class="s0">`</span><span class="s2">${label}</span><span class="s0">: </span><span class="s2">${++</span><span class="s3">this</span><span class="s2">._counters[label]}</span><span class="s0">`</span><span class="s2">)</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">countReset(label = </span><span class="s0">'default'</span><span class="s2">) {</span>
+    <span class="s3">this</span><span class="s2">._counters[label] = </span><span class="s4">0</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">debug(firstArg</span><span class="s1">, </span><span class="s2">...args) {</span>
+    <span class="s3">this</span><span class="s2">._log(</span><span class="s0">'debug'</span><span class="s1">, </span><span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_util().format)(firstArg</span><span class="s1">, </span><span class="s2">...args))</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">dir(firstArg</span><span class="s1">, </span><span class="s2">options = {}) {</span>
+    <span class="s3">const </span><span class="s2">representation = (</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_util().inspect)(firstArg</span><span class="s1">, </span><span class="s2">options)</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._log(</span><span class="s0">'dir'</span><span class="s1">, </span><span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_util().formatWithOptions)(options</span><span class="s1">, </span><span class="s2">representation))</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">dirxml(firstArg</span><span class="s1">, </span><span class="s2">...args) {</span>
+    <span class="s3">this</span><span class="s2">._log(</span><span class="s0">'dirxml'</span><span class="s1">, </span><span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_util().format)(firstArg</span><span class="s1">, </span><span class="s2">...args))</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">error(firstArg</span><span class="s1">, </span><span class="s2">...args) {</span>
+    <span class="s3">this</span><span class="s2">._logError(</span><span class="s0">'error'</span><span class="s1">, </span><span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_util().format)(firstArg</span><span class="s1">, </span><span class="s2">...args))</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">group(title</span><span class="s1">, </span><span class="s2">...args) {</span>
+    <span class="s3">this</span><span class="s2">._groupDepth++</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(title || args.length &gt; </span><span class="s4">0</span><span class="s2">) {</span>
+      <span class="s3">this</span><span class="s2">._log(</span>
+        <span class="s0">'group'</span><span class="s1">,</span>
+        <span class="s2">_chalk().default.bold((</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_util().format)(title</span><span class="s1">, </span><span class="s2">...args))</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">groupCollapsed(title</span><span class="s1">, </span><span class="s2">...args) {</span>
+    <span class="s3">this</span><span class="s2">._groupDepth++</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(title || args.length &gt; </span><span class="s4">0</span><span class="s2">) {</span>
+      <span class="s3">this</span><span class="s2">._log(</span>
+        <span class="s0">'groupCollapsed'</span><span class="s1">,</span>
+        <span class="s2">_chalk().default.bold((</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_util().format)(title</span><span class="s1">, </span><span class="s2">...args))</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">groupEnd() {</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._groupDepth &gt; </span><span class="s4">0</span><span class="s2">) {</span>
+      <span class="s3">this</span><span class="s2">._groupDepth--</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">info(firstArg</span><span class="s1">, </span><span class="s2">...args) {</span>
+    <span class="s3">this</span><span class="s2">._log(</span><span class="s0">'info'</span><span class="s1">, </span><span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_util().format)(firstArg</span><span class="s1">, </span><span class="s2">...args))</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">log(firstArg</span><span class="s1">, </span><span class="s2">...args) {</span>
+    <span class="s3">this</span><span class="s2">._log(</span><span class="s0">'log'</span><span class="s1">, </span><span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_util().format)(firstArg</span><span class="s1">, </span><span class="s2">...args))</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">time(label = </span><span class="s0">'default'</span><span class="s2">) {</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._timers[label]) {</span>
+      <span class="s3">return</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">this</span><span class="s2">._timers[label] = </span><span class="s3">new </span><span class="s2">Date()</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">timeEnd(label = </span><span class="s0">'default'</span><span class="s2">) {</span>
+    <span class="s3">const </span><span class="s2">startTime = </span><span class="s3">this</span><span class="s2">._timers[label]</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(startTime) {</span>
+      <span class="s3">const </span><span class="s2">endTime = </span><span class="s3">new </span><span class="s2">Date().getTime()</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">time = endTime - startTime.getTime()</span><span class="s1">;</span>
+
+      <span class="s3">this</span><span class="s2">._log(</span>
+        <span class="s0">'time'</span><span class="s1">,</span>
+        <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_util().format)(</span><span class="s0">`</span><span class="s2">${label}</span><span class="s0">: </span><span class="s2">${(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_jestUtil().formatTime)(time)}</span><span class="s0">`</span><span class="s2">)</span>
+      <span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">delete this</span><span class="s2">._timers[label]</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">timeLog(label = </span><span class="s0">'default'</span><span class="s1">, </span><span class="s2">...data) {</span>
+    <span class="s3">const </span><span class="s2">startTime = </span><span class="s3">this</span><span class="s2">._timers[label]</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(startTime) {</span>
+      <span class="s3">const </span><span class="s2">endTime = </span><span class="s3">new </span><span class="s2">Date()</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">time = endTime.getTime() - startTime.getTime()</span><span class="s1">;</span>
+
+      <span class="s3">this</span><span class="s2">._log(</span>
+        <span class="s0">'time'</span><span class="s1">,</span>
+        <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_util().format)(</span>
+          <span class="s0">`</span><span class="s2">${label}</span><span class="s0">: </span><span class="s2">${(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_jestUtil().formatTime)(time)}</span><span class="s0">`</span><span class="s1">,</span>
+          <span class="s2">...data</span>
+        <span class="s2">)</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">warn(firstArg</span><span class="s1">, </span><span class="s2">...args) {</span>
+    <span class="s3">this</span><span class="s2">._logError(</span><span class="s0">'warn'</span><span class="s1">, </span><span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_util().format)(firstArg</span><span class="s1">, </span><span class="s2">...args))</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">getBuffer() {</span>
+    <span class="s3">return </span><span class="s2">undefined</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s2">exports.default = CustomConsole</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

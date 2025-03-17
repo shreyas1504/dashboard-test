@@ -1,0 +1,72 @@
+<html>
+<head>
+<title>walk.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+walk.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">noop = </span><span class="s0">function</span><span class="s1">() {}</span><span class="s2">;</span>
+
+<span class="s0">function </span><span class="s1">ensureFunction(value) {</span>
+    <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'function' </span><span class="s1">? value : noop</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = </span><span class="s0">function</span><span class="s1">(node</span><span class="s2">, </span><span class="s1">options</span><span class="s2">, </span><span class="s1">context) {</span>
+    <span class="s0">function </span><span class="s1">walk(node) {</span>
+        <span class="s1">enter.call(context</span><span class="s2">, </span><span class="s1">node)</span><span class="s2">;</span>
+
+        <span class="s0">switch </span><span class="s1">(node.type) {</span>
+            <span class="s0">case </span><span class="s3">'Group'</span><span class="s1">:</span>
+                <span class="s1">node.terms.forEach(walk)</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'Multiplier'</span><span class="s1">:</span>
+                <span class="s1">walk(node.term)</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'Type'</span><span class="s1">:</span>
+            <span class="s0">case </span><span class="s3">'Property'</span><span class="s1">:</span>
+            <span class="s0">case </span><span class="s3">'Keyword'</span><span class="s1">:</span>
+            <span class="s0">case </span><span class="s3">'AtKeyword'</span><span class="s1">:</span>
+            <span class="s0">case </span><span class="s3">'Function'</span><span class="s1">:</span>
+            <span class="s0">case </span><span class="s3">'String'</span><span class="s1">:</span>
+            <span class="s0">case </span><span class="s3">'Token'</span><span class="s1">:</span>
+            <span class="s0">case </span><span class="s3">'Comma'</span><span class="s1">:</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">default</span><span class="s1">:</span>
+                <span class="s0">throw new </span><span class="s1">Error(</span><span class="s3">'Unknown type: ' </span><span class="s1">+ node.type)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">leave.call(context</span><span class="s2">, </span><span class="s1">node)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">enter = noop</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">leave = noop</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">options === </span><span class="s3">'function'</span><span class="s1">) {</span>
+        <span class="s1">enter = options</span><span class="s2">;</span>
+    <span class="s1">} </span><span class="s0">else if </span><span class="s1">(options) {</span>
+        <span class="s1">enter = ensureFunction(options.enter)</span><span class="s2">;</span>
+        <span class="s1">leave = ensureFunction(options.leave)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(enter === noop &amp;&amp; leave === noop) {</span>
+        <span class="s0">throw new </span><span class="s1">Error(</span><span class="s3">'Neither `enter` nor `leave` walker handler is set or both aren</span><span class="s2">\'</span><span class="s3">t a function'</span><span class="s1">)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">walk(node</span><span class="s2">, </span><span class="s1">context)</span><span class="s2">;</span>
+<span class="s1">}</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

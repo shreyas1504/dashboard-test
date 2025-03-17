@@ -1,0 +1,129 @@
+<html>
+<head>
+<title>validation.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #8a8a8a; font-style: italic;}
+.s4 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s5 { color: #cc7832; font-weight: bold;}
+.s6 { color: #6897bb;}
+.s7 { color: #808080;}
+.s8 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+validation.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* Checks if a status code is allowed in a close frame.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Number} code The status code</span>
+ <span class="s3">* </span><span class="s4">@return </span><span class="s3">{Boolean} `true` if the status code is valid, else `false`</span>
+ <span class="s3">* </span><span class="s4">@public</span>
+ <span class="s3">*/</span>
+<span class="s5">function </span><span class="s2">isValidStatusCode(code) {</span>
+  <span class="s5">return </span><span class="s2">(</span>
+    <span class="s2">(code &gt;= </span><span class="s6">1000 </span><span class="s2">&amp;&amp;</span>
+      <span class="s2">code &lt;= </span><span class="s6">1014 </span><span class="s2">&amp;&amp;</span>
+      <span class="s2">code !== </span><span class="s6">1004 </span><span class="s2">&amp;&amp;</span>
+      <span class="s2">code !== </span><span class="s6">1005 </span><span class="s2">&amp;&amp;</span>
+      <span class="s2">code !== </span><span class="s6">1006</span><span class="s2">) ||</span>
+    <span class="s2">(code &gt;= </span><span class="s6">3000 </span><span class="s2">&amp;&amp; code &lt;= </span><span class="s6">4999</span><span class="s2">)</span>
+  <span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* Checks if a given buffer contains only correct UTF-8.</span>
+ <span class="s3">* Ported from https://www.cl.cam.ac.uk/%7Emgk25/ucs/utf8_check.c by</span>
+ <span class="s3">* Markus Kuhn.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Buffer} buf The buffer to check</span>
+ <span class="s3">* </span><span class="s4">@return </span><span class="s3">{Boolean} `true` if `buf` contains only correct UTF-8, else `false`</span>
+ <span class="s3">* </span><span class="s4">@public</span>
+ <span class="s3">*/</span>
+<span class="s5">function </span><span class="s2">_isValidUTF8(buf) {</span>
+  <span class="s5">const </span><span class="s2">len = buf.length</span><span class="s1">;</span>
+  <span class="s5">let </span><span class="s2">i = </span><span class="s6">0</span><span class="s1">;</span>
+
+  <span class="s5">while </span><span class="s2">(i &lt; len) {</span>
+    <span class="s5">if </span><span class="s2">((buf[i] &amp; </span><span class="s6">0x80</span><span class="s2">) === </span><span class="s6">0</span><span class="s2">) {</span>
+      <span class="s7">// 0xxxxxxx</span>
+      <span class="s2">i++</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s5">else if </span><span class="s2">((buf[i] &amp; </span><span class="s6">0xe0</span><span class="s2">) === </span><span class="s6">0xc0</span><span class="s2">) {</span>
+      <span class="s7">// 110xxxxx 10xxxxxx</span>
+      <span class="s5">if </span><span class="s2">(</span>
+        <span class="s2">i + </span><span class="s6">1 </span><span class="s2">=== len ||</span>
+        <span class="s2">(buf[i + </span><span class="s6">1</span><span class="s2">] &amp; </span><span class="s6">0xc0</span><span class="s2">) !== </span><span class="s6">0x80 </span><span class="s2">||</span>
+        <span class="s2">(buf[i] &amp; </span><span class="s6">0xfe</span><span class="s2">) === </span><span class="s6">0xc0 </span><span class="s7">// Overlong</span>
+      <span class="s2">) {</span>
+        <span class="s5">return false</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">i += </span><span class="s6">2</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s5">else if </span><span class="s2">((buf[i] &amp; </span><span class="s6">0xf0</span><span class="s2">) === </span><span class="s6">0xe0</span><span class="s2">) {</span>
+      <span class="s7">// 1110xxxx 10xxxxxx 10xxxxxx</span>
+      <span class="s5">if </span><span class="s2">(</span>
+        <span class="s2">i + </span><span class="s6">2 </span><span class="s2">&gt;= len ||</span>
+        <span class="s2">(buf[i + </span><span class="s6">1</span><span class="s2">] &amp; </span><span class="s6">0xc0</span><span class="s2">) !== </span><span class="s6">0x80 </span><span class="s2">||</span>
+        <span class="s2">(buf[i + </span><span class="s6">2</span><span class="s2">] &amp; </span><span class="s6">0xc0</span><span class="s2">) !== </span><span class="s6">0x80 </span><span class="s2">||</span>
+        <span class="s2">(buf[i] === </span><span class="s6">0xe0 </span><span class="s2">&amp;&amp; (buf[i + </span><span class="s6">1</span><span class="s2">] &amp; </span><span class="s6">0xe0</span><span class="s2">) === </span><span class="s6">0x80</span><span class="s2">) || </span><span class="s7">// Overlong</span>
+        <span class="s2">(buf[i] === </span><span class="s6">0xed </span><span class="s2">&amp;&amp; (buf[i + </span><span class="s6">1</span><span class="s2">] &amp; </span><span class="s6">0xe0</span><span class="s2">) === </span><span class="s6">0xa0</span><span class="s2">) </span><span class="s7">// Surrogate (U+D800 - U+DFFF)</span>
+      <span class="s2">) {</span>
+        <span class="s5">return false</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">i += </span><span class="s6">3</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s5">else if </span><span class="s2">((buf[i] &amp; </span><span class="s6">0xf8</span><span class="s2">) === </span><span class="s6">0xf0</span><span class="s2">) {</span>
+      <span class="s7">// 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx</span>
+      <span class="s5">if </span><span class="s2">(</span>
+        <span class="s2">i + </span><span class="s6">3 </span><span class="s2">&gt;= len ||</span>
+        <span class="s2">(buf[i + </span><span class="s6">1</span><span class="s2">] &amp; </span><span class="s6">0xc0</span><span class="s2">) !== </span><span class="s6">0x80 </span><span class="s2">||</span>
+        <span class="s2">(buf[i + </span><span class="s6">2</span><span class="s2">] &amp; </span><span class="s6">0xc0</span><span class="s2">) !== </span><span class="s6">0x80 </span><span class="s2">||</span>
+        <span class="s2">(buf[i + </span><span class="s6">3</span><span class="s2">] &amp; </span><span class="s6">0xc0</span><span class="s2">) !== </span><span class="s6">0x80 </span><span class="s2">||</span>
+        <span class="s2">(buf[i] === </span><span class="s6">0xf0 </span><span class="s2">&amp;&amp; (buf[i + </span><span class="s6">1</span><span class="s2">] &amp; </span><span class="s6">0xf0</span><span class="s2">) === </span><span class="s6">0x80</span><span class="s2">) || </span><span class="s7">// Overlong</span>
+        <span class="s2">(buf[i] === </span><span class="s6">0xf4 </span><span class="s2">&amp;&amp; buf[i + </span><span class="s6">1</span><span class="s2">] &gt; </span><span class="s6">0x8f</span><span class="s2">) ||</span>
+        <span class="s2">buf[i] &gt; </span><span class="s6">0xf4 </span><span class="s7">// &gt; U+10FFFF</span>
+      <span class="s2">) {</span>
+        <span class="s5">return false</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">i += </span><span class="s6">4</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s5">else </span><span class="s2">{</span>
+      <span class="s5">return false</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s5">return true</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s5">try </span><span class="s2">{</span>
+  <span class="s5">let </span><span class="s2">isValidUTF8 = require(</span><span class="s0">'utf-8-validate'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s8">/* istanbul ignore if */</span>
+  <span class="s5">if </span><span class="s2">(</span><span class="s5">typeof </span><span class="s2">isValidUTF8 === </span><span class="s0">'object'</span><span class="s2">) {</span>
+    <span class="s2">isValidUTF8 = isValidUTF8.Validation.isValidUTF8</span><span class="s1">; </span><span class="s7">// utf-8-validate@&lt;3.0.0</span>
+  <span class="s2">}</span>
+
+  <span class="s2">module.exports = {</span>
+    <span class="s2">isValidStatusCode</span><span class="s1">,</span>
+    <span class="s2">isValidUTF8(buf) {</span>
+      <span class="s5">return </span><span class="s2">buf.length &lt; </span><span class="s6">150 </span><span class="s2">? _isValidUTF8(buf) : isValidUTF8(buf)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span><span class="s1">;</span>
+<span class="s2">} </span><span class="s5">catch </span><span class="s2">(e) </span><span class="s8">/* istanbul ignore next */ </span><span class="s2">{</span>
+  <span class="s2">module.exports = {</span>
+    <span class="s2">isValidStatusCode</span><span class="s1">,</span>
+    <span class="s2">isValidUTF8: _isValidUTF8</span>
+  <span class="s2">}</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

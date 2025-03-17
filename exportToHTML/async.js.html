@@ -1,0 +1,113 @@
+<html>
+<head>
+<title>async.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+async.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">MissingRefError = require(</span><span class="s0">'./error_classes'</span><span class="s2">).MissingRef</span><span class="s1">;</span>
+
+<span class="s2">module.exports = compileAsync</span><span class="s1">;</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Creates validating function for passed schema with asynchronous loading of missing schemas.</span>
+ <span class="s4">* `loadSchema` option should be a function that accepts schema uri and returns promise that resolves with the schema.</span>
+ <span class="s4">* </span><span class="s5">@this  </span><span class="s4">Ajv</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object}   schema schema object</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Boolean}  meta optional true to compile meta-schema; this parameter can be skipped</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Function} callback an optional node-style callback, it is called with 2 parameters: error (or null) and validating function.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Promise} promise that resolves with a validating function.</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">compileAsync(schema</span><span class="s1">, </span><span class="s2">meta</span><span class="s1">, </span><span class="s2">callback) {</span>
+  <span class="s6">/* eslint no-shadow: 0 */</span>
+  <span class="s6">/* global Promise */</span>
+  <span class="s6">/* jshint validthis: true */</span>
+  <span class="s3">var </span><span class="s2">self = </span><span class="s3">this</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof this</span><span class="s2">._opts.loadSchema != </span><span class="s0">'function'</span><span class="s2">)</span>
+    <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'options.loadSchema should be a function'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">meta == </span><span class="s0">'function'</span><span class="s2">) {</span>
+    <span class="s2">callback = meta</span><span class="s1">;</span>
+    <span class="s2">meta = undefined</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">var </span><span class="s2">p = loadMetaSchemaOf(schema).then(</span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">var </span><span class="s2">schemaObj = self._addSchema(schema</span><span class="s1">, </span><span class="s2">undefined</span><span class="s1">, </span><span class="s2">meta)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">schemaObj.validate || _compileAsync(schemaObj)</span><span class="s1">;</span>
+  <span class="s2">})</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(callback) {</span>
+    <span class="s2">p.then(</span>
+      <span class="s3">function</span><span class="s2">(v) { callback(</span><span class="s3">null</span><span class="s1">, </span><span class="s2">v)</span><span class="s1">; </span><span class="s2">}</span><span class="s1">,</span>
+      <span class="s2">callback</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">p</span><span class="s1">;</span>
+
+
+  <span class="s3">function </span><span class="s2">loadMetaSchemaOf(sch) {</span>
+    <span class="s3">var </span><span class="s2">$schema = sch.$schema</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">$schema &amp;&amp; !self.getSchema($schema)</span>
+            <span class="s2">? compileAsync.call(self</span><span class="s1">, </span><span class="s2">{ $ref: $schema }</span><span class="s1">, </span><span class="s3">true</span><span class="s2">)</span>
+            <span class="s2">: Promise.resolve()</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+
+  <span class="s3">function </span><span class="s2">_compileAsync(schemaObj) {</span>
+    <span class="s3">try </span><span class="s2">{ </span><span class="s3">return </span><span class="s2">self._compile(schemaObj)</span><span class="s1">; </span><span class="s2">}</span>
+    <span class="s3">catch</span><span class="s2">(e) {</span>
+      <span class="s3">if </span><span class="s2">(e </span><span class="s3">instanceof </span><span class="s2">MissingRefError) </span><span class="s3">return </span><span class="s2">loadMissingSchema(e)</span><span class="s1">;</span>
+      <span class="s3">throw </span><span class="s2">e</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+
+    <span class="s3">function </span><span class="s2">loadMissingSchema(e) {</span>
+      <span class="s3">var </span><span class="s2">ref = e.missingSchema</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(added(ref)) </span><span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'Schema ' </span><span class="s2">+ ref + </span><span class="s0">' is loaded but ' </span><span class="s2">+ e.missingRef + </span><span class="s0">' cannot be resolved'</span><span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">var </span><span class="s2">schemaPromise = self._loadingSchemas[ref]</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(!schemaPromise) {</span>
+        <span class="s2">schemaPromise = self._loadingSchemas[ref] = self._opts.loadSchema(ref)</span><span class="s1">;</span>
+        <span class="s2">schemaPromise.then(removePromise</span><span class="s1">, </span><span class="s2">removePromise)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">return </span><span class="s2">schemaPromise.then(</span><span class="s3">function </span><span class="s2">(sch) {</span>
+        <span class="s3">if </span><span class="s2">(!added(ref)) {</span>
+          <span class="s3">return </span><span class="s2">loadMetaSchemaOf(sch).then(</span><span class="s3">function </span><span class="s2">() {</span>
+            <span class="s3">if </span><span class="s2">(!added(ref)) self.addSchema(sch</span><span class="s1">, </span><span class="s2">ref</span><span class="s1">, </span><span class="s2">undefined</span><span class="s1">, </span><span class="s2">meta)</span><span class="s1">;</span>
+          <span class="s2">})</span><span class="s1">;</span>
+        <span class="s2">}</span>
+      <span class="s2">}).then(</span><span class="s3">function</span><span class="s2">() {</span>
+        <span class="s3">return </span><span class="s2">_compileAsync(schemaObj)</span><span class="s1">;</span>
+      <span class="s2">})</span><span class="s1">;</span>
+
+      <span class="s3">function </span><span class="s2">removePromise() {</span>
+        <span class="s3">delete </span><span class="s2">self._loadingSchemas[ref]</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">function </span><span class="s2">added(ref) {</span>
+        <span class="s3">return </span><span class="s2">self._refs[ref] || self._schemas[ref]</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

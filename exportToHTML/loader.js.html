@@ -1,0 +1,197 @@
+<html>
+<head>
+<title>loader.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #808080;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+loader.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * Jake JavaScript build tool 
+ * Copyright 2112 Matthew Eernisse (mde@fleegix.org) 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *         http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+*/</span>
+
+<span class="s2">let </span><span class="s1">path = require(</span><span class="s3">'path'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">let </span><span class="s1">fs = require(</span><span class="s3">'fs'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">let </span><span class="s1">existsSync = fs.existsSync</span><span class="s4">;</span>
+<span class="s2">let </span><span class="s1">utils = require(</span><span class="s3">'./utils'</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s5">// Files like jakelib/foobar.jake.js</span>
+<span class="s2">const </span><span class="s1">JAKELIB_FILE_PAT = </span><span class="s6">/\.jake$|\.js$/</span><span class="s4">;</span>
+<span class="s2">const </span><span class="s1">SUPPORTED_EXTENSIONS = {</span>
+  <span class="s3">'js'</span><span class="s1">: </span><span class="s2">null</span><span class="s4">,</span>
+  <span class="s3">'cjs'</span><span class="s1">: </span><span class="s2">null</span><span class="s4">,</span>
+  <span class="s3">'coffee'</span><span class="s1">: </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">try </span><span class="s1">{</span>
+      <span class="s2">let </span><span class="s1">cs = require(</span><span class="s3">'coffeescript'</span><span class="s1">)</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">cs.register == </span><span class="s3">'function'</span><span class="s1">) {</span>
+        <span class="s1">cs.register()</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s2">catch</span><span class="s1">(e) {</span>
+      <span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">'You have a CoffeeScript Jakefile, but have not installed CoffeeScript'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s4">,</span>
+  <span class="s3">'ls'</span><span class="s1">: </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">try </span><span class="s1">{</span>
+      <span class="s1">require(</span><span class="s3">'livescript'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">catch </span><span class="s1">(e) {</span>
+      <span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">'You have a LiveScript Jakefile, but have not installed LiveScript'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s4">,</span>
+  <span class="s3">'ts'</span><span class="s1">: </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">try </span><span class="s1">{</span>
+      <span class="s1">require(</span><span class="s3">'ts-node/register/transpile-only'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">catch </span><span class="s1">(e) {</span>
+      <span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">'You have a TypeScript Jakefile, but have not installed TypeScript and ts-node'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s4">;</span>
+<span class="s2">const </span><span class="s1">IMPLICIT_JAKEFILE_NAMES = [</span>
+  <span class="s3">'Jakefile'</span><span class="s4">,</span>
+  <span class="s3">'Gulpfile'</span>
+<span class="s1">]</span><span class="s4">;</span>
+
+<span class="s2">let </span><span class="s1">Loader = </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s5">// Load a Jakefile, running the code inside -- this may result in</span>
+  <span class="s5">// tasks getting defined using the original Jake API, e.g.,</span>
+  <span class="s5">// `task('foo' ['bar', 'baz']);`, or can also auto-create tasks</span>
+  <span class="s5">// from any functions exported from the file</span>
+  <span class="s2">function </span><span class="s1">loadFile(filePath) {</span>
+    <span class="s2">let </span><span class="s1">exported = require(filePath)</span><span class="s4">;</span>
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">let </span><span class="s1">[key</span><span class="s4">, </span><span class="s1">value] of Object.entries(exported)) {</span>
+      <span class="s2">let </span><span class="s1">t</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">value == </span><span class="s3">'function'</span><span class="s1">) {</span>
+        <span class="s1">t = jake.task(key</span><span class="s4">, </span><span class="s1">value)</span><span class="s4">;</span>
+        <span class="s1">t.description = </span><span class="s3">'(Exported function)'</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s2">function </span><span class="s1">fileExists(name) {</span>
+    <span class="s2">let </span><span class="s1">nameWithExt = </span><span class="s2">null</span><span class="s4">;</span>
+    <span class="s5">// Support no file extension as well</span>
+    <span class="s2">let </span><span class="s1">exts = Object.keys(SUPPORTED_EXTENSIONS).concat([</span><span class="s3">''</span><span class="s1">])</span><span class="s4">;</span>
+    <span class="s1">exts.some((ext) =&gt; {</span>
+      <span class="s2">let </span><span class="s1">fname = ext ? </span><span class="s3">`</span><span class="s1">${name}</span><span class="s3">.</span><span class="s1">${ext}</span><span class="s3">` </span><span class="s1">: name</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(existsSync(fname)) {</span>
+        <span class="s1">nameWithExt = fname</span><span class="s4">;</span>
+        <span class="s2">return true</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span><span class="s4">;</span>
+    <span class="s2">return </span><span class="s1">nameWithExt</span><span class="s4">;</span>
+  <span class="s1">}</span>
+
+  <span class="s5">// Recursive</span>
+  <span class="s2">function </span><span class="s1">findImplicitJakefile() {</span>
+    <span class="s2">let </span><span class="s1">cwd = process.cwd()</span><span class="s4">;</span>
+    <span class="s2">let </span><span class="s1">names = IMPLICIT_JAKEFILE_NAMES</span><span class="s4">;</span>
+    <span class="s2">let </span><span class="s1">found = </span><span class="s2">null</span><span class="s4">;</span>
+    <span class="s1">names.some((name) =&gt; {</span>
+      <span class="s2">let </span><span class="s1">n</span><span class="s4">;</span>
+      <span class="s5">// Prefer all-lowercase</span>
+      <span class="s1">n = name.toLowerCase()</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">((found = fileExists(n))) {</span>
+        <span class="s2">return </span><span class="s1">found</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s5">// Check mixed-case as well</span>
+      <span class="s1">n = name</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">((found = fileExists(n))) {</span>
+        <span class="s2">return </span><span class="s1">found</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span><span class="s4">;</span>
+    <span class="s2">if </span><span class="s1">(found) {</span>
+      <span class="s2">return </span><span class="s1">found</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">else </span><span class="s1">{</span>
+      <span class="s1">process.chdir(</span><span class="s3">&quot;..&quot;</span><span class="s1">)</span><span class="s4">;</span>
+      <span class="s5">// If we've walked all the way up the directory tree,</span>
+      <span class="s5">// bail out with no result</span>
+      <span class="s2">if </span><span class="s1">(cwd === process.cwd()) {</span>
+        <span class="s2">return null</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s2">return </span><span class="s1">findImplicitJakefile()</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s2">this</span><span class="s1">.loadFile = </span><span class="s2">function </span><span class="s1">(fileSpecified) {</span>
+    <span class="s2">let </span><span class="s1">jakefile</span><span class="s4">;</span>
+    <span class="s2">let </span><span class="s1">origCwd = process.cwd()</span><span class="s4">;</span>
+
+    <span class="s2">if </span><span class="s1">(fileSpecified) {</span>
+      <span class="s2">if </span><span class="s1">(existsSync(fileSpecified)) {</span>
+        <span class="s1">jakefile = fileSpecified</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s2">else </span><span class="s1">{</span>
+      <span class="s1">jakefile = findImplicitJakefile()</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(jakefile) {</span>
+      <span class="s2">let </span><span class="s1">ext = jakefile.split(</span><span class="s3">'.'</span><span class="s1">)[</span><span class="s6">1</span><span class="s1">]</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">loaderFunc = SUPPORTED_EXTENSIONS[ext]</span><span class="s4">;</span>
+      <span class="s1">loaderFunc &amp;&amp; loaderFunc()</span><span class="s4">;</span>
+
+      <span class="s1">loadFile(utils.file.absolutize(jakefile))</span><span class="s4">;</span>
+      <span class="s2">return true</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">else </span><span class="s1">{</span>
+      <span class="s2">if </span><span class="s1">(!fileSpecified) {</span>
+        <span class="s5">// Restore the working directory on failure</span>
+        <span class="s1">process.chdir(origCwd)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s2">return false</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s2">this</span><span class="s1">.loadDirectory = </span><span class="s2">function </span><span class="s1">(d) {</span>
+    <span class="s2">let </span><span class="s1">dirname = d || </span><span class="s3">'jakelib'</span><span class="s4">;</span>
+    <span class="s2">let </span><span class="s1">dirlist</span><span class="s4">;</span>
+    <span class="s1">dirname = utils.file.absolutize(dirname)</span><span class="s4">;</span>
+    <span class="s2">if </span><span class="s1">(existsSync(dirname)) {</span>
+      <span class="s1">dirlist = fs.readdirSync(dirname)</span><span class="s4">;</span>
+      <span class="s1">dirlist.forEach(</span><span class="s2">function </span><span class="s1">(filePath) {</span>
+        <span class="s2">if </span><span class="s1">(JAKELIB_FILE_PAT.test(filePath)) {</span>
+          <span class="s1">loadFile(path.join(dirname</span><span class="s4">, </span><span class="s1">filePath))</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">})</span><span class="s4">;</span>
+      <span class="s2">return true</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">return false</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">module.exports = </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s2">return new </span><span class="s1">Loader()</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

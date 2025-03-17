@@ -1,0 +1,120 @@
+<html>
+<head>
+<title>route.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #8a8a8a;}
+.s5 { color: #808080;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+route.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">conversions = require(</span><span class="s2">'./conversions'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s4">/* 
+    this function routes a model to all other models. 
+ 
+    all functions that are routed have a property `.conversion` attached 
+    to the returned synthetic function. This property is an array 
+    of strings, each with the steps in between the 'from' and 'to' 
+    color models (inclusive). 
+ 
+    conversions that are not possible simply are not included. 
+*/</span>
+
+<span class="s0">function </span><span class="s1">buildGraph() {</span>
+	<span class="s0">var </span><span class="s1">graph = {}</span><span class="s3">;</span>
+	<span class="s5">// https://jsperf.com/object-keys-vs-for-in-with-closure/3</span>
+	<span class="s0">var </span><span class="s1">models = Object.keys(conversions)</span><span class="s3">;</span>
+
+	<span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">len = models.length</span><span class="s3">, </span><span class="s1">i = </span><span class="s6">0</span><span class="s3">; </span><span class="s1">i &lt; len</span><span class="s3">; </span><span class="s1">i++) {</span>
+		<span class="s1">graph[models[i]] = {</span>
+			<span class="s5">// http://jsperf.com/1-vs-infinity</span>
+			<span class="s5">// micro-opt, but this is simple.</span>
+			<span class="s1">distance: -</span><span class="s6">1</span><span class="s3">,</span>
+			<span class="s1">parent: </span><span class="s0">null</span>
+		<span class="s1">}</span><span class="s3">;</span>
+	<span class="s1">}</span>
+
+	<span class="s0">return </span><span class="s1">graph</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s5">// https://en.wikipedia.org/wiki/Breadth-first_search</span>
+<span class="s0">function </span><span class="s1">deriveBFS(fromModel) {</span>
+	<span class="s0">var </span><span class="s1">graph = buildGraph()</span><span class="s3">;</span>
+	<span class="s0">var </span><span class="s1">queue = [fromModel]</span><span class="s3">; </span><span class="s5">// unshift -&gt; queue -&gt; pop</span>
+
+	<span class="s1">graph[fromModel].distance = </span><span class="s6">0</span><span class="s3">;</span>
+
+	<span class="s0">while </span><span class="s1">(queue.length) {</span>
+		<span class="s0">var </span><span class="s1">current = queue.pop()</span><span class="s3">;</span>
+		<span class="s0">var </span><span class="s1">adjacents = Object.keys(conversions[current])</span><span class="s3">;</span>
+
+		<span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">len = adjacents.length</span><span class="s3">, </span><span class="s1">i = </span><span class="s6">0</span><span class="s3">; </span><span class="s1">i &lt; len</span><span class="s3">; </span><span class="s1">i++) {</span>
+			<span class="s0">var </span><span class="s1">adjacent = adjacents[i]</span><span class="s3">;</span>
+			<span class="s0">var </span><span class="s1">node = graph[adjacent]</span><span class="s3">;</span>
+
+			<span class="s0">if </span><span class="s1">(node.distance === -</span><span class="s6">1</span><span class="s1">) {</span>
+				<span class="s1">node.distance = graph[current].distance + </span><span class="s6">1</span><span class="s3">;</span>
+				<span class="s1">node.parent = current</span><span class="s3">;</span>
+				<span class="s1">queue.unshift(adjacent)</span><span class="s3">;</span>
+			<span class="s1">}</span>
+		<span class="s1">}</span>
+	<span class="s1">}</span>
+
+	<span class="s0">return </span><span class="s1">graph</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">link(from</span><span class="s3">, </span><span class="s1">to) {</span>
+	<span class="s0">return function </span><span class="s1">(args) {</span>
+		<span class="s0">return </span><span class="s1">to(from(args))</span><span class="s3">;</span>
+	<span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">wrapConversion(toModel</span><span class="s3">, </span><span class="s1">graph) {</span>
+	<span class="s0">var </span><span class="s1">path = [graph[toModel].parent</span><span class="s3">, </span><span class="s1">toModel]</span><span class="s3">;</span>
+	<span class="s0">var </span><span class="s1">fn = conversions[graph[toModel].parent][toModel]</span><span class="s3">;</span>
+
+	<span class="s0">var </span><span class="s1">cur = graph[toModel].parent</span><span class="s3">;</span>
+	<span class="s0">while </span><span class="s1">(graph[cur].parent) {</span>
+		<span class="s1">path.unshift(graph[cur].parent)</span><span class="s3">;</span>
+		<span class="s1">fn = link(conversions[graph[cur].parent][cur]</span><span class="s3">, </span><span class="s1">fn)</span><span class="s3">;</span>
+		<span class="s1">cur = graph[cur].parent</span><span class="s3">;</span>
+	<span class="s1">}</span>
+
+	<span class="s1">fn.conversion = path</span><span class="s3">;</span>
+	<span class="s0">return </span><span class="s1">fn</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">(fromModel) {</span>
+	<span class="s0">var </span><span class="s1">graph = deriveBFS(fromModel)</span><span class="s3">;</span>
+	<span class="s0">var </span><span class="s1">conversion = {}</span><span class="s3">;</span>
+
+	<span class="s0">var </span><span class="s1">models = Object.keys(graph)</span><span class="s3">;</span>
+	<span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">len = models.length</span><span class="s3">, </span><span class="s1">i = </span><span class="s6">0</span><span class="s3">; </span><span class="s1">i &lt; len</span><span class="s3">; </span><span class="s1">i++) {</span>
+		<span class="s0">var </span><span class="s1">toModel = models[i]</span><span class="s3">;</span>
+		<span class="s0">var </span><span class="s1">node = graph[toModel]</span><span class="s3">;</span>
+
+		<span class="s0">if </span><span class="s1">(node.parent === </span><span class="s0">null</span><span class="s1">) {</span>
+			<span class="s5">// no possible conversion, or this node is the source model.</span>
+			<span class="s0">continue</span><span class="s3">;</span>
+		<span class="s1">}</span>
+
+		<span class="s1">conversion[toModel] = wrapConversion(toModel</span><span class="s3">, </span><span class="s1">graph)</span><span class="s3">;</span>
+	<span class="s1">}</span>
+
+	<span class="s0">return </span><span class="s1">conversion</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+</pre>
+</body>
+</html>

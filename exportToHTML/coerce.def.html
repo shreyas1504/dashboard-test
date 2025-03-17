@@ -1,0 +1,68 @@
+<html>
+<head>
+<title>coerce.def</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+coerce.def</font>
+</center></td></tr></table>
+<pre><span class="s0">{{## def.coerceType:</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $dataType = 'dataType' + $lvl</span>
+      <span class="s0">, $coerced = 'coerced' + $lvl;</span>
+  <span class="s0">}}</span>
+  <span class="s0">var {{=$dataType}} = typeof {{=$data}};</span>
+  <span class="s0">var {{=$coerced}} = undefined;</span>
+
+  <span class="s0">{{? it.opts.coerceTypes == 'array' }}</span>
+    <span class="s0">if ({{=$dataType}} == 'object' &amp;&amp; Array.isArray({{=$data}}) &amp;&amp; {{=$data}}.length == 1) {</span>
+      <span class="s0">{{=$data}} = {{=$data}}[0];</span>
+      <span class="s0">{{=$dataType}} = typeof {{=$data}};</span>
+      <span class="s0">if ({{=it.util.checkDataType(it.schema.type, $data, it.opts.strictNumbers)}}) {{=$coerced}} = {{=$data}};</span>
+    <span class="s0">}</span>
+  <span class="s0">{{?}}</span>
+
+  <span class="s0">if ({{=$coerced}} !== undefined) ;</span>
+  <span class="s0">{{~ $coerceToTypes:$type:$i }}</span>
+    <span class="s0">{{? $type == 'string' }}</span>
+      <span class="s0">else if ({{=$dataType}} == 'number' || {{=$dataType}} == 'boolean')</span>
+        <span class="s0">{{=$coerced}} = '' + {{=$data}};</span>
+      <span class="s0">else if ({{=$data}} === null) {{=$coerced}} = '';</span>
+    <span class="s0">{{?? $type == 'number' || $type == 'integer' }}</span>
+      <span class="s0">else if ({{=$dataType}} == 'boolean' || {{=$data}} === null</span>
+          <span class="s0">|| ({{=$dataType}} == 'string' &amp;&amp; {{=$data}} &amp;&amp; {{=$data}} == +{{=$data}}</span>
+          <span class="s0">{{? $type == 'integer' }} &amp;&amp; !({{=$data}} % 1){{?}}))</span>
+        <span class="s0">{{=$coerced}} = +{{=$data}};</span>
+    <span class="s0">{{?? $type == 'boolean' }}</span>
+      <span class="s0">else if ({{=$data}} === 'false' || {{=$data}} === 0 || {{=$data}} === null)</span>
+        <span class="s0">{{=$coerced}} = false;</span>
+      <span class="s0">else if ({{=$data}} === 'true' || {{=$data}} === 1)</span>
+        <span class="s0">{{=$coerced}} = true;</span>
+    <span class="s0">{{?? $type == 'null' }}</span>
+      <span class="s0">else if ({{=$data}} === '' || {{=$data}} === 0 || {{=$data}} === false)</span>
+        <span class="s0">{{=$coerced}} = null;</span>
+    <span class="s0">{{?? it.opts.coerceTypes == 'array' &amp;&amp; $type == 'array' }}</span>
+      <span class="s0">else if ({{=$dataType}} == 'string' || {{=$dataType}} == 'number' || {{=$dataType}} == 'boolean' || {{=$data}} == null)</span>
+        <span class="s0">{{=$coerced}} = [{{=$data}}];</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{~}}</span>
+  <span class="s0">else {</span>
+    <span class="s0">{{# def.error:'type' }}</span>
+  <span class="s0">}</span>
+
+  <span class="s0">if ({{=$coerced}} !== undefined) {</span>
+    <span class="s0">{{# def.setParentData }}</span>
+    <span class="s0">{{=$data}} = {{=$coerced}};</span>
+    <span class="s0">{{? !$dataLvl }}if ({{=$parentData}} !== undefined){{?}}</span>
+      <span class="s0">{{=$parentData}}[{{=$parentDataProperty}}] = {{=$coerced}};</span>
+  <span class="s0">}</span>
+<span class="s0">#}}</span>
+</pre>
+</body>
+</html>

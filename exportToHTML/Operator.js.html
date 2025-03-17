@@ -1,0 +1,42 @@
+<html>
+<head>
+<title>Operator.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #cc7832; font-weight: bold;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Operator.js</font>
+</center></td></tr></table>
+<pre><span class="s0">// '/' | '*' | ',' | ':' | '+' | '-'</span>
+<span class="s1">module.exports = {</span>
+    <span class="s1">name: </span><span class="s2">'Operator'</span><span class="s3">,</span>
+    <span class="s1">structure: {</span>
+        <span class="s1">value: String</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">parse: </span><span class="s4">function</span><span class="s1">() {</span>
+        <span class="s4">var </span><span class="s1">start = </span><span class="s4">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+
+        <span class="s4">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+
+        <span class="s4">return </span><span class="s1">{</span>
+            <span class="s1">type: </span><span class="s2">'Operator'</span><span class="s3">,</span>
+            <span class="s1">loc: </span><span class="s4">this</span><span class="s1">.getLocation(start</span><span class="s3">, </span><span class="s4">this</span><span class="s1">.scanner.tokenStart)</span><span class="s3">,</span>
+            <span class="s1">value: </span><span class="s4">this</span><span class="s1">.scanner.substrToCursor(start)</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">generate: </span><span class="s4">function</span><span class="s1">(node) {</span>
+        <span class="s4">this</span><span class="s1">.chunk(node.value)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

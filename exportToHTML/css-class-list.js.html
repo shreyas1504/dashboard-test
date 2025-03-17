@@ -1,0 +1,161 @@
+<html>
+<head>
+<title>css-class-list.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #808080;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s7 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+css-class-list.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">values = require(</span><span class="s0">'object.values'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">if </span><span class="s2">(!Object.values) {</span>
+    <span class="s2">values.shim()</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">var </span><span class="s2">CSSClassList = </span><span class="s3">function</span><span class="s2">(node) {</span>
+    <span class="s3">this</span><span class="s2">.parentNode = node</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.classNames = </span><span class="s3">new </span><span class="s2">Set()</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.classAttr = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s4">//this.classValue = null;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Performs a deep clone of this object.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">parentNode the parentNode to assign to the cloned result</span>
+ <span class="s5">*/</span>
+<span class="s2">CSSClassList.prototype.clone = </span><span class="s3">function</span><span class="s2">(parentNode) {</span>
+    <span class="s3">var </span><span class="s2">node = </span><span class="s3">this</span><span class="s1">;</span>
+    <span class="s3">var </span><span class="s2">nodeData = {}</span><span class="s1">;</span>
+
+    <span class="s2">Object.keys(node).forEach(</span><span class="s3">function</span><span class="s2">(key) {</span>
+        <span class="s3">if </span><span class="s2">(key !== </span><span class="s0">'parentNode'</span><span class="s2">) {</span>
+            <span class="s2">nodeData[key] = node[key]</span><span class="s1">;</span>
+        <span class="s2">}</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s4">// Deep-clone node data.</span>
+    <span class="s2">nodeData = JSON.parse(JSON.stringify(nodeData))</span><span class="s1">;</span>
+
+    <span class="s3">var </span><span class="s2">clone = </span><span class="s3">new </span><span class="s2">CSSClassList(parentNode)</span><span class="s1">;</span>
+   <span class="s2">Object.assign(clone</span><span class="s1">, </span><span class="s2">nodeData)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">clone</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">CSSClassList.prototype.hasClass = </span><span class="s3">function</span><span class="s2">() {</span>
+    <span class="s3">this</span><span class="s2">.classAttr = { </span><span class="s4">// empty class attr</span>
+        <span class="s0">'name'</span><span class="s2">: </span><span class="s0">'class'</span><span class="s1">,</span>
+        <span class="s0">'value'</span><span class="s2">: </span><span class="s3">null</span>
+    <span class="s2">}</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">.addClassHandler()</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+
+<span class="s4">// attr.class</span>
+
+<span class="s2">CSSClassList.prototype.addClassHandler = </span><span class="s3">function</span><span class="s2">() {</span>
+
+    <span class="s2">Object.defineProperty(</span><span class="s3">this</span><span class="s2">.parentNode.attrs</span><span class="s1">, </span><span class="s0">'class'</span><span class="s1">, </span><span class="s2">{</span>
+        <span class="s2">get: </span><span class="s3">this</span><span class="s2">.getClassAttr.bind(</span><span class="s3">this</span><span class="s2">)</span><span class="s1">,</span>
+        <span class="s2">set: </span><span class="s3">this</span><span class="s2">.setClassAttr.bind(</span><span class="s3">this</span><span class="s2">)</span><span class="s1">,</span>
+        <span class="s2">enumerable: </span><span class="s3">true</span><span class="s1">,</span>
+        <span class="s2">configurable: </span><span class="s3">true</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">.addClassValueHandler()</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s4">// attr.class.value</span>
+
+<span class="s2">CSSClassList.prototype.addClassValueHandler = </span><span class="s3">function</span><span class="s2">() {</span>
+
+    <span class="s2">Object.defineProperty(</span><span class="s3">this</span><span class="s2">.classAttr</span><span class="s1">, </span><span class="s0">'value'</span><span class="s1">, </span><span class="s2">{</span>
+        <span class="s2">get: </span><span class="s3">this</span><span class="s2">.getClassValue.bind(</span><span class="s3">this</span><span class="s2">)</span><span class="s1">,</span>
+        <span class="s2">set: </span><span class="s3">this</span><span class="s2">.setClassValue.bind(</span><span class="s3">this</span><span class="s2">)</span><span class="s1">,</span>
+        <span class="s2">enumerable: </span><span class="s3">true</span><span class="s1">,</span>
+        <span class="s2">configurable: </span><span class="s3">true</span>
+    <span class="s2">})</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">CSSClassList.prototype.getClassAttr = </span><span class="s3">function</span><span class="s2">() {</span>
+    <span class="s3">return this</span><span class="s2">.classAttr</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">CSSClassList.prototype.setClassAttr = </span><span class="s3">function</span><span class="s2">(newClassAttr) {</span>
+    <span class="s3">this</span><span class="s2">.setClassValue(newClassAttr.value)</span><span class="s1">; </span><span class="s4">// must before applying value handler!</span>
+
+    <span class="s3">this</span><span class="s2">.classAttr = newClassAttr</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.addClassValueHandler()</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">CSSClassList.prototype.getClassValue = </span><span class="s3">function</span><span class="s2">() {</span>
+    <span class="s3">var </span><span class="s2">arrClassNames = Array.from(</span><span class="s3">this</span><span class="s2">.classNames)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">arrClassNames.join(</span><span class="s0">' '</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">CSSClassList.prototype.setClassValue = </span><span class="s3">function</span><span class="s2">(newValue) {</span>
+    <span class="s3">if</span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">newValue === </span><span class="s0">'undefined'</span><span class="s2">) {</span>
+      <span class="s3">this</span><span class="s2">.classNames.clear()</span><span class="s1">;</span>
+      <span class="s3">return</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s3">var </span><span class="s2">arrClassNames = newValue.split(</span><span class="s0">' '</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.classNames = </span><span class="s3">new </span><span class="s2">Set(arrClassNames)</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+
+<span class="s2">CSSClassList.prototype.add = </span><span class="s3">function</span><span class="s2">(</span><span class="s7">/* variadic */</span><span class="s2">) {</span>
+    <span class="s3">this</span><span class="s2">.hasClass()</span><span class="s1">;</span>
+    <span class="s2">Object.values(arguments).forEach(</span><span class="s3">this</span><span class="s2">._addSingle.bind(</span><span class="s3">this</span><span class="s2">))</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">CSSClassList.prototype._addSingle = </span><span class="s3">function</span><span class="s2">(className) {</span>
+    <span class="s3">this</span><span class="s2">.classNames.add(className)</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+
+<span class="s2">CSSClassList.prototype.remove = </span><span class="s3">function</span><span class="s2">(</span><span class="s7">/* variadic */</span><span class="s2">) {</span>
+    <span class="s3">this</span><span class="s2">.hasClass()</span><span class="s1">;</span>
+    <span class="s2">Object.values(arguments).forEach(</span><span class="s3">this</span><span class="s2">._removeSingle.bind(</span><span class="s3">this</span><span class="s2">))</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">CSSClassList.prototype._removeSingle = </span><span class="s3">function</span><span class="s2">(className) {</span>
+    <span class="s3">this</span><span class="s2">.classNames.delete(className)</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+
+<span class="s2">CSSClassList.prototype.item = </span><span class="s3">function</span><span class="s2">(index) {</span>
+    <span class="s3">var </span><span class="s2">arrClassNames = Array.from(</span><span class="s3">this</span><span class="s2">.classNames)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">arrClassNames[index]</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">CSSClassList.prototype.toggle = </span><span class="s3">function</span><span class="s2">(className</span><span class="s1">, </span><span class="s2">force) {</span>
+    <span class="s3">if</span><span class="s2">(</span><span class="s3">this</span><span class="s2">.contains(className) || force === </span><span class="s3">false</span><span class="s2">) {</span>
+        <span class="s3">this</span><span class="s2">.classNames.delete(className)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s3">this</span><span class="s2">.classNames.add(className)</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">CSSClassList.prototype.contains = </span><span class="s3">function</span><span class="s2">(className) {</span>
+    <span class="s3">return this</span><span class="s2">.classNames.has(className)</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+
+<span class="s2">module.exports = CSSClassList</span><span class="s1">;</span></pre>
+</body>
+</html>

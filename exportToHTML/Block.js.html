@@ -1,0 +1,111 @@
+<html>
+<head>
+<title>Block.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Block.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).TYPE</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">rawMode = require(</span><span class="s2">'./Raw'</span><span class="s1">).mode</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">WHITESPACE = TYPE.WhiteSpace</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">COMMENT = TYPE.Comment</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">SEMICOLON = TYPE.Semicolon</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">ATKEYWORD = TYPE.AtKeyword</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">LEFTCURLYBRACKET = TYPE.LeftCurlyBracket</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">RIGHTCURLYBRACKET = TYPE.RightCurlyBracket</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">consumeRaw(startToken) {</span>
+    <span class="s0">return this</span><span class="s1">.Raw(startToken</span><span class="s3">, </span><span class="s0">null</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+<span class="s0">function </span><span class="s1">consumeRule() {</span>
+    <span class="s0">return this</span><span class="s1">.parseWithFallback(</span><span class="s0">this</span><span class="s1">.Rule</span><span class="s3">, </span><span class="s1">consumeRaw)</span><span class="s3">;</span>
+<span class="s1">}</span>
+<span class="s0">function </span><span class="s1">consumeRawDeclaration(startToken) {</span>
+    <span class="s0">return this</span><span class="s1">.Raw(startToken</span><span class="s3">, </span><span class="s1">rawMode.semicolonIncluded</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+<span class="s0">function </span><span class="s1">consumeDeclaration() {</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenType === SEMICOLON) {</span>
+        <span class="s0">return </span><span class="s1">consumeRawDeclaration.call(</span><span class="s0">this</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenIndex)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">node = </span><span class="s0">this</span><span class="s1">.parseWithFallback(</span><span class="s0">this</span><span class="s1">.Declaration</span><span class="s3">, </span><span class="s1">consumeRawDeclaration)</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenType === SEMICOLON) {</span>
+        <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">node</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">name: </span><span class="s2">'Block'</span><span class="s3">,</span>
+    <span class="s1">structure: {</span>
+        <span class="s1">children: [[</span>
+            <span class="s2">'Atrule'</span><span class="s3">,</span>
+            <span class="s2">'Rule'</span><span class="s3">,</span>
+            <span class="s2">'Declaration'</span>
+        <span class="s1">]]</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">parse: </span><span class="s0">function</span><span class="s1">(isDeclaration) {</span>
+        <span class="s0">var </span><span class="s1">consumer = isDeclaration ? consumeDeclaration : consumeRule</span><span class="s3">;</span>
+
+        <span class="s0">var </span><span class="s1">start = </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">children = </span><span class="s0">this</span><span class="s1">.createList()</span><span class="s3">;</span>
+
+        <span class="s0">this</span><span class="s1">.eat(LEFTCURLYBRACKET)</span><span class="s3">;</span>
+
+        <span class="s1">scan:</span>
+        <span class="s0">while </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.scanner.eof) {</span>
+            <span class="s0">switch </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenType) {</span>
+                <span class="s0">case </span><span class="s1">RIGHTCURLYBRACKET:</span>
+                    <span class="s0">break </span><span class="s1">scan</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s1">WHITESPACE:</span>
+                <span class="s0">case </span><span class="s1">COMMENT:</span>
+                    <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s1">ATKEYWORD:</span>
+                    <span class="s1">children.push(</span><span class="s0">this</span><span class="s1">.parseWithFallback(</span><span class="s0">this</span><span class="s1">.Atrule</span><span class="s3">, </span><span class="s1">consumeRaw))</span><span class="s3">;</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+
+                <span class="s0">default</span><span class="s1">:</span>
+                    <span class="s1">children.push(consumer.call(</span><span class="s0">this</span><span class="s1">))</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.scanner.eof) {</span>
+            <span class="s0">this</span><span class="s1">.eat(RIGHTCURLYBRACKET)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">type: </span><span class="s2">'Block'</span><span class="s3">,</span>
+            <span class="s1">loc: </span><span class="s0">this</span><span class="s1">.getLocation(start</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart)</span><span class="s3">,</span>
+            <span class="s1">children: children</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">generate: </span><span class="s0">function</span><span class="s1">(node) {</span>
+        <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">'{'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.children(node</span><span class="s3">, </span><span class="s0">function</span><span class="s1">(prev) {</span>
+            <span class="s0">if </span><span class="s1">(prev.type === </span><span class="s2">'Declaration'</span><span class="s1">) {</span>
+                <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">';'</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">})</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">'}'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">walkContext: </span><span class="s2">'block'</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

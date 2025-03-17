@@ -1,0 +1,155 @@
+<html>
+<head>
+<title>js-yaml</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #8a8a8a;}
+.s5 { color: #cc7832; font-weight: bold;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+js-yaml</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+
+
+<span class="s2">'use strict'</span><span class="s3">;</span>
+
+<span class="s4">/*eslint-disable no-console*/</span>
+
+
+<span class="s0">// stdlib</span>
+<span class="s5">var </span><span class="s1">fs    = require(</span><span class="s2">'fs'</span><span class="s1">)</span><span class="s3">;</span>
+
+
+<span class="s0">// 3rd-party</span>
+<span class="s5">var </span><span class="s1">argparse = require(</span><span class="s2">'argparse'</span><span class="s1">)</span><span class="s3">;</span>
+
+
+<span class="s0">// internal</span>
+<span class="s5">var </span><span class="s1">yaml = require(</span><span class="s2">'..'</span><span class="s1">)</span><span class="s3">;</span>
+
+
+<span class="s0">////////////////////////////////////////////////////////////////////////////////</span>
+
+
+<span class="s5">var </span><span class="s1">cli = </span><span class="s5">new </span><span class="s1">argparse.ArgumentParser({</span>
+  <span class="s1">prog:     </span><span class="s2">'js-yaml'</span><span class="s3">,</span>
+  <span class="s1">version:  require(</span><span class="s2">'../package.json'</span><span class="s1">).version</span><span class="s3">,</span>
+  <span class="s1">addHelp:  </span><span class="s5">true</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+
+<span class="s1">cli.addArgument([ </span><span class="s2">'-c'</span><span class="s3">, </span><span class="s2">'--compact' </span><span class="s1">]</span><span class="s3">, </span><span class="s1">{</span>
+  <span class="s1">help:   </span><span class="s2">'Display errors in compact mode'</span><span class="s3">,</span>
+  <span class="s1">action: </span><span class="s2">'storeTrue'</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+
+<span class="s0">// deprecated (not needed after we removed output colors)</span>
+<span class="s0">// option suppressed, but not completely removed for compatibility</span>
+<span class="s1">cli.addArgument([ </span><span class="s2">'-j'</span><span class="s3">, </span><span class="s2">'--to-json' </span><span class="s1">]</span><span class="s3">, </span><span class="s1">{</span>
+  <span class="s1">help:   argparse.Const.SUPPRESS</span><span class="s3">,</span>
+  <span class="s1">dest:   </span><span class="s2">'json'</span><span class="s3">,</span>
+  <span class="s1">action: </span><span class="s2">'storeTrue'</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+
+<span class="s1">cli.addArgument([ </span><span class="s2">'-t'</span><span class="s3">, </span><span class="s2">'--trace' </span><span class="s1">]</span><span class="s3">, </span><span class="s1">{</span>
+  <span class="s1">help:   </span><span class="s2">'Show stack trace on error'</span><span class="s3">,</span>
+  <span class="s1">action: </span><span class="s2">'storeTrue'</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">cli.addArgument([ </span><span class="s2">'file' </span><span class="s1">]</span><span class="s3">, </span><span class="s1">{</span>
+  <span class="s1">help:   </span><span class="s2">'File to read, utf-8 encoded without BOM'</span><span class="s3">,</span>
+  <span class="s1">nargs:  </span><span class="s2">'?'</span><span class="s3">,</span>
+  <span class="s1">defaultValue: </span><span class="s2">'-'</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+
+<span class="s0">////////////////////////////////////////////////////////////////////////////////</span>
+
+
+<span class="s5">var </span><span class="s1">options = cli.parseArgs()</span><span class="s3">;</span>
+
+
+<span class="s0">////////////////////////////////////////////////////////////////////////////////</span>
+
+<span class="s5">function </span><span class="s1">readFile(filename</span><span class="s3">, </span><span class="s1">encoding</span><span class="s3">, </span><span class="s1">callback) {</span>
+  <span class="s5">if </span><span class="s1">(options.file === </span><span class="s2">'-'</span><span class="s1">) {</span>
+    <span class="s0">// read from stdin</span>
+
+    <span class="s5">var </span><span class="s1">chunks = []</span><span class="s3">;</span>
+
+    <span class="s1">process.stdin.on(</span><span class="s2">'data'</span><span class="s3">, </span><span class="s5">function </span><span class="s1">(chunk) {</span>
+      <span class="s1">chunks.push(chunk)</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s1">process.stdin.on(</span><span class="s2">'end'</span><span class="s3">, </span><span class="s5">function </span><span class="s1">() {</span>
+      <span class="s5">return </span><span class="s1">callback(</span><span class="s5">null</span><span class="s3">, </span><span class="s1">Buffer.concat(chunks).toString(encoding))</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+  <span class="s1">} </span><span class="s5">else </span><span class="s1">{</span>
+    <span class="s1">fs.readFile(filename</span><span class="s3">, </span><span class="s1">encoding</span><span class="s3">, </span><span class="s1">callback)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">readFile(options.file</span><span class="s3">, </span><span class="s2">'utf8'</span><span class="s3">, </span><span class="s5">function </span><span class="s1">(error</span><span class="s3">, </span><span class="s1">input) {</span>
+  <span class="s5">var </span><span class="s1">output</span><span class="s3">, </span><span class="s1">isYaml</span><span class="s3">;</span>
+
+  <span class="s5">if </span><span class="s1">(error) {</span>
+    <span class="s5">if </span><span class="s1">(error.code === </span><span class="s2">'ENOENT'</span><span class="s1">) {</span>
+      <span class="s1">console.error(</span><span class="s2">'File not found: ' </span><span class="s1">+ options.file)</span><span class="s3">;</span>
+      <span class="s1">process.exit(</span><span class="s6">2</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">console.error(</span>
+      <span class="s1">options.trace &amp;&amp; error.stack ||</span>
+      <span class="s1">error.message ||</span>
+      <span class="s1">String(error))</span><span class="s3">;</span>
+
+    <span class="s1">process.exit(</span><span class="s6">1</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s5">try </span><span class="s1">{</span>
+    <span class="s1">output = JSON.parse(input)</span><span class="s3">;</span>
+    <span class="s1">isYaml = </span><span class="s5">false</span><span class="s3">;</span>
+  <span class="s1">} </span><span class="s5">catch </span><span class="s1">(err) {</span>
+    <span class="s5">if </span><span class="s1">(err </span><span class="s5">instanceof </span><span class="s1">SyntaxError) {</span>
+      <span class="s5">try </span><span class="s1">{</span>
+        <span class="s1">output = []</span><span class="s3">;</span>
+        <span class="s1">yaml.loadAll(input</span><span class="s3">, </span><span class="s5">function </span><span class="s1">(doc) { output.push(doc)</span><span class="s3">; </span><span class="s1">}</span><span class="s3">, </span><span class="s1">{})</span><span class="s3">;</span>
+        <span class="s1">isYaml = </span><span class="s5">true</span><span class="s3">;</span>
+
+        <span class="s5">if </span><span class="s1">(output.length === </span><span class="s6">0</span><span class="s1">) output = </span><span class="s5">null</span><span class="s3">;</span>
+        <span class="s5">else if </span><span class="s1">(output.length === </span><span class="s6">1</span><span class="s1">) output = output[</span><span class="s6">0</span><span class="s1">]</span><span class="s3">;</span>
+
+      <span class="s1">} </span><span class="s5">catch </span><span class="s1">(e) {</span>
+        <span class="s5">if </span><span class="s1">(options.trace &amp;&amp; err.stack) console.error(e.stack)</span><span class="s3">;</span>
+        <span class="s5">else </span><span class="s1">console.error(e.toString(options.compact))</span><span class="s3">;</span>
+
+        <span class="s1">process.exit(</span><span class="s6">1</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">} </span><span class="s5">else </span><span class="s1">{</span>
+      <span class="s1">console.error(</span>
+        <span class="s1">options.trace &amp;&amp; err.stack ||</span>
+        <span class="s1">err.message ||</span>
+        <span class="s1">String(err))</span><span class="s3">;</span>
+
+      <span class="s1">process.exit(</span><span class="s6">1</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s5">if </span><span class="s1">(isYaml) console.log(JSON.stringify(output</span><span class="s3">, </span><span class="s5">null</span><span class="s3">, </span><span class="s2">'  '</span><span class="s1">))</span><span class="s3">;</span>
+  <span class="s5">else </span><span class="s1">console.log(yaml.dump(output))</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

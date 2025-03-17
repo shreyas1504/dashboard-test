@@ -1,0 +1,305 @@
+<html>
+<head>
+<title>program.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #808080;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+program.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * Jake JavaScript build tool 
+ * Copyright 2112 Matthew Eernisse (mde@fleegix.org) 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *         http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+*/</span>
+
+<span class="s2">let </span><span class="s1">fs = require(</span><span class="s3">'fs'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">let </span><span class="s1">parseargs = require(</span><span class="s3">'./parseargs'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">let </span><span class="s1">utils = require(</span><span class="s3">'./utils'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">let </span><span class="s1">Program</span><span class="s4">;</span>
+<span class="s2">let </span><span class="s1">usage = require(</span><span class="s3">'fs'</span><span class="s1">).readFileSync(</span><span class="s3">`</span><span class="s1">${__dirname}</span><span class="s3">/../usage.txt`</span><span class="s1">).toString()</span><span class="s4">;</span>
+<span class="s2">let </span><span class="s1">{ Task } = require(</span><span class="s3">'./task/task'</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s2">function </span><span class="s1">die(msg) {</span>
+  <span class="s1">console.log(msg)</span><span class="s4">;</span>
+  <span class="s1">process.stdout.write(</span><span class="s3">''</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">process.stderr.write(</span><span class="s3">''</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s1">process.exit()</span><span class="s4">;</span>
+    <span class="s1">})</span><span class="s4">;</span>
+  <span class="s1">})</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s2">let </span><span class="s1">preempts = {</span>
+  <span class="s1">version: </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">die(jake.version)</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">,</span>
+  <span class="s1">help: </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">die(usage)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s2">let </span><span class="s1">AVAILABLE_OPTS = [</span>
+  <span class="s1">{ full: </span><span class="s3">'jakefile'</span><span class="s4">,</span>
+    <span class="s1">abbr: </span><span class="s3">'f'</span><span class="s4">,</span>
+    <span class="s1">expectValue: </span><span class="s2">true</span>
+  <span class="s1">}</span><span class="s4">,</span>
+  <span class="s1">{ full: </span><span class="s3">'quiet'</span><span class="s4">,</span>
+    <span class="s1">abbr: </span><span class="s3">'q'</span><span class="s4">,</span>
+    <span class="s1">expectValue: </span><span class="s2">false</span>
+  <span class="s1">}</span><span class="s4">,</span>
+  <span class="s1">{ full: </span><span class="s3">'directory'</span><span class="s4">,</span>
+    <span class="s1">abbr: </span><span class="s3">'C'</span><span class="s4">,</span>
+    <span class="s1">expectValue: </span><span class="s2">true</span>
+  <span class="s1">}</span><span class="s4">,</span>
+  <span class="s1">{ full: </span><span class="s3">'always-make'</span><span class="s4">,</span>
+    <span class="s1">abbr: </span><span class="s3">'B'</span><span class="s4">,</span>
+    <span class="s1">expectValue: </span><span class="s2">false</span>
+  <span class="s1">}</span><span class="s4">,</span>
+  <span class="s1">{ full: </span><span class="s3">'tasks'</span><span class="s4">,</span>
+    <span class="s1">abbr: </span><span class="s3">'T'</span><span class="s4">,</span>
+    <span class="s1">expectValue: </span><span class="s2">false</span><span class="s4">,</span>
+    <span class="s1">allowValue: </span><span class="s2">true</span>
+  <span class="s1">}</span><span class="s4">,</span>
+  <span class="s5">// Alias t</span>
+  <span class="s1">{ full: </span><span class="s3">'tasks'</span><span class="s4">,</span>
+    <span class="s1">abbr: </span><span class="s3">'t'</span><span class="s4">,</span>
+    <span class="s1">expectValue: </span><span class="s2">false</span><span class="s4">,</span>
+    <span class="s1">allowValue: </span><span class="s2">true</span>
+  <span class="s1">}</span><span class="s4">,</span>
+  <span class="s5">// Alias ls</span>
+  <span class="s1">{ full: </span><span class="s3">'tasks'</span><span class="s4">,</span>
+    <span class="s1">abbr: </span><span class="s3">'ls'</span><span class="s4">,</span>
+    <span class="s1">expectValue: </span><span class="s2">false</span><span class="s4">,</span>
+    <span class="s1">allowValue: </span><span class="s2">true</span>
+  <span class="s1">}</span><span class="s4">,</span>
+  <span class="s1">{ full: </span><span class="s3">'help'</span><span class="s4">,</span>
+    <span class="s1">abbr: </span><span class="s3">'h'</span><span class="s4">,</span>
+  <span class="s1">}</span><span class="s4">,</span>
+  <span class="s1">{ full: </span><span class="s3">'version'</span><span class="s4">,</span>
+    <span class="s1">abbr: </span><span class="s3">'V'</span><span class="s4">,</span>
+  <span class="s1">}</span><span class="s4">,</span>
+  <span class="s5">// Alias lowercase v</span>
+  <span class="s1">{ full: </span><span class="s3">'version'</span><span class="s4">,</span>
+    <span class="s1">abbr: </span><span class="s3">'v'</span><span class="s4">,</span>
+  <span class="s1">}</span><span class="s4">,</span>
+  <span class="s1">{ full: </span><span class="s3">'jakelibdir'</span><span class="s4">,</span>
+    <span class="s1">abbr: </span><span class="s3">'J'</span><span class="s4">,</span>
+    <span class="s1">expectValue: </span><span class="s2">true</span>
+  <span class="s1">}</span><span class="s4">,</span>
+  <span class="s1">{ full: </span><span class="s3">'allow-rejection'</span><span class="s4">,</span>
+    <span class="s1">abbr: </span><span class="s3">'ar'</span><span class="s4">,</span>
+    <span class="s1">expectValue: </span><span class="s2">false</span>
+  <span class="s1">}</span>
+<span class="s1">]</span><span class="s4">;</span>
+
+<span class="s1">Program = </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s2">this</span><span class="s1">.availableOpts = AVAILABLE_OPTS</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">.opts = {}</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">.taskNames = </span><span class="s2">null</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">.taskArgs = </span><span class="s2">null</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">.envVars = </span><span class="s2">null</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">.die = die</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">Program.prototype = </span><span class="s2">new </span><span class="s1">(</span><span class="s2">function </span><span class="s1">() {</span>
+
+  <span class="s2">this</span><span class="s1">.handleErr = </span><span class="s2">function </span><span class="s1">(err) {</span>
+    <span class="s2">if </span><span class="s1">(jake.listeners(</span><span class="s3">'error'</span><span class="s1">).length !== </span><span class="s6">0</span><span class="s1">) {</span>
+      <span class="s1">jake.emit(</span><span class="s3">'error'</span><span class="s4">, </span><span class="s1">err)</span><span class="s4">;</span>
+      <span class="s2">return</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(jake.listeners(</span><span class="s3">'error'</span><span class="s1">).length) {</span>
+      <span class="s1">jake.emit(</span><span class="s3">'error'</span><span class="s4">, </span><span class="s1">err)</span><span class="s4">;</span>
+      <span class="s2">return</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">utils.logger.error(</span><span class="s3">'jake aborted.'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s2">if </span><span class="s1">(err.stack) {</span>
+      <span class="s1">utils.logger.error(err.stack)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">else </span><span class="s1">{</span>
+      <span class="s1">utils.logger.error(err.message)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">process.stdout.write(</span><span class="s3">''</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s1">process.stderr.write(</span><span class="s3">''</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+        <span class="s1">jake.errorCode = jake.errorCode || </span><span class="s6">1</span><span class="s4">;</span>
+        <span class="s1">process.exit(jake.errorCode)</span><span class="s4">;</span>
+      <span class="s1">})</span><span class="s4">;</span>
+    <span class="s1">})</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s2">this</span><span class="s1">.parseArgs = </span><span class="s2">function </span><span class="s1">(args) {</span>
+    <span class="s2">let </span><span class="s1">result = (</span><span class="s2">new </span><span class="s1">parseargs.Parser(</span><span class="s2">this</span><span class="s1">.availableOpts)).parse(args)</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">.setOpts(result.opts)</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">.setTaskNames(result.taskNames)</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">.setEnvVars(result.envVars)</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s2">this</span><span class="s1">.setOpts = </span><span class="s2">function </span><span class="s1">(options) {</span>
+    <span class="s2">let </span><span class="s1">opts = options || {}</span><span class="s4">;</span>
+    <span class="s1">Object.assign(</span><span class="s2">this</span><span class="s1">.opts</span><span class="s4">, </span><span class="s1">opts)</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s2">this</span><span class="s1">.internalOpts = </span><span class="s2">function </span><span class="s1">(options) {</span>
+    <span class="s2">this</span><span class="s1">.availableOpts = </span><span class="s2">this</span><span class="s1">.availableOpts.concat(options)</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s2">this</span><span class="s1">.autocompletions = </span><span class="s2">function </span><span class="s1">(cur) {</span>
+    <span class="s2">let </span><span class="s1">p</span><span class="s4">; </span><span class="s2">let </span><span class="s1">i</span><span class="s4">; </span><span class="s2">let </span><span class="s1">task</span><span class="s4">;</span>
+    <span class="s2">let </span><span class="s1">commonPrefix = </span><span class="s3">''</span><span class="s4">;</span>
+    <span class="s2">let </span><span class="s1">matches = []</span><span class="s4">;</span>
+
+    <span class="s2">for </span><span class="s1">(p </span><span class="s2">in </span><span class="s1">jake.Task) {</span>
+      <span class="s1">task = jake.Task[p]</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(</span>
+        <span class="s3">'fullName' </span><span class="s2">in </span><span class="s1">task</span>
+          <span class="s1">&amp;&amp; (</span>
+            <span class="s5">// if empty string, program converts to true</span>
+            <span class="s1">cur === </span><span class="s2">true </span><span class="s1">||</span>
+            <span class="s1">task.fullName.indexOf(cur) === </span><span class="s6">0</span>
+          <span class="s1">)</span>
+      <span class="s1">) {</span>
+        <span class="s2">if </span><span class="s1">(matches.length === </span><span class="s6">0</span><span class="s1">) {</span>
+          <span class="s1">commonPrefix = task.fullName</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s2">else </span><span class="s1">{</span>
+          <span class="s2">for </span><span class="s1">(i = commonPrefix.length</span><span class="s4">; </span><span class="s1">i &gt; -</span><span class="s6">1</span><span class="s4">; </span><span class="s1">--i) {</span>
+            <span class="s1">commonPrefix = commonPrefix.substr(</span><span class="s6">0</span><span class="s4">, </span><span class="s1">i)</span><span class="s4">;</span>
+            <span class="s2">if </span><span class="s1">(task.fullName.indexOf(commonPrefix) === </span><span class="s6">0</span><span class="s1">) {</span>
+              <span class="s2">break</span><span class="s4">;</span>
+            <span class="s1">}</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s1">matches.push(task.fullName)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(matches.length &gt; </span><span class="s6">1 </span><span class="s1">&amp;&amp; commonPrefix === cur) {</span>
+      <span class="s1">matches.unshift(</span><span class="s3">'yes-space'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">else </span><span class="s1">{</span>
+      <span class="s1">matches.unshift(</span><span class="s3">'no-space'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">process.stdout.write(matches.join(</span><span class="s3">' '</span><span class="s1">))</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s2">this</span><span class="s1">.setTaskNames = </span><span class="s2">function </span><span class="s1">(names) {</span>
+    <span class="s2">if </span><span class="s1">(names &amp;&amp; !Array.isArray(names)) {</span>
+      <span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">'Task names must be an array'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">this</span><span class="s1">.taskNames = (names &amp;&amp; names.length) ? names : [</span><span class="s3">'default'</span><span class="s1">]</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s2">this</span><span class="s1">.setEnvVars = </span><span class="s2">function </span><span class="s1">(vars) {</span>
+    <span class="s2">this</span><span class="s1">.envVars = vars || </span><span class="s2">null</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s2">this</span><span class="s1">.firstPreemptiveOption = </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">opts = </span><span class="s2">this</span><span class="s1">.opts</span><span class="s4">;</span>
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">let </span><span class="s1">p </span><span class="s2">in </span><span class="s1">opts) {</span>
+      <span class="s2">if </span><span class="s1">(preempts[p]) {</span>
+        <span class="s2">return </span><span class="s1">preempts[p]</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s2">return false</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s2">this</span><span class="s1">.init = </span><span class="s2">function </span><span class="s1">(configuration) {</span>
+    <span class="s2">let </span><span class="s1">self = </span><span class="s2">this</span><span class="s4">;</span>
+    <span class="s2">let </span><span class="s1">config = configuration || {}</span><span class="s4">;</span>
+    <span class="s2">if </span><span class="s1">(config.options) {</span>
+      <span class="s2">this</span><span class="s1">.setOpts(config.options)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(config.taskNames) {</span>
+      <span class="s2">this</span><span class="s1">.setTaskNames(config.taskNames)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(config.envVars) {</span>
+      <span class="s2">this</span><span class="s1">.setEnvVars(config.envVars)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s1">process.addListener(</span><span class="s3">'uncaughtException'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err) {</span>
+      <span class="s1">self.handleErr(err)</span><span class="s4">;</span>
+    <span class="s1">})</span><span class="s4">;</span>
+    <span class="s2">if </span><span class="s1">(!</span><span class="s2">this</span><span class="s1">.opts[</span><span class="s3">'allow-rejection'</span><span class="s1">]) {</span>
+      <span class="s1">process.addListener(</span><span class="s3">'unhandledRejection'</span><span class="s4">, </span><span class="s1">(reason</span><span class="s4">, </span><span class="s1">promise) =&gt; {</span>
+        <span class="s1">utils.logger.error(</span><span class="s3">'Unhandled rejection at:'</span><span class="s4">, </span><span class="s1">promise</span><span class="s4">, </span><span class="s3">'reason:'</span><span class="s4">, </span><span class="s1">reason)</span><span class="s4">;</span>
+        <span class="s1">self.handleErr(reason)</span><span class="s4">;</span>
+      <span class="s1">})</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.envVars) {</span>
+      <span class="s1">Object.assign(process.env</span><span class="s4">, </span><span class="s2">this</span><span class="s1">.envVars)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s2">this</span><span class="s1">.run = </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">rootTask</span><span class="s4">;</span>
+    <span class="s2">let </span><span class="s1">taskNames</span><span class="s4">;</span>
+    <span class="s2">let </span><span class="s1">dirname</span><span class="s4">;</span>
+    <span class="s2">let </span><span class="s1">opts = </span><span class="s2">this</span><span class="s1">.opts</span><span class="s4">;</span>
+
+    <span class="s2">if </span><span class="s1">(opts.autocomplete) {</span>
+      <span class="s2">return this</span><span class="s1">.autocompletions(opts[</span><span class="s3">'autocomplete-cur'</span><span class="s1">]</span><span class="s4">, </span><span class="s1">opts[</span><span class="s3">'autocomplete-prev'</span><span class="s1">])</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s5">// Run with `jake -T`, just show descriptions</span>
+    <span class="s2">if </span><span class="s1">(opts.tasks) {</span>
+      <span class="s2">return </span><span class="s1">jake.showAllTaskDescriptions(opts.tasks)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">taskNames = </span><span class="s2">this</span><span class="s1">.taskNames</span><span class="s4">;</span>
+    <span class="s2">if </span><span class="s1">(!(Array.isArray(taskNames) &amp;&amp; taskNames.length)) {</span>
+      <span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">'Please pass jake.runTasks an array of task-names'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">// Set working dir</span>
+    <span class="s1">dirname = opts.directory</span><span class="s4">;</span>
+    <span class="s2">if </span><span class="s1">(dirname) {</span>
+      <span class="s2">if </span><span class="s1">(fs.existsSync(dirname) &amp;&amp;</span>
+        <span class="s1">fs.statSync(dirname).isDirectory()) {</span>
+        <span class="s1">process.chdir(dirname)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s2">else </span><span class="s1">{</span>
+        <span class="s2">throw new </span><span class="s1">Error(dirname + </span><span class="s3">' is not a valid directory path'</span><span class="s1">)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s1">rootTask = task(Task.ROOT_TASK_NAME</span><span class="s4">, </span><span class="s1">taskNames</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {})</span><span class="s4">;</span>
+    <span class="s1">rootTask._internal = </span><span class="s2">true</span><span class="s4">;</span>
+
+    <span class="s1">rootTask.once(</span><span class="s3">'complete'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s1">jake.emit(</span><span class="s3">'complete'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">})</span><span class="s4">;</span>
+    <span class="s1">jake.emit(</span><span class="s3">'start'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">rootTask.invoke()</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">})()</span><span class="s4">;</span>
+
+<span class="s1">module.exports.Program = Program</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

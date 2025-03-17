@@ -1,0 +1,450 @@
+<html>
+<head>
+<title>source-map-generator.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #6897bb;}
+.s7 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s8 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+source-map-generator.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* -*- Mode: js; js-indent-level: 2; -*- */</span>
+<span class="s0">/* 
+ * Copyright 2011 Mozilla Foundation and contributors 
+ * Licensed under the New BSD license. See LICENSE or: 
+ * http://opensource.org/licenses/BSD-3-Clause 
+ */</span>
+
+<span class="s2">var </span><span class="s1">base64VLQ = require(</span><span class="s3">'./base64-vlq'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">var </span><span class="s1">util = require(</span><span class="s3">'./util'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">var </span><span class="s1">ArraySet = require(</span><span class="s3">'./array-set'</span><span class="s1">).ArraySet</span><span class="s4">;</span>
+<span class="s2">var </span><span class="s1">MappingList = require(</span><span class="s3">'./mapping-list'</span><span class="s1">).MappingList</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* An instance of the SourceMapGenerator represents a source map which is</span>
+ <span class="s5">* being built incrementally. You may pass an object with the following</span>
+ <span class="s5">* properties:</span>
+ <span class="s5">*</span>
+ <span class="s5">*   - file: The filename of the generated source.</span>
+ <span class="s5">*   - sourceRoot: A root for all relative URLs in this source map.</span>
+ <span class="s5">*/</span>
+<span class="s2">function </span><span class="s1">SourceMapGenerator(aArgs) {</span>
+  <span class="s2">if </span><span class="s1">(!aArgs) {</span>
+    <span class="s1">aArgs = {}</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s2">this</span><span class="s1">._file = util.getArg(aArgs</span><span class="s4">, </span><span class="s3">'file'</span><span class="s4">, </span><span class="s2">null</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">._sourceRoot = util.getArg(aArgs</span><span class="s4">, </span><span class="s3">'sourceRoot'</span><span class="s4">, </span><span class="s2">null</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">._skipValidation = util.getArg(aArgs</span><span class="s4">, </span><span class="s3">'skipValidation'</span><span class="s4">, </span><span class="s2">false</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">._sources = </span><span class="s2">new </span><span class="s1">ArraySet()</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">._names = </span><span class="s2">new </span><span class="s1">ArraySet()</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">._mappings = </span><span class="s2">new </span><span class="s1">MappingList()</span><span class="s4">;</span>
+  <span class="s2">this</span><span class="s1">._sourcesContents = </span><span class="s2">null</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s1">SourceMapGenerator.prototype._version = </span><span class="s6">3</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Creates a new SourceMapGenerator based on a SourceMapConsumer</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s7">@param </span><span class="s5">aSourceMapConsumer The SourceMap.</span>
+ <span class="s5">*/</span>
+<span class="s1">SourceMapGenerator.fromSourceMap =</span>
+  <span class="s2">function </span><span class="s1">SourceMapGenerator_fromSourceMap(aSourceMapConsumer) {</span>
+    <span class="s2">var </span><span class="s1">sourceRoot = aSourceMapConsumer.sourceRoot</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">generator = </span><span class="s2">new </span><span class="s1">SourceMapGenerator({</span>
+      <span class="s1">file: aSourceMapConsumer.file</span><span class="s4">,</span>
+      <span class="s1">sourceRoot: sourceRoot</span>
+    <span class="s1">})</span><span class="s4">;</span>
+    <span class="s1">aSourceMapConsumer.eachMapping(</span><span class="s2">function </span><span class="s1">(mapping) {</span>
+      <span class="s2">var </span><span class="s1">newMapping = {</span>
+        <span class="s1">generated: {</span>
+          <span class="s1">line: mapping.generatedLine</span><span class="s4">,</span>
+          <span class="s1">column: mapping.generatedColumn</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span><span class="s4">;</span>
+
+      <span class="s2">if </span><span class="s1">(mapping.source != </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">newMapping.source = mapping.source</span><span class="s4">;</span>
+        <span class="s2">if </span><span class="s1">(sourceRoot != </span><span class="s2">null</span><span class="s1">) {</span>
+          <span class="s1">newMapping.source = util.relative(sourceRoot</span><span class="s4">, </span><span class="s1">newMapping.source)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">newMapping.original = {</span>
+          <span class="s1">line: mapping.originalLine</span><span class="s4">,</span>
+          <span class="s1">column: mapping.originalColumn</span>
+        <span class="s1">}</span><span class="s4">;</span>
+
+        <span class="s2">if </span><span class="s1">(mapping.name != </span><span class="s2">null</span><span class="s1">) {</span>
+          <span class="s1">newMapping.name = mapping.name</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s1">generator.addMapping(newMapping)</span><span class="s4">;</span>
+    <span class="s1">})</span><span class="s4">;</span>
+    <span class="s1">aSourceMapConsumer.sources.forEach(</span><span class="s2">function </span><span class="s1">(sourceFile) {</span>
+      <span class="s2">var </span><span class="s1">sourceRelative = sourceFile</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(sourceRoot !== </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">sourceRelative = util.relative(sourceRoot</span><span class="s4">, </span><span class="s1">sourceFile)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+
+      <span class="s2">if </span><span class="s1">(!generator._sources.has(sourceRelative)) {</span>
+        <span class="s1">generator._sources.add(sourceRelative)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+
+      <span class="s2">var </span><span class="s1">content = aSourceMapConsumer.sourceContentFor(sourceFile)</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(content != </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">generator.setSourceContent(sourceFile</span><span class="s4">, </span><span class="s1">content)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span><span class="s4">;</span>
+    <span class="s2">return </span><span class="s1">generator</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Add a single mapping from original source line and column to the generated</span>
+ <span class="s5">* source's line and column for this source map being created. The mapping</span>
+ <span class="s5">* object should have the following properties:</span>
+ <span class="s5">*</span>
+ <span class="s5">*   - generated: An object with the generated line and column positions.</span>
+ <span class="s5">*   - original: An object with the original line and column positions.</span>
+ <span class="s5">*   - source: The original source file (relative to the sourceRoot).</span>
+ <span class="s5">*   - name: An optional original token name for this mapping.</span>
+ <span class="s5">*/</span>
+<span class="s1">SourceMapGenerator.prototype.addMapping =</span>
+  <span class="s2">function </span><span class="s1">SourceMapGenerator_addMapping(aArgs) {</span>
+    <span class="s2">var </span><span class="s1">generated = util.getArg(aArgs</span><span class="s4">, </span><span class="s3">'generated'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">original = util.getArg(aArgs</span><span class="s4">, </span><span class="s3">'original'</span><span class="s4">, </span><span class="s2">null</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">source = util.getArg(aArgs</span><span class="s4">, </span><span class="s3">'source'</span><span class="s4">, </span><span class="s2">null</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">name = util.getArg(aArgs</span><span class="s4">, </span><span class="s3">'name'</span><span class="s4">, </span><span class="s2">null</span><span class="s1">)</span><span class="s4">;</span>
+
+    <span class="s2">if </span><span class="s1">(!</span><span class="s2">this</span><span class="s1">._skipValidation) {</span>
+      <span class="s2">this</span><span class="s1">._validateMapping(generated</span><span class="s4">, </span><span class="s1">original</span><span class="s4">, </span><span class="s1">source</span><span class="s4">, </span><span class="s1">name)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(source != </span><span class="s2">null</span><span class="s1">) {</span>
+      <span class="s1">source = String(source)</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(!</span><span class="s2">this</span><span class="s1">._sources.has(source)) {</span>
+        <span class="s2">this</span><span class="s1">._sources.add(source)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(name != </span><span class="s2">null</span><span class="s1">) {</span>
+      <span class="s1">name = String(name)</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(!</span><span class="s2">this</span><span class="s1">._names.has(name)) {</span>
+        <span class="s2">this</span><span class="s1">._names.add(name)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s2">this</span><span class="s1">._mappings.add({</span>
+      <span class="s1">generatedLine: generated.line</span><span class="s4">,</span>
+      <span class="s1">generatedColumn: generated.column</span><span class="s4">,</span>
+      <span class="s1">originalLine: original != </span><span class="s2">null </span><span class="s1">&amp;&amp; original.line</span><span class="s4">,</span>
+      <span class="s1">originalColumn: original != </span><span class="s2">null </span><span class="s1">&amp;&amp; original.column</span><span class="s4">,</span>
+      <span class="s1">source: source</span><span class="s4">,</span>
+      <span class="s1">name: name</span>
+    <span class="s1">})</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Set the source content for a source file.</span>
+ <span class="s5">*/</span>
+<span class="s1">SourceMapGenerator.prototype.setSourceContent =</span>
+  <span class="s2">function </span><span class="s1">SourceMapGenerator_setSourceContent(aSourceFile</span><span class="s4">, </span><span class="s1">aSourceContent) {</span>
+    <span class="s2">var </span><span class="s1">source = aSourceFile</span><span class="s4">;</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">._sourceRoot != </span><span class="s2">null</span><span class="s1">) {</span>
+      <span class="s1">source = util.relative(</span><span class="s2">this</span><span class="s1">._sourceRoot</span><span class="s4">, </span><span class="s1">source)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(aSourceContent != </span><span class="s2">null</span><span class="s1">) {</span>
+      <span class="s8">// Add the source content to the _sourcesContents map.</span>
+      <span class="s8">// Create a new _sourcesContents map if the property is null.</span>
+      <span class="s2">if </span><span class="s1">(!</span><span class="s2">this</span><span class="s1">._sourcesContents) {</span>
+        <span class="s2">this</span><span class="s1">._sourcesContents = Object.create(</span><span class="s2">null</span><span class="s1">)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s2">this</span><span class="s1">._sourcesContents[util.toSetString(source)] = aSourceContent</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s2">else if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">._sourcesContents) {</span>
+      <span class="s8">// Remove the source file from the _sourcesContents map.</span>
+      <span class="s8">// If the _sourcesContents map is empty, set the property to null.</span>
+      <span class="s2">delete this</span><span class="s1">._sourcesContents[util.toSetString(source)]</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(Object.keys(</span><span class="s2">this</span><span class="s1">._sourcesContents).length === </span><span class="s6">0</span><span class="s1">) {</span>
+        <span class="s2">this</span><span class="s1">._sourcesContents = </span><span class="s2">null</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Applies the mappings of a sub-source-map for a specific source file to the</span>
+ <span class="s5">* source map being generated. Each mapping to the supplied source file is</span>
+ <span class="s5">* rewritten using the supplied source map. Note: The resolution for the</span>
+ <span class="s5">* resulting mappings is the minimium of this map and the supplied map.</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s7">@param </span><span class="s5">aSourceMapConsumer The source map to be applied.</span>
+ <span class="s5">* </span><span class="s7">@param </span><span class="s5">aSourceFile Optional. The filename of the source file.</span>
+ <span class="s5">*        If omitted, SourceMapConsumer's file property will be used.</span>
+ <span class="s5">* </span><span class="s7">@param </span><span class="s5">aSourceMapPath Optional. The dirname of the path to the source map</span>
+ <span class="s5">*        to be applied. If relative, it is relative to the SourceMapConsumer.</span>
+ <span class="s5">*        This parameter is needed when the two source maps aren't in the same</span>
+ <span class="s5">*        directory, and the source map to be applied contains relative source</span>
+ <span class="s5">*        paths. If so, those relative source paths need to be rewritten</span>
+ <span class="s5">*        relative to the SourceMapGenerator.</span>
+ <span class="s5">*/</span>
+<span class="s1">SourceMapGenerator.prototype.applySourceMap =</span>
+  <span class="s2">function </span><span class="s1">SourceMapGenerator_applySourceMap(aSourceMapConsumer</span><span class="s4">, </span><span class="s1">aSourceFile</span><span class="s4">, </span><span class="s1">aSourceMapPath) {</span>
+    <span class="s2">var </span><span class="s1">sourceFile = aSourceFile</span><span class="s4">;</span>
+    <span class="s8">// If aSourceFile is omitted, we will use the file property of the SourceMap</span>
+    <span class="s2">if </span><span class="s1">(aSourceFile == </span><span class="s2">null</span><span class="s1">) {</span>
+      <span class="s2">if </span><span class="s1">(aSourceMapConsumer.file == </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s2">throw new </span><span class="s1">Error(</span>
+          <span class="s3">'SourceMapGenerator.prototype.applySourceMap requires either an explicit source file, ' </span><span class="s1">+</span>
+          <span class="s3">'or the source map</span><span class="s4">\'</span><span class="s3">s &quot;file&quot; property. Both were omitted.'</span>
+        <span class="s1">)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s1">sourceFile = aSourceMapConsumer.file</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">var </span><span class="s1">sourceRoot = </span><span class="s2">this</span><span class="s1">._sourceRoot</span><span class="s4">;</span>
+    <span class="s8">// Make &quot;sourceFile&quot; relative if an absolute Url is passed.</span>
+    <span class="s2">if </span><span class="s1">(sourceRoot != </span><span class="s2">null</span><span class="s1">) {</span>
+      <span class="s1">sourceFile = util.relative(sourceRoot</span><span class="s4">, </span><span class="s1">sourceFile)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s8">// Applying the SourceMap can add and remove items from the sources and</span>
+    <span class="s8">// the names array.</span>
+    <span class="s2">var </span><span class="s1">newSources = </span><span class="s2">new </span><span class="s1">ArraySet()</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">newNames = </span><span class="s2">new </span><span class="s1">ArraySet()</span><span class="s4">;</span>
+
+    <span class="s8">// Find mappings for the &quot;sourceFile&quot;</span>
+    <span class="s2">this</span><span class="s1">._mappings.unsortedForEach(</span><span class="s2">function </span><span class="s1">(mapping) {</span>
+      <span class="s2">if </span><span class="s1">(mapping.source === sourceFile &amp;&amp; mapping.originalLine != </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s8">// Check if it can be mapped by the source map, then update the mapping.</span>
+        <span class="s2">var </span><span class="s1">original = aSourceMapConsumer.originalPositionFor({</span>
+          <span class="s1">line: mapping.originalLine</span><span class="s4">,</span>
+          <span class="s1">column: mapping.originalColumn</span>
+        <span class="s1">})</span><span class="s4">;</span>
+        <span class="s2">if </span><span class="s1">(original.source != </span><span class="s2">null</span><span class="s1">) {</span>
+          <span class="s8">// Copy mapping</span>
+          <span class="s1">mapping.source = original.source</span><span class="s4">;</span>
+          <span class="s2">if </span><span class="s1">(aSourceMapPath != </span><span class="s2">null</span><span class="s1">) {</span>
+            <span class="s1">mapping.source = util.join(aSourceMapPath</span><span class="s4">, </span><span class="s1">mapping.source)</span>
+          <span class="s1">}</span>
+          <span class="s2">if </span><span class="s1">(sourceRoot != </span><span class="s2">null</span><span class="s1">) {</span>
+            <span class="s1">mapping.source = util.relative(sourceRoot</span><span class="s4">, </span><span class="s1">mapping.source)</span><span class="s4">;</span>
+          <span class="s1">}</span>
+          <span class="s1">mapping.originalLine = original.line</span><span class="s4">;</span>
+          <span class="s1">mapping.originalColumn = original.column</span><span class="s4">;</span>
+          <span class="s2">if </span><span class="s1">(original.name != </span><span class="s2">null</span><span class="s1">) {</span>
+            <span class="s1">mapping.name = original.name</span><span class="s4">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s2">var </span><span class="s1">source = mapping.source</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(source != </span><span class="s2">null </span><span class="s1">&amp;&amp; !newSources.has(source)) {</span>
+        <span class="s1">newSources.add(source)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+
+      <span class="s2">var </span><span class="s1">name = mapping.name</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(name != </span><span class="s2">null </span><span class="s1">&amp;&amp; !newNames.has(name)) {</span>
+        <span class="s1">newNames.add(name)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+
+    <span class="s1">}</span><span class="s4">, </span><span class="s2">this</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">._sources = newSources</span><span class="s4">;</span>
+    <span class="s2">this</span><span class="s1">._names = newNames</span><span class="s4">;</span>
+
+    <span class="s8">// Copy sourcesContents of applied map.</span>
+    <span class="s1">aSourceMapConsumer.sources.forEach(</span><span class="s2">function </span><span class="s1">(sourceFile) {</span>
+      <span class="s2">var </span><span class="s1">content = aSourceMapConsumer.sourceContentFor(sourceFile)</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(content != </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s2">if </span><span class="s1">(aSourceMapPath != </span><span class="s2">null</span><span class="s1">) {</span>
+          <span class="s1">sourceFile = util.join(aSourceMapPath</span><span class="s4">, </span><span class="s1">sourceFile)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s2">if </span><span class="s1">(sourceRoot != </span><span class="s2">null</span><span class="s1">) {</span>
+          <span class="s1">sourceFile = util.relative(sourceRoot</span><span class="s4">, </span><span class="s1">sourceFile)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s2">this</span><span class="s1">.setSourceContent(sourceFile</span><span class="s4">, </span><span class="s1">content)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span><span class="s4">, </span><span class="s2">this</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* A mapping can have one of the three levels of data:</span>
+ <span class="s5">*</span>
+ <span class="s5">*   1. Just the generated position.</span>
+ <span class="s5">*   2. The Generated position, original position, and original source.</span>
+ <span class="s5">*   3. Generated and original position, original source, as well as a name</span>
+ <span class="s5">*      token.</span>
+ <span class="s5">*</span>
+ <span class="s5">* To maintain consistency, we validate that any new mapping being added falls</span>
+ <span class="s5">* in to one of these categories.</span>
+ <span class="s5">*/</span>
+<span class="s1">SourceMapGenerator.prototype._validateMapping =</span>
+  <span class="s2">function </span><span class="s1">SourceMapGenerator_validateMapping(aGenerated</span><span class="s4">, </span><span class="s1">aOriginal</span><span class="s4">, </span><span class="s1">aSource</span><span class="s4">,</span>
+                                              <span class="s1">aName) {</span>
+    <span class="s8">// When aOriginal is truthy but has empty values for .line and .column,</span>
+    <span class="s8">// it is most likely a programmer error. In this case we throw a very</span>
+    <span class="s8">// specific error message to try to guide them the right way.</span>
+    <span class="s8">// For example: https://github.com/Polymer/polymer-bundler/pull/519</span>
+    <span class="s2">if </span><span class="s1">(aOriginal &amp;&amp; </span><span class="s2">typeof </span><span class="s1">aOriginal.line !== </span><span class="s3">'number' </span><span class="s1">&amp;&amp; </span><span class="s2">typeof </span><span class="s1">aOriginal.column !== </span><span class="s3">'number'</span><span class="s1">) {</span>
+        <span class="s2">throw new </span><span class="s1">Error(</span>
+            <span class="s3">'original.line and original.column are not numbers -- you probably meant to omit ' </span><span class="s1">+</span>
+            <span class="s3">'the original mapping entirely and only map the generated position. If so, pass ' </span><span class="s1">+</span>
+            <span class="s3">'null for the original mapping instead of an object with empty or null values.'</span>
+        <span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">if </span><span class="s1">(aGenerated &amp;&amp; </span><span class="s3">'line' </span><span class="s2">in </span><span class="s1">aGenerated &amp;&amp; </span><span class="s3">'column' </span><span class="s2">in </span><span class="s1">aGenerated</span>
+        <span class="s1">&amp;&amp; aGenerated.line &gt; </span><span class="s6">0 </span><span class="s1">&amp;&amp; aGenerated.column &gt;= </span><span class="s6">0</span>
+        <span class="s1">&amp;&amp; !aOriginal &amp;&amp; !aSource &amp;&amp; !aName) {</span>
+      <span class="s8">// Case 1.</span>
+      <span class="s2">return</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">else if </span><span class="s1">(aGenerated &amp;&amp; </span><span class="s3">'line' </span><span class="s2">in </span><span class="s1">aGenerated &amp;&amp; </span><span class="s3">'column' </span><span class="s2">in </span><span class="s1">aGenerated</span>
+             <span class="s1">&amp;&amp; aOriginal &amp;&amp; </span><span class="s3">'line' </span><span class="s2">in </span><span class="s1">aOriginal &amp;&amp; </span><span class="s3">'column' </span><span class="s2">in </span><span class="s1">aOriginal</span>
+             <span class="s1">&amp;&amp; aGenerated.line &gt; </span><span class="s6">0 </span><span class="s1">&amp;&amp; aGenerated.column &gt;= </span><span class="s6">0</span>
+             <span class="s1">&amp;&amp; aOriginal.line &gt; </span><span class="s6">0 </span><span class="s1">&amp;&amp; aOriginal.column &gt;= </span><span class="s6">0</span>
+             <span class="s1">&amp;&amp; aSource) {</span>
+      <span class="s8">// Cases 2 and 3.</span>
+      <span class="s2">return</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">else </span><span class="s1">{</span>
+      <span class="s2">throw new </span><span class="s1">Error(</span><span class="s3">'Invalid mapping: ' </span><span class="s1">+ JSON.stringify({</span>
+        <span class="s1">generated: aGenerated</span><span class="s4">,</span>
+        <span class="s1">source: aSource</span><span class="s4">,</span>
+        <span class="s1">original: aOriginal</span><span class="s4">,</span>
+        <span class="s1">name: aName</span>
+      <span class="s1">}))</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Serialize the accumulated mappings in to the stream of base 64 VLQs</span>
+ <span class="s5">* specified by the source map format.</span>
+ <span class="s5">*/</span>
+<span class="s1">SourceMapGenerator.prototype._serializeMappings =</span>
+  <span class="s2">function </span><span class="s1">SourceMapGenerator_serializeMappings() {</span>
+    <span class="s2">var </span><span class="s1">previousGeneratedColumn = </span><span class="s6">0</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">previousGeneratedLine = </span><span class="s6">1</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">previousOriginalColumn = </span><span class="s6">0</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">previousOriginalLine = </span><span class="s6">0</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">previousName = </span><span class="s6">0</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">previousSource = </span><span class="s6">0</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">result = </span><span class="s3">''</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">next</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">mapping</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">nameIdx</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">sourceIdx</span><span class="s4">;</span>
+
+    <span class="s2">var </span><span class="s1">mappings = </span><span class="s2">this</span><span class="s1">._mappings.toArray()</span><span class="s4">;</span>
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s6">0</span><span class="s4">, </span><span class="s1">len = mappings.length</span><span class="s4">; </span><span class="s1">i &lt; len</span><span class="s4">; </span><span class="s1">i++) {</span>
+      <span class="s1">mapping = mappings[i]</span><span class="s4">;</span>
+      <span class="s1">next = </span><span class="s3">''</span>
+
+      <span class="s2">if </span><span class="s1">(mapping.generatedLine !== previousGeneratedLine) {</span>
+        <span class="s1">previousGeneratedColumn = </span><span class="s6">0</span><span class="s4">;</span>
+        <span class="s2">while </span><span class="s1">(mapping.generatedLine !== previousGeneratedLine) {</span>
+          <span class="s1">next += </span><span class="s3">';'</span><span class="s4">;</span>
+          <span class="s1">previousGeneratedLine++</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+      <span class="s2">else </span><span class="s1">{</span>
+        <span class="s2">if </span><span class="s1">(i &gt; </span><span class="s6">0</span><span class="s1">) {</span>
+          <span class="s2">if </span><span class="s1">(!util.compareByGeneratedPositionsInflated(mapping</span><span class="s4">, </span><span class="s1">mappings[i - </span><span class="s6">1</span><span class="s1">])) {</span>
+            <span class="s2">continue</span><span class="s4">;</span>
+          <span class="s1">}</span>
+          <span class="s1">next += </span><span class="s3">','</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s1">next += base64VLQ.encode(mapping.generatedColumn</span>
+                                 <span class="s1">- previousGeneratedColumn)</span><span class="s4">;</span>
+      <span class="s1">previousGeneratedColumn = mapping.generatedColumn</span><span class="s4">;</span>
+
+      <span class="s2">if </span><span class="s1">(mapping.source != </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">sourceIdx = </span><span class="s2">this</span><span class="s1">._sources.indexOf(mapping.source)</span><span class="s4">;</span>
+        <span class="s1">next += base64VLQ.encode(sourceIdx - previousSource)</span><span class="s4">;</span>
+        <span class="s1">previousSource = sourceIdx</span><span class="s4">;</span>
+
+        <span class="s8">// lines are stored 0-based in SourceMap spec version 3</span>
+        <span class="s1">next += base64VLQ.encode(mapping.originalLine - </span><span class="s6">1</span>
+                                   <span class="s1">- previousOriginalLine)</span><span class="s4">;</span>
+        <span class="s1">previousOriginalLine = mapping.originalLine - </span><span class="s6">1</span><span class="s4">;</span>
+
+        <span class="s1">next += base64VLQ.encode(mapping.originalColumn</span>
+                                   <span class="s1">- previousOriginalColumn)</span><span class="s4">;</span>
+        <span class="s1">previousOriginalColumn = mapping.originalColumn</span><span class="s4">;</span>
+
+        <span class="s2">if </span><span class="s1">(mapping.name != </span><span class="s2">null</span><span class="s1">) {</span>
+          <span class="s1">nameIdx = </span><span class="s2">this</span><span class="s1">._names.indexOf(mapping.name)</span><span class="s4">;</span>
+          <span class="s1">next += base64VLQ.encode(nameIdx - previousName)</span><span class="s4">;</span>
+          <span class="s1">previousName = nameIdx</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s1">result += next</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return </span><span class="s1">result</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">SourceMapGenerator.prototype._generateSourcesContent =</span>
+  <span class="s2">function </span><span class="s1">SourceMapGenerator_generateSourcesContent(aSources</span><span class="s4">, </span><span class="s1">aSourceRoot) {</span>
+    <span class="s2">return </span><span class="s1">aSources.map(</span><span class="s2">function </span><span class="s1">(source) {</span>
+      <span class="s2">if </span><span class="s1">(!</span><span class="s2">this</span><span class="s1">._sourcesContents) {</span>
+        <span class="s2">return null</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s2">if </span><span class="s1">(aSourceRoot != </span><span class="s2">null</span><span class="s1">) {</span>
+        <span class="s1">source = util.relative(aSourceRoot</span><span class="s4">, </span><span class="s1">source)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+      <span class="s2">var </span><span class="s1">key = util.toSetString(source)</span><span class="s4">;</span>
+      <span class="s2">return </span><span class="s1">Object.prototype.hasOwnProperty.call(</span><span class="s2">this</span><span class="s1">._sourcesContents</span><span class="s4">, </span><span class="s1">key)</span>
+        <span class="s1">? </span><span class="s2">this</span><span class="s1">._sourcesContents[key]</span>
+        <span class="s1">: </span><span class="s2">null</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">, </span><span class="s2">this</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Externalize the source map.</span>
+ <span class="s5">*/</span>
+<span class="s1">SourceMapGenerator.prototype.toJSON =</span>
+  <span class="s2">function </span><span class="s1">SourceMapGenerator_toJSON() {</span>
+    <span class="s2">var </span><span class="s1">map = {</span>
+      <span class="s1">version: </span><span class="s2">this</span><span class="s1">._version</span><span class="s4">,</span>
+      <span class="s1">sources: </span><span class="s2">this</span><span class="s1">._sources.toArray()</span><span class="s4">,</span>
+      <span class="s1">names: </span><span class="s2">this</span><span class="s1">._names.toArray()</span><span class="s4">,</span>
+      <span class="s1">mappings: </span><span class="s2">this</span><span class="s1">._serializeMappings()</span>
+    <span class="s1">}</span><span class="s4">;</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">._file != </span><span class="s2">null</span><span class="s1">) {</span>
+      <span class="s1">map.file = </span><span class="s2">this</span><span class="s1">._file</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">._sourceRoot != </span><span class="s2">null</span><span class="s1">) {</span>
+      <span class="s1">map.sourceRoot = </span><span class="s2">this</span><span class="s1">._sourceRoot</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">._sourcesContents) {</span>
+      <span class="s1">map.sourcesContent = </span><span class="s2">this</span><span class="s1">._generateSourcesContent(map.sources</span><span class="s4">, </span><span class="s1">map.sourceRoot)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return </span><span class="s1">map</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Render the source map being generated to a string.</span>
+ <span class="s5">*/</span>
+<span class="s1">SourceMapGenerator.prototype.toString =</span>
+  <span class="s2">function </span><span class="s1">SourceMapGenerator_toString() {</span>
+    <span class="s2">return </span><span class="s1">JSON.stringify(</span><span class="s2">this</span><span class="s1">.toJSON())</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">exports.SourceMapGenerator = SourceMapGenerator</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

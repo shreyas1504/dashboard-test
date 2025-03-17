@@ -1,0 +1,113 @@
+<html>
+<head>
+<title>OffsetToLocation.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+OffsetToLocation.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">adoptBuffer = require(</span><span class="s2">'./adopt-buffer'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">isBOM = require(</span><span class="s2">'../tokenizer'</span><span class="s1">).isBOM</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">N = </span><span class="s4">10</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">F = </span><span class="s4">12</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">R = </span><span class="s4">13</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">computeLinesAndColumns(host</span><span class="s3">, </span><span class="s1">source) {</span>
+    <span class="s0">var </span><span class="s1">sourceLength = source.length</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">lines = adoptBuffer(host.lines</span><span class="s3">, </span><span class="s1">sourceLength)</span><span class="s3">; </span><span class="s5">// +1</span>
+    <span class="s0">var </span><span class="s1">line = host.startLine</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">columns = adoptBuffer(host.columns</span><span class="s3">, </span><span class="s1">sourceLength)</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">column = host.startColumn</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">startOffset = source.length &gt; </span><span class="s4">0 </span><span class="s1">? isBOM(source.charCodeAt(</span><span class="s4">0</span><span class="s1">)) : </span><span class="s4">0</span><span class="s3">;</span>
+
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = startOffset</span><span class="s3">; </span><span class="s1">i &lt; sourceLength</span><span class="s3">; </span><span class="s1">i++) { </span><span class="s5">// -1</span>
+        <span class="s0">var </span><span class="s1">code = source.charCodeAt(i)</span><span class="s3">;</span>
+
+        <span class="s1">lines[i] = line</span><span class="s3">;</span>
+        <span class="s1">columns[i] = column++</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(code === N || code === R || code === F) {</span>
+            <span class="s0">if </span><span class="s1">(code === R &amp;&amp; i + </span><span class="s4">1 </span><span class="s1">&lt; sourceLength &amp;&amp; source.charCodeAt(i + </span><span class="s4">1</span><span class="s1">) === N) {</span>
+                <span class="s1">i++</span><span class="s3">;</span>
+                <span class="s1">lines[i] = line</span><span class="s3">;</span>
+                <span class="s1">columns[i] = column</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s1">line++</span><span class="s3">;</span>
+            <span class="s1">column = </span><span class="s4">1</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s1">lines[i] = line</span><span class="s3">;</span>
+    <span class="s1">columns[i] = column</span><span class="s3">;</span>
+
+    <span class="s1">host.lines = lines</span><span class="s3">;</span>
+    <span class="s1">host.columns = columns</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">var </span><span class="s1">OffsetToLocation = </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s0">this</span><span class="s1">.lines = </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.columns = </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.linesAndColumnsComputed = </span><span class="s0">false</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">OffsetToLocation.prototype = {</span>
+    <span class="s1">setSource: </span><span class="s0">function</span><span class="s1">(source</span><span class="s3">, </span><span class="s1">startOffset</span><span class="s3">, </span><span class="s1">startLine</span><span class="s3">, </span><span class="s1">startColumn) {</span>
+        <span class="s0">this</span><span class="s1">.source = source</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.startOffset = </span><span class="s0">typeof </span><span class="s1">startOffset === </span><span class="s2">'undefined' </span><span class="s1">? </span><span class="s4">0 </span><span class="s1">: startOffset</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.startLine = </span><span class="s0">typeof </span><span class="s1">startLine === </span><span class="s2">'undefined' </span><span class="s1">? </span><span class="s4">1 </span><span class="s1">: startLine</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.startColumn = </span><span class="s0">typeof </span><span class="s1">startColumn === </span><span class="s2">'undefined' </span><span class="s1">? </span><span class="s4">1 </span><span class="s1">: startColumn</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.linesAndColumnsComputed = </span><span class="s0">false</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+
+    <span class="s1">ensureLinesAndColumnsComputed: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.linesAndColumnsComputed) {</span>
+            <span class="s1">computeLinesAndColumns(</span><span class="s0">this</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.source)</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.linesAndColumnsComputed = </span><span class="s0">true</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">getLocation: </span><span class="s0">function</span><span class="s1">(offset</span><span class="s3">, </span><span class="s1">filename) {</span>
+        <span class="s0">this</span><span class="s1">.ensureLinesAndColumnsComputed()</span><span class="s3">;</span>
+
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">source: filename</span><span class="s3">,</span>
+            <span class="s1">offset: </span><span class="s0">this</span><span class="s1">.startOffset + offset</span><span class="s3">,</span>
+            <span class="s1">line: </span><span class="s0">this</span><span class="s1">.lines[offset]</span><span class="s3">,</span>
+            <span class="s1">column: </span><span class="s0">this</span><span class="s1">.columns[offset]</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">getLocationRange: </span><span class="s0">function</span><span class="s1">(start</span><span class="s3">, </span><span class="s1">end</span><span class="s3">, </span><span class="s1">filename) {</span>
+        <span class="s0">this</span><span class="s1">.ensureLinesAndColumnsComputed()</span><span class="s3">;</span>
+
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">source: filename</span><span class="s3">,</span>
+            <span class="s1">start: {</span>
+                <span class="s1">offset: </span><span class="s0">this</span><span class="s1">.startOffset + start</span><span class="s3">,</span>
+                <span class="s1">line: </span><span class="s0">this</span><span class="s1">.lines[start]</span><span class="s3">,</span>
+                <span class="s1">column: </span><span class="s0">this</span><span class="s1">.columns[start]</span>
+            <span class="s1">}</span><span class="s3">,</span>
+            <span class="s1">end: {</span>
+                <span class="s1">offset: </span><span class="s0">this</span><span class="s1">.startOffset + end</span><span class="s3">,</span>
+                <span class="s1">line: </span><span class="s0">this</span><span class="s1">.lines[end]</span><span class="s3">,</span>
+                <span class="s1">column: </span><span class="s0">this</span><span class="s1">.columns[end]</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">module.exports = OffsetToLocation</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

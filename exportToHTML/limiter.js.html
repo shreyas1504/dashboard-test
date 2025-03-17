@@ -1,0 +1,78 @@
+<html>
+<head>
+<title>limiter.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+limiter.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">kDone = Symbol(</span><span class="s0">'kDone'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">kRun = Symbol(</span><span class="s0">'kRun'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* A very simple job queue with adjustable concurrency. Adapted from</span>
+ <span class="s4">* https://github.com/STRML/async-limiter</span>
+ <span class="s4">*/</span>
+<span class="s3">class </span><span class="s2">Limiter {</span>
+  <span class="s4">/**</span>
+   <span class="s4">* Creates a new `Limiter`.</span>
+   <span class="s4">*</span>
+   <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Number} [concurrency=Infinity] The maximum number of jobs allowed</span>
+   <span class="s4">*     to run concurrently</span>
+   <span class="s4">*/</span>
+  <span class="s2">constructor(concurrency) {</span>
+    <span class="s3">this</span><span class="s2">[kDone] = () =&gt; {</span>
+      <span class="s3">this</span><span class="s2">.pending--</span><span class="s1">;</span>
+      <span class="s3">this</span><span class="s2">[kRun]()</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.concurrency = concurrency || Infinity</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.jobs = []</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.pending = </span><span class="s6">0</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s4">/**</span>
+   <span class="s4">* Adds a job to the queue.</span>
+   <span class="s4">*</span>
+   <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Function} job The job to run</span>
+   <span class="s4">* </span><span class="s5">@public</span>
+   <span class="s4">*/</span>
+  <span class="s2">add(job) {</span>
+    <span class="s3">this</span><span class="s2">.jobs.push(job)</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">[kRun]()</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s4">/**</span>
+   <span class="s4">* Removes a job from the queue and runs it if possible.</span>
+   <span class="s4">*</span>
+   <span class="s4">* </span><span class="s5">@private</span>
+   <span class="s4">*/</span>
+  <span class="s2">[kRun]() {</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.pending === </span><span class="s3">this</span><span class="s2">.concurrency) </span><span class="s3">return</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.jobs.length) {</span>
+      <span class="s3">const </span><span class="s2">job = </span><span class="s3">this</span><span class="s2">.jobs.shift()</span><span class="s1">;</span>
+
+      <span class="s3">this</span><span class="s2">.pending++</span><span class="s1">;</span>
+      <span class="s2">job(</span><span class="s3">this</span><span class="s2">[kDone])</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s2">module.exports = Limiter</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<html>
+<head>
+<title>Comment.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Comment.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).TYPE</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">COMMENT = TYPE.Comment</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">ASTERISK = </span><span class="s4">0x002A</span><span class="s3">;        </span><span class="s5">// U+002A ASTERISK (*)</span>
+<span class="s0">var </span><span class="s1">SOLIDUS = </span><span class="s4">0x002F</span><span class="s3">;         </span><span class="s5">// U+002F SOLIDUS (/)</span>
+
+<span class="s5">// '/*' .* '*/'</span>
+<span class="s1">module.exports = {</span>
+    <span class="s1">name: </span><span class="s2">'Comment'</span><span class="s3">,</span>
+    <span class="s1">structure: {</span>
+        <span class="s1">value: String</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">parse: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">var </span><span class="s1">start = </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">end = </span><span class="s0">this</span><span class="s1">.scanner.tokenEnd</span><span class="s3">;</span>
+
+        <span class="s0">this</span><span class="s1">.eat(COMMENT)</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">((end - start + </span><span class="s4">2</span><span class="s1">) &gt;= </span><span class="s4">2 </span><span class="s1">&amp;&amp;</span>
+            <span class="s0">this</span><span class="s1">.scanner.source.charCodeAt(end - </span><span class="s4">2</span><span class="s1">) === ASTERISK &amp;&amp;</span>
+            <span class="s0">this</span><span class="s1">.scanner.source.charCodeAt(end - </span><span class="s4">1</span><span class="s1">) === SOLIDUS) {</span>
+            <span class="s1">end -= </span><span class="s4">2</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">type: </span><span class="s2">'Comment'</span><span class="s3">,</span>
+            <span class="s1">loc: </span><span class="s0">this</span><span class="s1">.getLocation(start</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart)</span><span class="s3">,</span>
+            <span class="s1">value: </span><span class="s0">this</span><span class="s1">.scanner.source.substring(start + </span><span class="s4">2</span><span class="s3">, </span><span class="s1">end)</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">generate: </span><span class="s0">function</span><span class="s1">(node) {</span>
+        <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">'/*'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.chunk(node.value)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">'*/'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

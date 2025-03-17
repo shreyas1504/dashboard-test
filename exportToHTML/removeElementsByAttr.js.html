@@ -1,0 +1,104 @@
+<html>
+<head>
+<title>removeElementsByAttr.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #808080;}
+.s7 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+removeElementsByAttr.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">exports.type = </span><span class="s0">'perItem'</span><span class="s1">;</span>
+
+<span class="s2">exports.active = </span><span class="s3">false</span><span class="s1">;</span>
+
+<span class="s2">exports.description = </span><span class="s0">'removes arbitrary elements by ID or className (disabled by default)'</span><span class="s1">;</span>
+
+<span class="s2">exports.params = {</span>
+    <span class="s2">id: []</span><span class="s1">,</span>
+    <span class="s3">class</span><span class="s2">: []</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Remove arbitrary SVG elements by ID or className.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">id</span>
+ <span class="s4">*   examples:</span>
+ <span class="s4">*</span>
+ <span class="s4">*     &gt; single: remove element with ID of `elementID`</span>
+ <span class="s4">*     ---</span>
+ <span class="s4">*     removeElementsByAttr:</span>
+ <span class="s4">*       id: 'elementID'</span>
+ <span class="s4">*</span>
+ <span class="s4">*     &gt; list: remove multiple elements by ID</span>
+ <span class="s4">*     ---</span>
+ <span class="s4">*     removeElementsByAttr:</span>
+ <span class="s4">*       id:</span>
+ <span class="s4">*         - 'elementID'</span>
+ <span class="s4">*         - 'anotherID'</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">class</span>
+ <span class="s4">*   examples:</span>
+ <span class="s4">*</span>
+ <span class="s4">*     &gt; single: remove all elements with class of `elementClass`</span>
+ <span class="s4">*     ---</span>
+ <span class="s4">*     removeElementsByAttr:</span>
+ <span class="s4">*       class: 'elementClass'</span>
+ <span class="s4">*</span>
+ <span class="s4">*     &gt; list: remove all elements with class of `elementClass` or `anotherClass`</span>
+ <span class="s4">*     ---</span>
+ <span class="s4">*     removeElementsByAttr:</span>
+ <span class="s4">*       class:</span>
+ <span class="s4">*         - 'elementClass'</span>
+ <span class="s4">*         - 'anotherClass'</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} item current iteration item</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} params plugin params</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Boolean} if false, item will be filtered out</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@author </span><span class="s4">Eli Dupuis (@elidupuis)</span>
+ <span class="s4">*/</span>
+<span class="s2">exports.fn = </span><span class="s3">function</span><span class="s2">(item</span><span class="s1">, </span><span class="s2">params) {</span>
+    <span class="s3">var </span><span class="s2">elemId</span><span class="s1">, </span><span class="s2">elemClass</span><span class="s1">;</span>
+
+    <span class="s6">// wrap params in an array if not already</span>
+    <span class="s2">[</span><span class="s0">'id'</span><span class="s1">, </span><span class="s0">'class'</span><span class="s2">].forEach(</span><span class="s3">function</span><span class="s2">(key) {</span>
+        <span class="s3">if </span><span class="s2">(!Array.isArray(params[key])) {</span>
+            <span class="s2">params[key] = [ params[key] ]</span><span class="s1">;</span>
+        <span class="s2">}</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s6">// abort if current item is no an element</span>
+    <span class="s3">if </span><span class="s2">(!item.isElem()) {</span>
+        <span class="s3">return</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s6">// remove element if it's `id` matches configured `id` params</span>
+    <span class="s2">elemId = item.attr(</span><span class="s0">'id'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(elemId) {</span>
+        <span class="s3">return </span><span class="s2">params.id.indexOf(elemId.value) === -</span><span class="s7">1</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s6">// remove element if it's `class` contains any of the configured `class` params</span>
+    <span class="s2">elemClass = item.attr(</span><span class="s0">'class'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(elemClass) {</span>
+        <span class="s3">var </span><span class="s2">hasClassRegex = </span><span class="s3">new </span><span class="s2">RegExp(params.class.join(</span><span class="s0">'|'</span><span class="s2">))</span><span class="s1">;</span>
+        <span class="s3">return </span><span class="s2">!hasClassRegex.test(elemClass.value)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

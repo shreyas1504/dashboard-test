@@ -1,0 +1,2378 @@
+<html>
+<head>
+<title>eventify.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+eventify.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span>
+
+<span class="s2">const </span><span class="s1">assert = require(</span><span class="s0">'chai'</span><span class="s1">).assert</span>
+<span class="s2">const </span><span class="s1">events = require(</span><span class="s0">'../../src/events'</span><span class="s1">)</span>
+<span class="s2">const </span><span class="s1">Promise = require(</span><span class="s0">'bluebird'</span><span class="s1">)</span>
+<span class="s2">const </span><span class="s1">spooks = require(</span><span class="s0">'spooks'</span><span class="s1">)</span>
+
+<span class="s2">const </span><span class="s1">modulePath = </span><span class="s0">'../../src/eventify'</span>
+
+<span class="s1">suite(</span><span class="s0">'eventify:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+  <span class="s2">let </span><span class="s1">log</span>
+
+  <span class="s1">setup(() =&gt; {</span>
+    <span class="s1">log = {}</span>
+  <span class="s1">})</span>
+
+  <span class="s1">test(</span><span class="s0">'require does not throw'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">assert.doesNotThrow(() =&gt; {</span>
+      <span class="s1">require(modulePath)</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+
+  <span class="s1">test(</span><span class="s0">'require returns function'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s1">assert.isFunction(require(modulePath))</span>
+  <span class="s1">})</span>
+
+  <span class="s1">suite(</span><span class="s0">'require:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+    <span class="s2">let </span><span class="s1">eventify</span>
+
+    <span class="s1">setup(() =&gt; {</span>
+      <span class="s1">eventify = require(modulePath)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'eventify does not throw'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.doesNotThrow(() =&gt; {</span>
+        <span class="s1">eventify()</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'eventify returns EventEmitter'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.instanceOf(eventify()</span><span class="s3">, </span><span class="s1">require(</span><span class="s0">'events'</span><span class="s1">).EventEmitter)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'EventEmitter is decorated with pause method'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.isFunction(eventify().pause)</span>
+      <span class="s1">assert.lengthOf(eventify().pause</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">test(</span><span class="s0">'pause method returns continue function'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">assert.isFunction(eventify().pause())</span>
+      <span class="s1">assert.lengthOf(eventify().pause()</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'undefined:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(undefined)</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.end[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.isUndefined(log.args.end[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'NaN:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(NaN)</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.end[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.isUndefined(log.args.end[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'Infinity:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(Infinity)</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.end[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.isUndefined(log.args.end[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'Number.NEGATIVE_INFINITY:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(Number.NEGATIVE_INFINITY)</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.end[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.isUndefined(log.args.end[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'function:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(() =&gt; {})</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'symbol:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(Symbol(</span><span class="s0">'foo'</span><span class="s1">))</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'empty array:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify([])</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.array[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.isUndefined(log.args.array[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.endArray[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.isUndefined(log.args.endArray[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'empty object:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify({})</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.object[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.isUndefined(log.args.object[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.endObject[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.isUndefined(log.args.endObject[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'string:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s0">'foo'</span><span class="s1">)</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.string[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'string with special characters:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s0">'foo</span><span class="s3">\n</span><span class="s0">bar</span><span class="s3">\t</span><span class="s0">&quot;baz&quot;'</span><span class="s1">)</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.string[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo</span><span class="s3">\\</span><span class="s0">nbar</span><span class="s3">\\</span><span class="s0">t</span><span class="s3">\\</span><span class="s0">&quot;baz</span><span class="s3">\\</span><span class="s0">&quot;'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'number:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s4">42</span><span class="s1">)</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.number[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.number[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">42</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'false:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s2">false</span><span class="s1">)</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.literal[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.isFalse(log.args.literal[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'true:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s2">true</span><span class="s1">)</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isTrue(log.args.literal[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'null:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s2">null</span><span class="s1">)</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isNull(log.args.literal[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'array with items:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify([</span>
+          <span class="s1">undefined</span><span class="s3">,</span>
+          <span class="s1">NaN</span><span class="s3">,</span>
+          <span class="s1">Number.POSITIVE_INFINITY</span><span class="s3">,</span>
+          <span class="s1">Number.NEGATIVE_INFINITY</span><span class="s3">,</span>
+          <span class="s0">'foo'</span><span class="s3">,</span>
+          <span class="s1">() =&gt; {}</span><span class="s3">,</span>
+          <span class="s0">'bar'</span><span class="s3">,</span>
+          <span class="s1">Symbol(</span><span class="s0">'baz'</span><span class="s1">)</span>
+        <span class="s1">])</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event occurred six times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">6</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event was dispatched correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isNull(log.args.literal[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event was dispatched correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isNull(log.args.literal[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event was dispatched correctly third time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isNull(log.args.literal[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event was dispatched correctly fourth time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isNull(log.args.literal[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event was dispatched correctly fifth time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isNull(log.args.literal[</span><span class="s4">4</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event was dispatched correctly sixth time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.isNull(log.args.literal[</span><span class="s4">5</span><span class="s1">][</span><span class="s4">0</span><span class="s1">])</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'bar'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'object with properties:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify({ foo: </span><span class="s4">42</span><span class="s3">,</span>
+          <span class="s1">bar: undefined</span><span class="s3">,</span>
+          <span class="s1">baz: </span><span class="s4">3.14159265359</span><span class="s3">,</span>
+          <span class="s1">qux: Symbol(</span><span class="s0">'qux'</span><span class="s1">)</span>
+        <span class="s1">})</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'baz'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event was dispatched correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.number[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">42</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event was dispatched correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.number[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">3.14159265359</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'object with keys containing special characters:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify({ </span><span class="s0">'foo</span><span class="s3">\n</span><span class="s0">&quot;bar&quot;'</span><span class="s1">: </span><span class="s4">42 </span><span class="s1">})</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo</span><span class="s3">\\</span><span class="s0">n</span><span class="s3">\\</span><span class="s0">&quot;bar</span><span class="s3">\\</span><span class="s0">&quot;'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.number[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">42</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'nested array:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify([ </span><span class="s0">'foo'</span><span class="s3">, </span><span class="s1">[ </span><span class="s0">'bar'</span><span class="s3">, </span><span class="s1">[ </span><span class="s0">'baz'</span><span class="s3">, </span><span class="s0">'qux' </span><span class="s1">] ] ])</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event occurred three times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occurred four times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">4</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'bar'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly third time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'baz'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly fourth time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'qux'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event occurred three times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'nested object:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify({ foo: { bar: { baz: </span><span class="s4">1</span><span class="s3">, </span><span class="s1">qux: </span><span class="s4">2 </span><span class="s1">}</span><span class="s3">, </span><span class="s1">wibble: </span><span class="s4">3 </span><span class="s1">}</span><span class="s3">, </span><span class="s1">wobble: </span><span class="s4">4 </span><span class="s1">})</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event occurred three times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event occurred six times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">6</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'bar'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly third time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'baz'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly fourth time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'qux'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly fifth time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">4</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'wibble'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly sixth time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">5</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'wobble'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event occurred four times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">4</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event was dispatched correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.number[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event was dispatched correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.number[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event was dispatched correctly third time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.number[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event was dispatched correctly fourth time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.number[</span><span class="s4">3</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">4</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event occurred three times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'promise:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">let </span><span class="s1">resolve</span>
+
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s2">new </span><span class="s1">Promise(res =&gt; resolve = res)</span><span class="s3">, </span><span class="s1">{ poll: </span><span class="s4">4 </span><span class="s1">})</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+
+        <span class="s1">setTimeout(resolve.bind(</span><span class="s2">null</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span><span class="s3">, </span><span class="s4">20</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.string[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'ignore promise:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">let </span><span class="s1">resolve</span>
+
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s2">new </span><span class="s1">Promise(res =&gt; resolve = res)</span><span class="s3">, </span><span class="s1">{ poll: </span><span class="s4">4</span><span class="s3">, </span><span class="s1">promises: </span><span class="s0">'ignore' </span><span class="s1">})</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+
+        <span class="s1">setTimeout(resolve.bind(</span><span class="s2">null</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span><span class="s3">, </span><span class="s4">20</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'buffer:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">let </span><span class="s1">resolve</span>
+
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s2">new </span><span class="s1">Buffer(</span><span class="s0">'foo bar baz qux'</span><span class="s1">))</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.string[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo bar baz qux'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'ignore buffer:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">let </span><span class="s1">resolve</span>
+
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s2">new </span><span class="s1">Buffer(</span><span class="s0">'foo bar baz qux'</span><span class="s1">)</span><span class="s3">, </span><span class="s1">{ buffers: </span><span class="s0">'ignore' </span><span class="s1">})</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'date:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">let </span><span class="s1">resolve</span>
+
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s2">new </span><span class="s1">Date(</span><span class="s0">'1977-06-10T10:30:00.000Z'</span><span class="s1">))</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.string[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'1977-06-10T10:30:00.000Z'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'object with toJSON method:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">let </span><span class="s1">resolve</span>
+
+        <span class="s2">const </span><span class="s1">emitter = eventify({ toJSON () { </span><span class="s2">return </span><span class="s0">'foo' </span><span class="s1">} })</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.string[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'map:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">let </span><span class="s1">resolve</span>
+
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s2">new </span><span class="s1">Map([[</span><span class="s0">'foo'</span><span class="s3">,</span><span class="s0">'bar'</span><span class="s1">]</span><span class="s3">,</span><span class="s1">[</span><span class="s0">'baz'</span><span class="s3">,</span><span class="s0">'qux'</span><span class="s1">]]))</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'baz'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'bar'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'qux'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'ignore map:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">let </span><span class="s1">resolve</span>
+
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s2">new </span><span class="s1">Map([[</span><span class="s0">'foo'</span><span class="s3">,</span><span class="s0">'bar'</span><span class="s1">]</span><span class="s3">,</span><span class="s1">[</span><span class="s0">'baz'</span><span class="s3">,</span><span class="s0">'qux'</span><span class="s1">]])</span><span class="s3">, </span><span class="s1">{ maps: </span><span class="s0">'ignore' </span><span class="s1">})</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'set:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">let </span><span class="s1">resolve</span>
+
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s2">new </span><span class="s1">Set([</span><span class="s0">'foo'</span><span class="s3">,</span><span class="s0">'bar'</span><span class="s1">]))</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'bar'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'ignore set:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">let </span><span class="s1">resolve</span>
+
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s2">new </span><span class="s1">Set([</span><span class="s0">'foo'</span><span class="s3">,</span><span class="s0">'bar'</span><span class="s1">])</span><span class="s3">, </span><span class="s1">{ iterables: </span><span class="s0">'ignore' </span><span class="s1">})</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'promise resolved to a map:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">let </span><span class="s1">resolve</span>
+
+        <span class="s2">const </span><span class="s1">emitter = eventify(</span><span class="s2">new </span><span class="s1">Promise(res =&gt; resolve = res)</span><span class="s3">, </span><span class="s1">{ poll: </span><span class="s4">4 </span><span class="s1">})</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+
+        <span class="s1">setImmediate(resolve.bind(</span><span class="s2">null</span><span class="s3">, </span><span class="s2">new </span><span class="s1">Map([[</span><span class="s0">'foo'</span><span class="s3">,</span><span class="s0">'bar'</span><span class="s1">]</span><span class="s3">,</span><span class="s1">[</span><span class="s0">'baz'</span><span class="s3">,</span><span class="s0">'qux'</span><span class="s1">]])))</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'baz'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'bar'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'qux'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endPrefix event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endPrefix</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'array circular reference:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">array = [ </span><span class="s0">'foo' </span><span class="s1">]</span>
+        <span class="s1">array[</span><span class="s4">1</span><span class="s1">] = array</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(array)</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.string[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.lengthOf(log.args.dataError[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+        <span class="s1">assert.instanceOf(log.args.dataError[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">Error)</span>
+        <span class="s1">assert.strictEqual(log.args.dataError[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">].message</span><span class="s3">, </span><span class="s0">'Circular reference.'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'object circular reference:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">object = { foo: </span><span class="s0">'bar' </span><span class="s1">}</span>
+        <span class="s1">object.self = object</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(object)</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly first time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'foo'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event was dispatched correctly second time'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.property[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s0">'self'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event was dispatched correctly'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.args.dataError[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">].message</span><span class="s3">, </span><span class="s0">'Circular reference.'</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'array circular reference with ignore set:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">array = [ </span><span class="s0">'foo' </span><span class="s1">]</span>
+        <span class="s1">array[</span><span class="s4">1</span><span class="s1">] = array</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(array</span><span class="s3">, </span><span class="s1">{ circular: </span><span class="s0">'ignore' </span><span class="s1">})</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'object circular reference with ignore set:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">object = { foo: </span><span class="s0">'bar' </span><span class="s1">}</span>
+        <span class="s1">object.self = object</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify(object</span><span class="s3">, </span><span class="s1">{ circular: </span><span class="s0">'ignore' </span><span class="s1">})</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'parallel array reference:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">array = [ </span><span class="s0">'foo' </span><span class="s1">]</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify([ array</span><span class="s3">, </span><span class="s1">array ])</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event occurred three times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occurred twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event occurred three times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'parallel object reference:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">object = { foo: </span><span class="s0">'bar' </span><span class="s1">}</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify({ baz: object</span><span class="s3">, </span><span class="s1">qux: object })</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event occurred three times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event occurred four times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">4</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event occurred three times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+
+    <span class="s1">suite(</span><span class="s0">'throw errors from event handlers:'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+      <span class="s1">setup(done =&gt; {</span>
+        <span class="s2">const </span><span class="s1">emitter = eventify([</span><span class="s2">null</span><span class="s3">,</span><span class="s2">false</span><span class="s3">,</span><span class="s2">true</span><span class="s3">,</span><span class="s4">0</span><span class="s3">,</span><span class="s0">&quot;&quot;</span><span class="s3">,</span><span class="s1">{</span><span class="s0">&quot;foo&quot;</span><span class="s1">:</span><span class="s0">&quot;bar&quot;</span><span class="s1">}])</span>
+
+        <span class="s1">Object.entries(events).forEach(([ key</span><span class="s3">, </span><span class="s1">value ]) =&gt; {</span>
+          <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">spooks.fn({</span>
+            <span class="s1">name: key</span><span class="s3">,</span>
+            <span class="s1">log: log</span>
+          <span class="s1">}))</span>
+          <span class="s2">if </span><span class="s1">(value !== events.end) {</span>
+            <span class="s1">emitter.on(value</span><span class="s3">, </span><span class="s1">() =&gt; { </span><span class="s2">throw </span><span class="s4">0 </span><span class="s1">})</span>
+          <span class="s1">}</span>
+        <span class="s1">})</span>
+
+        <span class="s1">emitter.on(events.end</span><span class="s3">, </span><span class="s1">done)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'end event occurred once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.end</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'array event occured once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.array</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'literal event occured three times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.literal</span><span class="s3">, </span><span class="s4">3</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'number event occured once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.number</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'string event occured twice'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.string</span><span class="s3">, </span><span class="s4">2</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'object event occured once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.object</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'property event occured once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.property</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endObject event occured once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endObject</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'endArray event occured once'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.endArray</span><span class="s3">, </span><span class="s4">1</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'error event occured eleven times'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.error</span><span class="s3">, </span><span class="s4">11</span><span class="s1">)</span>
+      <span class="s1">})</span>
+
+      <span class="s1">test(</span><span class="s0">'dataError event did not occur'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+        <span class="s1">assert.strictEqual(log.counts.dataError</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+<span class="s1">})</span>
+</pre>
+</body>
+</html>

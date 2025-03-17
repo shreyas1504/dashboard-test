@@ -1,0 +1,111 @@
+<html>
+<head>
+<title>normalize.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #6897bb;}
+.s7 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+normalize.js</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;use strict&quot;</span><span class="s1">;</span>
+<span class="s2">Object.defineProperty(exports</span><span class="s1">, </span><span class="s0">&quot;__esModule&quot;</span><span class="s1">, </span><span class="s2">{ value: </span><span class="s3">true </span><span class="s2">})</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">compare_1 = require(</span><span class="s0">&quot;./compare&quot;</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">range_tree_1 = require(</span><span class="s0">&quot;./range-tree&quot;</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* Normalizes a process coverage.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Sorts the scripts alphabetically by `url`.</span>
+ <span class="s4">* Reassigns script ids: the script at index `0` receives `&quot;0&quot;`, the script at</span>
+ <span class="s4">* index `1` receives `&quot;1&quot;` etc.</span>
+ <span class="s4">* This does not normalize the script coverages.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">processCov Process coverage to normalize.</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">normalizeProcessCov(processCov) {</span>
+    <span class="s2">processCov.result.sort(compare_1.compareScriptCovs)</span><span class="s1">;</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">[scriptId</span><span class="s1">, </span><span class="s2">scriptCov] of processCov.result.entries()) {</span>
+        <span class="s2">scriptCov.scriptId = scriptId.toString(</span><span class="s6">10</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+<span class="s2">}</span>
+<span class="s2">exports.normalizeProcessCov = normalizeProcessCov</span><span class="s1">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* Normalizes a process coverage deeply.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Normalizes the script coverages deeply, then normalizes the process coverage</span>
+ <span class="s4">* itself.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">processCov Process coverage to normalize.</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">deepNormalizeProcessCov(processCov) {</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">scriptCov of processCov.result) {</span>
+        <span class="s2">deepNormalizeScriptCov(scriptCov)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">normalizeProcessCov(processCov)</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s2">exports.deepNormalizeProcessCov = deepNormalizeProcessCov</span><span class="s1">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* Normalizes a script coverage.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Sorts the function by root range (pre-order sort).</span>
+ <span class="s4">* This does not normalize the function coverages.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">scriptCov Script coverage to normalize.</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">normalizeScriptCov(scriptCov) {</span>
+    <span class="s2">scriptCov.functions.sort(compare_1.compareFunctionCovs)</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s2">exports.normalizeScriptCov = normalizeScriptCov</span><span class="s1">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* Normalizes a script coverage deeply.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Normalizes the function coverages deeply, then normalizes the script coverage</span>
+ <span class="s4">* itself.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">scriptCov Script coverage to normalize.</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">deepNormalizeScriptCov(scriptCov) {</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">funcCov of scriptCov.functions) {</span>
+        <span class="s2">normalizeFunctionCov(funcCov)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">normalizeScriptCov(scriptCov)</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s2">exports.deepNormalizeScriptCov = deepNormalizeScriptCov</span><span class="s1">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* Normalizes a function coverage.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Sorts the ranges (pre-order sort).</span>
+ <span class="s4">* TODO: Tree-based normalization of the ranges.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">funcCov Function coverage to normalize.</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">normalizeFunctionCov(funcCov) {</span>
+    <span class="s2">funcCov.ranges.sort(compare_1.compareRangeCovs)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">tree = range_tree_1.RangeTree.fromSortedRanges(funcCov.ranges)</span><span class="s1">;</span>
+    <span class="s2">normalizeRangeTree(tree)</span><span class="s1">;</span>
+    <span class="s2">funcCov.ranges = tree.toRanges()</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s2">exports.normalizeFunctionCov = normalizeFunctionCov</span><span class="s1">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* </span><span class="s5">@internal</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">normalizeRangeTree(tree) {</span>
+    <span class="s2">tree.normalize()</span><span class="s1">;</span>
+<span class="s2">}</span>
+<span class="s2">exports.normalizeRangeTree = normalizeRangeTree</span><span class="s1">;</span>
+
+<span class="s7">//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIl9zcmMvbm9ybWFsaXplLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7O0FBQUEsdUNBQXFGO0FBQ3JGLDZDQUF5QztBQUd6Qzs7Ozs7Ozs7O0dBU0c7QUFDSCxTQUFnQixtQkFBbUIsQ0FBQyxVQUFzQjtJQUN4RCxVQUFVLENBQUMsTUFBTSxDQUFDLElBQUksQ0FBQywyQkFBaUIsQ0FBQyxDQUFDO0lBQzFDLEtBQUssTUFBTSxDQUFDLFFBQVEsRUFBRSxTQUFTLENBQUMsSUFBSSxVQUFVLENBQUMsTUFBTSxDQUFDLE9BQU8sRUFBRSxFQUFFO1FBQy9ELFNBQVMsQ0FBQyxRQUFRLEdBQUcsUUFBUSxDQUFDLFFBQVEsQ0FBQyxFQUFFLENBQUMsQ0FBQztLQUM1QztBQUNILENBQUM7QUFMRCxrREFLQztBQUVEOzs7Ozs7O0dBT0c7QUFDSCxTQUFnQix1QkFBdUIsQ0FBQyxVQUFzQjtJQUM1RCxLQUFLLE1BQU0sU0FBUyxJQUFJLFVBQVUsQ0FBQyxNQUFNLEVBQUU7UUFDekMsc0JBQXNCLENBQUMsU0FBUyxDQUFDLENBQUM7S0FDbkM7SUFDRCxtQkFBbUIsQ0FBQyxVQUFVLENBQUMsQ0FBQztBQUNsQyxDQUFDO0FBTEQsMERBS0M7QUFFRDs7Ozs7OztHQU9HO0FBQ0gsU0FBZ0Isa0JBQWtCLENBQUMsU0FBb0I7SUFDckQsU0FBUyxDQUFDLFNBQVMsQ0FBQyxJQUFJLENBQUMsNkJBQW1CLENBQUMsQ0FBQztBQUNoRCxDQUFDO0FBRkQsZ0RBRUM7QUFFRDs7Ozs7OztHQU9HO0FBQ0gsU0FBZ0Isc0JBQXNCLENBQUMsU0FBb0I7SUFDekQsS0FBSyxNQUFNLE9BQU8sSUFBSSxTQUFTLENBQUMsU0FBUyxFQUFFO1FBQ3pDLG9CQUFvQixDQUFDLE9BQU8sQ0FBQyxDQUFDO0tBQy9CO0lBQ0Qsa0JBQWtCLENBQUMsU0FBUyxDQUFDLENBQUM7QUFDaEMsQ0FBQztBQUxELHdEQUtDO0FBRUQ7Ozs7Ozs7R0FPRztBQUNILFNBQWdCLG9CQUFvQixDQUFDLE9BQW9CO0lBQ3ZELE9BQU8sQ0FBQyxNQUFNLENBQUMsSUFBSSxDQUFDLDBCQUFnQixDQUFDLENBQUM7SUFDdEMsTUFBTSxJQUFJLEdBQWMsc0JBQVMsQ0FBQyxnQkFBZ0IsQ0FBQyxPQUFPLENBQUMsTUFBTSxDQUFFLENBQUM7SUFDcEUsa0JBQWtCLENBQUMsSUFBSSxDQUFDLENBQUM7SUFDekIsT0FBTyxDQUFDLE1BQU0sR0FBRyxJQUFJLENBQUMsUUFBUSxFQUFFLENBQUM7QUFDbkMsQ0FBQztBQUxELG9EQUtDO0FBRUQ7O0dBRUc7QUFDSCxTQUFnQixrQkFBa0IsQ0FBQyxJQUFlO0lBQ2hELElBQUksQ0FBQyxTQUFTLEVBQUUsQ0FBQztBQUNuQixDQUFDO0FBRkQsZ0RBRUMiLCJmaWxlIjoibm9ybWFsaXplLmpzIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgY29tcGFyZUZ1bmN0aW9uQ292cywgY29tcGFyZVJhbmdlQ292cywgY29tcGFyZVNjcmlwdENvdnMgfSBmcm9tIFwiLi9jb21wYXJlXCI7XG5pbXBvcnQgeyBSYW5nZVRyZWUgfSBmcm9tIFwiLi9yYW5nZS10cmVlXCI7XG5pbXBvcnQgeyBGdW5jdGlvbkNvdiwgUHJvY2Vzc0NvdiwgU2NyaXB0Q292IH0gZnJvbSBcIi4vdHlwZXNcIjtcblxuLyoqXG4gKiBOb3JtYWxpemVzIGEgcHJvY2VzcyBjb3ZlcmFnZS5cbiAqXG4gKiBTb3J0cyB0aGUgc2NyaXB0cyBhbHBoYWJldGljYWxseSBieSBgdXJsYC5cbiAqIFJlYXNzaWducyBzY3JpcHQgaWRzOiB0aGUgc2NyaXB0IGF0IGluZGV4IGAwYCByZWNlaXZlcyBgXCIwXCJgLCB0aGUgc2NyaXB0IGF0XG4gKiBpbmRleCBgMWAgcmVjZWl2ZXMgYFwiMVwiYCBldGMuXG4gKiBUaGlzIGRvZXMgbm90IG5vcm1hbGl6ZSB0aGUgc2NyaXB0IGNvdmVyYWdlcy5cbiAqXG4gKiBAcGFyYW0gcHJvY2Vzc0NvdiBQcm9jZXNzIGNvdmVyYWdlIHRvIG5vcm1hbGl6ZS5cbiAqL1xuZXhwb3J0IGZ1bmN0aW9uIG5vcm1hbGl6ZVByb2Nlc3NDb3YocHJvY2Vzc0NvdjogUHJvY2Vzc0Nvdik6IHZvaWQge1xuICBwcm9jZXNzQ292LnJlc3VsdC5zb3J0KGNvbXBhcmVTY3JpcHRDb3ZzKTtcbiAgZm9yIChjb25zdCBbc2NyaXB0SWQsIHNjcmlwdENvdl0gb2YgcHJvY2Vzc0Nvdi5yZXN1bHQuZW50cmllcygpKSB7XG4gICAgc2NyaXB0Q292LnNjcmlwdElkID0gc2NyaXB0SWQudG9TdHJpbmcoMTApO1xuICB9XG59XG5cbi8qKlxuICogTm9ybWFsaXplcyBhIHByb2Nlc3MgY292ZXJhZ2UgZGVlcGx5LlxuICpcbiAqIE5vcm1hbGl6ZXMgdGhlIHNjcmlwdCBjb3ZlcmFnZXMgZGVlcGx5LCB0aGVuIG5vcm1hbGl6ZXMgdGhlIHByb2Nlc3MgY292ZXJhZ2VcbiAqIGl0c2VsZi5cbiAqXG4gKiBAcGFyYW0gcHJvY2Vzc0NvdiBQcm9jZXNzIGNvdmVyYWdlIHRvIG5vcm1hbGl6ZS5cbiAqL1xuZXhwb3J0IGZ1bmN0aW9uIGRlZXBOb3JtYWxpemVQcm9jZXNzQ292KHByb2Nlc3NDb3Y6IFByb2Nlc3NDb3YpOiB2b2lkIHtcbiAgZm9yIChjb25zdCBzY3JpcHRDb3Ygb2YgcHJvY2Vzc0Nvdi5yZXN1bHQpIHtcbiAgICBkZWVwTm9ybWFsaXplU2NyaXB0Q292KHNjcmlwdENvdik7XG4gIH1cbiAgbm9ybWFsaXplUHJvY2Vzc0Nvdihwcm9jZXNzQ292KTtcbn1cblxuLyoqXG4gKiBOb3JtYWxpemVzIGEgc2NyaXB0IGNvdmVyYWdlLlxuICpcbiAqIFNvcnRzIHRoZSBmdW5jdGlvbiBieSByb290IHJhbmdlIChwcmUtb3JkZXIgc29ydCkuXG4gKiBUaGlzIGRvZXMgbm90IG5vcm1hbGl6ZSB0aGUgZnVuY3Rpb24gY292ZXJhZ2VzLlxuICpcbiAqIEBwYXJhbSBzY3JpcHRDb3YgU2NyaXB0IGNvdmVyYWdlIHRvIG5vcm1hbGl6ZS5cbiAqL1xuZXhwb3J0IGZ1bmN0aW9uIG5vcm1hbGl6ZVNjcmlwdENvdihzY3JpcHRDb3Y6IFNjcmlwdENvdik6IHZvaWQge1xuICBzY3JpcHRDb3YuZnVuY3Rpb25zLnNvcnQoY29tcGFyZUZ1bmN0aW9uQ292cyk7XG59XG5cbi8qKlxuICogTm9ybWFsaXplcyBhIHNjcmlwdCBjb3ZlcmFnZSBkZWVwbHkuXG4gKlxuICogTm9ybWFsaXplcyB0aGUgZnVuY3Rpb24gY292ZXJhZ2VzIGRlZXBseSwgdGhlbiBub3JtYWxpemVzIHRoZSBzY3JpcHQgY292ZXJhZ2VcbiAqIGl0c2VsZi5cbiAqXG4gKiBAcGFyYW0gc2NyaXB0Q292IFNjcmlwdCBjb3ZlcmFnZSB0byBub3JtYWxpemUuXG4gKi9cbmV4cG9ydCBmdW5jdGlvbiBkZWVwTm9ybWFsaXplU2NyaXB0Q292KHNjcmlwdENvdjogU2NyaXB0Q292KTogdm9pZCB7XG4gIGZvciAoY29uc3QgZnVuY0NvdiBvZiBzY3JpcHRDb3YuZnVuY3Rpb25zKSB7XG4gICAgbm9ybWFsaXplRnVuY3Rpb25Db3YoZnVuY0Nvdik7XG4gIH1cbiAgbm9ybWFsaXplU2NyaXB0Q292KHNjcmlwdENvdik7XG59XG5cbi8qKlxuICogTm9ybWFsaXplcyBhIGZ1bmN0aW9uIGNvdmVyYWdlLlxuICpcbiAqIFNvcnRzIHRoZSByYW5nZXMgKHByZS1vcmRlciBzb3J0KS5cbiAqIFRPRE86IFRyZWUtYmFzZWQgbm9ybWFsaXphdGlvbiBvZiB0aGUgcmFuZ2VzLlxuICpcbiAqIEBwYXJhbSBmdW5jQ292IEZ1bmN0aW9uIGNvdmVyYWdlIHRvIG5vcm1hbGl6ZS5cbiAqL1xuZXhwb3J0IGZ1bmN0aW9uIG5vcm1hbGl6ZUZ1bmN0aW9uQ292KGZ1bmNDb3Y6IEZ1bmN0aW9uQ292KTogdm9pZCB7XG4gIGZ1bmNDb3YucmFuZ2VzLnNvcnQoY29tcGFyZVJhbmdlQ292cyk7XG4gIGNvbnN0IHRyZWU6IFJhbmdlVHJlZSA9IFJhbmdlVHJlZS5mcm9tU29ydGVkUmFuZ2VzKGZ1bmNDb3YucmFuZ2VzKSE7XG4gIG5vcm1hbGl6ZVJhbmdlVHJlZSh0cmVlKTtcbiAgZnVuY0Nvdi5yYW5nZXMgPSB0cmVlLnRvUmFuZ2VzKCk7XG59XG5cbi8qKlxuICogQGludGVybmFsXG4gKi9cbmV4cG9ydCBmdW5jdGlvbiBub3JtYWxpemVSYW5nZVRyZWUodHJlZTogUmFuZ2VUcmVlKTogdm9pZCB7XG4gIHRyZWUubm9ybWFsaXplKCk7XG59XG4iXSwic291cmNlUm9vdCI6IiJ9</span>
+</pre>
+</body>
+</html>

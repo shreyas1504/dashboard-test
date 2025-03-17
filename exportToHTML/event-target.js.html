@@ -1,0 +1,207 @@
+<html>
+<head>
+<title>event-target.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #8a8a8a; font-style: italic;}
+.s4 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s5 { color: #cc7832; font-weight: bold;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+event-target.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* Class representing an event.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@private</span>
+ <span class="s3">*/</span>
+<span class="s5">class </span><span class="s2">Event {</span>
+  <span class="s3">/**</span>
+   <span class="s3">* Create a new `Event`.</span>
+   <span class="s3">*</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{String} type The name of the event</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Object} target A reference to the target to which the event was</span>
+   <span class="s3">*     dispatched</span>
+   <span class="s3">*/</span>
+  <span class="s2">constructor(type</span><span class="s1">, </span><span class="s2">target) {</span>
+    <span class="s5">this</span><span class="s2">.target = target</span><span class="s1">;</span>
+    <span class="s5">this</span><span class="s2">.type = type</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* Class representing a message event.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@extends </span><span class="s3">Event</span>
+ <span class="s3">* </span><span class="s4">@private</span>
+ <span class="s3">*/</span>
+<span class="s5">class </span><span class="s2">MessageEvent </span><span class="s5">extends </span><span class="s2">Event {</span>
+  <span class="s3">/**</span>
+   <span class="s3">* Create a new `MessageEvent`.</span>
+   <span class="s3">*</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{(String|Buffer|ArrayBuffer|Buffer[])} data The received data</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{WebSocket} target A reference to the target to which the event was</span>
+   <span class="s3">*     dispatched</span>
+   <span class="s3">*/</span>
+  <span class="s2">constructor(data</span><span class="s1">, </span><span class="s2">target) {</span>
+    <span class="s5">super</span><span class="s2">(</span><span class="s0">'message'</span><span class="s1">, </span><span class="s2">target)</span><span class="s1">;</span>
+
+    <span class="s5">this</span><span class="s2">.data = data</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* Class representing a close event.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@extends </span><span class="s3">Event</span>
+ <span class="s3">* </span><span class="s4">@private</span>
+ <span class="s3">*/</span>
+<span class="s5">class </span><span class="s2">CloseEvent </span><span class="s5">extends </span><span class="s2">Event {</span>
+  <span class="s3">/**</span>
+   <span class="s3">* Create a new `CloseEvent`.</span>
+   <span class="s3">*</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Number} code The status code explaining why the connection is being</span>
+   <span class="s3">*     closed</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{String} reason A human-readable string explaining why the</span>
+   <span class="s3">*     connection is closing</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{WebSocket} target A reference to the target to which the event was</span>
+   <span class="s3">*     dispatched</span>
+   <span class="s3">*/</span>
+  <span class="s2">constructor(code</span><span class="s1">, </span><span class="s2">reason</span><span class="s1">, </span><span class="s2">target) {</span>
+    <span class="s5">super</span><span class="s2">(</span><span class="s0">'close'</span><span class="s1">, </span><span class="s2">target)</span><span class="s1">;</span>
+
+    <span class="s5">this</span><span class="s2">.wasClean = target._closeFrameReceived &amp;&amp; target._closeFrameSent</span><span class="s1">;</span>
+    <span class="s5">this</span><span class="s2">.reason = reason</span><span class="s1">;</span>
+    <span class="s5">this</span><span class="s2">.code = code</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* Class representing an open event.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@extends </span><span class="s3">Event</span>
+ <span class="s3">* </span><span class="s4">@private</span>
+ <span class="s3">*/</span>
+<span class="s5">class </span><span class="s2">OpenEvent </span><span class="s5">extends </span><span class="s2">Event {</span>
+  <span class="s3">/**</span>
+   <span class="s3">* Create a new `OpenEvent`.</span>
+   <span class="s3">*</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{WebSocket} target A reference to the target to which the event was</span>
+   <span class="s3">*     dispatched</span>
+   <span class="s3">*/</span>
+  <span class="s2">constructor(target) {</span>
+    <span class="s5">super</span><span class="s2">(</span><span class="s0">'open'</span><span class="s1">, </span><span class="s2">target)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* Class representing an error event.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@extends </span><span class="s3">Event</span>
+ <span class="s3">* </span><span class="s4">@private</span>
+ <span class="s3">*/</span>
+<span class="s5">class </span><span class="s2">ErrorEvent </span><span class="s5">extends </span><span class="s2">Event {</span>
+  <span class="s3">/**</span>
+   <span class="s3">* Create a new `ErrorEvent`.</span>
+   <span class="s3">*</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Object} error The error that generated this event</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{WebSocket} target A reference to the target to which the event was</span>
+   <span class="s3">*     dispatched</span>
+   <span class="s3">*/</span>
+  <span class="s2">constructor(error</span><span class="s1">, </span><span class="s2">target) {</span>
+    <span class="s5">super</span><span class="s2">(</span><span class="s0">'error'</span><span class="s1">, </span><span class="s2">target)</span><span class="s1">;</span>
+
+    <span class="s5">this</span><span class="s2">.message = error.message</span><span class="s1">;</span>
+    <span class="s5">this</span><span class="s2">.error = error</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* This provides methods for emulating the `EventTarget` interface. It's not</span>
+ <span class="s3">* meant to be used directly.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@mixin</span>
+ <span class="s3">*/</span>
+<span class="s5">const </span><span class="s2">EventTarget = {</span>
+  <span class="s3">/**</span>
+   <span class="s3">* Register an event listener.</span>
+   <span class="s3">*</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{String} type A string representing the event type to listen for</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Function} listener The listener to add</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Object} [options] An options object specifies characteristics about</span>
+   <span class="s3">*     the event listener</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Boolean} [options.once=false] A `Boolean`` indicating that the</span>
+   <span class="s3">*     listener should be invoked at most once after being added. If `true`,</span>
+   <span class="s3">*     the listener would be automatically removed when invoked.</span>
+   <span class="s3">* </span><span class="s4">@public</span>
+   <span class="s3">*/</span>
+  <span class="s2">addEventListener(type</span><span class="s1">, </span><span class="s2">listener</span><span class="s1">, </span><span class="s2">options) {</span>
+    <span class="s5">if </span><span class="s2">(</span><span class="s5">typeof </span><span class="s2">listener !== </span><span class="s0">'function'</span><span class="s2">) </span><span class="s5">return</span><span class="s1">;</span>
+
+    <span class="s5">function </span><span class="s2">onMessage(data) {</span>
+      <span class="s2">listener.call(</span><span class="s5">this</span><span class="s1">, </span><span class="s5">new </span><span class="s2">MessageEvent(data</span><span class="s1">, </span><span class="s5">this</span><span class="s2">))</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s5">function </span><span class="s2">onClose(code</span><span class="s1">, </span><span class="s2">message) {</span>
+      <span class="s2">listener.call(</span><span class="s5">this</span><span class="s1">, </span><span class="s5">new </span><span class="s2">CloseEvent(code</span><span class="s1">, </span><span class="s2">message</span><span class="s1">, </span><span class="s5">this</span><span class="s2">))</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s5">function </span><span class="s2">onError(error) {</span>
+      <span class="s2">listener.call(</span><span class="s5">this</span><span class="s1">, </span><span class="s5">new </span><span class="s2">ErrorEvent(error</span><span class="s1">, </span><span class="s5">this</span><span class="s2">))</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s5">function </span><span class="s2">onOpen() {</span>
+      <span class="s2">listener.call(</span><span class="s5">this</span><span class="s1">, </span><span class="s5">new </span><span class="s2">OpenEvent(</span><span class="s5">this</span><span class="s2">))</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s5">const </span><span class="s2">method = options &amp;&amp; options.once ? </span><span class="s0">'once' </span><span class="s2">: </span><span class="s0">'on'</span><span class="s1">;</span>
+
+    <span class="s5">if </span><span class="s2">(type === </span><span class="s0">'message'</span><span class="s2">) {</span>
+      <span class="s2">onMessage._listener = listener</span><span class="s1">;</span>
+      <span class="s5">this</span><span class="s2">[method](type</span><span class="s1">, </span><span class="s2">onMessage)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s5">else if </span><span class="s2">(type === </span><span class="s0">'close'</span><span class="s2">) {</span>
+      <span class="s2">onClose._listener = listener</span><span class="s1">;</span>
+      <span class="s5">this</span><span class="s2">[method](type</span><span class="s1">, </span><span class="s2">onClose)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s5">else if </span><span class="s2">(type === </span><span class="s0">'error'</span><span class="s2">) {</span>
+      <span class="s2">onError._listener = listener</span><span class="s1">;</span>
+      <span class="s5">this</span><span class="s2">[method](type</span><span class="s1">, </span><span class="s2">onError)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s5">else if </span><span class="s2">(type === </span><span class="s0">'open'</span><span class="s2">) {</span>
+      <span class="s2">onOpen._listener = listener</span><span class="s1">;</span>
+      <span class="s5">this</span><span class="s2">[method](type</span><span class="s1">, </span><span class="s2">onOpen)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s5">else </span><span class="s2">{</span>
+      <span class="s5">this</span><span class="s2">[method](type</span><span class="s1">, </span><span class="s2">listener)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span><span class="s1">,</span>
+
+  <span class="s3">/**</span>
+   <span class="s3">* Remove an event listener.</span>
+   <span class="s3">*</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{String} type A string representing the event type to remove</span>
+   <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Function} listener The listener to remove</span>
+   <span class="s3">* </span><span class="s4">@public</span>
+   <span class="s3">*/</span>
+  <span class="s2">removeEventListener(type</span><span class="s1">, </span><span class="s2">listener) {</span>
+    <span class="s5">const </span><span class="s2">listeners = </span><span class="s5">this</span><span class="s2">.listeners(type)</span><span class="s1">;</span>
+
+    <span class="s5">for </span><span class="s2">(</span><span class="s5">let </span><span class="s2">i = </span><span class="s6">0</span><span class="s1">; </span><span class="s2">i &lt; listeners.length</span><span class="s1">; </span><span class="s2">i++) {</span>
+      <span class="s5">if </span><span class="s2">(listeners[i] === listener || listeners[i]._listener === listener) {</span>
+        <span class="s5">this</span><span class="s2">.removeListener(type</span><span class="s1">, </span><span class="s2">listeners[i])</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">module.exports = EventTarget</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

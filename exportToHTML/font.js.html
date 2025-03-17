@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>font.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #cc7832; font-weight: bold;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+font.js</font>
+</center></td></tr></table>
+<pre><span class="s0">module.exports = </span><span class="s1">function </span><span class="s0">compressFont(node) {</span>
+    <span class="s1">var </span><span class="s0">list = node.children</span><span class="s2">;</span>
+
+    <span class="s0">list.eachRight(</span><span class="s1">function</span><span class="s0">(node</span><span class="s2">, </span><span class="s0">item) {</span>
+        <span class="s1">if </span><span class="s0">(node.type === </span><span class="s3">'Identifier'</span><span class="s0">) {</span>
+            <span class="s1">if </span><span class="s0">(node.name === </span><span class="s3">'bold'</span><span class="s0">) {</span>
+                <span class="s0">item.data = {</span>
+                    <span class="s0">type: </span><span class="s3">'Number'</span><span class="s2">,</span>
+                    <span class="s0">loc: node.loc</span><span class="s2">,</span>
+                    <span class="s0">value: </span><span class="s3">'700'</span>
+                <span class="s0">}</span><span class="s2">;</span>
+            <span class="s0">} </span><span class="s1">else if </span><span class="s0">(node.name === </span><span class="s3">'normal'</span><span class="s0">) {</span>
+                <span class="s1">var </span><span class="s0">prev = item.prev</span><span class="s2">;</span>
+
+                <span class="s1">if </span><span class="s0">(prev &amp;&amp; prev.data.type === </span><span class="s3">'Operator' </span><span class="s0">&amp;&amp; prev.data.value === </span><span class="s3">'/'</span><span class="s0">) {</span>
+                    <span class="s1">this</span><span class="s0">.remove(prev)</span><span class="s2">;</span>
+                <span class="s0">}</span>
+
+                <span class="s1">this</span><span class="s0">.remove(item)</span><span class="s2">;</span>
+            <span class="s0">} </span><span class="s1">else if </span><span class="s0">(node.name === </span><span class="s3">'medium'</span><span class="s0">) {</span>
+                <span class="s1">var </span><span class="s0">next = item.next</span><span class="s2">;</span>
+
+                <span class="s1">if </span><span class="s0">(!next || next.data.type !== </span><span class="s3">'Operator'</span><span class="s0">) {</span>
+                    <span class="s1">this</span><span class="s0">.remove(item)</span><span class="s2">;</span>
+                <span class="s0">}</span>
+            <span class="s0">}</span>
+        <span class="s0">}</span>
+    <span class="s0">})</span><span class="s2">;</span>
+
+    <span class="s4">// remove redundant spaces</span>
+    <span class="s0">list.each(</span><span class="s1">function</span><span class="s0">(node</span><span class="s2">, </span><span class="s0">item) {</span>
+        <span class="s1">if </span><span class="s0">(node.type === </span><span class="s3">'WhiteSpace'</span><span class="s0">) {</span>
+            <span class="s1">if </span><span class="s0">(!item.prev || !item.next || item.next.data.type === </span><span class="s3">'WhiteSpace'</span><span class="s0">) {</span>
+                <span class="s1">this</span><span class="s0">.remove(item)</span><span class="s2">;</span>
+            <span class="s0">}</span>
+        <span class="s0">}</span>
+    <span class="s0">})</span><span class="s2">;</span>
+
+    <span class="s1">if </span><span class="s0">(list.isEmpty()) {</span>
+        <span class="s0">list.insert(list.createItem({</span>
+            <span class="s0">type: </span><span class="s3">'Identifier'</span><span class="s2">,</span>
+            <span class="s0">name: </span><span class="s3">'normal'</span>
+        <span class="s0">}))</span><span class="s2">;</span>
+    <span class="s0">}</span>
+<span class="s0">}</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

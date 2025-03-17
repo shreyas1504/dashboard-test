@@ -1,0 +1,225 @@
+<html>
+<head>
+<title>index.cjs</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+index.cjs</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">fs = require(</span><span class="s0">'fs'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">util = require(</span><span class="s0">'util'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">path = require(</span><span class="s0">'path'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">let </span><span class="s2">shim</span><span class="s1">;</span>
+<span class="s3">class </span><span class="s2">Y18N {</span>
+    <span class="s2">constructor(opts) {</span>
+        <span class="s4">// configurable options.</span>
+        <span class="s2">opts = opts || {}</span><span class="s1">;</span>
+        <span class="s3">this</span><span class="s2">.directory = opts.directory || </span><span class="s0">'./locales'</span><span class="s1">;</span>
+        <span class="s3">this</span><span class="s2">.updateFiles = </span><span class="s3">typeof </span><span class="s2">opts.updateFiles === </span><span class="s0">'boolean' </span><span class="s2">? opts.updateFiles : </span><span class="s3">true</span><span class="s1">;</span>
+        <span class="s3">this</span><span class="s2">.locale = opts.locale || </span><span class="s0">'en'</span><span class="s1">;</span>
+        <span class="s3">this</span><span class="s2">.fallbackToLanguage = </span><span class="s3">typeof </span><span class="s2">opts.fallbackToLanguage === </span><span class="s0">'boolean' </span><span class="s2">? opts.fallbackToLanguage : </span><span class="s3">true</span><span class="s1">;</span>
+        <span class="s4">// internal stuff.</span>
+        <span class="s3">this</span><span class="s2">.cache = Object.create(</span><span class="s3">null</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s3">this</span><span class="s2">.writeQueue = []</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">__(...args) {</span>
+        <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">arguments[</span><span class="s5">0</span><span class="s2">] !== </span><span class="s0">'string'</span><span class="s2">) {</span>
+            <span class="s3">return this</span><span class="s2">._taggedLiteral(arguments[</span><span class="s5">0</span><span class="s2">]</span><span class="s1">, </span><span class="s2">...arguments)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">const </span><span class="s2">str = args.shift()</span><span class="s1">;</span>
+        <span class="s3">let </span><span class="s2">cb = </span><span class="s3">function </span><span class="s2">() { }</span><span class="s1">; </span><span class="s4">// start with noop.</span>
+        <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">args[args.length - </span><span class="s5">1</span><span class="s2">] === </span><span class="s0">'function'</span><span class="s2">)</span>
+            <span class="s2">cb = args.pop()</span><span class="s1">;</span>
+        <span class="s2">cb = cb || </span><span class="s3">function </span><span class="s2">() { }</span><span class="s1">; </span><span class="s4">// noop.</span>
+        <span class="s3">if </span><span class="s2">(!</span><span class="s3">this</span><span class="s2">.cache[</span><span class="s3">this</span><span class="s2">.locale])</span>
+            <span class="s3">this</span><span class="s2">._readLocaleFile()</span><span class="s1">;</span>
+        <span class="s4">// we've observed a new string, update the language file.</span>
+        <span class="s3">if </span><span class="s2">(!</span><span class="s3">this</span><span class="s2">.cache[</span><span class="s3">this</span><span class="s2">.locale][str] &amp;&amp; </span><span class="s3">this</span><span class="s2">.updateFiles) {</span>
+            <span class="s3">this</span><span class="s2">.cache[</span><span class="s3">this</span><span class="s2">.locale][str] = str</span><span class="s1">;</span>
+            <span class="s4">// include the current directory and locale,</span>
+            <span class="s4">// since these values could change before the</span>
+            <span class="s4">// write is performed.</span>
+            <span class="s3">this</span><span class="s2">._enqueueWrite({</span>
+                <span class="s2">directory: </span><span class="s3">this</span><span class="s2">.directory</span><span class="s1">,</span>
+                <span class="s2">locale: </span><span class="s3">this</span><span class="s2">.locale</span><span class="s1">,</span>
+                <span class="s2">cb</span>
+            <span class="s2">})</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">else </span><span class="s2">{</span>
+            <span class="s2">cb()</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">return </span><span class="s2">shim.format.apply(shim.format</span><span class="s1">, </span><span class="s2">[</span><span class="s3">this</span><span class="s2">.cache[</span><span class="s3">this</span><span class="s2">.locale][str] || str].concat(args))</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">__n() {</span>
+        <span class="s3">const </span><span class="s2">args = Array.prototype.slice.call(arguments)</span><span class="s1">;</span>
+        <span class="s3">const </span><span class="s2">singular = args.shift()</span><span class="s1">;</span>
+        <span class="s3">const </span><span class="s2">plural = args.shift()</span><span class="s1">;</span>
+        <span class="s3">const </span><span class="s2">quantity = args.shift()</span><span class="s1">;</span>
+        <span class="s3">let </span><span class="s2">cb = </span><span class="s3">function </span><span class="s2">() { }</span><span class="s1">; </span><span class="s4">// start with noop.</span>
+        <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">args[args.length - </span><span class="s5">1</span><span class="s2">] === </span><span class="s0">'function'</span><span class="s2">)</span>
+            <span class="s2">cb = args.pop()</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(!</span><span class="s3">this</span><span class="s2">.cache[</span><span class="s3">this</span><span class="s2">.locale])</span>
+            <span class="s3">this</span><span class="s2">._readLocaleFile()</span><span class="s1">;</span>
+        <span class="s3">let </span><span class="s2">str = quantity === </span><span class="s5">1 </span><span class="s2">? singular : plural</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.cache[</span><span class="s3">this</span><span class="s2">.locale][singular]) {</span>
+            <span class="s3">const </span><span class="s2">entry = </span><span class="s3">this</span><span class="s2">.cache[</span><span class="s3">this</span><span class="s2">.locale][singular]</span><span class="s1">;</span>
+            <span class="s2">str = entry[quantity === </span><span class="s5">1 </span><span class="s2">? </span><span class="s0">'one' </span><span class="s2">: </span><span class="s0">'other'</span><span class="s2">]</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s4">// we've observed a new string, update the language file.</span>
+        <span class="s3">if </span><span class="s2">(!</span><span class="s3">this</span><span class="s2">.cache[</span><span class="s3">this</span><span class="s2">.locale][singular] &amp;&amp; </span><span class="s3">this</span><span class="s2">.updateFiles) {</span>
+            <span class="s3">this</span><span class="s2">.cache[</span><span class="s3">this</span><span class="s2">.locale][singular] = {</span>
+                <span class="s2">one: singular</span><span class="s1">,</span>
+                <span class="s2">other: plural</span>
+            <span class="s2">}</span><span class="s1">;</span>
+            <span class="s4">// include the current directory and locale,</span>
+            <span class="s4">// since these values could change before the</span>
+            <span class="s4">// write is performed.</span>
+            <span class="s3">this</span><span class="s2">._enqueueWrite({</span>
+                <span class="s2">directory: </span><span class="s3">this</span><span class="s2">.directory</span><span class="s1">,</span>
+                <span class="s2">locale: </span><span class="s3">this</span><span class="s2">.locale</span><span class="s1">,</span>
+                <span class="s2">cb</span>
+            <span class="s2">})</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">else </span><span class="s2">{</span>
+            <span class="s2">cb()</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s4">// if a %d placeholder is provided, add quantity</span>
+        <span class="s4">// to the arguments expanded by util.format.</span>
+        <span class="s3">const </span><span class="s2">values = [str]</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(~str.indexOf(</span><span class="s0">'%d'</span><span class="s2">))</span>
+            <span class="s2">values.push(quantity)</span><span class="s1">;</span>
+        <span class="s3">return </span><span class="s2">shim.format.apply(shim.format</span><span class="s1">, </span><span class="s2">values.concat(args))</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">setLocale(locale) {</span>
+        <span class="s3">this</span><span class="s2">.locale = locale</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">getLocale() {</span>
+        <span class="s3">return this</span><span class="s2">.locale</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">updateLocale(obj) {</span>
+        <span class="s3">if </span><span class="s2">(!</span><span class="s3">this</span><span class="s2">.cache[</span><span class="s3">this</span><span class="s2">.locale])</span>
+            <span class="s3">this</span><span class="s2">._readLocaleFile()</span><span class="s1">;</span>
+        <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">key </span><span class="s3">in </span><span class="s2">obj) {</span>
+            <span class="s3">if </span><span class="s2">(Object.prototype.hasOwnProperty.call(obj</span><span class="s1">, </span><span class="s2">key)) {</span>
+                <span class="s3">this</span><span class="s2">.cache[</span><span class="s3">this</span><span class="s2">.locale][key] = obj[key]</span><span class="s1">;</span>
+            <span class="s2">}</span>
+        <span class="s2">}</span>
+    <span class="s2">}</span>
+    <span class="s2">_taggedLiteral(parts</span><span class="s1">, </span><span class="s2">...args) {</span>
+        <span class="s3">let </span><span class="s2">str = </span><span class="s0">''</span><span class="s1">;</span>
+        <span class="s2">parts.forEach(</span><span class="s3">function </span><span class="s2">(part</span><span class="s1">, </span><span class="s2">i) {</span>
+            <span class="s3">const </span><span class="s2">arg = args[i + </span><span class="s5">1</span><span class="s2">]</span><span class="s1">;</span>
+            <span class="s2">str += part</span><span class="s1">;</span>
+            <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">arg !== </span><span class="s0">'undefined'</span><span class="s2">) {</span>
+                <span class="s2">str += </span><span class="s0">'%s'</span><span class="s1">;</span>
+            <span class="s2">}</span>
+        <span class="s2">})</span><span class="s1">;</span>
+        <span class="s3">return this</span><span class="s2">.__.apply(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">[str].concat([].slice.call(args</span><span class="s1">, </span><span class="s5">1</span><span class="s2">)))</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">_enqueueWrite(work) {</span>
+        <span class="s3">this</span><span class="s2">.writeQueue.push(work)</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.writeQueue.length === </span><span class="s5">1</span><span class="s2">)</span>
+            <span class="s3">this</span><span class="s2">._processWriteQueue()</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">_processWriteQueue() {</span>
+        <span class="s3">const </span><span class="s2">_this = </span><span class="s3">this</span><span class="s1">;</span>
+        <span class="s3">const </span><span class="s2">work = </span><span class="s3">this</span><span class="s2">.writeQueue[</span><span class="s5">0</span><span class="s2">]</span><span class="s1">;</span>
+        <span class="s4">// destructure the enqueued work.</span>
+        <span class="s3">const </span><span class="s2">directory = work.directory</span><span class="s1">;</span>
+        <span class="s3">const </span><span class="s2">locale = work.locale</span><span class="s1">;</span>
+        <span class="s3">const </span><span class="s2">cb = work.cb</span><span class="s1">;</span>
+        <span class="s3">const </span><span class="s2">languageFile = </span><span class="s3">this</span><span class="s2">._resolveLocaleFile(directory</span><span class="s1">, </span><span class="s2">locale)</span><span class="s1">;</span>
+        <span class="s3">const </span><span class="s2">serializedLocale = JSON.stringify(</span><span class="s3">this</span><span class="s2">.cache[locale]</span><span class="s1">, </span><span class="s3">null</span><span class="s1">, </span><span class="s5">2</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">shim.fs.writeFile(languageFile</span><span class="s1">, </span><span class="s2">serializedLocale</span><span class="s1">, </span><span class="s0">'utf-8'</span><span class="s1">, </span><span class="s3">function </span><span class="s2">(err) {</span>
+            <span class="s2">_this.writeQueue.shift()</span><span class="s1">;</span>
+            <span class="s3">if </span><span class="s2">(_this.writeQueue.length &gt; </span><span class="s5">0</span><span class="s2">)</span>
+                <span class="s2">_this._processWriteQueue()</span><span class="s1">;</span>
+            <span class="s2">cb(err)</span><span class="s1">;</span>
+        <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">_readLocaleFile() {</span>
+        <span class="s3">let </span><span class="s2">localeLookup = {}</span><span class="s1">;</span>
+        <span class="s3">const </span><span class="s2">languageFile = </span><span class="s3">this</span><span class="s2">._resolveLocaleFile(</span><span class="s3">this</span><span class="s2">.directory</span><span class="s1">, </span><span class="s3">this</span><span class="s2">.locale)</span><span class="s1">;</span>
+        <span class="s3">try </span><span class="s2">{</span>
+            <span class="s4">// When using a bundler such as webpack, readFileSync may not be defined:</span>
+            <span class="s3">if </span><span class="s2">(shim.fs.readFileSync) {</span>
+                <span class="s2">localeLookup = JSON.parse(shim.fs.readFileSync(languageFile</span><span class="s1">, </span><span class="s0">'utf-8'</span><span class="s2">))</span><span class="s1">;</span>
+            <span class="s2">}</span>
+        <span class="s2">}</span>
+        <span class="s3">catch </span><span class="s2">(err) {</span>
+            <span class="s3">if </span><span class="s2">(err </span><span class="s3">instanceof </span><span class="s2">SyntaxError) {</span>
+                <span class="s2">err.message = </span><span class="s0">'syntax error in ' </span><span class="s2">+ languageFile</span><span class="s1">;</span>
+            <span class="s2">}</span>
+            <span class="s3">if </span><span class="s2">(err.code === </span><span class="s0">'ENOENT'</span><span class="s2">)</span>
+                <span class="s2">localeLookup = {}</span><span class="s1">;</span>
+            <span class="s3">else</span>
+                <span class="s3">throw </span><span class="s2">err</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">this</span><span class="s2">.cache[</span><span class="s3">this</span><span class="s2">.locale] = localeLookup</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">_resolveLocaleFile(directory</span><span class="s1">, </span><span class="s2">locale) {</span>
+        <span class="s3">let </span><span class="s2">file = shim.resolve(directory</span><span class="s1">, </span><span class="s0">'./'</span><span class="s1">, </span><span class="s2">locale + </span><span class="s0">'.json'</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.fallbackToLanguage &amp;&amp; !</span><span class="s3">this</span><span class="s2">._fileExistsSync(file) &amp;&amp; ~locale.lastIndexOf(</span><span class="s0">'_'</span><span class="s2">)) {</span>
+            <span class="s4">// attempt fallback to language only</span>
+            <span class="s3">const </span><span class="s2">languageFile = shim.resolve(directory</span><span class="s1">, </span><span class="s0">'./'</span><span class="s1">, </span><span class="s2">locale.split(</span><span class="s0">'_'</span><span class="s2">)[</span><span class="s5">0</span><span class="s2">] + </span><span class="s0">'.json'</span><span class="s2">)</span><span class="s1">;</span>
+            <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._fileExistsSync(languageFile))</span>
+                <span class="s2">file = languageFile</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">return </span><span class="s2">file</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">_fileExistsSync(file) {</span>
+        <span class="s3">return </span><span class="s2">shim.exists(file)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+<span class="s2">}</span>
+<span class="s3">function </span><span class="s2">y18n$1(opts</span><span class="s1">, </span><span class="s2">_shim) {</span>
+    <span class="s2">shim = _shim</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">y18n = </span><span class="s3">new </span><span class="s2">Y18N(opts)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">__: y18n.__.bind(y18n)</span><span class="s1">,</span>
+        <span class="s2">__n: y18n.__n.bind(y18n)</span><span class="s1">,</span>
+        <span class="s2">setLocale: y18n.setLocale.bind(y18n)</span><span class="s1">,</span>
+        <span class="s2">getLocale: y18n.getLocale.bind(y18n)</span><span class="s1">,</span>
+        <span class="s2">updateLocale: y18n.updateLocale.bind(y18n)</span><span class="s1">,</span>
+        <span class="s2">locale: y18n.locale</span>
+    <span class="s2">}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">var </span><span class="s2">nodePlatformShim = {</span>
+    <span class="s2">fs: {</span>
+        <span class="s2">readFileSync: fs.readFileSync</span><span class="s1">,</span>
+        <span class="s2">writeFile: fs.writeFile</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">format: util.format</span><span class="s1">,</span>
+    <span class="s2">resolve: path.resolve</span><span class="s1">,</span>
+    <span class="s2">exists: (file) =&gt; {</span>
+        <span class="s3">try </span><span class="s2">{</span>
+            <span class="s3">return </span><span class="s2">fs.statSync(file).isFile()</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">catch </span><span class="s2">(err) {</span>
+            <span class="s3">return false</span><span class="s1">;</span>
+        <span class="s2">}</span>
+    <span class="s2">}</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">y18n = (opts) =&gt; {</span>
+    <span class="s3">return </span><span class="s2">y18n$1(opts</span><span class="s1">, </span><span class="s2">nodePlatformShim)</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">module.exports = y18n</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

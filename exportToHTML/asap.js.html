@@ -1,0 +1,88 @@
+<html>
+<head>
+<title>asap.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+asap.js</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;use strict&quot;</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">rawAsap = require(</span><span class="s0">&quot;./raw&quot;</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">var </span><span class="s2">freeTasks = []</span><span class="s1">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Calls a task as soon as possible after returning, in its own event, with</span>
+ <span class="s4">* priority over IO events. An exception thrown in a task can be handled by</span>
+ <span class="s4">* `process.on(&quot;uncaughtException&quot;) or `domain.on(&quot;error&quot;)`, but will otherwise</span>
+ <span class="s4">* crash the process. If the error is handled, all subsequent tasks will</span>
+ <span class="s4">* resume.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{{call}} task A callable object, typically a function that takes no</span>
+ <span class="s4">* arguments.</span>
+ <span class="s4">*/</span>
+<span class="s2">module.exports = asap</span><span class="s1">;</span>
+<span class="s3">function </span><span class="s2">asap(task) {</span>
+    <span class="s3">var </span><span class="s2">rawTask</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(freeTasks.length) {</span>
+        <span class="s2">rawTask = freeTasks.pop()</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s2">rawTask = </span><span class="s3">new </span><span class="s2">RawTask()</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">rawTask.task = task</span><span class="s1">;</span>
+    <span class="s2">rawTask.domain = process.domain</span><span class="s1">;</span>
+    <span class="s2">rawAsap(rawTask)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">RawTask() {</span>
+    <span class="s3">this</span><span class="s2">.task = </span><span class="s3">null</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">.domain = </span><span class="s3">null</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s2">RawTask.prototype.call = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.domain) {</span>
+        <span class="s3">this</span><span class="s2">.domain.enter()</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s3">var </span><span class="s2">threw = </span><span class="s3">true</span><span class="s1">;</span>
+    <span class="s3">try </span><span class="s2">{</span>
+        <span class="s3">this</span><span class="s2">.task.call()</span><span class="s1">;</span>
+        <span class="s2">threw = </span><span class="s3">false</span><span class="s1">;</span>
+        <span class="s6">// If the task throws an exception (presumably) Node.js restores the</span>
+        <span class="s6">// domain stack for the next event.</span>
+        <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">.domain) {</span>
+            <span class="s3">this</span><span class="s2">.domain.exit()</span><span class="s1">;</span>
+        <span class="s2">}</span>
+    <span class="s2">} </span><span class="s3">finally </span><span class="s2">{</span>
+        <span class="s6">// We use try/finally and a threw flag to avoid messing up stack traces</span>
+        <span class="s6">// when we catch and release errors.</span>
+        <span class="s3">if </span><span class="s2">(threw) {</span>
+            <span class="s6">// In Node.js, uncaught exceptions are considered fatal errors.</span>
+            <span class="s6">// Re-throw them to interrupt flushing!</span>
+            <span class="s6">// Ensure that flushing continues if an uncaught exception is</span>
+            <span class="s6">// suppressed listening process.on(&quot;uncaughtException&quot;) or</span>
+            <span class="s6">// domain.on(&quot;error&quot;).</span>
+            <span class="s2">rawAsap.requestFlush()</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s6">// If the task threw an error, we do not want to exit the domain here.</span>
+        <span class="s6">// Exiting the domain would prevent the domain from catching the error.</span>
+        <span class="s3">this</span><span class="s2">.task = </span><span class="s3">null</span><span class="s1">;</span>
+        <span class="s3">this</span><span class="s2">.domain = </span><span class="s3">null</span><span class="s1">;</span>
+        <span class="s2">freeTasks.push(</span><span class="s3">this</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+</pre>
+</body>
+</html>

@@ -1,0 +1,661 @@
+<html>
+<head>
+<title>match.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+match.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">hasOwnProperty = Object.prototype.hasOwnProperty</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">matchGraph = require(</span><span class="s3">'./match-graph'</span><span class="s1">)</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">MATCH = matchGraph.MATCH</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">MISMATCH = matchGraph.MISMATCH</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">DISALLOW_EMPTY = matchGraph.DISALLOW_EMPTY</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s3">'../tokenizer/const'</span><span class="s1">).TYPE</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">STUB = </span><span class="s4">0</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">TOKEN = </span><span class="s4">1</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">OPEN_SYNTAX = </span><span class="s4">2</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">CLOSE_SYNTAX = </span><span class="s4">3</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">EXIT_REASON_MATCH = </span><span class="s3">'Match'</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">EXIT_REASON_MISMATCH = </span><span class="s3">'Mismatch'</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">EXIT_REASON_ITERATION_LIMIT = </span><span class="s3">'Maximum iteration number exceeded (please fill an issue on https://github.com/csstree/csstree/issues)'</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">ITERATION_LIMIT = </span><span class="s4">15000</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">totalIterationCount = </span><span class="s4">0</span><span class="s2">;</span>
+
+<span class="s0">function </span><span class="s1">reverseList(list) {</span>
+    <span class="s0">var </span><span class="s1">prev = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">next = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">item = list</span><span class="s2">;</span>
+
+    <span class="s0">while </span><span class="s1">(item !== </span><span class="s0">null</span><span class="s1">) {</span>
+        <span class="s1">next = item.prev</span><span class="s2">;</span>
+        <span class="s1">item.prev = prev</span><span class="s2">;</span>
+        <span class="s1">prev = item</span><span class="s2">;</span>
+        <span class="s1">item = next</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">prev</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">areStringsEqualCaseInsensitive(testStr</span><span class="s2">, </span><span class="s1">referenceStr) {</span>
+    <span class="s0">if </span><span class="s1">(testStr.length !== referenceStr.length) {</span>
+        <span class="s0">return false</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s2">; </span><span class="s1">i &lt; testStr.length</span><span class="s2">; </span><span class="s1">i++) {</span>
+        <span class="s0">var </span><span class="s1">testCode = testStr.charCodeAt(i)</span><span class="s2">;</span>
+        <span class="s0">var </span><span class="s1">referenceCode = referenceStr.charCodeAt(i)</span><span class="s2">;</span>
+
+        <span class="s5">// testCode.toLowerCase() for U+0041 LATIN CAPITAL LETTER A (A) .. U+005A LATIN CAPITAL LETTER Z (Z).</span>
+        <span class="s0">if </span><span class="s1">(testCode &gt;= </span><span class="s4">0x0041 </span><span class="s1">&amp;&amp; testCode &lt;= </span><span class="s4">0x005A</span><span class="s1">) {</span>
+            <span class="s1">testCode = testCode | </span><span class="s4">32</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(testCode !== referenceCode) {</span>
+            <span class="s0">return false</span><span class="s2">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return true</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">isContextEdgeDelim(token) {</span>
+    <span class="s0">if </span><span class="s1">(token.type !== TYPE.Delim) {</span>
+        <span class="s0">return false</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s5">// Fix matching for unicode-range: U+30??, U+FF00-FF9F</span>
+    <span class="s5">// Probably we need to check out previous match instead</span>
+    <span class="s0">return </span><span class="s1">token.value !== </span><span class="s3">'?'</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">isCommaContextStart(token) {</span>
+    <span class="s0">if </span><span class="s1">(token === </span><span class="s0">null</span><span class="s1">) {</span>
+        <span class="s0">return true</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">(</span>
+        <span class="s1">token.type === TYPE.Comma ||</span>
+        <span class="s1">token.type === TYPE.Function ||</span>
+        <span class="s1">token.type === TYPE.LeftParenthesis ||</span>
+        <span class="s1">token.type === TYPE.LeftSquareBracket ||</span>
+        <span class="s1">token.type === TYPE.LeftCurlyBracket ||</span>
+        <span class="s1">isContextEdgeDelim(token)</span>
+    <span class="s1">)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">isCommaContextEnd(token) {</span>
+    <span class="s0">if </span><span class="s1">(token === </span><span class="s0">null</span><span class="s1">) {</span>
+        <span class="s0">return true</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">(</span>
+        <span class="s1">token.type === TYPE.RightParenthesis ||</span>
+        <span class="s1">token.type === TYPE.RightSquareBracket ||</span>
+        <span class="s1">token.type === TYPE.RightCurlyBracket ||</span>
+        <span class="s1">token.type === TYPE.Delim</span>
+    <span class="s1">)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">internalMatch(tokens</span><span class="s2">, </span><span class="s1">state</span><span class="s2">, </span><span class="s1">syntaxes) {</span>
+    <span class="s0">function </span><span class="s1">moveToNextToken() {</span>
+        <span class="s0">do </span><span class="s1">{</span>
+            <span class="s1">tokenIndex++</span><span class="s2">;</span>
+            <span class="s1">token = tokenIndex &lt; tokens.length ? tokens[tokenIndex] : </span><span class="s0">null</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">while </span><span class="s1">(token !== </span><span class="s0">null </span><span class="s1">&amp;&amp; (token.type === TYPE.WhiteSpace || token.type === TYPE.Comment))</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">function </span><span class="s1">getNextToken(offset) {</span>
+        <span class="s0">var </span><span class="s1">nextIndex = tokenIndex + offset</span><span class="s2">;</span>
+
+        <span class="s0">return </span><span class="s1">nextIndex &lt; tokens.length ? tokens[nextIndex] : </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">function </span><span class="s1">stateSnapshotFromSyntax(nextState</span><span class="s2">, </span><span class="s1">prev) {</span>
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">nextState: nextState</span><span class="s2">,</span>
+            <span class="s1">matchStack: matchStack</span><span class="s2">,</span>
+            <span class="s1">syntaxStack: syntaxStack</span><span class="s2">,</span>
+            <span class="s1">thenStack: thenStack</span><span class="s2">,</span>
+            <span class="s1">tokenIndex: tokenIndex</span><span class="s2">,</span>
+            <span class="s1">prev: prev</span>
+        <span class="s1">}</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">function </span><span class="s1">pushThenStack(nextState) {</span>
+        <span class="s1">thenStack = {</span>
+            <span class="s1">nextState: nextState</span><span class="s2">,</span>
+            <span class="s1">matchStack: matchStack</span><span class="s2">,</span>
+            <span class="s1">syntaxStack: syntaxStack</span><span class="s2">,</span>
+            <span class="s1">prev: thenStack</span>
+        <span class="s1">}</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">function </span><span class="s1">pushElseStack(nextState) {</span>
+        <span class="s1">elseStack = stateSnapshotFromSyntax(nextState</span><span class="s2">, </span><span class="s1">elseStack)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">function </span><span class="s1">addTokenToMatch() {</span>
+        <span class="s1">matchStack = {</span>
+            <span class="s1">type: TOKEN</span><span class="s2">,</span>
+            <span class="s1">syntax: state.syntax</span><span class="s2">,</span>
+            <span class="s1">token: token</span><span class="s2">,</span>
+            <span class="s1">prev: matchStack</span>
+        <span class="s1">}</span><span class="s2">;</span>
+
+        <span class="s1">moveToNextToken()</span><span class="s2">;</span>
+        <span class="s1">syntaxStash = </span><span class="s0">null</span><span class="s2">;</span>
+
+        <span class="s0">if </span><span class="s1">(tokenIndex &gt; longestMatch) {</span>
+            <span class="s1">longestMatch = tokenIndex</span><span class="s2">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">function </span><span class="s1">openSyntax() {</span>
+        <span class="s1">syntaxStack = {</span>
+            <span class="s1">syntax: state.syntax</span><span class="s2">,</span>
+            <span class="s1">opts: state.syntax.opts || (syntaxStack !== </span><span class="s0">null </span><span class="s1">&amp;&amp; syntaxStack.opts) || </span><span class="s0">null</span><span class="s2">,</span>
+            <span class="s1">prev: syntaxStack</span>
+        <span class="s1">}</span><span class="s2">;</span>
+
+        <span class="s1">matchStack = {</span>
+            <span class="s1">type: OPEN_SYNTAX</span><span class="s2">,</span>
+            <span class="s1">syntax: state.syntax</span><span class="s2">,</span>
+            <span class="s1">token: matchStack.token</span><span class="s2">,</span>
+            <span class="s1">prev: matchStack</span>
+        <span class="s1">}</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">function </span><span class="s1">closeSyntax() {</span>
+        <span class="s0">if </span><span class="s1">(matchStack.type === OPEN_SYNTAX) {</span>
+            <span class="s1">matchStack = matchStack.prev</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s1">matchStack = {</span>
+                <span class="s1">type: CLOSE_SYNTAX</span><span class="s2">,</span>
+                <span class="s1">syntax: syntaxStack.syntax</span><span class="s2">,</span>
+                <span class="s1">token: matchStack.token</span><span class="s2">,</span>
+                <span class="s1">prev: matchStack</span>
+            <span class="s1">}</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">syntaxStack = syntaxStack.prev</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">syntaxStack = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">thenStack = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">elseStack = </span><span class="s0">null</span><span class="s2">;</span>
+
+    <span class="s5">// null – stashing allowed, nothing stashed</span>
+    <span class="s5">// false – stashing disabled, nothing stashed</span>
+    <span class="s5">// anithing else – fail stashable syntaxes, some syntax stashed</span>
+    <span class="s0">var </span><span class="s1">syntaxStash = </span><span class="s0">null</span><span class="s2">;</span>
+
+    <span class="s0">var </span><span class="s1">iterationCount = </span><span class="s4">0</span><span class="s2">; </span><span class="s5">// count iterations and prevent infinite loop</span>
+    <span class="s0">var </span><span class="s1">exitReason = </span><span class="s0">null</span><span class="s2">;</span>
+
+    <span class="s0">var </span><span class="s1">token = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">tokenIndex = -</span><span class="s4">1</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">longestMatch = </span><span class="s4">0</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">matchStack = {</span>
+        <span class="s1">type: STUB</span><span class="s2">,</span>
+        <span class="s1">syntax: </span><span class="s0">null</span><span class="s2">,</span>
+        <span class="s1">token: </span><span class="s0">null</span><span class="s2">,</span>
+        <span class="s1">prev: </span><span class="s0">null</span>
+    <span class="s1">}</span><span class="s2">;</span>
+
+    <span class="s1">moveToNextToken()</span><span class="s2">;</span>
+
+    <span class="s0">while </span><span class="s1">(exitReason === </span><span class="s0">null </span><span class="s1">&amp;&amp; ++iterationCount &lt; ITERATION_LIMIT) {</span>
+        <span class="s5">// function mapList(list, fn) {</span>
+        <span class="s5">//     var result = [];</span>
+        <span class="s5">//     while (list) {</span>
+        <span class="s5">//         result.unshift(fn(list));</span>
+        <span class="s5">//         list = list.prev;</span>
+        <span class="s5">//     }</span>
+        <span class="s5">//     return result;</span>
+        <span class="s5">// }</span>
+        <span class="s5">// console.log('--\n',</span>
+        <span class="s5">//     '#' + iterationCount,</span>
+        <span class="s5">//     require('util').inspect({</span>
+        <span class="s5">//         match: mapList(matchStack, x =&gt; x.type === TOKEN ? x.token &amp;&amp; x.token.value : x.syntax ? ({ [OPEN_SYNTAX]: '&lt;', [CLOSE_SYNTAX]: '&lt;/' }[x.type] || x.type) + '!' + x.syntax.name : null),</span>
+        <span class="s5">//         token: token &amp;&amp; token.value,</span>
+        <span class="s5">//         tokenIndex,</span>
+        <span class="s5">//         syntax: syntax.type + (syntax.id ? ' #' + syntax.id : '')</span>
+        <span class="s5">//     }, { depth: null })</span>
+        <span class="s5">// );</span>
+        <span class="s0">switch </span><span class="s1">(state.type) {</span>
+            <span class="s0">case </span><span class="s3">'Match'</span><span class="s1">:</span>
+                <span class="s0">if </span><span class="s1">(thenStack === </span><span class="s0">null</span><span class="s1">) {</span>
+                    <span class="s5">// turn to MISMATCH when some tokens left unmatched</span>
+                    <span class="s0">if </span><span class="s1">(token !== </span><span class="s0">null</span><span class="s1">) {</span>
+                        <span class="s5">// doesn't mismatch if just one token left and it's an IE hack</span>
+                        <span class="s0">if </span><span class="s1">(tokenIndex !== tokens.length - </span><span class="s4">1 </span><span class="s1">|| (token.value !== </span><span class="s3">'</span><span class="s2">\\</span><span class="s3">0' </span><span class="s1">&amp;&amp; token.value !== </span><span class="s3">'</span><span class="s2">\\</span><span class="s3">9'</span><span class="s1">)) {</span>
+                            <span class="s1">state = MISMATCH</span><span class="s2">;</span>
+                            <span class="s0">break</span><span class="s2">;</span>
+                        <span class="s1">}</span>
+                    <span class="s1">}</span>
+
+                    <span class="s5">// break the main loop, return a result - MATCH</span>
+                    <span class="s1">exitReason = EXIT_REASON_MATCH</span><span class="s2">;</span>
+                    <span class="s0">break</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s5">// go to next syntax (`then` branch)</span>
+                <span class="s1">state = thenStack.nextState</span><span class="s2">;</span>
+
+                <span class="s5">// check match is not empty</span>
+                <span class="s0">if </span><span class="s1">(state === DISALLOW_EMPTY) {</span>
+                    <span class="s0">if </span><span class="s1">(thenStack.matchStack === matchStack) {</span>
+                        <span class="s1">state = MISMATCH</span><span class="s2">;</span>
+                        <span class="s0">break</span><span class="s2">;</span>
+                    <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                        <span class="s1">state = MATCH</span><span class="s2">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+
+                <span class="s5">// close syntax if needed</span>
+                <span class="s0">while </span><span class="s1">(thenStack.syntaxStack !== syntaxStack) {</span>
+                    <span class="s1">closeSyntax()</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s5">// pop stack</span>
+                <span class="s1">thenStack = thenStack.prev</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'Mismatch'</span><span class="s1">:</span>
+                <span class="s5">// when some syntax is stashed</span>
+                <span class="s0">if </span><span class="s1">(syntaxStash !== </span><span class="s0">null </span><span class="s1">&amp;&amp; syntaxStash !== </span><span class="s0">false</span><span class="s1">) {</span>
+                    <span class="s5">// there is no else branches or a branch reduce match stack</span>
+                    <span class="s0">if </span><span class="s1">(elseStack === </span><span class="s0">null </span><span class="s1">|| tokenIndex &gt; elseStack.tokenIndex) {</span>
+                        <span class="s5">// restore state from the stash</span>
+                        <span class="s1">elseStack = syntaxStash</span><span class="s2">;</span>
+                        <span class="s1">syntaxStash = </span><span class="s0">false</span><span class="s2">; </span><span class="s5">// disable stashing</span>
+                    <span class="s1">}</span>
+                <span class="s1">} </span><span class="s0">else if </span><span class="s1">(elseStack === </span><span class="s0">null</span><span class="s1">) {</span>
+                    <span class="s5">// no else branches -&gt; break the main loop</span>
+                    <span class="s5">// return a result - MISMATCH</span>
+                    <span class="s1">exitReason = EXIT_REASON_MISMATCH</span><span class="s2">;</span>
+                    <span class="s0">break</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s5">// go to next syntax (`else` branch)</span>
+                <span class="s1">state = elseStack.nextState</span><span class="s2">;</span>
+
+                <span class="s5">// restore all the rest stack states</span>
+                <span class="s1">thenStack = elseStack.thenStack</span><span class="s2">;</span>
+                <span class="s1">syntaxStack = elseStack.syntaxStack</span><span class="s2">;</span>
+                <span class="s1">matchStack = elseStack.matchStack</span><span class="s2">;</span>
+                <span class="s1">tokenIndex = elseStack.tokenIndex</span><span class="s2">;</span>
+                <span class="s1">token = tokenIndex &lt; tokens.length ? tokens[tokenIndex] : </span><span class="s0">null</span><span class="s2">;</span>
+
+                <span class="s5">// pop stack</span>
+                <span class="s1">elseStack = elseStack.prev</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'MatchGraph'</span><span class="s1">:</span>
+                <span class="s1">state = state.match</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'If'</span><span class="s1">:</span>
+                <span class="s5">// IMPORTANT: else stack push must go first,</span>
+                <span class="s5">// since it stores the state of thenStack before changes</span>
+                <span class="s0">if </span><span class="s1">(state.else !== MISMATCH) {</span>
+                    <span class="s1">pushElseStack(state.else)</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">if </span><span class="s1">(state.then !== MATCH) {</span>
+                    <span class="s1">pushThenStack(state.then)</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s1">state = state.match</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'MatchOnce'</span><span class="s1">:</span>
+                <span class="s1">state = {</span>
+                    <span class="s1">type: </span><span class="s3">'MatchOnceBuffer'</span><span class="s2">,</span>
+                    <span class="s1">syntax: state</span><span class="s2">,</span>
+                    <span class="s1">index: </span><span class="s4">0</span><span class="s2">,</span>
+                    <span class="s1">mask: </span><span class="s4">0</span>
+                <span class="s1">}</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'MatchOnceBuffer'</span><span class="s1">:</span>
+                <span class="s0">var </span><span class="s1">terms = state.syntax.terms</span><span class="s2">;</span>
+
+                <span class="s0">if </span><span class="s1">(state.index === terms.length) {</span>
+                    <span class="s5">// no matches at all or it's required all terms to be matched</span>
+                    <span class="s0">if </span><span class="s1">(state.mask === </span><span class="s4">0 </span><span class="s1">|| state.syntax.all) {</span>
+                        <span class="s1">state = MISMATCH</span><span class="s2">;</span>
+                        <span class="s0">break</span><span class="s2">;</span>
+                    <span class="s1">}</span>
+
+                    <span class="s5">// a partial match is ok</span>
+                    <span class="s1">state = MATCH</span><span class="s2">;</span>
+                    <span class="s0">break</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s5">// all terms are matched</span>
+                <span class="s0">if </span><span class="s1">(state.mask === (</span><span class="s4">1 </span><span class="s1">&lt;&lt; terms.length) - </span><span class="s4">1</span><span class="s1">) {</span>
+                    <span class="s1">state = MATCH</span><span class="s2">;</span>
+                    <span class="s0">break</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">for </span><span class="s1">(</span><span class="s2">; </span><span class="s1">state.index &lt; terms.length</span><span class="s2">; </span><span class="s1">state.index++) {</span>
+                    <span class="s0">var </span><span class="s1">matchFlag = </span><span class="s4">1 </span><span class="s1">&lt;&lt; state.index</span><span class="s2">;</span>
+
+                    <span class="s0">if </span><span class="s1">((state.mask &amp; matchFlag) === </span><span class="s4">0</span><span class="s1">) {</span>
+                        <span class="s5">// IMPORTANT: else stack push must go first,</span>
+                        <span class="s5">// since it stores the state of thenStack before changes</span>
+                        <span class="s1">pushElseStack(state)</span><span class="s2">;</span>
+                        <span class="s1">pushThenStack({</span>
+                            <span class="s1">type: </span><span class="s3">'AddMatchOnce'</span><span class="s2">,</span>
+                            <span class="s1">syntax: state.syntax</span><span class="s2">,</span>
+                            <span class="s1">mask: state.mask | matchFlag</span>
+                        <span class="s1">})</span><span class="s2">;</span>
+
+                        <span class="s5">// match</span>
+                        <span class="s1">state = terms[state.index++]</span><span class="s2">;</span>
+                        <span class="s0">break</span><span class="s2">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'AddMatchOnce'</span><span class="s1">:</span>
+                <span class="s1">state = {</span>
+                    <span class="s1">type: </span><span class="s3">'MatchOnceBuffer'</span><span class="s2">,</span>
+                    <span class="s1">syntax: state.syntax</span><span class="s2">,</span>
+                    <span class="s1">index: </span><span class="s4">0</span><span class="s2">,</span>
+                    <span class="s1">mask: state.mask</span>
+                <span class="s1">}</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'Enum'</span><span class="s1">:</span>
+                <span class="s0">if </span><span class="s1">(token !== </span><span class="s0">null</span><span class="s1">) {</span>
+                    <span class="s0">var </span><span class="s1">name = token.value.toLowerCase()</span><span class="s2">;</span>
+
+                    <span class="s5">// drop \0 and \9 hack from keyword name</span>
+                    <span class="s0">if </span><span class="s1">(name.indexOf(</span><span class="s3">'</span><span class="s2">\\</span><span class="s3">'</span><span class="s1">) !== -</span><span class="s4">1</span><span class="s1">) {</span>
+                        <span class="s1">name = name.replace(</span><span class="s4">/\\[09].*$/</span><span class="s2">, </span><span class="s3">''</span><span class="s1">)</span><span class="s2">;</span>
+                    <span class="s1">}</span>
+
+                    <span class="s0">if </span><span class="s1">(hasOwnProperty.call(state.map</span><span class="s2">, </span><span class="s1">name)) {</span>
+                        <span class="s1">state = state.map[name]</span><span class="s2">;</span>
+                        <span class="s0">break</span><span class="s2">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+
+                <span class="s1">state = MISMATCH</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'Generic'</span><span class="s1">:</span>
+                <span class="s0">var </span><span class="s1">opts = syntaxStack !== </span><span class="s0">null </span><span class="s1">? syntaxStack.opts : </span><span class="s0">null</span><span class="s2">;</span>
+                <span class="s0">var </span><span class="s1">lastTokenIndex = tokenIndex + Math.floor(state.fn(token</span><span class="s2">, </span><span class="s1">getNextToken</span><span class="s2">, </span><span class="s1">opts))</span><span class="s2">;</span>
+
+                <span class="s0">if </span><span class="s1">(!isNaN(lastTokenIndex) &amp;&amp; lastTokenIndex &gt; tokenIndex) {</span>
+                    <span class="s0">while </span><span class="s1">(tokenIndex &lt; lastTokenIndex) {</span>
+                        <span class="s1">addTokenToMatch()</span><span class="s2">;</span>
+                    <span class="s1">}</span>
+
+                    <span class="s1">state = MATCH</span><span class="s2">;</span>
+                <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                    <span class="s1">state = MISMATCH</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'Type'</span><span class="s1">:</span>
+            <span class="s0">case </span><span class="s3">'Property'</span><span class="s1">:</span>
+                <span class="s0">var </span><span class="s1">syntaxDict = state.type === </span><span class="s3">'Type' </span><span class="s1">? </span><span class="s3">'types' </span><span class="s1">: </span><span class="s3">'properties'</span><span class="s2">;</span>
+                <span class="s0">var </span><span class="s1">dictSyntax = hasOwnProperty.call(syntaxes</span><span class="s2">, </span><span class="s1">syntaxDict) ? syntaxes[syntaxDict][state.name] : </span><span class="s0">null</span><span class="s2">;</span>
+
+                <span class="s0">if </span><span class="s1">(!dictSyntax || !dictSyntax.match) {</span>
+                    <span class="s0">throw new </span><span class="s1">Error(</span>
+                        <span class="s3">'Bad syntax reference: ' </span><span class="s1">+</span>
+                        <span class="s1">(state.type === </span><span class="s3">'Type'</span>
+                            <span class="s1">? </span><span class="s3">'&lt;' </span><span class="s1">+ state.name + </span><span class="s3">'&gt;'</span>
+                            <span class="s1">: </span><span class="s3">'&lt;</span><span class="s2">\'</span><span class="s3">' </span><span class="s1">+ state.name + </span><span class="s3">'</span><span class="s2">\'</span><span class="s3">&gt;'</span><span class="s1">)</span>
+                    <span class="s1">)</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s5">// stash a syntax for types with low priority</span>
+                <span class="s0">if </span><span class="s1">(syntaxStash !== </span><span class="s0">false </span><span class="s1">&amp;&amp; token !== </span><span class="s0">null </span><span class="s1">&amp;&amp; state.type === </span><span class="s3">'Type'</span><span class="s1">) {</span>
+                    <span class="s0">var </span><span class="s1">lowPriorityMatching =</span>
+                        <span class="s5">// https://drafts.csswg.org/css-values-4/#custom-idents</span>
+                        <span class="s5">// When parsing positionally-ambiguous keywords in a property value, a &lt;custom-ident&gt; production</span>
+                        <span class="s5">// can only claim the keyword if no other unfulfilled production can claim it.</span>
+                        <span class="s1">(state.name === </span><span class="s3">'custom-ident' </span><span class="s1">&amp;&amp; token.type === TYPE.Ident) ||</span>
+
+                        <span class="s5">// https://drafts.csswg.org/css-values-4/#lengths</span>
+                        <span class="s5">// ... if a `0` could be parsed as either a &lt;number&gt; or a &lt;length&gt; in a property (such as line-height),</span>
+                        <span class="s5">// it must parse as a &lt;number&gt;</span>
+                        <span class="s1">(state.name === </span><span class="s3">'length' </span><span class="s1">&amp;&amp; token.value === </span><span class="s3">'0'</span><span class="s1">)</span><span class="s2">;</span>
+
+                    <span class="s0">if </span><span class="s1">(lowPriorityMatching) {</span>
+                        <span class="s0">if </span><span class="s1">(syntaxStash === </span><span class="s0">null</span><span class="s1">) {</span>
+                            <span class="s1">syntaxStash = stateSnapshotFromSyntax(state</span><span class="s2">, </span><span class="s1">elseStack)</span><span class="s2">;</span>
+                        <span class="s1">}</span>
+
+                        <span class="s1">state = MISMATCH</span><span class="s2">;</span>
+                        <span class="s0">break</span><span class="s2">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+
+                <span class="s1">openSyntax()</span><span class="s2">;</span>
+                <span class="s1">state = dictSyntax.match</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'Keyword'</span><span class="s1">:</span>
+                <span class="s0">var </span><span class="s1">name = state.name</span><span class="s2">;</span>
+
+                <span class="s0">if </span><span class="s1">(token !== </span><span class="s0">null</span><span class="s1">) {</span>
+                    <span class="s0">var </span><span class="s1">keywordName = token.value</span><span class="s2">;</span>
+
+                    <span class="s5">// drop \0 and \9 hack from keyword name</span>
+                    <span class="s0">if </span><span class="s1">(keywordName.indexOf(</span><span class="s3">'</span><span class="s2">\\</span><span class="s3">'</span><span class="s1">) !== -</span><span class="s4">1</span><span class="s1">) {</span>
+                        <span class="s1">keywordName = keywordName.replace(</span><span class="s4">/\\[09].*$/</span><span class="s2">, </span><span class="s3">''</span><span class="s1">)</span><span class="s2">;</span>
+                    <span class="s1">}</span>
+
+                    <span class="s0">if </span><span class="s1">(areStringsEqualCaseInsensitive(keywordName</span><span class="s2">, </span><span class="s1">name)) {</span>
+                        <span class="s1">addTokenToMatch()</span><span class="s2">;</span>
+                        <span class="s1">state = MATCH</span><span class="s2">;</span>
+                        <span class="s0">break</span><span class="s2">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+
+                <span class="s1">state = MISMATCH</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'AtKeyword'</span><span class="s1">:</span>
+            <span class="s0">case </span><span class="s3">'Function'</span><span class="s1">:</span>
+                <span class="s0">if </span><span class="s1">(token !== </span><span class="s0">null </span><span class="s1">&amp;&amp; areStringsEqualCaseInsensitive(token.value</span><span class="s2">, </span><span class="s1">state.name)) {</span>
+                    <span class="s1">addTokenToMatch()</span><span class="s2">;</span>
+                    <span class="s1">state = MATCH</span><span class="s2">;</span>
+                    <span class="s0">break</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s1">state = MISMATCH</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'Token'</span><span class="s1">:</span>
+                <span class="s0">if </span><span class="s1">(token !== </span><span class="s0">null </span><span class="s1">&amp;&amp; token.value === state.value) {</span>
+                    <span class="s1">addTokenToMatch()</span><span class="s2">;</span>
+                    <span class="s1">state = MATCH</span><span class="s2">;</span>
+                    <span class="s0">break</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s1">state = MISMATCH</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'Comma'</span><span class="s1">:</span>
+                <span class="s0">if </span><span class="s1">(token !== </span><span class="s0">null </span><span class="s1">&amp;&amp; token.type === TYPE.Comma) {</span>
+                    <span class="s0">if </span><span class="s1">(isCommaContextStart(matchStack.token)) {</span>
+                        <span class="s1">state = MISMATCH</span><span class="s2">;</span>
+                    <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                        <span class="s1">addTokenToMatch()</span><span class="s2">;</span>
+                        <span class="s1">state = isCommaContextEnd(token) ? MISMATCH : MATCH</span><span class="s2">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                    <span class="s1">state = isCommaContextStart(matchStack.token) || isCommaContextEnd(token) ? MATCH : MISMATCH</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s3">'String'</span><span class="s1">:</span>
+                <span class="s0">var </span><span class="s1">string = </span><span class="s3">''</span><span class="s2">;</span>
+
+                <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">lastTokenIndex = tokenIndex</span><span class="s2">; </span><span class="s1">lastTokenIndex &lt; tokens.length &amp;&amp; string.length &lt; state.value.length</span><span class="s2">; </span><span class="s1">lastTokenIndex++) {</span>
+                    <span class="s1">string += tokens[lastTokenIndex].value</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">if </span><span class="s1">(areStringsEqualCaseInsensitive(string</span><span class="s2">, </span><span class="s1">state.value)) {</span>
+                    <span class="s0">while </span><span class="s1">(tokenIndex &lt; lastTokenIndex) {</span>
+                        <span class="s1">addTokenToMatch()</span><span class="s2">;</span>
+                    <span class="s1">}</span>
+
+                    <span class="s1">state = MATCH</span><span class="s2">;</span>
+                <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                    <span class="s1">state = MISMATCH</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">default</span><span class="s1">:</span>
+                <span class="s0">throw new </span><span class="s1">Error(</span><span class="s3">'Unknown node type: ' </span><span class="s1">+ state.type)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s1">totalIterationCount += iterationCount</span><span class="s2">;</span>
+
+    <span class="s0">switch </span><span class="s1">(exitReason) {</span>
+        <span class="s0">case null</span><span class="s1">:</span>
+            <span class="s1">console.warn(</span><span class="s3">'[csstree-match] BREAK after ' </span><span class="s1">+ ITERATION_LIMIT + </span><span class="s3">' iterations'</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">exitReason = EXIT_REASON_ITERATION_LIMIT</span><span class="s2">;</span>
+            <span class="s1">matchStack = </span><span class="s0">null</span><span class="s2">;</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+        <span class="s0">case </span><span class="s1">EXIT_REASON_MATCH:</span>
+            <span class="s0">while </span><span class="s1">(syntaxStack !== </span><span class="s0">null</span><span class="s1">) {</span>
+                <span class="s1">closeSyntax()</span><span class="s2">;</span>
+            <span class="s1">}</span>
+            <span class="s0">break</span><span class="s2">;</span>
+
+        <span class="s0">default</span><span class="s1">:</span>
+            <span class="s1">matchStack = </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">{</span>
+        <span class="s1">tokens: tokens</span><span class="s2">,</span>
+        <span class="s1">reason: exitReason</span><span class="s2">,</span>
+        <span class="s1">iterations: iterationCount</span><span class="s2">,</span>
+        <span class="s1">match: matchStack</span><span class="s2">,</span>
+        <span class="s1">longestMatch: longestMatch</span>
+    <span class="s1">}</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">matchAsList(tokens</span><span class="s2">, </span><span class="s1">matchGraph</span><span class="s2">, </span><span class="s1">syntaxes) {</span>
+    <span class="s0">var </span><span class="s1">matchResult = internalMatch(tokens</span><span class="s2">, </span><span class="s1">matchGraph</span><span class="s2">, </span><span class="s1">syntaxes || {})</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(matchResult.match !== </span><span class="s0">null</span><span class="s1">) {</span>
+        <span class="s0">var </span><span class="s1">item = reverseList(matchResult.match).prev</span><span class="s2">;</span>
+
+        <span class="s1">matchResult.match = []</span><span class="s2">;</span>
+
+        <span class="s0">while </span><span class="s1">(item !== </span><span class="s0">null</span><span class="s1">) {</span>
+            <span class="s0">switch </span><span class="s1">(item.type) {</span>
+                <span class="s0">case </span><span class="s1">STUB:</span>
+                    <span class="s0">break</span><span class="s2">;</span>
+
+                <span class="s0">case </span><span class="s1">OPEN_SYNTAX:</span>
+                <span class="s0">case </span><span class="s1">CLOSE_SYNTAX:</span>
+                    <span class="s1">matchResult.match.push({</span>
+                        <span class="s1">type: item.type</span><span class="s2">,</span>
+                        <span class="s1">syntax: item.syntax</span>
+                    <span class="s1">})</span><span class="s2">;</span>
+                    <span class="s0">break</span><span class="s2">;</span>
+
+                <span class="s0">default</span><span class="s1">:</span>
+                    <span class="s1">matchResult.match.push({</span>
+                        <span class="s1">token: item.token.value</span><span class="s2">,</span>
+                        <span class="s1">node: item.token.node</span>
+                    <span class="s1">})</span><span class="s2">;</span>
+                    <span class="s0">break</span><span class="s2">;</span>
+            <span class="s1">}</span>
+
+            <span class="s1">item = item.prev</span><span class="s2">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">matchResult</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">matchAsTree(tokens</span><span class="s2">, </span><span class="s1">matchGraph</span><span class="s2">, </span><span class="s1">syntaxes) {</span>
+    <span class="s0">var </span><span class="s1">matchResult = internalMatch(tokens</span><span class="s2">, </span><span class="s1">matchGraph</span><span class="s2">, </span><span class="s1">syntaxes || {})</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(matchResult.match === </span><span class="s0">null</span><span class="s1">) {</span>
+        <span class="s0">return </span><span class="s1">matchResult</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">item = matchResult.match</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">host = matchResult.match = {</span>
+        <span class="s1">syntax: matchGraph.syntax || </span><span class="s0">null</span><span class="s2">,</span>
+        <span class="s1">match: []</span>
+    <span class="s1">}</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">hostStack = [host]</span><span class="s2">;</span>
+
+    <span class="s5">// revert a list and start with 2nd item since 1st is a stub item</span>
+    <span class="s1">item = reverseList(item).prev</span><span class="s2">;</span>
+
+    <span class="s5">// build a tree</span>
+    <span class="s0">while </span><span class="s1">(item !== </span><span class="s0">null</span><span class="s1">) {</span>
+        <span class="s0">switch </span><span class="s1">(item.type) {</span>
+            <span class="s0">case </span><span class="s1">OPEN_SYNTAX:</span>
+                <span class="s1">host.match.push(host = {</span>
+                    <span class="s1">syntax: item.syntax</span><span class="s2">,</span>
+                    <span class="s1">match: []</span>
+                <span class="s1">})</span><span class="s2">;</span>
+                <span class="s1">hostStack.push(host)</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">case </span><span class="s1">CLOSE_SYNTAX:</span>
+                <span class="s1">hostStack.pop()</span><span class="s2">;</span>
+                <span class="s1">host = hostStack[hostStack.length - </span><span class="s4">1</span><span class="s1">]</span><span class="s2">;</span>
+                <span class="s0">break</span><span class="s2">;</span>
+
+            <span class="s0">default</span><span class="s1">:</span>
+                <span class="s1">host.match.push({</span>
+                    <span class="s1">syntax: item.syntax || </span><span class="s0">null</span><span class="s2">,</span>
+                    <span class="s1">token: item.token.value</span><span class="s2">,</span>
+                    <span class="s1">node: item.token.node</span>
+                <span class="s1">})</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">item = item.prev</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">matchResult</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">matchAsList: matchAsList</span><span class="s2">,</span>
+    <span class="s1">matchAsTree: matchAsTree</span><span class="s2">,</span>
+    <span class="s1">getTotalIterationCount: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">return </span><span class="s1">totalIterationCount</span><span class="s2">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

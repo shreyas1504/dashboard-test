@@ -1,0 +1,45 @@
+<html>
+<head>
+<title>logDebugMessages.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+logDebugMessages.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">Object.defineProperty(exports</span><span class="s1">, </span><span class="s0">'__esModule'</span><span class="s1">, </span><span class="s2">{</span>
+  <span class="s2">value: </span><span class="s3">true</span>
+<span class="s2">})</span><span class="s1">;</span>
+<span class="s2">exports.default = logDebugMessages</span><span class="s1">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s4">*</span>
+ <span class="s4">* This source code is licensed under the MIT license found in the</span>
+ <span class="s4">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s4">*/</span>
+<span class="s3">const </span><span class="s2">VERSION = require(</span><span class="s0">'../../package.json'</span><span class="s2">).version</span><span class="s1">; </span><span class="s5">// if the output here changes, update `getConfig` in e2e/runJest.ts</span>
+
+<span class="s3">function </span><span class="s2">logDebugMessages(globalConfig</span><span class="s1">, </span><span class="s2">configs</span><span class="s1">, </span><span class="s2">outputStream) {</span>
+  <span class="s3">const </span><span class="s2">output = {</span>
+    <span class="s2">configs</span><span class="s1">,</span>
+    <span class="s2">globalConfig</span><span class="s1">,</span>
+    <span class="s2">version: VERSION</span>
+  <span class="s2">}</span><span class="s1">;</span>
+  <span class="s2">outputStream.write(JSON.stringify(output</span><span class="s1">, </span><span class="s3">null</span><span class="s1">, </span><span class="s0">'  '</span><span class="s2">) + </span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<html>
+<head>
+<title>svgo.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #8a8a8a; font-style: italic;}
+.s4 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s5 { color: #cc7832; font-weight: bold;}
+.s6 { color: #6897bb;}
+.s7 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+svgo.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* SVGO is a Nodejs-based tool for optimizing SVG vector graphics files.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@see </span><span class="s3">https://github.com/svg/svgo</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@author </span><span class="s3">Kir Belevich &lt;kir@soulshine.in&gt; (https://github.com/deepsweet)</span>
+ <span class="s3">* </span><span class="s4">@copyright </span><span class="s3">© 2012 Kir Belevich</span>
+ <span class="s3">* </span><span class="s4">@license </span><span class="s3">MIT https://raw.githubusercontent.com/svg/svgo/master/LICENSE</span>
+ <span class="s3">*/</span>
+
+<span class="s5">var </span><span class="s2">CONFIG = require(</span><span class="s0">'./svgo/config.js'</span><span class="s2">)</span><span class="s1">,</span>
+    <span class="s2">SVG2JS = require(</span><span class="s0">'./svgo/svg2js.js'</span><span class="s2">)</span><span class="s1">,</span>
+    <span class="s2">PLUGINS = require(</span><span class="s0">'./svgo/plugins.js'</span><span class="s2">)</span><span class="s1">,</span>
+    <span class="s2">JSAPI = require(</span><span class="s0">'./svgo/jsAPI.js'</span><span class="s2">)</span><span class="s1">,</span>
+    <span class="s2">encodeSVGDatauri = require(</span><span class="s0">'./svgo/tools.js'</span><span class="s2">).encodeSVGDatauri</span><span class="s1">,</span>
+    <span class="s2">JS2SVG = require(</span><span class="s0">'./svgo/js2svg.js'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s5">var </span><span class="s2">SVGO = </span><span class="s5">function</span><span class="s2">(config) {</span>
+    <span class="s5">this</span><span class="s2">.config = CONFIG(config)</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">SVGO.prototype.optimize = </span><span class="s5">function</span><span class="s2">(svgstr</span><span class="s1">, </span><span class="s2">info) {</span>
+    <span class="s2">info = info || {}</span><span class="s1">;</span>
+    <span class="s5">return new </span><span class="s2">Promise((resolve</span><span class="s1">, </span><span class="s2">reject) =&gt; {</span>
+        <span class="s5">if </span><span class="s2">(</span><span class="s5">this</span><span class="s2">.config.error) {</span>
+            <span class="s2">reject(</span><span class="s5">this</span><span class="s2">.config.error)</span><span class="s1">;</span>
+            <span class="s5">return</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s5">var </span><span class="s2">config = </span><span class="s5">this</span><span class="s2">.config</span><span class="s1">,</span>
+            <span class="s2">maxPassCount = config.multipass ? </span><span class="s6">10 </span><span class="s2">: </span><span class="s6">1</span><span class="s1">,</span>
+            <span class="s2">counter = </span><span class="s6">0</span><span class="s1">,</span>
+            <span class="s2">prevResultSize = Number.POSITIVE_INFINITY</span><span class="s1">,</span>
+            <span class="s2">optimizeOnceCallback = (svgjs) =&gt; {</span>
+                <span class="s5">if </span><span class="s2">(svgjs.error) {</span>
+                    <span class="s2">reject(svgjs.error)</span><span class="s1">;</span>
+                    <span class="s5">return</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+                <span class="s2">info.multipassCount = counter</span><span class="s1">;</span>
+                <span class="s5">if </span><span class="s2">(++counter &lt; maxPassCount &amp;&amp; svgjs.data.length &lt; prevResultSize) {</span>
+                    <span class="s2">prevResultSize = svgjs.data.length</span><span class="s1">;</span>
+                    <span class="s5">this</span><span class="s2">._optimizeOnce(svgjs.data</span><span class="s1">, </span><span class="s2">info</span><span class="s1">, </span><span class="s2">optimizeOnceCallback)</span><span class="s1">;</span>
+                <span class="s2">} </span><span class="s5">else </span><span class="s2">{</span>
+                    <span class="s5">if </span><span class="s2">(config.datauri) {</span>
+                        <span class="s2">svgjs.data = encodeSVGDatauri(svgjs.data</span><span class="s1">, </span><span class="s2">config.datauri)</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+                    <span class="s5">if </span><span class="s2">(info &amp;&amp; info.path) {</span>
+                        <span class="s2">svgjs.path = info.path</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+                    <span class="s2">resolve(svgjs)</span><span class="s1">;</span>
+                <span class="s2">}</span>
+            <span class="s2">}</span><span class="s1">;</span>
+
+        <span class="s5">this</span><span class="s2">._optimizeOnce(svgstr</span><span class="s1">, </span><span class="s2">info</span><span class="s1">, </span><span class="s2">optimizeOnceCallback)</span><span class="s1">;</span>
+    <span class="s2">})</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">SVGO.prototype._optimizeOnce = </span><span class="s5">function</span><span class="s2">(svgstr</span><span class="s1">, </span><span class="s2">info</span><span class="s1">, </span><span class="s2">callback) {</span>
+    <span class="s5">var </span><span class="s2">config = </span><span class="s5">this</span><span class="s2">.config</span><span class="s1">;</span>
+
+    <span class="s2">SVG2JS(svgstr</span><span class="s1">, </span><span class="s5">function</span><span class="s2">(svgjs) {</span>
+        <span class="s5">if </span><span class="s2">(svgjs.error) {</span>
+            <span class="s2">callback(svgjs)</span><span class="s1">;</span>
+            <span class="s5">return</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s2">svgjs = PLUGINS(svgjs</span><span class="s1">, </span><span class="s2">info</span><span class="s1">, </span><span class="s2">config.plugins)</span><span class="s1">;</span>
+
+        <span class="s2">callback(JS2SVG(svgjs</span><span class="s1">, </span><span class="s2">config.js2svg))</span><span class="s1">;</span>
+    <span class="s2">})</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* The factory that creates a content item with the helper methods.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Object} data which passed to jsAPI constructor</span>
+ <span class="s3">* </span><span class="s4">@returns </span><span class="s3">{JSAPI} content item</span>
+ <span class="s3">*/</span>
+<span class="s2">SVGO.prototype.createContentItem = </span><span class="s5">function</span><span class="s2">(data) {</span>
+    <span class="s5">return new </span><span class="s2">JSAPI(data)</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">SVGO.Config = CONFIG</span><span class="s1">;</span>
+
+<span class="s2">module.exports = SVGO</span><span class="s1">;</span>
+<span class="s7">// Offer ES module interop compatibility.</span>
+<span class="s2">module.exports.default = SVGO</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

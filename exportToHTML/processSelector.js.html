@@ -1,0 +1,116 @@
+<html>
+<head>
+<title>processSelector.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+processSelector.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">generate = require(</span><span class="s2">'css-tree'</span><span class="s1">).generate</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">specificity = require(</span><span class="s2">'./specificity'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">nonFreezePseudoElements = {</span>
+    <span class="s2">'first-letter'</span><span class="s1">: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s2">'first-line'</span><span class="s1">: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s2">'after'</span><span class="s1">: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s2">'before'</span><span class="s1">: </span><span class="s0">true</span>
+<span class="s1">}</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">nonFreezePseudoClasses = {</span>
+    <span class="s2">'link'</span><span class="s1">: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s2">'visited'</span><span class="s1">: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s2">'hover'</span><span class="s1">: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s2">'active'</span><span class="s1">: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s2">'first-letter'</span><span class="s1">: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s2">'first-line'</span><span class="s1">: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s2">'after'</span><span class="s1">: </span><span class="s0">true</span><span class="s3">,</span>
+    <span class="s2">'before'</span><span class="s1">: </span><span class="s0">true</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">freeze(node</span><span class="s3">, </span><span class="s1">usageData) {</span>
+    <span class="s0">var </span><span class="s1">pseudos = Object.create(</span><span class="s0">null</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">hasPseudo = </span><span class="s0">false</span><span class="s3">;</span>
+
+    <span class="s1">node.prelude.children.each(</span><span class="s0">function</span><span class="s1">(simpleSelector) {</span>
+        <span class="s0">var </span><span class="s1">tagName = </span><span class="s2">'*'</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">scope = </span><span class="s4">0</span><span class="s3">;</span>
+
+        <span class="s1">simpleSelector.children.each(</span><span class="s0">function</span><span class="s1">(node) {</span>
+            <span class="s0">switch </span><span class="s1">(node.type) {</span>
+                <span class="s0">case </span><span class="s2">'ClassSelector'</span><span class="s1">:</span>
+                    <span class="s0">if </span><span class="s1">(usageData &amp;&amp; usageData.scopes) {</span>
+                        <span class="s0">var </span><span class="s1">classScope = usageData.scopes[node.name] || </span><span class="s4">0</span><span class="s3">;</span>
+
+                        <span class="s0">if </span><span class="s1">(scope !== </span><span class="s4">0 </span><span class="s1">&amp;&amp; classScope !== scope) {</span>
+                            <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">'Selector can</span><span class="s3">\'</span><span class="s2">t has classes from different scopes: ' </span><span class="s1">+ generate(simpleSelector))</span><span class="s3">;</span>
+                        <span class="s1">}</span>
+
+                        <span class="s1">scope = classScope</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s2">'PseudoClassSelector'</span><span class="s1">:</span>
+                    <span class="s0">var </span><span class="s1">name = node.name.toLowerCase()</span><span class="s3">;</span>
+
+                    <span class="s0">if </span><span class="s1">(!nonFreezePseudoClasses.hasOwnProperty(name)) {</span>
+                        <span class="s1">pseudos[</span><span class="s2">':' </span><span class="s1">+ name] = </span><span class="s0">true</span><span class="s3">;</span>
+                        <span class="s1">hasPseudo = </span><span class="s0">true</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s2">'PseudoElementSelector'</span><span class="s1">:</span>
+                    <span class="s0">var </span><span class="s1">name = node.name.toLowerCase()</span><span class="s3">;</span>
+
+                    <span class="s0">if </span><span class="s1">(!nonFreezePseudoElements.hasOwnProperty(name)) {</span>
+                        <span class="s1">pseudos[</span><span class="s2">'::' </span><span class="s1">+ name] = </span><span class="s0">true</span><span class="s3">;</span>
+                        <span class="s1">hasPseudo = </span><span class="s0">true</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s2">'TypeSelector'</span><span class="s1">:</span>
+                    <span class="s1">tagName = node.name.toLowerCase()</span><span class="s3">;</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s2">'AttributeSelector'</span><span class="s1">:</span>
+                    <span class="s0">if </span><span class="s1">(node.flags) {</span>
+                        <span class="s1">pseudos[</span><span class="s2">'[' </span><span class="s1">+ node.flags.toLowerCase() + </span><span class="s2">']'</span><span class="s1">] = </span><span class="s0">true</span><span class="s3">;</span>
+                        <span class="s1">hasPseudo = </span><span class="s0">true</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s2">'WhiteSpace'</span><span class="s1">:</span>
+                <span class="s0">case </span><span class="s2">'Combinator'</span><span class="s1">:</span>
+                    <span class="s1">tagName = </span><span class="s2">'*'</span><span class="s3">;</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">})</span><span class="s3">;</span>
+
+        <span class="s1">simpleSelector.compareMarker = specificity(simpleSelector).toString()</span><span class="s3">;</span>
+        <span class="s1">simpleSelector.id = </span><span class="s0">null</span><span class="s3">; </span><span class="s5">// pre-init property to avoid multiple hidden class</span>
+        <span class="s1">simpleSelector.id = generate(simpleSelector)</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(scope) {</span>
+            <span class="s1">simpleSelector.compareMarker += </span><span class="s2">':' </span><span class="s1">+ scope</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(tagName !== </span><span class="s2">'*'</span><span class="s1">) {</span>
+            <span class="s1">simpleSelector.compareMarker += </span><span class="s2">',' </span><span class="s1">+ tagName</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s5">// add property to all rule nodes to avoid multiple hidden class</span>
+    <span class="s1">node.pseudoSignature = hasPseudo &amp;&amp; Object.keys(pseudos).sort().join(</span><span class="s2">','</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<html>
+<head>
+<title>bundle.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+bundle.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">fs = require(</span><span class="s0">'fs'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">path = require(</span><span class="s0">'path'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">browserify = require(</span><span class="s0">'browserify'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">uglify = require(</span><span class="s0">'uglify-js'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">pkg = process.argv[</span><span class="s4">2</span><span class="s2">]</span>
+  <span class="s1">, </span><span class="s2">standalone = process.argv[</span><span class="s4">3</span><span class="s2">]</span>
+  <span class="s1">, </span><span class="s2">compress = process.argv[</span><span class="s4">4</span><span class="s2">]</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">packageDir = path.join(__dirname</span><span class="s1">, </span><span class="s0">'..'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">if </span><span class="s2">(pkg != </span><span class="s0">'.'</span><span class="s2">) packageDir = path.join(packageDir</span><span class="s1">, </span><span class="s0">'node_modules'</span><span class="s1">, </span><span class="s2">pkg)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">json = require(path.join(packageDir</span><span class="s1">, </span><span class="s0">'package.json'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">distDir = path.join(__dirname</span><span class="s1">, </span><span class="s0">'..'</span><span class="s1">, </span><span class="s0">'dist'</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s3">if </span><span class="s2">(!fs.existsSync(distDir)) fs.mkdirSync(distDir)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">bOpts = {}</span><span class="s1">;</span>
+<span class="s3">if </span><span class="s2">(standalone) bOpts.standalone = standalone</span><span class="s1">;</span>
+
+<span class="s2">browserify(bOpts)</span>
+<span class="s2">.require(path.join(packageDir</span><span class="s1">, </span><span class="s2">json.main)</span><span class="s1">, </span><span class="s2">{expose: json.name})</span>
+<span class="s2">.bundle(</span><span class="s3">function </span><span class="s2">(err</span><span class="s1">, </span><span class="s2">buf) {</span>
+  <span class="s3">if </span><span class="s2">(err) {</span>
+    <span class="s2">console.error(</span><span class="s0">'browserify error:'</span><span class="s1">, </span><span class="s2">err)</span><span class="s1">;</span>
+    <span class="s2">process.exit(</span><span class="s4">1</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">var </span><span class="s2">outputFile = path.join(distDir</span><span class="s1">, </span><span class="s2">json.name)</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">uglifyOpts = {</span>
+    <span class="s2">warnings: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">compress: {}</span><span class="s1">,</span>
+    <span class="s2">output: {</span>
+      <span class="s2">preamble: </span><span class="s0">'/* ' </span><span class="s2">+ json.name + </span><span class="s0">' ' </span><span class="s2">+ json.version + </span><span class="s0">': ' </span><span class="s2">+ json.description + </span><span class="s0">' */'</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(compress) {</span>
+    <span class="s3">var </span><span class="s2">compressOpts = compress.split(</span><span class="s0">','</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i=</span><span class="s4">0</span><span class="s1">, </span><span class="s2">il = compressOpts.length</span><span class="s1">; </span><span class="s2">i&lt;il</span><span class="s1">; </span><span class="s2">++i) {</span>
+      <span class="s3">var </span><span class="s2">pair = compressOpts[i].split(</span><span class="s0">'='</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">uglifyOpts.compress[pair[</span><span class="s4">0</span><span class="s2">]] = pair.length &lt; </span><span class="s4">1 </span><span class="s2">|| pair[</span><span class="s4">1</span><span class="s2">] != </span><span class="s0">'false'</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s3">if </span><span class="s2">(standalone) {</span>
+    <span class="s2">uglifyOpts.sourceMap = {</span>
+      <span class="s2">filename: json.name + </span><span class="s0">'.min.js'</span><span class="s1">,</span>
+      <span class="s2">url: json.name + </span><span class="s0">'.min.js.map'</span>
+    <span class="s2">}</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">var </span><span class="s2">result = uglify.minify(buf.toString()</span><span class="s1">, </span><span class="s2">uglifyOpts)</span><span class="s1">;</span>
+  <span class="s2">fs.writeFileSync(outputFile + </span><span class="s0">'.min.js'</span><span class="s1">, </span><span class="s2">result.code)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(result.map) fs.writeFileSync(outputFile + </span><span class="s0">'.min.js.map'</span><span class="s1">, </span><span class="s2">result.map)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(standalone) fs.writeFileSync(outputFile + </span><span class="s0">'.bundle.js'</span><span class="s1">, </span><span class="s2">buf)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(result.warnings) {</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">j=</span><span class="s4">0</span><span class="s1">, </span><span class="s2">jl = result.warnings.length</span><span class="s1">; </span><span class="s2">j&lt;jl</span><span class="s1">; </span><span class="s2">++j)</span>
+      <span class="s2">console.warn(</span><span class="s0">'UglifyJS warning:'</span><span class="s1">, </span><span class="s2">result.warnings[j])</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">})</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

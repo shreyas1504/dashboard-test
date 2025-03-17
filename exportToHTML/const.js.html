@@ -1,0 +1,61 @@
+<html>
+<head>
+<title>const.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #6897bb;}
+.s4 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+const.js</font>
+</center></td></tr></table>
+<pre><span class="s0">// CSS Syntax Module Level 3</span>
+<span class="s0">// https://www.w3.org/TR/css-syntax-3/</span>
+<span class="s2">var </span><span class="s1">TYPE = {</span>
+    <span class="s1">EOF: </span><span class="s3">0</span><span class="s4">,                 </span><span class="s0">// &lt;EOF-token&gt;</span>
+    <span class="s1">Ident: </span><span class="s3">1</span><span class="s4">,               </span><span class="s0">// &lt;ident-token&gt;</span>
+    <span class="s1">Function: </span><span class="s3">2</span><span class="s4">,            </span><span class="s0">// &lt;function-token&gt;</span>
+    <span class="s1">AtKeyword: </span><span class="s3">3</span><span class="s4">,           </span><span class="s0">// &lt;at-keyword-token&gt;</span>
+    <span class="s1">Hash: </span><span class="s3">4</span><span class="s4">,                </span><span class="s0">// &lt;hash-token&gt;</span>
+    <span class="s1">String: </span><span class="s3">5</span><span class="s4">,              </span><span class="s0">// &lt;string-token&gt;</span>
+    <span class="s1">BadString: </span><span class="s3">6</span><span class="s4">,           </span><span class="s0">// &lt;bad-string-token&gt;</span>
+    <span class="s1">Url: </span><span class="s3">7</span><span class="s4">,                 </span><span class="s0">// &lt;url-token&gt;</span>
+    <span class="s1">BadUrl: </span><span class="s3">8</span><span class="s4">,              </span><span class="s0">// &lt;bad-url-token&gt;</span>
+    <span class="s1">Delim: </span><span class="s3">9</span><span class="s4">,               </span><span class="s0">// &lt;delim-token&gt;</span>
+    <span class="s1">Number: </span><span class="s3">10</span><span class="s4">,             </span><span class="s0">// &lt;number-token&gt;</span>
+    <span class="s1">Percentage: </span><span class="s3">11</span><span class="s4">,         </span><span class="s0">// &lt;percentage-token&gt;</span>
+    <span class="s1">Dimension: </span><span class="s3">12</span><span class="s4">,          </span><span class="s0">// &lt;dimension-token&gt;</span>
+    <span class="s1">WhiteSpace: </span><span class="s3">13</span><span class="s4">,         </span><span class="s0">// &lt;whitespace-token&gt;</span>
+    <span class="s1">CDO: </span><span class="s3">14</span><span class="s4">,                </span><span class="s0">// &lt;CDO-token&gt;</span>
+    <span class="s1">CDC: </span><span class="s3">15</span><span class="s4">,                </span><span class="s0">// &lt;CDC-token&gt;</span>
+    <span class="s1">Colon: </span><span class="s3">16</span><span class="s4">,              </span><span class="s0">// &lt;colon-token&gt;     :</span>
+    <span class="s1">Semicolon: </span><span class="s3">17</span><span class="s4">,          </span><span class="s0">// &lt;semicolon-token&gt; ;</span>
+    <span class="s1">Comma: </span><span class="s3">18</span><span class="s4">,              </span><span class="s0">// &lt;comma-token&gt;     ,</span>
+    <span class="s1">LeftSquareBracket: </span><span class="s3">19</span><span class="s4">,  </span><span class="s0">// &lt;[-token&gt;</span>
+    <span class="s1">RightSquareBracket: </span><span class="s3">20</span><span class="s4">, </span><span class="s0">// &lt;]-token&gt;</span>
+    <span class="s1">LeftParenthesis: </span><span class="s3">21</span><span class="s4">,    </span><span class="s0">// &lt;(-token&gt;</span>
+    <span class="s1">RightParenthesis: </span><span class="s3">22</span><span class="s4">,   </span><span class="s0">// &lt;)-token&gt;</span>
+    <span class="s1">LeftCurlyBracket: </span><span class="s3">23</span><span class="s4">,   </span><span class="s0">// &lt;{-token&gt;</span>
+    <span class="s1">RightCurlyBracket: </span><span class="s3">24</span><span class="s4">,  </span><span class="s0">// &lt;}-token&gt;</span>
+    <span class="s1">Comment: </span><span class="s3">25</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s2">var </span><span class="s1">NAME = Object.keys(TYPE).reduce(</span><span class="s2">function</span><span class="s1">(result</span><span class="s4">, </span><span class="s1">key) {</span>
+    <span class="s1">result[TYPE[key]] = key</span><span class="s4">;</span>
+    <span class="s2">return </span><span class="s1">result</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">, </span><span class="s1">{})</span><span class="s4">;</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">TYPE: TYPE</span><span class="s4">,</span>
+    <span class="s1">NAME: NAME</span>
+<span class="s1">}</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<html>
+<head>
+<title>quick-sort.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #808080;}
+.s3 { color: #8a8a8a; font-style: italic;}
+.s4 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s5 { color: #cc7832; font-weight: bold;}
+.s6 { color: #cc7832;}
+.s7 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+quick-sort.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* -*- Mode: js; js-indent-level: 2; -*- */</span>
+<span class="s0">/* 
+ * Copyright 2011 Mozilla Foundation and contributors 
+ * Licensed under the New BSD license. See LICENSE or: 
+ * http://opensource.org/licenses/BSD-3-Clause 
+ */</span>
+
+<span class="s2">// It turns out that some (most?) JavaScript engines don't self-host</span>
+<span class="s2">// `Array.prototype.sort`. This makes sense because C++ will likely remain</span>
+<span class="s2">// faster than JS when doing raw CPU-intensive sorting. However, when using a</span>
+<span class="s2">// custom comparator function, calling back and forth between the VM's C++ and</span>
+<span class="s2">// JIT'd JS is rather slow *and* loses JIT type information, resulting in</span>
+<span class="s2">// worse generated code for the comparator function than would be optimal. In</span>
+<span class="s2">// fact, when sorting with a comparator, these costs outweigh the benefits of</span>
+<span class="s2">// sorting in C++. By using our own JS-implemented Quick Sort (below), we get</span>
+<span class="s2">// a ~3500ms mean speed-up in `bench/bench.html`.</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* Swap the elements indexed by `x` and `y` in the array `ary`.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Array} ary</span>
+ <span class="s3">*        The array.</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Number} x</span>
+ <span class="s3">*        The index of the first item.</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Number} y</span>
+ <span class="s3">*        The index of the second item.</span>
+ <span class="s3">*/</span>
+<span class="s5">function </span><span class="s1">swap(ary</span><span class="s6">, </span><span class="s1">x</span><span class="s6">, </span><span class="s1">y) {</span>
+  <span class="s5">var </span><span class="s1">temp = ary[x]</span><span class="s6">;</span>
+  <span class="s1">ary[x] = ary[y]</span><span class="s6">;</span>
+  <span class="s1">ary[y] = temp</span><span class="s6">;</span>
+<span class="s1">}</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* Returns a random integer within the range `low .. high` inclusive.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Number} low</span>
+ <span class="s3">*        The lower bound on the range.</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Number} high</span>
+ <span class="s3">*        The upper bound on the range.</span>
+ <span class="s3">*/</span>
+<span class="s5">function </span><span class="s1">randomIntInRange(low</span><span class="s6">, </span><span class="s1">high) {</span>
+  <span class="s5">return </span><span class="s1">Math.round(low + (Math.random() * (high - low)))</span><span class="s6">;</span>
+<span class="s1">}</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* The Quick Sort algorithm.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Array} ary</span>
+ <span class="s3">*        An array to sort.</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{function} comparator</span>
+ <span class="s3">*        Function to use to compare two items.</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Number} p</span>
+ <span class="s3">*        Start index of the array</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Number} r</span>
+ <span class="s3">*        End index of the array</span>
+ <span class="s3">*/</span>
+<span class="s5">function </span><span class="s1">doQuickSort(ary</span><span class="s6">, </span><span class="s1">comparator</span><span class="s6">, </span><span class="s1">p</span><span class="s6">, </span><span class="s1">r) {</span>
+  <span class="s2">// If our lower bound is less than our upper bound, we (1) partition the</span>
+  <span class="s2">// array into two pieces and (2) recurse on each half. If it is not, this is</span>
+  <span class="s2">// the empty array and our base case.</span>
+
+  <span class="s5">if </span><span class="s1">(p &lt; r) {</span>
+    <span class="s2">// (1) Partitioning.</span>
+    <span class="s2">//</span>
+    <span class="s2">// The partitioning chooses a pivot between `p` and `r` and moves all</span>
+    <span class="s2">// elements that are less than or equal to the pivot to the before it, and</span>
+    <span class="s2">// all the elements that are greater than it after it. The effect is that</span>
+    <span class="s2">// once partition is done, the pivot is in the exact place it will be when</span>
+    <span class="s2">// the array is put in sorted order, and it will not need to be moved</span>
+    <span class="s2">// again. This runs in O(n) time.</span>
+
+    <span class="s2">// Always choose a random pivot so that an input array which is reverse</span>
+    <span class="s2">// sorted does not cause O(n^2) running time.</span>
+    <span class="s5">var </span><span class="s1">pivotIndex = randomIntInRange(p</span><span class="s6">, </span><span class="s1">r)</span><span class="s6">;</span>
+    <span class="s5">var </span><span class="s1">i = p - </span><span class="s7">1</span><span class="s6">;</span>
+
+    <span class="s1">swap(ary</span><span class="s6">, </span><span class="s1">pivotIndex</span><span class="s6">, </span><span class="s1">r)</span><span class="s6">;</span>
+    <span class="s5">var </span><span class="s1">pivot = ary[r]</span><span class="s6">;</span>
+
+    <span class="s2">// Immediately after `j` is incremented in this loop, the following hold</span>
+    <span class="s2">// true:</span>
+    <span class="s2">//</span>
+    <span class="s2">//   * Every element in `ary[p .. i]` is less than or equal to the pivot.</span>
+    <span class="s2">//</span>
+    <span class="s2">//   * Every element in `ary[i+1 .. j-1]` is greater than the pivot.</span>
+    <span class="s5">for </span><span class="s1">(</span><span class="s5">var </span><span class="s1">j = p</span><span class="s6">; </span><span class="s1">j &lt; r</span><span class="s6">; </span><span class="s1">j++) {</span>
+      <span class="s5">if </span><span class="s1">(comparator(ary[j]</span><span class="s6">, </span><span class="s1">pivot) &lt;= </span><span class="s7">0</span><span class="s1">) {</span>
+        <span class="s1">i += </span><span class="s7">1</span><span class="s6">;</span>
+        <span class="s1">swap(ary</span><span class="s6">, </span><span class="s1">i</span><span class="s6">, </span><span class="s1">j)</span><span class="s6">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s1">swap(ary</span><span class="s6">, </span><span class="s1">i + </span><span class="s7">1</span><span class="s6">, </span><span class="s1">j)</span><span class="s6">;</span>
+    <span class="s5">var </span><span class="s1">q = i + </span><span class="s7">1</span><span class="s6">;</span>
+
+    <span class="s2">// (2) Recurse on each half.</span>
+
+    <span class="s1">doQuickSort(ary</span><span class="s6">, </span><span class="s1">comparator</span><span class="s6">, </span><span class="s1">p</span><span class="s6">, </span><span class="s1">q - </span><span class="s7">1</span><span class="s1">)</span><span class="s6">;</span>
+    <span class="s1">doQuickSort(ary</span><span class="s6">, </span><span class="s1">comparator</span><span class="s6">, </span><span class="s1">q + </span><span class="s7">1</span><span class="s6">, </span><span class="s1">r)</span><span class="s6">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* Sort the given array in-place with the given comparator function.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Array} ary</span>
+ <span class="s3">*        An array to sort.</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{function} comparator</span>
+ <span class="s3">*        Function to use to compare two items.</span>
+ <span class="s3">*/</span>
+<span class="s1">exports.quickSort = </span><span class="s5">function </span><span class="s1">(ary</span><span class="s6">, </span><span class="s1">comparator) {</span>
+  <span class="s1">doQuickSort(ary</span><span class="s6">, </span><span class="s1">comparator</span><span class="s6">, </span><span class="s7">0</span><span class="s6">, </span><span class="s1">ary.length - </span><span class="s7">1</span><span class="s1">)</span><span class="s6">;</span>
+<span class="s1">}</span><span class="s6">;</span>
+</pre>
+</body>
+</html>

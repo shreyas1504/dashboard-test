@@ -1,0 +1,705 @@
+<html>
+<head>
+<title>Schema-e94716c8.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #6897bb;}
+.s5 { color: #8a8a8a;}
+.s6 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Schema-e94716c8.js</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">{ _ as _createForOfIteratorHelper</span><span class="s2">, </span><span class="s1">h as _slicedToArray</span><span class="s2">, </span><span class="s1">a as _typeof</span><span class="s2">, </span><span class="s1">b as _createClass</span><span class="s2">, </span><span class="s1">e as _defineProperty</span><span class="s2">, </span><span class="s1">c as _classCallCheck</span><span class="s2">, </span><span class="s1">d as defaultTagPrefix</span><span class="s2">, </span><span class="s1">n as defaultTags } from </span><span class="s3">'./PlainValue-b8036b75.js'</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">{ d as YAMLMap</span><span class="s2">, </span><span class="s1">g as resolveMap</span><span class="s2">, </span><span class="s1">Y as YAMLSeq</span><span class="s2">, </span><span class="s1">h as resolveSeq</span><span class="s2">, </span><span class="s1">j as resolveString</span><span class="s2">, </span><span class="s1">c as stringifyString</span><span class="s2">, </span><span class="s1">s as strOptions</span><span class="s2">, </span><span class="s1">S as Scalar</span><span class="s2">, </span><span class="s1">n as nullOptions</span><span class="s2">, </span><span class="s1">a as boolOptions</span><span class="s2">, </span><span class="s1">i as intOptions</span><span class="s2">, </span><span class="s1">k as stringifyNumber</span><span class="s2">, </span><span class="s1">N as Node</span><span class="s2">, </span><span class="s1">A as Alias</span><span class="s2">, </span><span class="s1">P as Pair } from </span><span class="s3">'./resolveSeq-492ab440.js'</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">{ b as binary</span><span class="s2">, </span><span class="s1">o as omap</span><span class="s2">, </span><span class="s1">p as pairs</span><span class="s2">, </span><span class="s1">s as set</span><span class="s2">, </span><span class="s1">i as intTime</span><span class="s2">, </span><span class="s1">f as floatTime</span><span class="s2">, </span><span class="s1">t as timestamp</span><span class="s2">, </span><span class="s1">a as warnOptionDeprecation } from </span><span class="s3">'./warnings-df54cb69.js'</span><span class="s2">;</span>
+
+<span class="s0">function </span><span class="s1">createMap(schema</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">, </span><span class="s1">ctx) {</span>
+  <span class="s0">var </span><span class="s1">map = </span><span class="s0">new </span><span class="s1">YAMLMap(schema)</span><span class="s2">;</span>
+
+  <span class="s0">if </span><span class="s1">(obj </span><span class="s0">instanceof </span><span class="s1">Map) {</span>
+    <span class="s0">var </span><span class="s1">_iterator = _createForOfIteratorHelper(obj)</span><span class="s2">,</span>
+        <span class="s1">_step</span><span class="s2">;</span>
+
+    <span class="s0">try </span><span class="s1">{</span>
+      <span class="s0">for </span><span class="s1">(_iterator.s()</span><span class="s2">; </span><span class="s1">!(_step = _iterator.n()).done</span><span class="s2">;</span><span class="s1">) {</span>
+        <span class="s0">var </span><span class="s1">_step$value = _slicedToArray(_step.value</span><span class="s2">, </span><span class="s4">2</span><span class="s1">)</span><span class="s2">,</span>
+            <span class="s1">key = _step$value[</span><span class="s4">0</span><span class="s1">]</span><span class="s2">,</span>
+            <span class="s1">value = _step$value[</span><span class="s4">1</span><span class="s1">]</span><span class="s2">;</span>
+
+        <span class="s1">map.items.push(schema.createPair(key</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">ctx))</span><span class="s2">;</span>
+      <span class="s1">}</span>
+    <span class="s1">} </span><span class="s0">catch </span><span class="s1">(err) {</span>
+      <span class="s1">_iterator.e(err)</span><span class="s2">;</span>
+    <span class="s1">} </span><span class="s0">finally </span><span class="s1">{</span>
+      <span class="s1">_iterator.f()</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">} </span><span class="s0">else if </span><span class="s1">(obj &amp;&amp; _typeof(obj) === </span><span class="s3">'object'</span><span class="s1">) {</span>
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">_i = </span><span class="s4">0</span><span class="s2">, </span><span class="s1">_Object$keys = Object.keys(obj)</span><span class="s2">; </span><span class="s1">_i &lt; _Object$keys.length</span><span class="s2">; </span><span class="s1">_i++) {</span>
+      <span class="s0">var </span><span class="s1">_key = _Object$keys[_i]</span><span class="s2">;</span>
+      <span class="s1">map.items.push(schema.createPair(_key</span><span class="s2">, </span><span class="s1">obj[_key]</span><span class="s2">, </span><span class="s1">ctx))</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">schema.sortMapEntries === </span><span class="s3">'function'</span><span class="s1">) {</span>
+    <span class="s1">map.items.sort(schema.sortMapEntries)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">map</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">var </span><span class="s1">map = {</span>
+  <span class="s1">createNode: createMap</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">nodeClass: YAMLMap</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:map'</span><span class="s2">,</span>
+  <span class="s1">resolve: resolveMap</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s0">function </span><span class="s1">createSeq(schema</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">, </span><span class="s1">ctx) {</span>
+  <span class="s0">var </span><span class="s1">seq = </span><span class="s0">new </span><span class="s1">YAMLSeq(schema)</span><span class="s2">;</span>
+
+  <span class="s0">if </span><span class="s1">(obj &amp;&amp; obj[Symbol.iterator]) {</span>
+    <span class="s0">var </span><span class="s1">_iterator = _createForOfIteratorHelper(obj)</span><span class="s2">,</span>
+        <span class="s1">_step</span><span class="s2">;</span>
+
+    <span class="s0">try </span><span class="s1">{</span>
+      <span class="s0">for </span><span class="s1">(_iterator.s()</span><span class="s2">; </span><span class="s1">!(_step = _iterator.n()).done</span><span class="s2">;</span><span class="s1">) {</span>
+        <span class="s0">var </span><span class="s1">it = _step.value</span><span class="s2">;</span>
+        <span class="s0">var </span><span class="s1">v = schema.createNode(it</span><span class="s2">, </span><span class="s1">ctx.wrapScalars</span><span class="s2">, </span><span class="s0">null</span><span class="s2">, </span><span class="s1">ctx)</span><span class="s2">;</span>
+        <span class="s1">seq.items.push(v)</span><span class="s2">;</span>
+      <span class="s1">}</span>
+    <span class="s1">} </span><span class="s0">catch </span><span class="s1">(err) {</span>
+      <span class="s1">_iterator.e(err)</span><span class="s2">;</span>
+    <span class="s1">} </span><span class="s0">finally </span><span class="s1">{</span>
+      <span class="s1">_iterator.f()</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">seq</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">var </span><span class="s1">seq = {</span>
+  <span class="s1">createNode: createSeq</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">nodeClass: YAMLSeq</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:seq'</span><span class="s2">,</span>
+  <span class="s1">resolve: resolveSeq</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">string = {</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'string'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:str'</span><span class="s2">,</span>
+  <span class="s1">resolve: resolveString</span><span class="s2">,</span>
+  <span class="s1">stringify: </span><span class="s0">function </span><span class="s1">stringify(item</span><span class="s2">, </span><span class="s1">ctx</span><span class="s2">, </span><span class="s1">onComment</span><span class="s2">, </span><span class="s1">onChompKeep) {</span>
+    <span class="s1">ctx = Object.assign({</span>
+      <span class="s1">actualString: </span><span class="s0">true</span>
+    <span class="s1">}</span><span class="s2">, </span><span class="s1">ctx)</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">stringifyString(item</span><span class="s2">, </span><span class="s1">ctx</span><span class="s2">, </span><span class="s1">onComment</span><span class="s2">, </span><span class="s1">onChompKeep)</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">options: strOptions</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">failsafe = [map</span><span class="s2">, </span><span class="s1">seq</span><span class="s2">, </span><span class="s1">string]</span><span class="s2">;</span>
+
+<span class="s5">/* global BigInt */</span>
+
+<span class="s0">var </span><span class="s1">intIdentify$2 = </span><span class="s0">function </span><span class="s1">intIdentify(value) {</span>
+  <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'bigint' </span><span class="s1">|| Number.isInteger(value)</span><span class="s2">;</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">intResolve$1 = </span><span class="s0">function </span><span class="s1">intResolve(src</span><span class="s2">, </span><span class="s1">part</span><span class="s2">, </span><span class="s1">radix) {</span>
+  <span class="s0">return </span><span class="s1">intOptions.asBigInt ? BigInt(src) : parseInt(part</span><span class="s2">, </span><span class="s1">radix)</span><span class="s2">;</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s0">function </span><span class="s1">intStringify$1(node</span><span class="s2">, </span><span class="s1">radix</span><span class="s2">, </span><span class="s1">prefix) {</span>
+  <span class="s0">var </span><span class="s1">value = node.value</span><span class="s2">;</span>
+  <span class="s0">if </span><span class="s1">(intIdentify$2(value) &amp;&amp; value &gt;= </span><span class="s4">0</span><span class="s1">) </span><span class="s0">return </span><span class="s1">prefix + value.toString(radix)</span><span class="s2">;</span>
+  <span class="s0">return </span><span class="s1">stringifyNumber(node)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">var </span><span class="s1">nullObj = {</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return </span><span class="s1">value == </span><span class="s0">null</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">createNode: </span><span class="s0">function </span><span class="s1">createNode(schema</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">ctx) {</span>
+    <span class="s0">return </span><span class="s1">ctx.wrapScalars ? </span><span class="s0">new </span><span class="s1">Scalar(</span><span class="s0">null</span><span class="s1">) : </span><span class="s0">null</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:null'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^(?:~|[Nn]ull|NULL)?$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve() {</span>
+    <span class="s0">return null</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">options: nullOptions</span><span class="s2">,</span>
+  <span class="s1">stringify: </span><span class="s0">function </span><span class="s1">stringify() {</span>
+    <span class="s0">return </span><span class="s1">nullOptions.nullStr</span><span class="s2">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">boolObj = {</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'boolean'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:bool'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^(?:[Tt]rue|TRUE|[Ff]alse|FALSE)$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str) {</span>
+    <span class="s0">return </span><span class="s1">str[</span><span class="s4">0</span><span class="s1">] === </span><span class="s3">'t' </span><span class="s1">|| str[</span><span class="s4">0</span><span class="s1">] === </span><span class="s3">'T'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">options: boolOptions</span><span class="s2">,</span>
+  <span class="s1">stringify: </span><span class="s0">function </span><span class="s1">stringify(_ref) {</span>
+    <span class="s0">var </span><span class="s1">value = _ref.value</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">value ? boolOptions.trueStr : boolOptions.falseStr</span><span class="s2">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">octObj = {</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return </span><span class="s1">intIdentify$2(value) &amp;&amp; value &gt;= </span><span class="s4">0</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:int'</span><span class="s2">,</span>
+  <span class="s1">format: </span><span class="s3">'OCT'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^0o([0-7]+)$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str</span><span class="s2">, </span><span class="s1">oct) {</span>
+    <span class="s0">return </span><span class="s1">intResolve$1(str</span><span class="s2">, </span><span class="s1">oct</span><span class="s2">, </span><span class="s4">8</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">options: intOptions</span><span class="s2">,</span>
+  <span class="s1">stringify: </span><span class="s0">function </span><span class="s1">stringify(node) {</span>
+    <span class="s0">return </span><span class="s1">intStringify$1(node</span><span class="s2">, </span><span class="s4">8</span><span class="s2">, </span><span class="s3">'0o'</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">intObj = {</span>
+  <span class="s1">identify: intIdentify$2</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:int'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^[-+]?[0-9]+$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str) {</span>
+    <span class="s0">return </span><span class="s1">intResolve$1(str</span><span class="s2">, </span><span class="s1">str</span><span class="s2">, </span><span class="s4">10</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">options: intOptions</span><span class="s2">,</span>
+  <span class="s1">stringify: stringifyNumber</span>
+<span class="s1">}</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">hexObj = {</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return </span><span class="s1">intIdentify$2(value) &amp;&amp; value &gt;= </span><span class="s4">0</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:int'</span><span class="s2">,</span>
+  <span class="s1">format: </span><span class="s3">'HEX'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^0x([0-9a-fA-F]+)$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str</span><span class="s2">, </span><span class="s1">hex) {</span>
+    <span class="s0">return </span><span class="s1">intResolve$1(str</span><span class="s2">, </span><span class="s1">hex</span><span class="s2">, </span><span class="s4">16</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">options: intOptions</span><span class="s2">,</span>
+  <span class="s1">stringify: </span><span class="s0">function </span><span class="s1">stringify(node) {</span>
+    <span class="s0">return </span><span class="s1">intStringify$1(node</span><span class="s2">, </span><span class="s4">16</span><span class="s2">, </span><span class="s3">'0x'</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">nanObj = {</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'number'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:float'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^(?:[-+]?\.inf|(\.nan))$/i</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str</span><span class="s2">, </span><span class="s1">nan) {</span>
+    <span class="s0">return </span><span class="s1">nan ? NaN : str[</span><span class="s4">0</span><span class="s1">] === </span><span class="s3">'-' </span><span class="s1">? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">stringify: stringifyNumber</span>
+<span class="s1">}</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">expObj = {</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'number'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:float'</span><span class="s2">,</span>
+  <span class="s1">format: </span><span class="s3">'EXP'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)[eE][-+]?[0-9]+$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str) {</span>
+    <span class="s0">return </span><span class="s1">parseFloat(str)</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">stringify: </span><span class="s0">function </span><span class="s1">stringify(_ref2) {</span>
+    <span class="s0">var </span><span class="s1">value = _ref2.value</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">Number(value).toExponential()</span><span class="s2">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">floatObj = {</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'number'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:float'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^[-+]?(?:\.([0-9]+)|[0-9]+\.([0-9]*))$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str</span><span class="s2">, </span><span class="s1">frac1</span><span class="s2">, </span><span class="s1">frac2) {</span>
+    <span class="s0">var </span><span class="s1">frac = frac1 || frac2</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">node = </span><span class="s0">new </span><span class="s1">Scalar(parseFloat(str))</span><span class="s2">;</span>
+    <span class="s0">if </span><span class="s1">(frac &amp;&amp; frac[frac.length - </span><span class="s4">1</span><span class="s1">] === </span><span class="s3">'0'</span><span class="s1">) node.minFractionDigits = frac.length</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">node</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">stringify: stringifyNumber</span>
+<span class="s1">}</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">core = failsafe.concat([nullObj</span><span class="s2">, </span><span class="s1">boolObj</span><span class="s2">, </span><span class="s1">octObj</span><span class="s2">, </span><span class="s1">intObj</span><span class="s2">, </span><span class="s1">hexObj</span><span class="s2">, </span><span class="s1">nanObj</span><span class="s2">, </span><span class="s1">expObj</span><span class="s2">, </span><span class="s1">floatObj])</span><span class="s2">;</span>
+
+<span class="s5">/* global BigInt */</span>
+
+<span class="s0">var </span><span class="s1">intIdentify$1 = </span><span class="s0">function </span><span class="s1">intIdentify(value) {</span>
+  <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'bigint' </span><span class="s1">|| Number.isInteger(value)</span><span class="s2">;</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">stringifyJSON = </span><span class="s0">function </span><span class="s1">stringifyJSON(_ref) {</span>
+  <span class="s0">var </span><span class="s1">value = _ref.value</span><span class="s2">;</span>
+  <span class="s0">return </span><span class="s1">JSON.stringify(value)</span><span class="s2">;</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">json = [map</span><span class="s2">, </span><span class="s1">seq</span><span class="s2">, </span><span class="s1">{</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'string'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:str'</span><span class="s2">,</span>
+  <span class="s1">resolve: resolveString</span><span class="s2">,</span>
+  <span class="s1">stringify: stringifyJSON</span>
+<span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return </span><span class="s1">value == </span><span class="s0">null</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">createNode: </span><span class="s0">function </span><span class="s1">createNode(schema</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">ctx) {</span>
+    <span class="s0">return </span><span class="s1">ctx.wrapScalars ? </span><span class="s0">new </span><span class="s1">Scalar(</span><span class="s0">null</span><span class="s1">) : </span><span class="s0">null</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:null'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^null$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve() {</span>
+    <span class="s0">return null</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">stringify: stringifyJSON</span>
+<span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'boolean'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:bool'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^true|false$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str) {</span>
+    <span class="s0">return </span><span class="s1">str === </span><span class="s3">'true'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">stringify: stringifyJSON</span>
+<span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+  <span class="s1">identify: intIdentify$1</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:int'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^-?(?:0|[1-9][0-9]*)$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str) {</span>
+    <span class="s0">return </span><span class="s1">intOptions.asBigInt ? BigInt(str) : parseInt(str</span><span class="s2">, </span><span class="s4">10</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">stringify: </span><span class="s0">function </span><span class="s1">stringify(_ref2) {</span>
+    <span class="s0">var </span><span class="s1">value = _ref2.value</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">intIdentify$1(value) ? value.toString() : JSON.stringify(value)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'number'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:float'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^-?(?:0|[1-9][0-9]*)(?:\.[0-9]*)?(?:[eE][-+]?[0-9]+)?$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str) {</span>
+    <span class="s0">return </span><span class="s1">parseFloat(str)</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">stringify: stringifyJSON</span>
+<span class="s1">}]</span><span class="s2">;</span>
+
+<span class="s1">json.scalarFallback = </span><span class="s0">function </span><span class="s1">(str) {</span>
+  <span class="s0">throw new </span><span class="s1">SyntaxError(</span><span class="s3">&quot;Unresolved plain scalar &quot;</span><span class="s1">.concat(JSON.stringify(str)))</span><span class="s2">;</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s5">/* global BigInt */</span>
+
+<span class="s0">var </span><span class="s1">boolStringify = </span><span class="s0">function </span><span class="s1">boolStringify(_ref) {</span>
+  <span class="s0">var </span><span class="s1">value = _ref.value</span><span class="s2">;</span>
+  <span class="s0">return </span><span class="s1">value ? boolOptions.trueStr : boolOptions.falseStr</span><span class="s2">;</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">intIdentify = </span><span class="s0">function </span><span class="s1">intIdentify(value) {</span>
+  <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'bigint' </span><span class="s1">|| Number.isInteger(value)</span><span class="s2">;</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s0">function </span><span class="s1">intResolve(sign</span><span class="s2">, </span><span class="s1">src</span><span class="s2">, </span><span class="s1">radix) {</span>
+  <span class="s0">var </span><span class="s1">str = src.replace(</span><span class="s4">/_/g</span><span class="s2">, </span><span class="s3">''</span><span class="s1">)</span><span class="s2">;</span>
+
+  <span class="s0">if </span><span class="s1">(intOptions.asBigInt) {</span>
+    <span class="s0">switch </span><span class="s1">(radix) {</span>
+      <span class="s0">case </span><span class="s4">2</span><span class="s1">:</span>
+        <span class="s1">str = </span><span class="s3">&quot;0b&quot;</span><span class="s1">.concat(str)</span><span class="s2">;</span>
+        <span class="s0">break</span><span class="s2">;</span>
+
+      <span class="s0">case </span><span class="s4">8</span><span class="s1">:</span>
+        <span class="s1">str = </span><span class="s3">&quot;0o&quot;</span><span class="s1">.concat(str)</span><span class="s2">;</span>
+        <span class="s0">break</span><span class="s2">;</span>
+
+      <span class="s0">case </span><span class="s4">16</span><span class="s1">:</span>
+        <span class="s1">str = </span><span class="s3">&quot;0x&quot;</span><span class="s1">.concat(str)</span><span class="s2">;</span>
+        <span class="s0">break</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">_n = BigInt(str)</span><span class="s2">;</span>
+
+    <span class="s0">return </span><span class="s1">sign === </span><span class="s3">'-' </span><span class="s1">? BigInt(-</span><span class="s4">1</span><span class="s1">) * _n : _n</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">var </span><span class="s1">n = parseInt(str</span><span class="s2">, </span><span class="s1">radix)</span><span class="s2">;</span>
+  <span class="s0">return </span><span class="s1">sign === </span><span class="s3">'-' </span><span class="s1">? -</span><span class="s4">1 </span><span class="s1">* n : n</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">intStringify(node</span><span class="s2">, </span><span class="s1">radix</span><span class="s2">, </span><span class="s1">prefix) {</span>
+  <span class="s0">var </span><span class="s1">value = node.value</span><span class="s2">;</span>
+
+  <span class="s0">if </span><span class="s1">(intIdentify(value)) {</span>
+    <span class="s0">var </span><span class="s1">str = value.toString(radix)</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">value &lt; </span><span class="s4">0 </span><span class="s1">? </span><span class="s3">'-' </span><span class="s1">+ prefix + str.substr(</span><span class="s4">1</span><span class="s1">) : prefix + str</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">stringifyNumber(node)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">var </span><span class="s1">yaml11 = failsafe.concat([{</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return </span><span class="s1">value == </span><span class="s0">null</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">createNode: </span><span class="s0">function </span><span class="s1">createNode(schema</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">ctx) {</span>
+    <span class="s0">return </span><span class="s1">ctx.wrapScalars ? </span><span class="s0">new </span><span class="s1">Scalar(</span><span class="s0">null</span><span class="s1">) : </span><span class="s0">null</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:null'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^(?:~|[Nn]ull|NULL)?$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve() {</span>
+    <span class="s0">return null</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">options: nullOptions</span><span class="s2">,</span>
+  <span class="s1">stringify: </span><span class="s0">function </span><span class="s1">stringify() {</span>
+    <span class="s0">return </span><span class="s1">nullOptions.nullStr</span><span class="s2">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'boolean'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:bool'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^(?:Y|y|[Yy]es|YES|[Tt]rue|TRUE|[Oo]n|ON)$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve() {</span>
+    <span class="s0">return true</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">options: boolOptions</span><span class="s2">,</span>
+  <span class="s1">stringify: boolStringify</span>
+<span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'boolean'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:bool'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^(?:N|n|[Nn]o|NO|[Ff]alse|FALSE|[Oo]ff|OFF)$/i</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve() {</span>
+    <span class="s0">return false</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">options: boolOptions</span><span class="s2">,</span>
+  <span class="s1">stringify: boolStringify</span>
+<span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+  <span class="s1">identify: intIdentify</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:int'</span><span class="s2">,</span>
+  <span class="s1">format: </span><span class="s3">'BIN'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^([-+]?)0b([0-1_]+)$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str</span><span class="s2">, </span><span class="s1">sign</span><span class="s2">, </span><span class="s1">bin) {</span>
+    <span class="s0">return </span><span class="s1">intResolve(sign</span><span class="s2">, </span><span class="s1">bin</span><span class="s2">, </span><span class="s4">2</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">stringify: </span><span class="s0">function </span><span class="s1">stringify(node) {</span>
+    <span class="s0">return </span><span class="s1">intStringify(node</span><span class="s2">, </span><span class="s4">2</span><span class="s2">, </span><span class="s3">'0b'</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+  <span class="s1">identify: intIdentify</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:int'</span><span class="s2">,</span>
+  <span class="s1">format: </span><span class="s3">'OCT'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^([-+]?)0([0-7_]+)$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str</span><span class="s2">, </span><span class="s1">sign</span><span class="s2">, </span><span class="s1">oct) {</span>
+    <span class="s0">return </span><span class="s1">intResolve(sign</span><span class="s2">, </span><span class="s1">oct</span><span class="s2">, </span><span class="s4">8</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">stringify: </span><span class="s0">function </span><span class="s1">stringify(node) {</span>
+    <span class="s0">return </span><span class="s1">intStringify(node</span><span class="s2">, </span><span class="s4">8</span><span class="s2">, </span><span class="s3">'0'</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+  <span class="s1">identify: intIdentify</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:int'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^([-+]?)([0-9][0-9_]*)$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str</span><span class="s2">, </span><span class="s1">sign</span><span class="s2">, </span><span class="s1">abs) {</span>
+    <span class="s0">return </span><span class="s1">intResolve(sign</span><span class="s2">, </span><span class="s1">abs</span><span class="s2">, </span><span class="s4">10</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">stringify: stringifyNumber</span>
+<span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+  <span class="s1">identify: intIdentify</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:int'</span><span class="s2">,</span>
+  <span class="s1">format: </span><span class="s3">'HEX'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^([-+]?)0x([0-9a-fA-F_]+)$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str</span><span class="s2">, </span><span class="s1">sign</span><span class="s2">, </span><span class="s1">hex) {</span>
+    <span class="s0">return </span><span class="s1">intResolve(sign</span><span class="s2">, </span><span class="s1">hex</span><span class="s2">, </span><span class="s4">16</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">stringify: </span><span class="s0">function </span><span class="s1">stringify(node) {</span>
+    <span class="s0">return </span><span class="s1">intStringify(node</span><span class="s2">, </span><span class="s4">16</span><span class="s2">, </span><span class="s3">'0x'</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'number'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:float'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^(?:[-+]?\.inf|(\.nan))$/i</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str</span><span class="s2">, </span><span class="s1">nan) {</span>
+    <span class="s0">return </span><span class="s1">nan ? NaN : str[</span><span class="s4">0</span><span class="s1">] === </span><span class="s3">'-' </span><span class="s1">? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">stringify: stringifyNumber</span>
+<span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'number'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:float'</span><span class="s2">,</span>
+  <span class="s1">format: </span><span class="s3">'EXP'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^[-+]?([0-9][0-9_]*)?(\.[0-9_]*)?[eE][-+]?[0-9]+$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str) {</span>
+    <span class="s0">return </span><span class="s1">parseFloat(str.replace(</span><span class="s4">/_/g</span><span class="s2">, </span><span class="s3">''</span><span class="s1">))</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">stringify: </span><span class="s0">function </span><span class="s1">stringify(_ref2) {</span>
+    <span class="s0">var </span><span class="s1">value = _ref2.value</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">Number(value).toExponential()</span><span class="s2">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+  <span class="s1">identify: </span><span class="s0">function </span><span class="s1">identify(value) {</span>
+    <span class="s0">return typeof </span><span class="s1">value === </span><span class="s3">'number'</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s0">default</span><span class="s1">: </span><span class="s0">true</span><span class="s2">,</span>
+  <span class="s1">tag: </span><span class="s3">'tag:yaml.org,2002:float'</span><span class="s2">,</span>
+  <span class="s1">test: </span><span class="s4">/^[-+]?(?:[0-9][0-9_]*)?\.([0-9_]*)$/</span><span class="s2">,</span>
+  <span class="s1">resolve: </span><span class="s0">function </span><span class="s1">resolve(str</span><span class="s2">, </span><span class="s1">frac) {</span>
+    <span class="s0">var </span><span class="s1">node = </span><span class="s0">new </span><span class="s1">Scalar(parseFloat(str.replace(</span><span class="s4">/_/g</span><span class="s2">, </span><span class="s3">''</span><span class="s1">)))</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(frac) {</span>
+      <span class="s0">var </span><span class="s1">f = frac.replace(</span><span class="s4">/_/g</span><span class="s2">, </span><span class="s3">''</span><span class="s1">)</span><span class="s2">;</span>
+      <span class="s0">if </span><span class="s1">(f[f.length - </span><span class="s4">1</span><span class="s1">] === </span><span class="s3">'0'</span><span class="s1">) node.minFractionDigits = f.length</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">node</span><span class="s2">;</span>
+  <span class="s1">}</span><span class="s2">,</span>
+  <span class="s1">stringify: stringifyNumber</span>
+<span class="s1">}]</span><span class="s2">, </span><span class="s1">binary</span><span class="s2">, </span><span class="s1">omap</span><span class="s2">, </span><span class="s1">pairs</span><span class="s2">, </span><span class="s1">set</span><span class="s2">, </span><span class="s1">intTime</span><span class="s2">, </span><span class="s1">floatTime</span><span class="s2">, </span><span class="s1">timestamp)</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">schemas = {</span>
+  <span class="s1">core: core</span><span class="s2">,</span>
+  <span class="s1">failsafe: failsafe</span><span class="s2">,</span>
+  <span class="s1">json: json</span><span class="s2">,</span>
+  <span class="s1">yaml11: yaml11</span>
+<span class="s1">}</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">tags = {</span>
+  <span class="s1">binary: binary</span><span class="s2">,</span>
+  <span class="s1">bool: boolObj</span><span class="s2">,</span>
+  <span class="s1">float: floatObj</span><span class="s2">,</span>
+  <span class="s1">floatExp: expObj</span><span class="s2">,</span>
+  <span class="s1">floatNaN: nanObj</span><span class="s2">,</span>
+  <span class="s1">floatTime: floatTime</span><span class="s2">,</span>
+  <span class="s1">int: intObj</span><span class="s2">,</span>
+  <span class="s1">intHex: hexObj</span><span class="s2">,</span>
+  <span class="s1">intOct: octObj</span><span class="s2">,</span>
+  <span class="s1">intTime: intTime</span><span class="s2">,</span>
+  <span class="s1">map: map</span><span class="s2">,</span>
+  <span class="s0">null</span><span class="s1">: nullObj</span><span class="s2">,</span>
+  <span class="s1">omap: omap</span><span class="s2">,</span>
+  <span class="s1">pairs: pairs</span><span class="s2">,</span>
+  <span class="s1">seq: seq</span><span class="s2">,</span>
+  <span class="s1">set: set</span><span class="s2">,</span>
+  <span class="s1">timestamp: timestamp</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s0">function </span><span class="s1">findTagObject(value</span><span class="s2">, </span><span class="s1">tagName</span><span class="s2">, </span><span class="s1">tags) {</span>
+  <span class="s0">if </span><span class="s1">(tagName) {</span>
+    <span class="s0">var </span><span class="s1">match = tags.filter(</span><span class="s0">function </span><span class="s1">(t) {</span>
+      <span class="s0">return </span><span class="s1">t.tag === tagName</span><span class="s2">;</span>
+    <span class="s1">})</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">tagObj = match.find(</span><span class="s0">function </span><span class="s1">(t) {</span>
+      <span class="s0">return </span><span class="s1">!t.format</span><span class="s2">;</span>
+    <span class="s1">}) || match[</span><span class="s4">0</span><span class="s1">]</span><span class="s2">;</span>
+    <span class="s0">if </span><span class="s1">(!tagObj) </span><span class="s0">throw new </span><span class="s1">Error(</span><span class="s3">&quot;Tag &quot;</span><span class="s1">.concat(tagName</span><span class="s2">, </span><span class="s3">&quot; not found&quot;</span><span class="s1">))</span><span class="s2">;</span>
+    <span class="s0">return </span><span class="s1">tagObj</span><span class="s2">;</span>
+  <span class="s1">} </span><span class="s6">// TODO: deprecate/remove class check</span>
+
+
+  <span class="s0">return </span><span class="s1">tags.find(</span><span class="s0">function </span><span class="s1">(t) {</span>
+    <span class="s0">return </span><span class="s1">(t.identify &amp;&amp; t.identify(value) || t.class &amp;&amp; value </span><span class="s0">instanceof </span><span class="s1">t.class) &amp;&amp; !t.format</span><span class="s2">;</span>
+  <span class="s1">})</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">createNode(value</span><span class="s2">, </span><span class="s1">tagName</span><span class="s2">, </span><span class="s1">ctx) {</span>
+  <span class="s0">if </span><span class="s1">(value </span><span class="s0">instanceof </span><span class="s1">Node) </span><span class="s0">return </span><span class="s1">value</span><span class="s2">;</span>
+  <span class="s0">var </span><span class="s1">defaultPrefix = ctx.defaultPrefix</span><span class="s2">,</span>
+      <span class="s1">onTagObj = ctx.onTagObj</span><span class="s2">,</span>
+      <span class="s1">prevObjects = ctx.prevObjects</span><span class="s2">,</span>
+      <span class="s1">schema = ctx.schema</span><span class="s2">,</span>
+      <span class="s1">wrapScalars = ctx.wrapScalars</span><span class="s2">;</span>
+  <span class="s0">if </span><span class="s1">(tagName &amp;&amp; tagName.startsWith(</span><span class="s3">'!!'</span><span class="s1">)) tagName = defaultPrefix + tagName.slice(</span><span class="s4">2</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s0">var </span><span class="s1">tagObj = findTagObject(value</span><span class="s2">, </span><span class="s1">tagName</span><span class="s2">, </span><span class="s1">schema.tags)</span><span class="s2">;</span>
+
+  <span class="s0">if </span><span class="s1">(!tagObj) {</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">value.toJSON === </span><span class="s3">'function'</span><span class="s1">) value = value.toJSON()</span><span class="s2">;</span>
+    <span class="s0">if </span><span class="s1">(!value || _typeof(value) !== </span><span class="s3">'object'</span><span class="s1">) </span><span class="s0">return </span><span class="s1">wrapScalars ? </span><span class="s0">new </span><span class="s1">Scalar(value) : value</span><span class="s2">;</span>
+    <span class="s1">tagObj = value </span><span class="s0">instanceof </span><span class="s1">Map ? map : value[Symbol.iterator] ? seq : map</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">if </span><span class="s1">(onTagObj) {</span>
+    <span class="s1">onTagObj(tagObj)</span><span class="s2">;</span>
+    <span class="s0">delete </span><span class="s1">ctx.onTagObj</span><span class="s2">;</span>
+  <span class="s1">} </span><span class="s6">// Detect duplicate references to the same object &amp; use Alias nodes for all</span>
+  <span class="s6">// after first. The `obj` wrapper allows for circular references to resolve.</span>
+
+
+  <span class="s0">var </span><span class="s1">obj = {</span>
+    <span class="s1">value: undefined</span><span class="s2">,</span>
+    <span class="s1">node: undefined</span>
+  <span class="s1">}</span><span class="s2">;</span>
+
+  <span class="s0">if </span><span class="s1">(value &amp;&amp; _typeof(value) === </span><span class="s3">'object' </span><span class="s1">&amp;&amp; prevObjects) {</span>
+    <span class="s0">var </span><span class="s1">prev = prevObjects.get(value)</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(prev) {</span>
+      <span class="s0">var </span><span class="s1">alias = </span><span class="s0">new </span><span class="s1">Alias(prev)</span><span class="s2">; </span><span class="s6">// leaves source dirty; must be cleaned by caller</span>
+
+      <span class="s1">ctx.aliasNodes.push(alias)</span><span class="s2">; </span><span class="s6">// defined along with prevObjects</span>
+
+      <span class="s0">return </span><span class="s1">alias</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">obj.value = value</span><span class="s2">;</span>
+    <span class="s1">prevObjects.set(value</span><span class="s2">, </span><span class="s1">obj)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">obj.node = tagObj.createNode ? tagObj.createNode(ctx.schema</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">ctx) : wrapScalars ? </span><span class="s0">new </span><span class="s1">Scalar(value) : value</span><span class="s2">;</span>
+  <span class="s0">if </span><span class="s1">(tagName &amp;&amp; obj.node </span><span class="s0">instanceof </span><span class="s1">Node) obj.node.tag = tagName</span><span class="s2">;</span>
+  <span class="s0">return </span><span class="s1">obj.node</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">getSchemaTags(schemas</span><span class="s2">, </span><span class="s1">knownTags</span><span class="s2">, </span><span class="s1">customTags</span><span class="s2">, </span><span class="s1">schemaId) {</span>
+  <span class="s0">var </span><span class="s1">tags = schemas[schemaId.replace(</span><span class="s4">/\W/g</span><span class="s2">, </span><span class="s3">''</span><span class="s1">)]</span><span class="s2">; </span><span class="s6">// 'yaml-1.1' -&gt; 'yaml11'</span>
+
+  <span class="s0">if </span><span class="s1">(!tags) {</span>
+    <span class="s0">var </span><span class="s1">keys = Object.keys(schemas).map(</span><span class="s0">function </span><span class="s1">(key) {</span>
+      <span class="s0">return </span><span class="s1">JSON.stringify(key)</span><span class="s2">;</span>
+    <span class="s1">}).join(</span><span class="s3">', '</span><span class="s1">)</span><span class="s2">;</span>
+    <span class="s0">throw new </span><span class="s1">Error(</span><span class="s3">&quot;Unknown schema </span><span class="s2">\&quot;</span><span class="s3">&quot;</span><span class="s1">.concat(schemaId</span><span class="s2">, </span><span class="s3">&quot;</span><span class="s2">\&quot;</span><span class="s3">; use one of &quot;</span><span class="s1">).concat(keys))</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">if </span><span class="s1">(Array.isArray(customTags)) {</span>
+    <span class="s0">var </span><span class="s1">_iterator = _createForOfIteratorHelper(customTags)</span><span class="s2">,</span>
+        <span class="s1">_step</span><span class="s2">;</span>
+
+    <span class="s0">try </span><span class="s1">{</span>
+      <span class="s0">for </span><span class="s1">(_iterator.s()</span><span class="s2">; </span><span class="s1">!(_step = _iterator.n()).done</span><span class="s2">;</span><span class="s1">) {</span>
+        <span class="s0">var </span><span class="s1">tag = _step.value</span><span class="s2">;</span>
+        <span class="s1">tags = tags.concat(tag)</span><span class="s2">;</span>
+      <span class="s1">}</span>
+    <span class="s1">} </span><span class="s0">catch </span><span class="s1">(err) {</span>
+      <span class="s1">_iterator.e(err)</span><span class="s2">;</span>
+    <span class="s1">} </span><span class="s0">finally </span><span class="s1">{</span>
+      <span class="s1">_iterator.f()</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">} </span><span class="s0">else if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">customTags === </span><span class="s3">'function'</span><span class="s1">) {</span>
+    <span class="s1">tags = customTags(tags.slice())</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s2">; </span><span class="s1">i &lt; tags.length</span><span class="s2">; </span><span class="s1">++i) {</span>
+    <span class="s0">var </span><span class="s1">_tag = tags[i]</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">_tag === </span><span class="s3">'string'</span><span class="s1">) {</span>
+      <span class="s0">var </span><span class="s1">tagObj = knownTags[_tag]</span><span class="s2">;</span>
+
+      <span class="s0">if </span><span class="s1">(!tagObj) {</span>
+        <span class="s0">var </span><span class="s1">_keys = Object.keys(knownTags).map(</span><span class="s0">function </span><span class="s1">(key) {</span>
+          <span class="s0">return </span><span class="s1">JSON.stringify(key)</span><span class="s2">;</span>
+        <span class="s1">}).join(</span><span class="s3">', '</span><span class="s1">)</span><span class="s2">;</span>
+
+        <span class="s0">throw new </span><span class="s1">Error(</span><span class="s3">&quot;Unknown custom tag </span><span class="s2">\&quot;</span><span class="s3">&quot;</span><span class="s1">.concat(_tag</span><span class="s2">, </span><span class="s3">&quot;</span><span class="s2">\&quot;</span><span class="s3">; use one of &quot;</span><span class="s1">).concat(_keys))</span><span class="s2">;</span>
+      <span class="s1">}</span>
+
+      <span class="s1">tags[i] = tagObj</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">tags</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">var </span><span class="s1">sortMapEntriesByKey = </span><span class="s0">function </span><span class="s1">sortMapEntriesByKey(a</span><span class="s2">, </span><span class="s1">b) {</span>
+  <span class="s0">return </span><span class="s1">a.key &lt; b.key ? -</span><span class="s4">1 </span><span class="s1">: a.key &gt; b.key ? </span><span class="s4">1 </span><span class="s1">: </span><span class="s4">0</span><span class="s2">;</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s0">var </span><span class="s1">Schema = </span><span class="s5">/*#__PURE__*/</span><span class="s0">function </span><span class="s1">() {</span>
+  <span class="s6">// TODO: remove in v2</span>
+  <span class="s6">// TODO: remove in v2</span>
+  <span class="s0">function </span><span class="s1">Schema(_ref) {</span>
+    <span class="s0">var </span><span class="s1">customTags = _ref.customTags</span><span class="s2">,</span>
+        <span class="s1">merge = _ref.merge</span><span class="s2">,</span>
+        <span class="s1">schema = _ref.schema</span><span class="s2">,</span>
+        <span class="s1">sortMapEntries = _ref.sortMapEntries</span><span class="s2">,</span>
+        <span class="s1">deprecatedCustomTags = _ref.tags</span><span class="s2">;</span>
+
+    <span class="s1">_classCallCheck(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">Schema)</span><span class="s2">;</span>
+
+    <span class="s0">this</span><span class="s1">.merge = !!merge</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.name = schema</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.sortMapEntries = sortMapEntries === </span><span class="s0">true </span><span class="s1">? sortMapEntriesByKey : sortMapEntries || </span><span class="s0">null</span><span class="s2">;</span>
+    <span class="s0">if </span><span class="s1">(!customTags &amp;&amp; deprecatedCustomTags) warnOptionDeprecation(</span><span class="s3">'tags'</span><span class="s2">, </span><span class="s3">'customTags'</span><span class="s1">)</span><span class="s2">;</span>
+    <span class="s0">this</span><span class="s1">.tags = getSchemaTags(schemas</span><span class="s2">, </span><span class="s1">tags</span><span class="s2">, </span><span class="s1">customTags || deprecatedCustomTags</span><span class="s2">, </span><span class="s1">schema)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_createClass(Schema</span><span class="s2">, </span><span class="s1">[{</span>
+    <span class="s1">key: </span><span class="s3">&quot;createNode&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">createNode$1(value</span><span class="s2">, </span><span class="s1">wrapScalars</span><span class="s2">, </span><span class="s1">tagName</span><span class="s2">, </span><span class="s1">ctx) {</span>
+      <span class="s0">var </span><span class="s1">baseCtx = {</span>
+        <span class="s1">defaultPrefix: Schema.defaultPrefix</span><span class="s2">,</span>
+        <span class="s1">schema: </span><span class="s0">this</span><span class="s2">,</span>
+        <span class="s1">wrapScalars: wrapScalars</span>
+      <span class="s1">}</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">createCtx = ctx ? Object.assign(ctx</span><span class="s2">, </span><span class="s1">baseCtx) : baseCtx</span><span class="s2">;</span>
+      <span class="s0">return </span><span class="s1">createNode(value</span><span class="s2">, </span><span class="s1">tagName</span><span class="s2">, </span><span class="s1">createCtx)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s2">, </span><span class="s1">{</span>
+    <span class="s1">key: </span><span class="s3">&quot;createPair&quot;</span><span class="s2">,</span>
+    <span class="s1">value: </span><span class="s0">function </span><span class="s1">createPair(key</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">ctx) {</span>
+      <span class="s0">if </span><span class="s1">(!ctx) ctx = {</span>
+        <span class="s1">wrapScalars: </span><span class="s0">true</span>
+      <span class="s1">}</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">k = </span><span class="s0">this</span><span class="s1">.createNode(key</span><span class="s2">, </span><span class="s1">ctx.wrapScalars</span><span class="s2">, </span><span class="s0">null</span><span class="s2">, </span><span class="s1">ctx)</span><span class="s2">;</span>
+      <span class="s0">var </span><span class="s1">v = </span><span class="s0">this</span><span class="s1">.createNode(value</span><span class="s2">, </span><span class="s1">ctx.wrapScalars</span><span class="s2">, </span><span class="s0">null</span><span class="s2">, </span><span class="s1">ctx)</span><span class="s2">;</span>
+      <span class="s0">return new </span><span class="s1">Pair(k</span><span class="s2">, </span><span class="s1">v)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}])</span><span class="s2">;</span>
+
+  <span class="s0">return </span><span class="s1">Schema</span><span class="s2">;</span>
+<span class="s1">}()</span><span class="s2">;</span>
+
+<span class="s1">_defineProperty(Schema</span><span class="s2">, </span><span class="s3">&quot;defaultPrefix&quot;</span><span class="s2">, </span><span class="s1">defaultTagPrefix)</span><span class="s2">;</span>
+
+<span class="s1">_defineProperty(Schema</span><span class="s2">, </span><span class="s3">&quot;defaultTags&quot;</span><span class="s2">, </span><span class="s1">defaultTags)</span><span class="s2">;</span>
+
+<span class="s0">export </span><span class="s1">{ Schema as S }</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

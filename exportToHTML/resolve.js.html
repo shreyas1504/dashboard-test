@@ -1,0 +1,294 @@
+<html>
+<head>
+<title>resolve.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #8a8a8a;}
+.s7 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+resolve.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">URI = require(</span><span class="s0">'uri-js'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">equal = require(</span><span class="s0">'fast-deep-equal'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">util = require(</span><span class="s0">'./util'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">SchemaObject = require(</span><span class="s0">'./schema_obj'</span><span class="s2">)</span>
+  <span class="s1">, </span><span class="s2">traverse = require(</span><span class="s0">'json-schema-traverse'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s2">module.exports = resolve</span><span class="s1">;</span>
+
+<span class="s2">resolve.normalizeId = normalizeId</span><span class="s1">;</span>
+<span class="s2">resolve.fullPath = getFullPath</span><span class="s1">;</span>
+<span class="s2">resolve.url = resolveUrl</span><span class="s1">;</span>
+<span class="s2">resolve.ids = resolveIds</span><span class="s1">;</span>
+<span class="s2">resolve.inlineRef = inlineRef</span><span class="s1">;</span>
+<span class="s2">resolve.schema = resolveSchema</span><span class="s1">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* [resolve and compile the references ($ref)]</span>
+ <span class="s4">* </span><span class="s5">@this   </span><span class="s4">Ajv</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{Function} compile reference to schema compilation funciton (localCompile)</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{Object} root object with information about the root schema for the current schema</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{String} ref reference to resolve</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Object|Function} schema object (if the schema can be inlined) or validation function</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">resolve(compile</span><span class="s1">, </span><span class="s2">root</span><span class="s1">, </span><span class="s2">ref) {</span>
+  <span class="s6">/* jshint validthis: true */</span>
+  <span class="s3">var </span><span class="s2">refVal = </span><span class="s3">this</span><span class="s2">._refs[ref]</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">refVal == </span><span class="s0">'string'</span><span class="s2">) {</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._refs[refVal]) refVal = </span><span class="s3">this</span><span class="s2">._refs[refVal]</span><span class="s1">;</span>
+    <span class="s3">else return </span><span class="s2">resolve.call(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">compile</span><span class="s1">, </span><span class="s2">root</span><span class="s1">, </span><span class="s2">refVal)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">refVal = refVal || </span><span class="s3">this</span><span class="s2">._schemas[ref]</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(refVal </span><span class="s3">instanceof </span><span class="s2">SchemaObject) {</span>
+    <span class="s3">return </span><span class="s2">inlineRef(refVal.schema</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._opts.inlineRefs)</span>
+            <span class="s2">? refVal.schema</span>
+            <span class="s2">: refVal.validate || </span><span class="s3">this</span><span class="s2">._compile(refVal)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">var </span><span class="s2">res = resolveSchema.call(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">root</span><span class="s1">, </span><span class="s2">ref)</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">schema</span><span class="s1">, </span><span class="s2">v</span><span class="s1">, </span><span class="s2">baseId</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(res) {</span>
+    <span class="s2">schema = res.schema</span><span class="s1">;</span>
+    <span class="s2">root = res.root</span><span class="s1">;</span>
+    <span class="s2">baseId = res.baseId</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(schema </span><span class="s3">instanceof </span><span class="s2">SchemaObject) {</span>
+    <span class="s2">v = schema.validate || compile.call(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">schema.schema</span><span class="s1">, </span><span class="s2">root</span><span class="s1">, </span><span class="s2">undefined</span><span class="s1">, </span><span class="s2">baseId)</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else if </span><span class="s2">(schema !== undefined) {</span>
+    <span class="s2">v = inlineRef(schema</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._opts.inlineRefs)</span>
+        <span class="s2">? schema</span>
+        <span class="s2">: compile.call(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">schema</span><span class="s1">, </span><span class="s2">root</span><span class="s1">, </span><span class="s2">undefined</span><span class="s1">, </span><span class="s2">baseId)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return </span><span class="s2">v</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s4">/**</span>
+ <span class="s4">* Resolve schema, its root and baseId</span>
+ <span class="s4">* </span><span class="s5">@this </span><span class="s4">Ajv</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{Object} root root object with properties schema, refVal, refs</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{String} ref  reference to resolve</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{Object} object with properties schema, root, baseId</span>
+ <span class="s4">*/</span>
+<span class="s3">function </span><span class="s2">resolveSchema(root</span><span class="s1">, </span><span class="s2">ref) {</span>
+  <span class="s6">/* jshint validthis: true */</span>
+  <span class="s3">var </span><span class="s2">p = URI.parse(ref)</span>
+    <span class="s1">, </span><span class="s2">refPath = _getFullPath(p)</span>
+    <span class="s1">, </span><span class="s2">baseId = getFullPath(</span><span class="s3">this</span><span class="s2">._getId(root.schema))</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(Object.keys(root.schema).length === </span><span class="s7">0 </span><span class="s2">|| refPath !== baseId) {</span>
+    <span class="s3">var </span><span class="s2">id = normalizeId(refPath)</span><span class="s1">;</span>
+    <span class="s3">var </span><span class="s2">refVal = </span><span class="s3">this</span><span class="s2">._refs[id]</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">refVal == </span><span class="s0">'string'</span><span class="s2">) {</span>
+      <span class="s3">return </span><span class="s2">resolveRecursive.call(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">root</span><span class="s1">, </span><span class="s2">refVal</span><span class="s1">, </span><span class="s2">p)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(refVal </span><span class="s3">instanceof </span><span class="s2">SchemaObject) {</span>
+      <span class="s3">if </span><span class="s2">(!refVal.validate) </span><span class="s3">this</span><span class="s2">._compile(refVal)</span><span class="s1">;</span>
+      <span class="s2">root = refVal</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">refVal = </span><span class="s3">this</span><span class="s2">._schemas[id]</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(refVal </span><span class="s3">instanceof </span><span class="s2">SchemaObject) {</span>
+        <span class="s3">if </span><span class="s2">(!refVal.validate) </span><span class="s3">this</span><span class="s2">._compile(refVal)</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(id == normalizeId(ref))</span>
+          <span class="s3">return </span><span class="s2">{ schema: refVal</span><span class="s1">, </span><span class="s2">root: root</span><span class="s1">, </span><span class="s2">baseId: baseId }</span><span class="s1">;</span>
+        <span class="s2">root = refVal</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s3">return</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+    <span class="s3">if </span><span class="s2">(!root.schema) </span><span class="s3">return</span><span class="s1">;</span>
+    <span class="s2">baseId = getFullPath(</span><span class="s3">this</span><span class="s2">._getId(root.schema))</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">getJsonPointer.call(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">p</span><span class="s1">, </span><span class="s2">baseId</span><span class="s1">, </span><span class="s2">root.schema</span><span class="s1">, </span><span class="s2">root)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s6">/* @this Ajv */</span>
+<span class="s3">function </span><span class="s2">resolveRecursive(root</span><span class="s1">, </span><span class="s2">ref</span><span class="s1">, </span><span class="s2">parsedRef) {</span>
+  <span class="s6">/* jshint validthis: true */</span>
+  <span class="s3">var </span><span class="s2">res = resolveSchema.call(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">root</span><span class="s1">, </span><span class="s2">ref)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(res) {</span>
+    <span class="s3">var </span><span class="s2">schema = res.schema</span><span class="s1">;</span>
+    <span class="s3">var </span><span class="s2">baseId = res.baseId</span><span class="s1">;</span>
+    <span class="s2">root = res.root</span><span class="s1">;</span>
+    <span class="s3">var </span><span class="s2">id = </span><span class="s3">this</span><span class="s2">._getId(schema)</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(id) baseId = resolveUrl(baseId</span><span class="s1">, </span><span class="s2">id)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">getJsonPointer.call(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">parsedRef</span><span class="s1">, </span><span class="s2">baseId</span><span class="s1">, </span><span class="s2">schema</span><span class="s1">, </span><span class="s2">root)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+
+<span class="s3">var </span><span class="s2">PREVENT_SCOPE_CHANGE = util.toHash([</span><span class="s0">'properties'</span><span class="s1">, </span><span class="s0">'patternProperties'</span><span class="s1">, </span><span class="s0">'enum'</span><span class="s1">, </span><span class="s0">'dependencies'</span><span class="s1">, </span><span class="s0">'definitions'</span><span class="s2">])</span><span class="s1">;</span>
+<span class="s6">/* @this Ajv */</span>
+<span class="s3">function </span><span class="s2">getJsonPointer(parsedRef</span><span class="s1">, </span><span class="s2">baseId</span><span class="s1">, </span><span class="s2">schema</span><span class="s1">, </span><span class="s2">root) {</span>
+  <span class="s6">/* jshint validthis: true */</span>
+  <span class="s2">parsedRef.fragment = parsedRef.fragment || </span><span class="s0">''</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(parsedRef.fragment.slice(</span><span class="s7">0</span><span class="s1">,</span><span class="s7">1</span><span class="s2">) != </span><span class="s0">'/'</span><span class="s2">) </span><span class="s3">return</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">parts = parsedRef.fragment.split(</span><span class="s0">'/'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i = </span><span class="s7">1</span><span class="s1">; </span><span class="s2">i &lt; parts.length</span><span class="s1">; </span><span class="s2">i++) {</span>
+    <span class="s3">var </span><span class="s2">part = parts[i]</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(part) {</span>
+      <span class="s2">part = util.unescapeFragment(part)</span><span class="s1">;</span>
+      <span class="s2">schema = schema[part]</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(schema === undefined) </span><span class="s3">break</span><span class="s1">;</span>
+      <span class="s3">var </span><span class="s2">id</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(!PREVENT_SCOPE_CHANGE[part]) {</span>
+        <span class="s2">id = </span><span class="s3">this</span><span class="s2">._getId(schema)</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(id) baseId = resolveUrl(baseId</span><span class="s1">, </span><span class="s2">id)</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(schema.$ref) {</span>
+          <span class="s3">var </span><span class="s2">$ref = resolveUrl(baseId</span><span class="s1">, </span><span class="s2">schema.$ref)</span><span class="s1">;</span>
+          <span class="s3">var </span><span class="s2">res = resolveSchema.call(</span><span class="s3">this</span><span class="s1">, </span><span class="s2">root</span><span class="s1">, </span><span class="s2">$ref)</span><span class="s1">;</span>
+          <span class="s3">if </span><span class="s2">(res) {</span>
+            <span class="s2">schema = res.schema</span><span class="s1">;</span>
+            <span class="s2">root = res.root</span><span class="s1">;</span>
+            <span class="s2">baseId = res.baseId</span><span class="s1">;</span>
+          <span class="s2">}</span>
+        <span class="s2">}</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s3">if </span><span class="s2">(schema !== undefined &amp;&amp; schema !== root.schema)</span>
+    <span class="s3">return </span><span class="s2">{ schema: schema</span><span class="s1">, </span><span class="s2">root: root</span><span class="s1">, </span><span class="s2">baseId: baseId }</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">var </span><span class="s2">SIMPLE_INLINED = util.toHash([</span>
+  <span class="s0">'type'</span><span class="s1">, </span><span class="s0">'format'</span><span class="s1">, </span><span class="s0">'pattern'</span><span class="s1">,</span>
+  <span class="s0">'maxLength'</span><span class="s1">, </span><span class="s0">'minLength'</span><span class="s1">,</span>
+  <span class="s0">'maxProperties'</span><span class="s1">, </span><span class="s0">'minProperties'</span><span class="s1">,</span>
+  <span class="s0">'maxItems'</span><span class="s1">, </span><span class="s0">'minItems'</span><span class="s1">,</span>
+  <span class="s0">'maximum'</span><span class="s1">, </span><span class="s0">'minimum'</span><span class="s1">,</span>
+  <span class="s0">'uniqueItems'</span><span class="s1">, </span><span class="s0">'multipleOf'</span><span class="s1">,</span>
+  <span class="s0">'required'</span><span class="s1">, </span><span class="s0">'enum'</span>
+<span class="s2">])</span><span class="s1">;</span>
+<span class="s3">function </span><span class="s2">inlineRef(schema</span><span class="s1">, </span><span class="s2">limit) {</span>
+  <span class="s3">if </span><span class="s2">(limit === </span><span class="s3">false</span><span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(limit === undefined || limit === </span><span class="s3">true</span><span class="s2">) </span><span class="s3">return </span><span class="s2">checkNoRef(schema)</span><span class="s1">;</span>
+  <span class="s3">else if </span><span class="s2">(limit) </span><span class="s3">return </span><span class="s2">countKeys(schema) &lt;= limit</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">checkNoRef(schema) {</span>
+  <span class="s3">var </span><span class="s2">item</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(Array.isArray(schema)) {</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i=</span><span class="s7">0</span><span class="s1">; </span><span class="s2">i&lt;schema.length</span><span class="s1">; </span><span class="s2">i++) {</span>
+      <span class="s2">item = schema[i]</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">item == </span><span class="s0">'object' </span><span class="s2">&amp;&amp; !checkNoRef(item)) </span><span class="s3">return false</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">key </span><span class="s3">in </span><span class="s2">schema) {</span>
+      <span class="s3">if </span><span class="s2">(key == </span><span class="s0">'$ref'</span><span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+      <span class="s2">item = schema[key]</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">item == </span><span class="s0">'object' </span><span class="s2">&amp;&amp; !checkNoRef(item)) </span><span class="s3">return false</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s3">return true</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">countKeys(schema) {</span>
+  <span class="s3">var </span><span class="s2">count = </span><span class="s7">0</span><span class="s1">, </span><span class="s2">item</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(Array.isArray(schema)) {</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i=</span><span class="s7">0</span><span class="s1">; </span><span class="s2">i&lt;schema.length</span><span class="s1">; </span><span class="s2">i++) {</span>
+      <span class="s2">item = schema[i]</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">item == </span><span class="s0">'object'</span><span class="s2">) count += countKeys(item)</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(count == Infinity) </span><span class="s3">return </span><span class="s2">Infinity</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">key </span><span class="s3">in </span><span class="s2">schema) {</span>
+      <span class="s3">if </span><span class="s2">(key == </span><span class="s0">'$ref'</span><span class="s2">) </span><span class="s3">return </span><span class="s2">Infinity</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(SIMPLE_INLINED[key]) {</span>
+        <span class="s2">count++</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s2">item = schema[key]</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">item == </span><span class="s0">'object'</span><span class="s2">) count += countKeys(item) + </span><span class="s7">1</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(count == Infinity) </span><span class="s3">return </span><span class="s2">Infinity</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">count</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">getFullPath(id</span><span class="s1">, </span><span class="s2">normalize) {</span>
+  <span class="s3">if </span><span class="s2">(normalize !== </span><span class="s3">false</span><span class="s2">) id = normalizeId(id)</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">p = URI.parse(id)</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">_getFullPath(p)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">_getFullPath(p) {</span>
+  <span class="s3">return </span><span class="s2">URI.serialize(p).split(</span><span class="s0">'#'</span><span class="s2">)[</span><span class="s7">0</span><span class="s2">] + </span><span class="s0">'#'</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">var </span><span class="s2">TRAILING_SLASH_HASH = </span><span class="s7">/#\/?$/</span><span class="s1">;</span>
+<span class="s3">function </span><span class="s2">normalizeId(id) {</span>
+  <span class="s3">return </span><span class="s2">id ? id.replace(TRAILING_SLASH_HASH</span><span class="s1">, </span><span class="s0">''</span><span class="s2">) : </span><span class="s0">''</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s3">function </span><span class="s2">resolveUrl(baseId</span><span class="s1">, </span><span class="s2">id) {</span>
+  <span class="s2">id = normalizeId(id)</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">URI.resolve(baseId</span><span class="s1">, </span><span class="s2">id)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+
+<span class="s6">/* @this Ajv */</span>
+<span class="s3">function </span><span class="s2">resolveIds(schema) {</span>
+  <span class="s3">var </span><span class="s2">schemaId = normalizeId(</span><span class="s3">this</span><span class="s2">._getId(schema))</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">baseIds = {</span><span class="s0">''</span><span class="s2">: schemaId}</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">fullPaths = {</span><span class="s0">''</span><span class="s2">: getFullPath(schemaId</span><span class="s1">, </span><span class="s3">false</span><span class="s2">)}</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">localRefs = {}</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">self = </span><span class="s3">this</span><span class="s1">;</span>
+
+  <span class="s2">traverse(schema</span><span class="s1">, </span><span class="s2">{allKeys: </span><span class="s3">true</span><span class="s2">}</span><span class="s1">, </span><span class="s3">function</span><span class="s2">(sch</span><span class="s1">, </span><span class="s2">jsonPtr</span><span class="s1">, </span><span class="s2">rootSchema</span><span class="s1">, </span><span class="s2">parentJsonPtr</span><span class="s1">, </span><span class="s2">parentKeyword</span><span class="s1">, </span><span class="s2">parentSchema</span><span class="s1">, </span><span class="s2">keyIndex) {</span>
+    <span class="s3">if </span><span class="s2">(jsonPtr === </span><span class="s0">''</span><span class="s2">) </span><span class="s3">return</span><span class="s1">;</span>
+    <span class="s3">var </span><span class="s2">id = self._getId(sch)</span><span class="s1">;</span>
+    <span class="s3">var </span><span class="s2">baseId = baseIds[parentJsonPtr]</span><span class="s1">;</span>
+    <span class="s3">var </span><span class="s2">fullPath = fullPaths[parentJsonPtr] + </span><span class="s0">'/' </span><span class="s2">+ parentKeyword</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(keyIndex !== undefined)</span>
+      <span class="s2">fullPath += </span><span class="s0">'/' </span><span class="s2">+ (</span><span class="s3">typeof </span><span class="s2">keyIndex == </span><span class="s0">'number' </span><span class="s2">? keyIndex : util.escapeFragment(keyIndex))</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">id == </span><span class="s0">'string'</span><span class="s2">) {</span>
+      <span class="s2">id = baseId = normalizeId(baseId ? URI.resolve(baseId</span><span class="s1">, </span><span class="s2">id) : id)</span><span class="s1">;</span>
+
+      <span class="s3">var </span><span class="s2">refVal = self._refs[id]</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">refVal == </span><span class="s0">'string'</span><span class="s2">) refVal = self._refs[refVal]</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(refVal &amp;&amp; refVal.schema) {</span>
+        <span class="s3">if </span><span class="s2">(!equal(sch</span><span class="s1">, </span><span class="s2">refVal.schema))</span>
+          <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'id &quot;' </span><span class="s2">+ id + </span><span class="s0">'&quot; resolves to more than one schema'</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else if </span><span class="s2">(id != normalizeId(fullPath)) {</span>
+        <span class="s3">if </span><span class="s2">(id[</span><span class="s7">0</span><span class="s2">] == </span><span class="s0">'#'</span><span class="s2">) {</span>
+          <span class="s3">if </span><span class="s2">(localRefs[id] &amp;&amp; !equal(sch</span><span class="s1">, </span><span class="s2">localRefs[id]))</span>
+            <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'id &quot;' </span><span class="s2">+ id + </span><span class="s0">'&quot; resolves to more than one schema'</span><span class="s2">)</span><span class="s1">;</span>
+          <span class="s2">localRefs[id] = sch</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+          <span class="s2">self._refs[id] = fullPath</span><span class="s1">;</span>
+        <span class="s2">}</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+    <span class="s2">baseIds[jsonPtr] = baseId</span><span class="s1">;</span>
+    <span class="s2">fullPaths[jsonPtr] = fullPath</span><span class="s1">;</span>
+  <span class="s2">})</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">localRefs</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

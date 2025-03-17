@@ -1,0 +1,90 @@
+<html>
+<head>
+<title>if.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+if.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+<span class="s0">{{# def.setupNextLevel }}</span>
+
+
+<span class="s0">{{## def.validateIfClause:_clause:</span>
+  <span class="s0">{{</span>
+    <span class="s0">$it.schema = it.schema['_clause'];</span>
+    <span class="s0">$it.schemaPath = it.schemaPath + '._clause';</span>
+    <span class="s0">$it.errSchemaPath = it.errSchemaPath + '/_clause';</span>
+  <span class="s0">}}</span>
+  <span class="s0">{{# def.insertSubschemaCode }}</span>
+  <span class="s0">{{=$valid}} = {{=$nextValid}};</span>
+  <span class="s0">{{? $thenPresent &amp;&amp; $elsePresent }}</span>
+    <span class="s0">{{ $ifClause = 'ifClause' + $lvl; }}</span>
+    <span class="s0">var {{=$ifClause}} = '_clause';</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">{{ $ifClause = '\'_clause\''; }}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+<span class="s0">{{</span>
+  <span class="s0">var $thenSch = it.schema['then']</span>
+    <span class="s0">, $elseSch = it.schema['else']</span>
+    <span class="s0">, $thenPresent = $thenSch !== undefined &amp;&amp; {{# def.nonEmptySchema:$thenSch }}</span>
+    <span class="s0">, $elsePresent = $elseSch !== undefined &amp;&amp; {{# def.nonEmptySchema:$elseSch }}</span>
+    <span class="s0">, $currentBaseId = $it.baseId;</span>
+<span class="s0">}}</span>
+
+<span class="s0">{{? $thenPresent || $elsePresent }}</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $ifClause;</span>
+    <span class="s0">$it.createErrors = false;</span>
+    <span class="s0">$it.schema = $schema;</span>
+    <span class="s0">$it.schemaPath = $schemaPath;</span>
+    <span class="s0">$it.errSchemaPath = $errSchemaPath;</span>
+  <span class="s0">}}</span>
+  <span class="s0">var {{=$errs}} = errors;</span>
+  <span class="s0">var {{=$valid}} = true;</span>
+
+  <span class="s0">{{# def.setCompositeRule }}</span>
+  <span class="s0">{{# def.insertSubschemaCode }}</span>
+  <span class="s0">{{ $it.createErrors = true; }}</span>
+  <span class="s0">{{# def.resetErrors }}</span>
+  <span class="s0">{{# def.resetCompositeRule }}</span>
+
+  <span class="s0">{{? $thenPresent }}</span>
+    <span class="s0">if ({{=$nextValid}}) {</span>
+      <span class="s0">{{# def.validateIfClause:then }}</span>
+    <span class="s0">}</span>
+    <span class="s0">{{? $elsePresent }}</span>
+      <span class="s0">else {</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">if (!{{=$nextValid}}) {</span>
+  <span class="s0">{{?}}</span>
+
+  <span class="s0">{{? $elsePresent }}</span>
+      <span class="s0">{{# def.validateIfClause:else }}</span>
+    <span class="s0">}</span>
+  <span class="s0">{{?}}</span>
+
+  <span class="s0">if (!{{=$valid}}) {</span>
+    <span class="s0">{{# def.extraError:'if' }}</span>
+  <span class="s0">} </span>
+  <span class="s0">{{? $breakOnError }} else { {{?}}</span>
+<span class="s0">{{??}}</span>
+  <span class="s0">{{? $breakOnError }}</span>
+    <span class="s0">if (true) {</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{?}}</span>
+
+</pre>
+</body>
+</html>

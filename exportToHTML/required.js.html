@@ -1,0 +1,292 @@
+<html>
+<head>
+<title>required.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+required.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+<span class="s2">module.exports = </span><span class="s3">function </span><span class="s2">generate_required(it</span><span class="s1">, </span><span class="s2">$keyword</span><span class="s1">, </span><span class="s2">$ruleType) {</span>
+  <span class="s3">var </span><span class="s2">out = </span><span class="s0">' '</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$lvl = it.level</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$dataLvl = it.dataLevel</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$schema = it.schema[$keyword]</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$schemaPath = it.schemaPath + it.util.getProperty($keyword)</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$errSchemaPath = it.errSchemaPath + </span><span class="s0">'/' </span><span class="s2">+ $keyword</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$breakOnError = !it.opts.allErrors</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$data = </span><span class="s0">'data' </span><span class="s2">+ ($dataLvl || </span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$valid = </span><span class="s0">'valid' </span><span class="s2">+ $lvl</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$isData = it.opts.$data &amp;&amp; $schema &amp;&amp; $schema.$data</span><span class="s1">,</span>
+    <span class="s2">$schemaValue</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">($isData) {</span>
+    <span class="s2">out += </span><span class="s0">' var schema' </span><span class="s2">+ ($lvl) + </span><span class="s0">' = ' </span><span class="s2">+ (it.util.getData($schema.$data</span><span class="s1">, </span><span class="s2">$dataLvl</span><span class="s1">, </span><span class="s2">it.dataPathArr)) + </span><span class="s0">'; '</span><span class="s1">;</span>
+    <span class="s2">$schemaValue = </span><span class="s0">'schema' </span><span class="s2">+ $lvl</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s2">$schemaValue = $schema</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">$vSchema = </span><span class="s0">'schema' </span><span class="s2">+ $lvl</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(!$isData) {</span>
+    <span class="s3">if </span><span class="s2">($schema.length &lt; it.opts.loopRequired &amp;&amp; it.schema.properties &amp;&amp; Object.keys(it.schema.properties).length) {</span>
+      <span class="s3">var </span><span class="s2">$required = []</span><span class="s1">;</span>
+      <span class="s3">var </span><span class="s2">arr1 = $schema</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(arr1) {</span>
+        <span class="s3">var </span><span class="s2">$property</span><span class="s1">, </span><span class="s2">i1 = -</span><span class="s4">1</span><span class="s1">,</span>
+          <span class="s2">l1 = arr1.length - </span><span class="s4">1</span><span class="s1">;</span>
+        <span class="s3">while </span><span class="s2">(i1 &lt; l1) {</span>
+          <span class="s2">$property = arr1[i1 += </span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+          <span class="s3">var </span><span class="s2">$propertySch = it.schema.properties[$property]</span><span class="s1">;</span>
+          <span class="s3">if </span><span class="s2">(!($propertySch &amp;&amp; (it.opts.strictKeywords ? (</span><span class="s3">typeof </span><span class="s2">$propertySch == </span><span class="s0">'object' </span><span class="s2">&amp;&amp; Object.keys($propertySch).length &gt; </span><span class="s4">0</span><span class="s2">) || $propertySch === </span><span class="s3">false </span><span class="s2">: it.util.schemaHasRules($propertySch</span><span class="s1">, </span><span class="s2">it.RULES.all)))) {</span>
+            <span class="s2">$required[$required.length] = $property</span><span class="s1">;</span>
+          <span class="s2">}</span>
+        <span class="s2">}</span>
+      <span class="s2">}</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s3">var </span><span class="s2">$required = $schema</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s3">if </span><span class="s2">($isData || $required.length) {</span>
+    <span class="s3">var </span><span class="s2">$currentErrorPath = it.errorPath</span><span class="s1">,</span>
+      <span class="s2">$loopRequired = $isData || $required.length &gt;= it.opts.loopRequired</span><span class="s1">,</span>
+      <span class="s2">$ownProperties = it.opts.ownProperties</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">($breakOnError) {</span>
+      <span class="s2">out += </span><span class="s0">' var missing' </span><span class="s2">+ ($lvl) + </span><span class="s0">'; '</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">($loopRequired) {</span>
+        <span class="s3">if </span><span class="s2">(!$isData) {</span>
+          <span class="s2">out += </span><span class="s0">' var ' </span><span class="s2">+ ($vSchema) + </span><span class="s0">' = validate.schema' </span><span class="s2">+ ($schemaPath) + </span><span class="s0">'; '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">var </span><span class="s2">$i = </span><span class="s0">'i' </span><span class="s2">+ $lvl</span><span class="s1">,</span>
+          <span class="s2">$propertyPath = </span><span class="s0">'schema' </span><span class="s2">+ $lvl + </span><span class="s0">'[' </span><span class="s2">+ $i + </span><span class="s0">']'</span><span class="s1">,</span>
+          <span class="s2">$missingProperty = </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">+ ' </span><span class="s2">+ $propertyPath + </span><span class="s0">' + </span><span class="s1">\'</span><span class="s0">'</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(it.opts._errorDataPathProperty) {</span>
+          <span class="s2">it.errorPath = it.util.getPathExpr($currentErrorPath</span><span class="s1">, </span><span class="s2">$propertyPath</span><span class="s1">, </span><span class="s2">it.opts.jsonPointers)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s2">out += </span><span class="s0">' var ' </span><span class="s2">+ ($valid) + </span><span class="s0">' = true; '</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">($isData) {</span>
+          <span class="s2">out += </span><span class="s0">' if (schema' </span><span class="s2">+ ($lvl) + </span><span class="s0">' === undefined) ' </span><span class="s2">+ ($valid) + </span><span class="s0">' = true; else if (!Array.isArray(schema' </span><span class="s2">+ ($lvl) + </span><span class="s0">')) ' </span><span class="s2">+ ($valid) + </span><span class="s0">' = false; else {'</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s2">out += </span><span class="s0">' for (var ' </span><span class="s2">+ ($i) + </span><span class="s0">' = 0; ' </span><span class="s2">+ ($i) + </span><span class="s0">' &lt; ' </span><span class="s2">+ ($vSchema) + </span><span class="s0">'.length; ' </span><span class="s2">+ ($i) + </span><span class="s0">'++) { ' </span><span class="s2">+ ($valid) + </span><span class="s0">' = ' </span><span class="s2">+ ($data) + </span><span class="s0">'[' </span><span class="s2">+ ($vSchema) + </span><span class="s0">'[' </span><span class="s2">+ ($i) + </span><span class="s0">']] !== undefined '</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">($ownProperties) {</span>
+          <span class="s2">out += </span><span class="s0">' &amp;&amp;   Object.prototype.hasOwnProperty.call(' </span><span class="s2">+ ($data) + </span><span class="s0">', ' </span><span class="s2">+ ($vSchema) + </span><span class="s0">'[' </span><span class="s2">+ ($i) + </span><span class="s0">']) '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s2">out += </span><span class="s0">'; if (!' </span><span class="s2">+ ($valid) + </span><span class="s0">') break; } '</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">($isData) {</span>
+          <span class="s2">out += </span><span class="s0">'  }  '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s2">out += </span><span class="s0">'  if (!' </span><span class="s2">+ ($valid) + </span><span class="s0">') {   '</span><span class="s1">;</span>
+        <span class="s3">var </span><span class="s2">$$outStack = $$outStack || []</span><span class="s1">;</span>
+        <span class="s2">$$outStack.push(out)</span><span class="s1">;</span>
+        <span class="s2">out = </span><span class="s0">''</span><span class="s1">; </span><span class="s5">/* istanbul ignore else */</span>
+        <span class="s3">if </span><span class="s2">(it.createErrors !== </span><span class="s3">false</span><span class="s2">) {</span>
+          <span class="s2">out += </span><span class="s0">' { keyword: </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ (</span><span class="s0">'required'</span><span class="s2">) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">, dataPath: (dataPath || </span><span class="s1">\'\'</span><span class="s0">) + ' </span><span class="s2">+ (it.errorPath) + </span><span class="s0">' , schemaPath: ' </span><span class="s2">+ (it.util.toQuotedString($errSchemaPath)) + </span><span class="s0">' , params: { missingProperty: </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ ($missingProperty) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">} '</span><span class="s1">;</span>
+          <span class="s3">if </span><span class="s2">(it.opts.messages !== </span><span class="s3">false</span><span class="s2">) {</span>
+            <span class="s2">out += </span><span class="s0">' , message: </span><span class="s1">\'</span><span class="s0">'</span><span class="s1">;</span>
+            <span class="s3">if </span><span class="s2">(it.opts._errorDataPathProperty) {</span>
+              <span class="s2">out += </span><span class="s0">'is a required property'</span><span class="s1">;</span>
+            <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+              <span class="s2">out += </span><span class="s0">'should have required property </span><span class="s1">\\\'</span><span class="s0">' </span><span class="s2">+ ($missingProperty) + </span><span class="s0">'</span><span class="s1">\\\'</span><span class="s0">'</span><span class="s1">;</span>
+            <span class="s2">}</span>
+            <span class="s2">out += </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">'</span><span class="s1">;</span>
+          <span class="s2">}</span>
+          <span class="s3">if </span><span class="s2">(it.opts.verbose) {</span>
+            <span class="s2">out += </span><span class="s0">' , schema: validate.schema' </span><span class="s2">+ ($schemaPath) + </span><span class="s0">' , parentSchema: validate.schema' </span><span class="s2">+ (it.schemaPath) + </span><span class="s0">' , data: ' </span><span class="s2">+ ($data) + </span><span class="s0">' '</span><span class="s1">;</span>
+          <span class="s2">}</span>
+          <span class="s2">out += </span><span class="s0">' } '</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+          <span class="s2">out += </span><span class="s0">' {} '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">var </span><span class="s2">__err = out</span><span class="s1">;</span>
+        <span class="s2">out = $$outStack.pop()</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(!it.compositeRule &amp;&amp; $breakOnError) {</span>
+          <span class="s5">/* istanbul ignore if */</span>
+          <span class="s3">if </span><span class="s2">(it.async) {</span>
+            <span class="s2">out += </span><span class="s0">' throw new ValidationError([' </span><span class="s2">+ (__err) + </span><span class="s0">']); '</span><span class="s1">;</span>
+          <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+            <span class="s2">out += </span><span class="s0">' validate.errors = [' </span><span class="s2">+ (__err) + </span><span class="s0">']; return false; '</span><span class="s1">;</span>
+          <span class="s2">}</span>
+        <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+          <span class="s2">out += </span><span class="s0">' var err = ' </span><span class="s2">+ (__err) + </span><span class="s0">';  if (vErrors === null) vErrors = [err]; else vErrors.push(err); errors++; '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s2">out += </span><span class="s0">' } else { '</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s2">out += </span><span class="s0">' if ( '</span><span class="s1">;</span>
+        <span class="s3">var </span><span class="s2">arr2 = $required</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(arr2) {</span>
+          <span class="s3">var </span><span class="s2">$propertyKey</span><span class="s1">, </span><span class="s2">$i = -</span><span class="s4">1</span><span class="s1">,</span>
+            <span class="s2">l2 = arr2.length - </span><span class="s4">1</span><span class="s1">;</span>
+          <span class="s3">while </span><span class="s2">($i &lt; l2) {</span>
+            <span class="s2">$propertyKey = arr2[$i += </span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+            <span class="s3">if </span><span class="s2">($i) {</span>
+              <span class="s2">out += </span><span class="s0">' || '</span><span class="s1">;</span>
+            <span class="s2">}</span>
+            <span class="s3">var </span><span class="s2">$prop = it.util.getProperty($propertyKey)</span><span class="s1">,</span>
+              <span class="s2">$useData = $data + $prop</span><span class="s1">;</span>
+            <span class="s2">out += </span><span class="s0">' ( ( ' </span><span class="s2">+ ($useData) + </span><span class="s0">' === undefined '</span><span class="s1">;</span>
+            <span class="s3">if </span><span class="s2">($ownProperties) {</span>
+              <span class="s2">out += </span><span class="s0">' || ! Object.prototype.hasOwnProperty.call(' </span><span class="s2">+ ($data) + </span><span class="s0">', </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ (it.util.escapeQuotes($propertyKey)) + </span><span class="s0">'</span><span class="s1">\'</span><span class="s0">) '</span><span class="s1">;</span>
+            <span class="s2">}</span>
+            <span class="s2">out += </span><span class="s0">') &amp;&amp; (missing' </span><span class="s2">+ ($lvl) + </span><span class="s0">' = ' </span><span class="s2">+ (it.util.toQuotedString(it.opts.jsonPointers ? $propertyKey : $prop)) + </span><span class="s0">') ) '</span><span class="s1">;</span>
+          <span class="s2">}</span>
+        <span class="s2">}</span>
+        <span class="s2">out += </span><span class="s0">') {  '</span><span class="s1">;</span>
+        <span class="s3">var </span><span class="s2">$propertyPath = </span><span class="s0">'missing' </span><span class="s2">+ $lvl</span><span class="s1">,</span>
+          <span class="s2">$missingProperty = </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">+ ' </span><span class="s2">+ $propertyPath + </span><span class="s0">' + </span><span class="s1">\'</span><span class="s0">'</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(it.opts._errorDataPathProperty) {</span>
+          <span class="s2">it.errorPath = it.opts.jsonPointers ? it.util.getPathExpr($currentErrorPath</span><span class="s1">, </span><span class="s2">$propertyPath</span><span class="s1">, </span><span class="s3">true</span><span class="s2">) : $currentErrorPath + </span><span class="s0">' + ' </span><span class="s2">+ $propertyPath</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">var </span><span class="s2">$$outStack = $$outStack || []</span><span class="s1">;</span>
+        <span class="s2">$$outStack.push(out)</span><span class="s1">;</span>
+        <span class="s2">out = </span><span class="s0">''</span><span class="s1">; </span><span class="s5">/* istanbul ignore else */</span>
+        <span class="s3">if </span><span class="s2">(it.createErrors !== </span><span class="s3">false</span><span class="s2">) {</span>
+          <span class="s2">out += </span><span class="s0">' { keyword: </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ (</span><span class="s0">'required'</span><span class="s2">) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">, dataPath: (dataPath || </span><span class="s1">\'\'</span><span class="s0">) + ' </span><span class="s2">+ (it.errorPath) + </span><span class="s0">' , schemaPath: ' </span><span class="s2">+ (it.util.toQuotedString($errSchemaPath)) + </span><span class="s0">' , params: { missingProperty: </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ ($missingProperty) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">} '</span><span class="s1">;</span>
+          <span class="s3">if </span><span class="s2">(it.opts.messages !== </span><span class="s3">false</span><span class="s2">) {</span>
+            <span class="s2">out += </span><span class="s0">' , message: </span><span class="s1">\'</span><span class="s0">'</span><span class="s1">;</span>
+            <span class="s3">if </span><span class="s2">(it.opts._errorDataPathProperty) {</span>
+              <span class="s2">out += </span><span class="s0">'is a required property'</span><span class="s1">;</span>
+            <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+              <span class="s2">out += </span><span class="s0">'should have required property </span><span class="s1">\\\'</span><span class="s0">' </span><span class="s2">+ ($missingProperty) + </span><span class="s0">'</span><span class="s1">\\\'</span><span class="s0">'</span><span class="s1">;</span>
+            <span class="s2">}</span>
+            <span class="s2">out += </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">'</span><span class="s1">;</span>
+          <span class="s2">}</span>
+          <span class="s3">if </span><span class="s2">(it.opts.verbose) {</span>
+            <span class="s2">out += </span><span class="s0">' , schema: validate.schema' </span><span class="s2">+ ($schemaPath) + </span><span class="s0">' , parentSchema: validate.schema' </span><span class="s2">+ (it.schemaPath) + </span><span class="s0">' , data: ' </span><span class="s2">+ ($data) + </span><span class="s0">' '</span><span class="s1">;</span>
+          <span class="s2">}</span>
+          <span class="s2">out += </span><span class="s0">' } '</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+          <span class="s2">out += </span><span class="s0">' {} '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">var </span><span class="s2">__err = out</span><span class="s1">;</span>
+        <span class="s2">out = $$outStack.pop()</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(!it.compositeRule &amp;&amp; $breakOnError) {</span>
+          <span class="s5">/* istanbul ignore if */</span>
+          <span class="s3">if </span><span class="s2">(it.async) {</span>
+            <span class="s2">out += </span><span class="s0">' throw new ValidationError([' </span><span class="s2">+ (__err) + </span><span class="s0">']); '</span><span class="s1">;</span>
+          <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+            <span class="s2">out += </span><span class="s0">' validate.errors = [' </span><span class="s2">+ (__err) + </span><span class="s0">']; return false; '</span><span class="s1">;</span>
+          <span class="s2">}</span>
+        <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+          <span class="s2">out += </span><span class="s0">' var err = ' </span><span class="s2">+ (__err) + </span><span class="s0">';  if (vErrors === null) vErrors = [err]; else vErrors.push(err); errors++; '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s2">out += </span><span class="s0">' } else { '</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s3">if </span><span class="s2">($loopRequired) {</span>
+        <span class="s3">if </span><span class="s2">(!$isData) {</span>
+          <span class="s2">out += </span><span class="s0">' var ' </span><span class="s2">+ ($vSchema) + </span><span class="s0">' = validate.schema' </span><span class="s2">+ ($schemaPath) + </span><span class="s0">'; '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">var </span><span class="s2">$i = </span><span class="s0">'i' </span><span class="s2">+ $lvl</span><span class="s1">,</span>
+          <span class="s2">$propertyPath = </span><span class="s0">'schema' </span><span class="s2">+ $lvl + </span><span class="s0">'[' </span><span class="s2">+ $i + </span><span class="s0">']'</span><span class="s1">,</span>
+          <span class="s2">$missingProperty = </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">+ ' </span><span class="s2">+ $propertyPath + </span><span class="s0">' + </span><span class="s1">\'</span><span class="s0">'</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(it.opts._errorDataPathProperty) {</span>
+          <span class="s2">it.errorPath = it.util.getPathExpr($currentErrorPath</span><span class="s1">, </span><span class="s2">$propertyPath</span><span class="s1">, </span><span class="s2">it.opts.jsonPointers)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">if </span><span class="s2">($isData) {</span>
+          <span class="s2">out += </span><span class="s0">' if (' </span><span class="s2">+ ($vSchema) + </span><span class="s0">' &amp;&amp; !Array.isArray(' </span><span class="s2">+ ($vSchema) + </span><span class="s0">')) {  var err =   '</span><span class="s1">; </span><span class="s5">/* istanbul ignore else */</span>
+          <span class="s3">if </span><span class="s2">(it.createErrors !== </span><span class="s3">false</span><span class="s2">) {</span>
+            <span class="s2">out += </span><span class="s0">' { keyword: </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ (</span><span class="s0">'required'</span><span class="s2">) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">, dataPath: (dataPath || </span><span class="s1">\'\'</span><span class="s0">) + ' </span><span class="s2">+ (it.errorPath) + </span><span class="s0">' , schemaPath: ' </span><span class="s2">+ (it.util.toQuotedString($errSchemaPath)) + </span><span class="s0">' , params: { missingProperty: </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ ($missingProperty) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">} '</span><span class="s1">;</span>
+            <span class="s3">if </span><span class="s2">(it.opts.messages !== </span><span class="s3">false</span><span class="s2">) {</span>
+              <span class="s2">out += </span><span class="s0">' , message: </span><span class="s1">\'</span><span class="s0">'</span><span class="s1">;</span>
+              <span class="s3">if </span><span class="s2">(it.opts._errorDataPathProperty) {</span>
+                <span class="s2">out += </span><span class="s0">'is a required property'</span><span class="s1">;</span>
+              <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+                <span class="s2">out += </span><span class="s0">'should have required property </span><span class="s1">\\\'</span><span class="s0">' </span><span class="s2">+ ($missingProperty) + </span><span class="s0">'</span><span class="s1">\\\'</span><span class="s0">'</span><span class="s1">;</span>
+              <span class="s2">}</span>
+              <span class="s2">out += </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">'</span><span class="s1">;</span>
+            <span class="s2">}</span>
+            <span class="s3">if </span><span class="s2">(it.opts.verbose) {</span>
+              <span class="s2">out += </span><span class="s0">' , schema: validate.schema' </span><span class="s2">+ ($schemaPath) + </span><span class="s0">' , parentSchema: validate.schema' </span><span class="s2">+ (it.schemaPath) + </span><span class="s0">' , data: ' </span><span class="s2">+ ($data) + </span><span class="s0">' '</span><span class="s1">;</span>
+            <span class="s2">}</span>
+            <span class="s2">out += </span><span class="s0">' } '</span><span class="s1">;</span>
+          <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+            <span class="s2">out += </span><span class="s0">' {} '</span><span class="s1">;</span>
+          <span class="s2">}</span>
+          <span class="s2">out += </span><span class="s0">';  if (vErrors === null) vErrors = [err]; else vErrors.push(err); errors++; } else if (' </span><span class="s2">+ ($vSchema) + </span><span class="s0">' !== undefined) { '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s2">out += </span><span class="s0">' for (var ' </span><span class="s2">+ ($i) + </span><span class="s0">' = 0; ' </span><span class="s2">+ ($i) + </span><span class="s0">' &lt; ' </span><span class="s2">+ ($vSchema) + </span><span class="s0">'.length; ' </span><span class="s2">+ ($i) + </span><span class="s0">'++) { if (' </span><span class="s2">+ ($data) + </span><span class="s0">'[' </span><span class="s2">+ ($vSchema) + </span><span class="s0">'[' </span><span class="s2">+ ($i) + </span><span class="s0">']] === undefined '</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">($ownProperties) {</span>
+          <span class="s2">out += </span><span class="s0">' || ! Object.prototype.hasOwnProperty.call(' </span><span class="s2">+ ($data) + </span><span class="s0">', ' </span><span class="s2">+ ($vSchema) + </span><span class="s0">'[' </span><span class="s2">+ ($i) + </span><span class="s0">']) '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s2">out += </span><span class="s0">') {  var err =   '</span><span class="s1">; </span><span class="s5">/* istanbul ignore else */</span>
+        <span class="s3">if </span><span class="s2">(it.createErrors !== </span><span class="s3">false</span><span class="s2">) {</span>
+          <span class="s2">out += </span><span class="s0">' { keyword: </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ (</span><span class="s0">'required'</span><span class="s2">) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">, dataPath: (dataPath || </span><span class="s1">\'\'</span><span class="s0">) + ' </span><span class="s2">+ (it.errorPath) + </span><span class="s0">' , schemaPath: ' </span><span class="s2">+ (it.util.toQuotedString($errSchemaPath)) + </span><span class="s0">' , params: { missingProperty: </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ ($missingProperty) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">} '</span><span class="s1">;</span>
+          <span class="s3">if </span><span class="s2">(it.opts.messages !== </span><span class="s3">false</span><span class="s2">) {</span>
+            <span class="s2">out += </span><span class="s0">' , message: </span><span class="s1">\'</span><span class="s0">'</span><span class="s1">;</span>
+            <span class="s3">if </span><span class="s2">(it.opts._errorDataPathProperty) {</span>
+              <span class="s2">out += </span><span class="s0">'is a required property'</span><span class="s1">;</span>
+            <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+              <span class="s2">out += </span><span class="s0">'should have required property </span><span class="s1">\\\'</span><span class="s0">' </span><span class="s2">+ ($missingProperty) + </span><span class="s0">'</span><span class="s1">\\\'</span><span class="s0">'</span><span class="s1">;</span>
+            <span class="s2">}</span>
+            <span class="s2">out += </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">'</span><span class="s1">;</span>
+          <span class="s2">}</span>
+          <span class="s3">if </span><span class="s2">(it.opts.verbose) {</span>
+            <span class="s2">out += </span><span class="s0">' , schema: validate.schema' </span><span class="s2">+ ($schemaPath) + </span><span class="s0">' , parentSchema: validate.schema' </span><span class="s2">+ (it.schemaPath) + </span><span class="s0">' , data: ' </span><span class="s2">+ ($data) + </span><span class="s0">' '</span><span class="s1">;</span>
+          <span class="s2">}</span>
+          <span class="s2">out += </span><span class="s0">' } '</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+          <span class="s2">out += </span><span class="s0">' {} '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s2">out += </span><span class="s0">';  if (vErrors === null) vErrors = [err]; else vErrors.push(err); errors++; } } '</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">($isData) {</span>
+          <span class="s2">out += </span><span class="s0">'  }  '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s3">var </span><span class="s2">arr3 = $required</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(arr3) {</span>
+          <span class="s3">var </span><span class="s2">$propertyKey</span><span class="s1">, </span><span class="s2">i3 = -</span><span class="s4">1</span><span class="s1">,</span>
+            <span class="s2">l3 = arr3.length - </span><span class="s4">1</span><span class="s1">;</span>
+          <span class="s3">while </span><span class="s2">(i3 &lt; l3) {</span>
+            <span class="s2">$propertyKey = arr3[i3 += </span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+            <span class="s3">var </span><span class="s2">$prop = it.util.getProperty($propertyKey)</span><span class="s1">,</span>
+              <span class="s2">$missingProperty = it.util.escapeQuotes($propertyKey)</span><span class="s1">,</span>
+              <span class="s2">$useData = $data + $prop</span><span class="s1">;</span>
+            <span class="s3">if </span><span class="s2">(it.opts._errorDataPathProperty) {</span>
+              <span class="s2">it.errorPath = it.util.getPath($currentErrorPath</span><span class="s1">, </span><span class="s2">$propertyKey</span><span class="s1">, </span><span class="s2">it.opts.jsonPointers)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+            <span class="s2">out += </span><span class="s0">' if ( ' </span><span class="s2">+ ($useData) + </span><span class="s0">' === undefined '</span><span class="s1">;</span>
+            <span class="s3">if </span><span class="s2">($ownProperties) {</span>
+              <span class="s2">out += </span><span class="s0">' || ! Object.prototype.hasOwnProperty.call(' </span><span class="s2">+ ($data) + </span><span class="s0">', </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ (it.util.escapeQuotes($propertyKey)) + </span><span class="s0">'</span><span class="s1">\'</span><span class="s0">) '</span><span class="s1">;</span>
+            <span class="s2">}</span>
+            <span class="s2">out += </span><span class="s0">') {  var err =   '</span><span class="s1">; </span><span class="s5">/* istanbul ignore else */</span>
+            <span class="s3">if </span><span class="s2">(it.createErrors !== </span><span class="s3">false</span><span class="s2">) {</span>
+              <span class="s2">out += </span><span class="s0">' { keyword: </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ (</span><span class="s0">'required'</span><span class="s2">) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">, dataPath: (dataPath || </span><span class="s1">\'\'</span><span class="s0">) + ' </span><span class="s2">+ (it.errorPath) + </span><span class="s0">' , schemaPath: ' </span><span class="s2">+ (it.util.toQuotedString($errSchemaPath)) + </span><span class="s0">' , params: { missingProperty: </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ ($missingProperty) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">} '</span><span class="s1">;</span>
+              <span class="s3">if </span><span class="s2">(it.opts.messages !== </span><span class="s3">false</span><span class="s2">) {</span>
+                <span class="s2">out += </span><span class="s0">' , message: </span><span class="s1">\'</span><span class="s0">'</span><span class="s1">;</span>
+                <span class="s3">if </span><span class="s2">(it.opts._errorDataPathProperty) {</span>
+                  <span class="s2">out += </span><span class="s0">'is a required property'</span><span class="s1">;</span>
+                <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+                  <span class="s2">out += </span><span class="s0">'should have required property </span><span class="s1">\\\'</span><span class="s0">' </span><span class="s2">+ ($missingProperty) + </span><span class="s0">'</span><span class="s1">\\\'</span><span class="s0">'</span><span class="s1">;</span>
+                <span class="s2">}</span>
+                <span class="s2">out += </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">'</span><span class="s1">;</span>
+              <span class="s2">}</span>
+              <span class="s3">if </span><span class="s2">(it.opts.verbose) {</span>
+                <span class="s2">out += </span><span class="s0">' , schema: validate.schema' </span><span class="s2">+ ($schemaPath) + </span><span class="s0">' , parentSchema: validate.schema' </span><span class="s2">+ (it.schemaPath) + </span><span class="s0">' , data: ' </span><span class="s2">+ ($data) + </span><span class="s0">' '</span><span class="s1">;</span>
+              <span class="s2">}</span>
+              <span class="s2">out += </span><span class="s0">' } '</span><span class="s1">;</span>
+            <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+              <span class="s2">out += </span><span class="s0">' {} '</span><span class="s1">;</span>
+            <span class="s2">}</span>
+            <span class="s2">out += </span><span class="s0">';  if (vErrors === null) vErrors = [err]; else vErrors.push(err); errors++; } '</span><span class="s1">;</span>
+          <span class="s2">}</span>
+        <span class="s2">}</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+    <span class="s2">it.errorPath = $currentErrorPath</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else if </span><span class="s2">($breakOnError) {</span>
+    <span class="s2">out += </span><span class="s0">' if (true) {'</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">out</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

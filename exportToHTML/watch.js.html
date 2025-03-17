@@ -1,0 +1,792 @@
+<html>
+<head>
+<title>watch.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #808080;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+watch.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">Object.defineProperty(exports</span><span class="s1">, </span><span class="s0">'__esModule'</span><span class="s1">, </span><span class="s2">{</span>
+  <span class="s2">value: </span><span class="s3">true</span>
+<span class="s2">})</span><span class="s1">;</span>
+<span class="s2">exports.default = watch</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">path() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireWildcard(require(</span><span class="s0">'path'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">path = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_ansiEscapes() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'ansi-escapes'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_ansiEscapes = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_chalk() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'chalk'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_chalk = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_exit() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'exit'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_exit = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_slash() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'slash'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_slash = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestMessageUtil() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-message-util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestMessageUtil = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestUtil() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestUtil = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestValidate() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-validate'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestValidate = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestWatcher() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-watcher'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestWatcher = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">var </span><span class="s2">_FailedTestsCache = _interopRequireDefault(require(</span><span class="s0">'./FailedTestsCache'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_SearchSource = _interopRequireDefault(require(</span><span class="s0">'./SearchSource'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_TestWatcher = _interopRequireDefault(require(</span><span class="s0">'./TestWatcher'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_getChangedFilesPromise = _interopRequireDefault(</span>
+  <span class="s2">require(</span><span class="s0">'./getChangedFilesPromise'</span><span class="s2">)</span>
+<span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_activeFiltersMessage = _interopRequireDefault(</span>
+  <span class="s2">require(</span><span class="s0">'./lib/activeFiltersMessage'</span><span class="s2">)</span>
+<span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_createContext = _interopRequireDefault(require(</span><span class="s0">'./lib/createContext'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_isValidPath = _interopRequireDefault(require(</span><span class="s0">'./lib/isValidPath'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_updateGlobalConfig = _interopRequireDefault(</span>
+  <span class="s2">require(</span><span class="s0">'./lib/updateGlobalConfig'</span><span class="s2">)</span>
+<span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_watchPluginsHelpers = require(</span><span class="s0">'./lib/watchPluginsHelpers'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_FailedTestsInteractive = _interopRequireDefault(</span>
+  <span class="s2">require(</span><span class="s0">'./plugins/FailedTestsInteractive'</span><span class="s2">)</span>
+<span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_Quit = _interopRequireDefault(require(</span><span class="s0">'./plugins/Quit'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_TestNamePattern = _interopRequireDefault(</span>
+  <span class="s2">require(</span><span class="s0">'./plugins/TestNamePattern'</span><span class="s2">)</span>
+<span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_TestPathPattern = _interopRequireDefault(</span>
+  <span class="s2">require(</span><span class="s0">'./plugins/TestPathPattern'</span><span class="s2">)</span>
+<span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_UpdateSnapshots = _interopRequireDefault(</span>
+  <span class="s2">require(</span><span class="s0">'./plugins/UpdateSnapshots'</span><span class="s2">)</span>
+<span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_UpdateSnapshotsInteractive = _interopRequireDefault(</span>
+  <span class="s2">require(</span><span class="s0">'./plugins/UpdateSnapshotsInteractive'</span><span class="s2">)</span>
+<span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_runJest = _interopRequireDefault(require(</span><span class="s0">'./runJest'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireDefault(obj) {</span>
+  <span class="s3">return </span><span class="s2">obj &amp;&amp; obj.__esModule ? obj : {</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_getRequireWildcardCache(nodeInterop) {</span>
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">WeakMap !== </span><span class="s0">'function'</span><span class="s2">) </span><span class="s3">return null</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">cacheBabelInterop = </span><span class="s3">new </span><span class="s2">WeakMap()</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">cacheNodeInterop = </span><span class="s3">new </span><span class="s2">WeakMap()</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">(_getRequireWildcardCache = </span><span class="s3">function </span><span class="s2">(nodeInterop) {</span>
+    <span class="s3">return </span><span class="s2">nodeInterop ? cacheNodeInterop : cacheBabelInterop</span><span class="s1">;</span>
+  <span class="s2">})(nodeInterop)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireWildcard(obj</span><span class="s1">, </span><span class="s2">nodeInterop) {</span>
+  <span class="s3">if </span><span class="s2">(!nodeInterop &amp;&amp; obj &amp;&amp; obj.__esModule) {</span>
+    <span class="s3">return </span><span class="s2">obj</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">if </span><span class="s2">(obj === </span><span class="s3">null </span><span class="s2">|| (</span><span class="s3">typeof </span><span class="s2">obj !== </span><span class="s0">'object' </span><span class="s2">&amp;&amp; </span><span class="s3">typeof </span><span class="s2">obj !== </span><span class="s0">'function'</span><span class="s2">)) {</span>
+    <span class="s3">return </span><span class="s2">{</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">cache = _getRequireWildcardCache(nodeInterop)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(cache &amp;&amp; cache.has(obj)) {</span>
+    <span class="s3">return </span><span class="s2">cache.get(obj)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">newObj = {}</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">hasPropertyDescriptor =</span>
+    <span class="s2">Object.defineProperty &amp;&amp; Object.getOwnPropertyDescriptor</span><span class="s1">;</span>
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">key </span><span class="s3">in </span><span class="s2">obj) {</span>
+    <span class="s3">if </span><span class="s2">(key !== </span><span class="s0">'default' </span><span class="s2">&amp;&amp; Object.prototype.hasOwnProperty.call(obj</span><span class="s1">, </span><span class="s2">key)) {</span>
+      <span class="s3">var </span><span class="s2">desc = hasPropertyDescriptor</span>
+        <span class="s2">? Object.getOwnPropertyDescriptor(obj</span><span class="s1">, </span><span class="s2">key)</span>
+        <span class="s2">: </span><span class="s3">null</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(desc &amp;&amp; (desc.get || desc.set)) {</span>
+        <span class="s2">Object.defineProperty(newObj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">desc)</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s2">newObj[key] = obj[key]</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s2">newObj.default = obj</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(cache) {</span>
+    <span class="s2">cache.set(obj</span><span class="s1">, </span><span class="s2">newObj)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">newObj</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s4">*</span>
+ <span class="s4">* This source code is licensed under the MIT license found in the</span>
+ <span class="s4">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s4">*/</span>
+<span class="s3">const </span><span class="s2">{print: preRunMessagePrint} = _jestUtil().preRunMessage</span><span class="s1">;</span>
+
+<span class="s3">let </span><span class="s2">hasExitListener = </span><span class="s3">false</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">INTERNAL_PLUGINS = [</span>
+  <span class="s2">_FailedTestsInteractive.default</span><span class="s1">,</span>
+  <span class="s2">_TestPathPattern.default</span><span class="s1">,</span>
+  <span class="s2">_TestNamePattern.default</span><span class="s1">,</span>
+  <span class="s2">_UpdateSnapshots.default</span><span class="s1">,</span>
+  <span class="s2">_UpdateSnapshotsInteractive.default</span><span class="s1">,</span>
+  <span class="s2">_Quit.default</span>
+<span class="s2">]</span><span class="s1">;</span>
+<span class="s3">const </span><span class="s2">RESERVED_KEY_PLUGINS = </span><span class="s3">new </span><span class="s2">Map([</span>
+  <span class="s2">[</span>
+    <span class="s2">_UpdateSnapshots.default</span><span class="s1">,</span>
+    <span class="s2">{</span>
+      <span class="s2">forbiddenOverwriteMessage: </span><span class="s0">'updating snapshots'</span><span class="s1">,</span>
+      <span class="s2">key: </span><span class="s0">'u'</span>
+    <span class="s2">}</span>
+  <span class="s2">]</span><span class="s1">,</span>
+  <span class="s2">[</span>
+    <span class="s2">_UpdateSnapshotsInteractive.default</span><span class="s1">,</span>
+    <span class="s2">{</span>
+      <span class="s2">forbiddenOverwriteMessage: </span><span class="s0">'updating snapshots interactively'</span><span class="s1">,</span>
+      <span class="s2">key: </span><span class="s0">'i'</span>
+    <span class="s2">}</span>
+  <span class="s2">]</span><span class="s1">,</span>
+  <span class="s2">[</span>
+    <span class="s2">_Quit.default</span><span class="s1">,</span>
+    <span class="s2">{</span>
+      <span class="s2">forbiddenOverwriteMessage: </span><span class="s0">'quitting watch mode'</span>
+    <span class="s2">}</span>
+  <span class="s2">]</span>
+<span class="s2">])</span><span class="s1">;</span>
+
+<span class="s2">async </span><span class="s3">function </span><span class="s2">watch(</span>
+  <span class="s2">initialGlobalConfig</span><span class="s1">,</span>
+  <span class="s2">contexts</span><span class="s1">,</span>
+  <span class="s2">outputStream</span><span class="s1">,</span>
+  <span class="s2">hasteMapInstances</span><span class="s1">,</span>
+  <span class="s2">stdin = process.stdin</span><span class="s1">,</span>
+  <span class="s2">hooks = </span><span class="s3">new </span><span class="s2">(_jestWatcher().JestHook)()</span><span class="s1">,</span>
+  <span class="s2">filter</span>
+<span class="s2">) {</span>
+  <span class="s5">// `globalConfig` will be constantly updated and reassigned as a result of</span>
+  <span class="s5">// watch mode interactions.</span>
+  <span class="s3">let </span><span class="s2">globalConfig = initialGlobalConfig</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">activePlugin</span><span class="s1">;</span>
+  <span class="s2">globalConfig = (</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_updateGlobalConfig.default)(globalConfig</span><span class="s1">, </span><span class="s2">{</span>
+    <span class="s2">mode: globalConfig.watch ? </span><span class="s0">'watch' </span><span class="s2">: </span><span class="s0">'watchAll'</span><span class="s1">,</span>
+    <span class="s2">passWithNoTests: </span><span class="s3">true</span>
+  <span class="s2">})</span><span class="s1">;</span>
+
+  <span class="s3">const </span><span class="s2">updateConfigAndRun = ({</span>
+    <span class="s2">bail</span><span class="s1">,</span>
+    <span class="s2">changedSince</span><span class="s1">,</span>
+    <span class="s2">collectCoverage</span><span class="s1">,</span>
+    <span class="s2">collectCoverageFrom</span><span class="s1">,</span>
+    <span class="s2">collectCoverageOnlyFrom</span><span class="s1">,</span>
+    <span class="s2">coverageDirectory</span><span class="s1">,</span>
+    <span class="s2">coverageReporters</span><span class="s1">,</span>
+    <span class="s2">findRelatedTests</span><span class="s1">,</span>
+    <span class="s2">mode</span><span class="s1">,</span>
+    <span class="s2">nonFlagArgs</span><span class="s1">,</span>
+    <span class="s2">notify</span><span class="s1">,</span>
+    <span class="s2">notifyMode</span><span class="s1">,</span>
+    <span class="s2">onlyFailures</span><span class="s1">,</span>
+    <span class="s2">reporters</span><span class="s1">,</span>
+    <span class="s2">testNamePattern</span><span class="s1">,</span>
+    <span class="s2">testPathPattern</span><span class="s1">,</span>
+    <span class="s2">updateSnapshot</span><span class="s1">,</span>
+    <span class="s2">verbose</span>
+  <span class="s2">} = {}) =&gt; {</span>
+    <span class="s3">const </span><span class="s2">previousUpdateSnapshot = globalConfig.updateSnapshot</span><span class="s1">;</span>
+    <span class="s2">globalConfig = (</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_updateGlobalConfig.default)(globalConfig</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">bail</span><span class="s1">,</span>
+      <span class="s2">changedSince</span><span class="s1">,</span>
+      <span class="s2">collectCoverage</span><span class="s1">,</span>
+      <span class="s2">collectCoverageFrom</span><span class="s1">,</span>
+      <span class="s2">collectCoverageOnlyFrom</span><span class="s1">,</span>
+      <span class="s2">coverageDirectory</span><span class="s1">,</span>
+      <span class="s2">coverageReporters</span><span class="s1">,</span>
+      <span class="s2">findRelatedTests</span><span class="s1">,</span>
+      <span class="s2">mode</span><span class="s1">,</span>
+      <span class="s2">nonFlagArgs</span><span class="s1">,</span>
+      <span class="s2">notify</span><span class="s1">,</span>
+      <span class="s2">notifyMode</span><span class="s1">,</span>
+      <span class="s2">onlyFailures</span><span class="s1">,</span>
+      <span class="s2">reporters</span><span class="s1">,</span>
+      <span class="s2">testNamePattern</span><span class="s1">,</span>
+      <span class="s2">testPathPattern</span><span class="s1">,</span>
+      <span class="s2">updateSnapshot</span><span class="s1">,</span>
+      <span class="s2">verbose</span>
+    <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">startRun(globalConfig)</span><span class="s1">;</span>
+    <span class="s2">globalConfig = (</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_updateGlobalConfig.default)(globalConfig</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s5">// updateSnapshot is not sticky after a run.</span>
+      <span class="s2">updateSnapshot:</span>
+        <span class="s2">previousUpdateSnapshot === </span><span class="s0">'all' </span><span class="s2">? </span><span class="s0">'none' </span><span class="s2">: previousUpdateSnapshot</span>
+    <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">const </span><span class="s2">watchPlugins = INTERNAL_PLUGINS.map(</span>
+    <span class="s2">InternalPlugin =&gt;</span>
+      <span class="s3">new </span><span class="s2">InternalPlugin({</span>
+        <span class="s2">stdin</span><span class="s1">,</span>
+        <span class="s2">stdout: outputStream</span>
+      <span class="s2">})</span>
+  <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">watchPlugins.forEach(plugin =&gt; {</span>
+    <span class="s3">const </span><span class="s2">hookSubscriber = hooks.getSubscriber()</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(plugin.apply) {</span>
+      <span class="s2">plugin.apply(hookSubscriber)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">})</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(globalConfig.watchPlugins != </span><span class="s3">null</span><span class="s2">) {</span>
+    <span class="s3">const </span><span class="s2">watchPluginKeys = </span><span class="s3">new </span><span class="s2">Map()</span><span class="s1">;</span>
+
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">plugin of watchPlugins) {</span>
+      <span class="s3">const </span><span class="s2">reservedInfo = RESERVED_KEY_PLUGINS.get(plugin.constructor) || {}</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">key = reservedInfo.key || getPluginKey(plugin</span><span class="s1">, </span><span class="s2">globalConfig)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(!key) {</span>
+        <span class="s3">continue</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">const </span><span class="s2">{forbiddenOverwriteMessage} = reservedInfo</span><span class="s1">;</span>
+      <span class="s2">watchPluginKeys.set(key</span><span class="s1">, </span><span class="s2">{</span>
+        <span class="s2">forbiddenOverwriteMessage</span><span class="s1">,</span>
+        <span class="s2">overwritable: forbiddenOverwriteMessage == </span><span class="s3">null</span><span class="s1">,</span>
+        <span class="s2">plugin</span>
+      <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">pluginWithConfig of globalConfig.watchPlugins) {</span>
+      <span class="s3">let </span><span class="s2">plugin</span><span class="s1">;</span>
+
+      <span class="s3">try </span><span class="s2">{</span>
+        <span class="s3">const </span><span class="s2">ThirdPartyPlugin = </span><span class="s3">await </span><span class="s2">(</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_jestUtil().requireOrImportModule)(</span>
+          <span class="s2">pluginWithConfig.path</span>
+        <span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">plugin = </span><span class="s3">new </span><span class="s2">ThirdPartyPlugin({</span>
+          <span class="s2">config: pluginWithConfig.config</span><span class="s1">,</span>
+          <span class="s2">stdin</span><span class="s1">,</span>
+          <span class="s2">stdout: outputStream</span>
+        <span class="s2">})</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">catch </span><span class="s2">(error) {</span>
+        <span class="s3">const </span><span class="s2">errorWithContext = </span><span class="s3">new </span><span class="s2">Error(</span>
+          <span class="s0">`Failed to initialize watch plugin &quot;</span><span class="s2">${_chalk().default.bold(</span>
+            <span class="s2">(</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_slash().default)(</span>
+              <span class="s2">path().relative(process.cwd()</span><span class="s1">, </span><span class="s2">pluginWithConfig.path)</span>
+            <span class="s2">)</span>
+          <span class="s2">)}</span><span class="s0">&quot;:</span><span class="s1">\n\n</span><span class="s2">${(</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_jestMessageUtil().formatExecError)(</span>
+            <span class="s2">error</span><span class="s1">,</span>
+            <span class="s2">contexts[</span><span class="s6">0</span><span class="s2">].config</span><span class="s1">,</span>
+            <span class="s2">{</span>
+              <span class="s2">noStackTrace: </span><span class="s3">false</span>
+            <span class="s2">}</span>
+          <span class="s2">)}</span><span class="s0">`</span>
+        <span class="s2">)</span><span class="s1">;</span>
+        <span class="s3">delete </span><span class="s2">errorWithContext.stack</span><span class="s1">;</span>
+        <span class="s3">return </span><span class="s2">Promise.reject(errorWithContext)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">checkForConflicts(watchPluginKeys</span><span class="s1">, </span><span class="s2">plugin</span><span class="s1">, </span><span class="s2">globalConfig)</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">hookSubscriber = hooks.getSubscriber()</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(plugin.apply) {</span>
+        <span class="s2">plugin.apply(hookSubscriber)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">watchPlugins.push(plugin)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s3">const </span><span class="s2">failedTestsCache = </span><span class="s3">new </span><span class="s2">_FailedTestsCache.default()</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">searchSources = contexts.map(context =&gt; ({</span>
+    <span class="s2">context</span><span class="s1">,</span>
+    <span class="s2">searchSource: </span><span class="s3">new </span><span class="s2">_SearchSource.default(context)</span>
+  <span class="s2">}))</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">isRunning = </span><span class="s3">false</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">testWatcher</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">shouldDisplayWatchUsage = </span><span class="s3">true</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">isWatchUsageDisplayed = </span><span class="s3">false</span><span class="s1">;</span>
+
+  <span class="s3">const </span><span class="s2">emitFileChange = () =&gt; {</span>
+    <span class="s3">if </span><span class="s2">(hooks.isUsed(</span><span class="s0">'onFileChange'</span><span class="s2">)) {</span>
+      <span class="s3">const </span><span class="s2">projects = searchSources.map(({context</span><span class="s1">, </span><span class="s2">searchSource}) =&gt; ({</span>
+        <span class="s2">config: context.config</span><span class="s1">,</span>
+        <span class="s2">testPaths: searchSource.findMatchingTests(</span><span class="s0">''</span><span class="s2">).tests.map(t =&gt; t.path)</span>
+      <span class="s2">}))</span><span class="s1">;</span>
+      <span class="s2">hooks.getEmitter().onFileChange({</span>
+        <span class="s2">projects</span>
+      <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s2">emitFileChange()</span><span class="s1">;</span>
+  <span class="s2">hasteMapInstances.forEach((hasteMapInstance</span><span class="s1">, </span><span class="s2">index) =&gt; {</span>
+    <span class="s2">hasteMapInstance.on(</span><span class="s0">'change'</span><span class="s1">, </span><span class="s2">({eventsQueue</span><span class="s1">, </span><span class="s2">hasteFS</span><span class="s1">, </span><span class="s2">moduleMap}) =&gt; {</span>
+      <span class="s3">const </span><span class="s2">validPaths = eventsQueue.filter(({filePath}) =&gt;</span>
+        <span class="s2">(</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_isValidPath.default)(globalConfig</span><span class="s1">, </span><span class="s2">filePath)</span>
+      <span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(validPaths.length) {</span>
+        <span class="s3">const </span><span class="s2">context = (contexts[index] = (</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_createContext.default)(</span>
+          <span class="s2">contexts[index].config</span><span class="s1">,</span>
+          <span class="s2">{</span>
+            <span class="s2">hasteFS</span><span class="s1">,</span>
+            <span class="s2">moduleMap</span>
+          <span class="s2">}</span>
+        <span class="s2">))</span><span class="s1">;</span>
+        <span class="s2">activePlugin = </span><span class="s3">null</span><span class="s1">;</span>
+        <span class="s2">searchSources = searchSources.slice()</span><span class="s1">;</span>
+        <span class="s2">searchSources[index] = {</span>
+          <span class="s2">context</span><span class="s1">,</span>
+          <span class="s2">searchSource: </span><span class="s3">new </span><span class="s2">_SearchSource.default(context)</span>
+        <span class="s2">}</span><span class="s1">;</span>
+        <span class="s2">emitFileChange()</span><span class="s1">;</span>
+        <span class="s2">startRun(globalConfig)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">})</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(!hasExitListener) {</span>
+    <span class="s2">hasExitListener = </span><span class="s3">true</span><span class="s1">;</span>
+    <span class="s2">process.on(</span><span class="s0">'exit'</span><span class="s1">, </span><span class="s2">() =&gt; {</span>
+      <span class="s3">if </span><span class="s2">(activePlugin) {</span>
+        <span class="s2">outputStream.write(_ansiEscapes().default.cursorDown())</span><span class="s1">;</span>
+        <span class="s2">outputStream.write(_ansiEscapes().default.eraseDown)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">const </span><span class="s2">startRun = globalConfig =&gt; {</span>
+    <span class="s3">if </span><span class="s2">(isRunning) {</span>
+      <span class="s3">return </span><span class="s2">Promise.resolve(</span><span class="s3">null</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s2">testWatcher = </span><span class="s3">new </span><span class="s2">_TestWatcher.default({</span>
+      <span class="s2">isWatchMode: </span><span class="s3">true</span>
+    <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">_jestUtil().isInteractive &amp;&amp;</span>
+      <span class="s2">outputStream.write(_jestUtil().specialChars.CLEAR)</span><span class="s1">;</span>
+    <span class="s2">preRunMessagePrint(outputStream)</span><span class="s1">;</span>
+    <span class="s2">isRunning = </span><span class="s3">true</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">configs = contexts.map(context =&gt; context.config)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">changedFilesPromise = (</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_getChangedFilesPromise.default)(</span>
+      <span class="s2">globalConfig</span><span class="s1">,</span>
+      <span class="s2">configs</span>
+    <span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">(</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_runJest.default)({</span>
+      <span class="s2">changedFilesPromise</span><span class="s1">,</span>
+      <span class="s2">contexts</span><span class="s1">,</span>
+      <span class="s2">failedTestsCache</span><span class="s1">,</span>
+      <span class="s2">filter</span><span class="s1">,</span>
+      <span class="s2">globalConfig</span><span class="s1">,</span>
+      <span class="s2">jestHooks: hooks.getEmitter()</span><span class="s1">,</span>
+      <span class="s2">onComplete: results =&gt; {</span>
+        <span class="s2">isRunning = </span><span class="s3">false</span><span class="s1">;</span>
+        <span class="s2">hooks.getEmitter().onTestRunComplete(results)</span><span class="s1">; </span><span class="s5">// Create a new testWatcher instance so that re-runs won't be blocked.</span>
+        <span class="s5">// The old instance that was passed to Jest will still be interrupted</span>
+        <span class="s5">// and prevent test runs from the previous run.</span>
+
+        <span class="s2">testWatcher = </span><span class="s3">new </span><span class="s2">_TestWatcher.default({</span>
+          <span class="s2">isWatchMode: </span><span class="s3">true</span>
+        <span class="s2">})</span><span class="s1">; </span><span class="s5">// Do not show any Watch Usage related stuff when running in a</span>
+        <span class="s5">// non-interactive environment</span>
+
+        <span class="s3">if </span><span class="s2">(_jestUtil().isInteractive) {</span>
+          <span class="s3">if </span><span class="s2">(shouldDisplayWatchUsage) {</span>
+            <span class="s2">outputStream.write(usage(globalConfig</span><span class="s1">, </span><span class="s2">watchPlugins))</span><span class="s1">;</span>
+            <span class="s2">shouldDisplayWatchUsage = </span><span class="s3">false</span><span class="s1">; </span><span class="s5">// hide Watch Usage after first run</span>
+
+            <span class="s2">isWatchUsageDisplayed = </span><span class="s3">true</span><span class="s1">;</span>
+          <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+            <span class="s2">outputStream.write(showToggleUsagePrompt())</span><span class="s1">;</span>
+            <span class="s2">shouldDisplayWatchUsage = </span><span class="s3">false</span><span class="s1">;</span>
+            <span class="s2">isWatchUsageDisplayed = </span><span class="s3">false</span><span class="s1">;</span>
+          <span class="s2">}</span>
+        <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+          <span class="s2">outputStream.write(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s2">failedTestsCache.setTestResults(results.testResults)</span><span class="s1">;</span>
+      <span class="s2">}</span><span class="s1">,</span>
+      <span class="s2">outputStream</span><span class="s1">,</span>
+      <span class="s2">startRun</span><span class="s1">,</span>
+      <span class="s2">testWatcher</span>
+    <span class="s2">}).catch(</span>
+      <span class="s2">(</span>
+        <span class="s2">error </span><span class="s5">// Errors thrown inside `runJest`, e.g. by resolvers, are caught here for</span>
+      <span class="s2">) =&gt;</span>
+        <span class="s5">// continuous watch mode execution. We need to reprint them to the</span>
+        <span class="s5">// terminal and give just a little bit of extra space so they fit below</span>
+        <span class="s5">// `preRunMessagePrint` message nicely.</span>
+        <span class="s2">console.error(</span>
+          <span class="s0">'</span><span class="s1">\n\n</span><span class="s0">' </span><span class="s2">+</span>
+            <span class="s2">(</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_jestMessageUtil().formatExecError)(error</span><span class="s1">, </span><span class="s2">contexts[</span><span class="s6">0</span><span class="s2">].config</span><span class="s1">, </span><span class="s2">{</span>
+              <span class="s2">noStackTrace: </span><span class="s3">false</span>
+            <span class="s2">})</span>
+        <span class="s2">)</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">const </span><span class="s2">onKeypress = key =&gt; {</span>
+    <span class="s3">if </span><span class="s2">(</span>
+      <span class="s2">key === _jestWatcher().KEYS.CONTROL_C ||</span>
+      <span class="s2">key === _jestWatcher().KEYS.CONTROL_D</span>
+    <span class="s2">) {</span>
+      <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">stdin.setRawMode === </span><span class="s0">'function'</span><span class="s2">) {</span>
+        <span class="s2">stdin.setRawMode(</span><span class="s3">false</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">outputStream.write(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">(</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_exit().default)(</span><span class="s6">0</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s3">return</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(activePlugin != </span><span class="s3">null </span><span class="s2">&amp;&amp; activePlugin.onKey) {</span>
+      <span class="s5">// if a plugin is activate, Jest should let it handle keystrokes, so ignore</span>
+      <span class="s5">// them here</span>
+      <span class="s2">activePlugin.onKey(key)</span><span class="s1">;</span>
+      <span class="s3">return</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s5">// Abort test run</span>
+
+    <span class="s3">const </span><span class="s2">pluginKeys = (</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_watchPluginsHelpers.getSortedUsageRows)(</span>
+      <span class="s2">watchPlugins</span><span class="s1">,</span>
+      <span class="s2">globalConfig</span>
+    <span class="s2">).map(usage =&gt; Number(usage.key).toString(</span><span class="s6">16</span><span class="s2">))</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span>
+      <span class="s2">isRunning &amp;&amp;</span>
+      <span class="s2">testWatcher &amp;&amp;</span>
+      <span class="s2">[</span><span class="s0">'q'</span><span class="s1">, </span><span class="s2">_jestWatcher().KEYS.ENTER</span><span class="s1">, </span><span class="s0">'a'</span><span class="s1">, </span><span class="s0">'o'</span><span class="s1">, </span><span class="s0">'f'</span><span class="s2">]</span>
+        <span class="s2">.concat(pluginKeys)</span>
+        <span class="s2">.includes(key)</span>
+    <span class="s2">) {</span>
+      <span class="s2">testWatcher.setState({</span>
+        <span class="s2">interrupted: </span><span class="s3">true</span>
+      <span class="s2">})</span><span class="s1">;</span>
+      <span class="s3">return</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">const </span><span class="s2">matchingWatchPlugin = (</span><span class="s6">0</span><span class="s1">,</span>
+    <span class="s2">_watchPluginsHelpers.filterInteractivePlugins)(</span>
+      <span class="s2">watchPlugins</span><span class="s1">,</span>
+      <span class="s2">globalConfig</span>
+    <span class="s2">).find(plugin =&gt; getPluginKey(plugin</span><span class="s1">, </span><span class="s2">globalConfig) === key)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(matchingWatchPlugin != </span><span class="s3">null</span><span class="s2">) {</span>
+      <span class="s3">if </span><span class="s2">(isRunning) {</span>
+        <span class="s2">testWatcher.setState({</span>
+          <span class="s2">interrupted: </span><span class="s3">true</span>
+        <span class="s2">})</span><span class="s1">;</span>
+        <span class="s3">return</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s5">// &quot;activate&quot; the plugin, which has jest ignore keystrokes so the plugin</span>
+      <span class="s5">// can handle them</span>
+
+      <span class="s2">activePlugin = matchingWatchPlugin</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(activePlugin.run) {</span>
+        <span class="s2">activePlugin.run(globalConfig</span><span class="s1">, </span><span class="s2">updateConfigAndRun).then(</span>
+          <span class="s2">shouldRerun =&gt; {</span>
+            <span class="s2">activePlugin = </span><span class="s3">null</span><span class="s1">;</span>
+
+            <span class="s3">if </span><span class="s2">(shouldRerun) {</span>
+              <span class="s2">updateConfigAndRun()</span><span class="s1">;</span>
+            <span class="s2">}</span>
+          <span class="s2">}</span><span class="s1">,</span>
+          <span class="s2">() =&gt; {</span>
+            <span class="s2">activePlugin = </span><span class="s3">null</span><span class="s1">;</span>
+            <span class="s2">onCancelPatternPrompt()</span><span class="s1">;</span>
+          <span class="s2">}</span>
+        <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s2">activePlugin = </span><span class="s3">null</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+
+    <span class="s3">switch </span><span class="s2">(key) {</span>
+      <span class="s3">case </span><span class="s2">_jestWatcher().KEYS.ENTER:</span>
+        <span class="s2">startRun(globalConfig)</span><span class="s1">;</span>
+        <span class="s3">break</span><span class="s1">;</span>
+
+      <span class="s3">case </span><span class="s0">'a'</span><span class="s2">:</span>
+        <span class="s2">globalConfig = (</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_updateGlobalConfig.default)(globalConfig</span><span class="s1">, </span><span class="s2">{</span>
+          <span class="s2">mode: </span><span class="s0">'watchAll'</span><span class="s1">,</span>
+          <span class="s2">testNamePattern: </span><span class="s0">''</span><span class="s1">,</span>
+          <span class="s2">testPathPattern: </span><span class="s0">''</span>
+        <span class="s2">})</span><span class="s1">;</span>
+        <span class="s2">startRun(globalConfig)</span><span class="s1">;</span>
+        <span class="s3">break</span><span class="s1">;</span>
+
+      <span class="s3">case </span><span class="s0">'c'</span><span class="s2">:</span>
+        <span class="s2">updateConfigAndRun({</span>
+          <span class="s2">mode: </span><span class="s0">'watch'</span><span class="s1">,</span>
+          <span class="s2">testNamePattern: </span><span class="s0">''</span><span class="s1">,</span>
+          <span class="s2">testPathPattern: </span><span class="s0">''</span>
+        <span class="s2">})</span><span class="s1">;</span>
+        <span class="s3">break</span><span class="s1">;</span>
+
+      <span class="s3">case </span><span class="s0">'f'</span><span class="s2">:</span>
+        <span class="s2">globalConfig = (</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_updateGlobalConfig.default)(globalConfig</span><span class="s1">, </span><span class="s2">{</span>
+          <span class="s2">onlyFailures: !globalConfig.onlyFailures</span>
+        <span class="s2">})</span><span class="s1">;</span>
+        <span class="s2">startRun(globalConfig)</span><span class="s1">;</span>
+        <span class="s3">break</span><span class="s1">;</span>
+
+      <span class="s3">case </span><span class="s0">'o'</span><span class="s2">:</span>
+        <span class="s2">globalConfig = (</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_updateGlobalConfig.default)(globalConfig</span><span class="s1">, </span><span class="s2">{</span>
+          <span class="s2">mode: </span><span class="s0">'watch'</span><span class="s1">,</span>
+          <span class="s2">testNamePattern: </span><span class="s0">''</span><span class="s1">,</span>
+          <span class="s2">testPathPattern: </span><span class="s0">''</span>
+        <span class="s2">})</span><span class="s1">;</span>
+        <span class="s2">startRun(globalConfig)</span><span class="s1">;</span>
+        <span class="s3">break</span><span class="s1">;</span>
+
+      <span class="s3">case </span><span class="s0">'?'</span><span class="s2">:</span>
+        <span class="s3">break</span><span class="s1">;</span>
+
+      <span class="s3">case </span><span class="s0">'w'</span><span class="s2">:</span>
+        <span class="s3">if </span><span class="s2">(!shouldDisplayWatchUsage &amp;&amp; !isWatchUsageDisplayed) {</span>
+          <span class="s2">outputStream.write(_ansiEscapes().default.cursorUp())</span><span class="s1">;</span>
+          <span class="s2">outputStream.write(_ansiEscapes().default.eraseDown)</span><span class="s1">;</span>
+          <span class="s2">outputStream.write(usage(globalConfig</span><span class="s1">, </span><span class="s2">watchPlugins))</span><span class="s1">;</span>
+          <span class="s2">isWatchUsageDisplayed = </span><span class="s3">true</span><span class="s1">;</span>
+          <span class="s2">shouldDisplayWatchUsage = </span><span class="s3">false</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s3">break</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">const </span><span class="s2">onCancelPatternPrompt = () =&gt; {</span>
+    <span class="s2">outputStream.write(_ansiEscapes().default.cursorHide)</span><span class="s1">;</span>
+    <span class="s2">outputStream.write(_jestUtil().specialChars.CLEAR)</span><span class="s1">;</span>
+    <span class="s2">outputStream.write(usage(globalConfig</span><span class="s1">, </span><span class="s2">watchPlugins))</span><span class="s1">;</span>
+    <span class="s2">outputStream.write(_ansiEscapes().default.cursorShow)</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">stdin.setRawMode === </span><span class="s0">'function'</span><span class="s2">) {</span>
+    <span class="s2">stdin.setRawMode(</span><span class="s3">true</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">stdin.resume()</span><span class="s1">;</span>
+    <span class="s2">stdin.setEncoding(</span><span class="s0">'utf8'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">stdin.on(</span><span class="s0">'data'</span><span class="s1">, </span><span class="s2">onKeypress)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">startRun(globalConfig)</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">Promise.resolve()</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">const </span><span class="s2">checkForConflicts = (watchPluginKeys</span><span class="s1">, </span><span class="s2">plugin</span><span class="s1">, </span><span class="s2">globalConfig) =&gt; {</span>
+  <span class="s3">const </span><span class="s2">key = getPluginKey(plugin</span><span class="s1">, </span><span class="s2">globalConfig)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(!key) {</span>
+    <span class="s3">return</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">const </span><span class="s2">conflictor = watchPluginKeys.get(key)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(!conflictor || conflictor.overwritable) {</span>
+    <span class="s2">watchPluginKeys.set(key</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">overwritable: </span><span class="s3">false</span><span class="s1">,</span>
+      <span class="s2">plugin</span>
+    <span class="s2">})</span><span class="s1">;</span>
+    <span class="s3">return</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">let </span><span class="s2">error</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(conflictor.forbiddenOverwriteMessage) {</span>
+    <span class="s2">error = </span><span class="s0">`</span>
+  <span class="s0">Watch plugin </span><span class="s2">${_chalk().default.bold.red(</span>
+    <span class="s2">getPluginIdentifier(plugin)</span>
+  <span class="s2">)} </span><span class="s0">attempted to register key </span><span class="s2">${_chalk().default.bold.red(</span><span class="s0">`&lt;</span><span class="s2">${key}</span><span class="s0">&gt;`</span><span class="s2">)}</span><span class="s0">, 
+  that is reserved internally for </span><span class="s2">${_chalk().default.bold.red(</span>
+    <span class="s2">conflictor.forbiddenOverwriteMessage</span>
+  <span class="s2">)}</span><span class="s0">. 
+  Please change the configuration key for this plugin.`</span><span class="s2">.trim()</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s3">const </span><span class="s2">plugins = [conflictor.plugin</span><span class="s1">, </span><span class="s2">plugin]</span>
+      <span class="s2">.map(p =&gt; _chalk().default.bold.red(getPluginIdentifier(p)))</span>
+      <span class="s2">.join(</span><span class="s0">' and '</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">error = </span><span class="s0">`</span>
+  <span class="s0">Watch plugins </span><span class="s2">${plugins} </span><span class="s0">both attempted to register key </span><span class="s2">${_chalk().default.bold.red(</span>
+      <span class="s0">`&lt;</span><span class="s2">${key}</span><span class="s0">&gt;`</span>
+    <span class="s2">)}</span><span class="s0">. 
+  Please change the key configuration for one of the conflicting plugins to avoid overlap.`</span><span class="s2">.trim()</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">throw new </span><span class="s2">(_jestValidate().ValidationError)(</span>
+    <span class="s0">'Watch plugin configuration error'</span><span class="s1">,</span>
+    <span class="s2">error</span>
+  <span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">getPluginIdentifier = (</span>
+  <span class="s2">plugin </span><span class="s5">// This breaks as `displayName` is not defined as a static, but since</span>
+<span class="s2">) =&gt;</span>
+  <span class="s5">// WatchPlugin is an interface, and it is my understanding interface</span>
+  <span class="s5">// static fields are not definable anymore, no idea how to circumvent</span>
+  <span class="s5">// this :-(</span>
+  <span class="s5">// @ts-expect-error: leave `displayName` be.</span>
+  <span class="s2">plugin.constructor.displayName || plugin.constructor.name</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">getPluginKey = (plugin</span><span class="s1">, </span><span class="s2">globalConfig) =&gt; {</span>
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">plugin.getUsageInfo === </span><span class="s0">'function'</span><span class="s2">) {</span>
+    <span class="s3">return </span><span class="s2">(</span>
+      <span class="s2">plugin.getUsageInfo(globalConfig) || {</span>
+        <span class="s2">key: </span><span class="s3">null</span>
+      <span class="s2">}</span>
+    <span class="s2">).key</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">return null</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">usage = (globalConfig</span><span class="s1">, </span><span class="s2">watchPlugins</span><span class="s1">, </span><span class="s2">delimiter = </span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">) =&gt; {</span>
+  <span class="s3">const </span><span class="s2">messages = [</span>
+    <span class="s2">(</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_activeFiltersMessage.default)(globalConfig)</span><span class="s1">,</span>
+    <span class="s2">globalConfig.testPathPattern || globalConfig.testNamePattern</span>
+      <span class="s2">? _chalk().default.dim(</span><span class="s0">' </span><span class="s1">\u203A </span><span class="s0">Press '</span><span class="s2">) +</span>
+        <span class="s0">'c' </span><span class="s2">+</span>
+        <span class="s2">_chalk().default.dim(</span><span class="s0">' to clear filters.'</span><span class="s2">)</span>
+      <span class="s2">: </span><span class="s3">null</span><span class="s1">,</span>
+    <span class="s0">'</span><span class="s1">\n</span><span class="s0">' </span><span class="s2">+ _chalk().default.bold(</span><span class="s0">'Watch Usage'</span><span class="s2">)</span><span class="s1">,</span>
+    <span class="s2">globalConfig.watch</span>
+      <span class="s2">? _chalk().default.dim(</span><span class="s0">' </span><span class="s1">\u203A </span><span class="s0">Press '</span><span class="s2">) +</span>
+        <span class="s0">'a' </span><span class="s2">+</span>
+        <span class="s2">_chalk().default.dim(</span><span class="s0">' to run all tests.'</span><span class="s2">)</span>
+      <span class="s2">: </span><span class="s3">null</span><span class="s1">,</span>
+    <span class="s2">globalConfig.onlyFailures</span>
+      <span class="s2">? _chalk().default.dim(</span><span class="s0">' </span><span class="s1">\u203A </span><span class="s0">Press '</span><span class="s2">) +</span>
+        <span class="s0">'f' </span><span class="s2">+</span>
+        <span class="s2">_chalk().default.dim(</span><span class="s0">' to quit &quot;only failed tests&quot; mode.'</span><span class="s2">)</span>
+      <span class="s2">: _chalk().default.dim(</span><span class="s0">' </span><span class="s1">\u203A </span><span class="s0">Press '</span><span class="s2">) +</span>
+        <span class="s0">'f' </span><span class="s2">+</span>
+        <span class="s2">_chalk().default.dim(</span><span class="s0">' to run only failed tests.'</span><span class="s2">)</span><span class="s1">,</span>
+    <span class="s2">(globalConfig.watchAll ||</span>
+      <span class="s2">globalConfig.testPathPattern ||</span>
+      <span class="s2">globalConfig.testNamePattern) &amp;&amp;</span>
+    <span class="s2">!globalConfig.noSCM</span>
+      <span class="s2">? _chalk().default.dim(</span><span class="s0">' </span><span class="s1">\u203A </span><span class="s0">Press '</span><span class="s2">) +</span>
+        <span class="s0">'o' </span><span class="s2">+</span>
+        <span class="s2">_chalk().default.dim(</span><span class="s0">' to only run tests related to changed files.'</span><span class="s2">)</span>
+      <span class="s2">: </span><span class="s3">null</span><span class="s1">,</span>
+    <span class="s2">...(</span><span class="s6">0</span><span class="s1">, </span><span class="s2">_watchPluginsHelpers.getSortedUsageRows)(</span>
+      <span class="s2">watchPlugins</span><span class="s1">,</span>
+      <span class="s2">globalConfig</span>
+    <span class="s2">).map(</span>
+      <span class="s2">plugin =&gt;</span>
+        <span class="s2">_chalk().default.dim(</span><span class="s0">' </span><span class="s1">\u203A </span><span class="s0">Press'</span><span class="s2">) +</span>
+        <span class="s0">' ' </span><span class="s2">+</span>
+        <span class="s2">plugin.key +</span>
+        <span class="s0">' ' </span><span class="s2">+</span>
+        <span class="s2">_chalk().default.dim(</span><span class="s0">`to </span><span class="s2">${plugin.prompt}</span><span class="s0">.`</span><span class="s2">)</span>
+    <span class="s2">)</span><span class="s1">,</span>
+    <span class="s2">_chalk().default.dim(</span><span class="s0">' </span><span class="s1">\u203A </span><span class="s0">Press '</span><span class="s2">) +</span>
+      <span class="s0">'Enter' </span><span class="s2">+</span>
+      <span class="s2">_chalk().default.dim(</span><span class="s0">' to trigger a test run.'</span><span class="s2">)</span>
+  <span class="s2">]</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">messages.filter(message =&gt; !!message).join(delimiter) + </span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">showToggleUsagePrompt = () =&gt;</span>
+  <span class="s0">'</span><span class="s1">\n</span><span class="s0">' </span><span class="s2">+</span>
+  <span class="s2">_chalk().default.bold(</span><span class="s0">'Watch Usage: '</span><span class="s2">) +</span>
+  <span class="s2">_chalk().default.dim(</span><span class="s0">'Press '</span><span class="s2">) +</span>
+  <span class="s0">'w' </span><span class="s2">+</span>
+  <span class="s2">_chalk().default.dim(</span><span class="s0">' to show more.'</span><span class="s2">)</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,513 @@
+<html>
+<head>
+<title>util.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8a8a8a; font-style: italic;}
+.s3 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #cc7832;}
+.s6 { color: #6897bb;}
+.s7 { color: #8ea765;}
+.s8 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+util.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* -*- Mode: js; js-indent-level: 2; -*- */</span>
+<span class="s0">/* 
+ * Copyright 2011 Mozilla Foundation and contributors 
+ * Licensed under the New BSD license. See LICENSE or: 
+ * http://opensource.org/licenses/BSD-3-Clause 
+ */</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* This is a helper function for getting values from parameter/options</span>
+ <span class="s2">* objects.</span>
+ <span class="s2">*</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">args The object we are extracting values from</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">name The name of the property we are getting.</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">defaultValue An optional value to return if the property is missing</span>
+ <span class="s2">* from the object. If this is not specified and the property is missing, an</span>
+ <span class="s2">* error will be thrown.</span>
+ <span class="s2">*/</span>
+<span class="s4">function </span><span class="s1">getArg(aArgs</span><span class="s5">, </span><span class="s1">aName</span><span class="s5">, </span><span class="s1">aDefaultValue) {</span>
+  <span class="s4">if </span><span class="s1">(aName </span><span class="s4">in </span><span class="s1">aArgs) {</span>
+    <span class="s4">return </span><span class="s1">aArgs[aName]</span><span class="s5">;</span>
+  <span class="s1">} </span><span class="s4">else if </span><span class="s1">(arguments.length === </span><span class="s6">3</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">aDefaultValue</span><span class="s5">;</span>
+  <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+    <span class="s4">throw new </span><span class="s1">Error(</span><span class="s7">'&quot;' </span><span class="s1">+ aName + </span><span class="s7">'&quot; is a required argument.'</span><span class="s1">)</span><span class="s5">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+<span class="s1">exports.getArg = getArg</span><span class="s5">;</span>
+
+<span class="s4">var </span><span class="s1">urlRegexp = </span><span class="s6">/^(?:([\w+\-.]+):)?\/\/(?:(\w+:\w+)@)?([\w.-]*)(?::(\d+))?(.*)$/</span><span class="s5">;</span>
+<span class="s4">var </span><span class="s1">dataUrlRegexp = </span><span class="s6">/^data:.+\,.+$/</span><span class="s5">;</span>
+
+<span class="s4">function </span><span class="s1">urlParse(aUrl) {</span>
+  <span class="s4">var </span><span class="s1">match = aUrl.match(urlRegexp)</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(!match) {</span>
+    <span class="s4">return null</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s4">return </span><span class="s1">{</span>
+    <span class="s1">scheme: match[</span><span class="s6">1</span><span class="s1">]</span><span class="s5">,</span>
+    <span class="s1">auth: match[</span><span class="s6">2</span><span class="s1">]</span><span class="s5">,</span>
+    <span class="s1">host: match[</span><span class="s6">3</span><span class="s1">]</span><span class="s5">,</span>
+    <span class="s1">port: match[</span><span class="s6">4</span><span class="s1">]</span><span class="s5">,</span>
+    <span class="s1">path: match[</span><span class="s6">5</span><span class="s1">]</span>
+  <span class="s1">}</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s1">exports.urlParse = urlParse</span><span class="s5">;</span>
+
+<span class="s4">function </span><span class="s1">urlGenerate(aParsedUrl) {</span>
+  <span class="s4">var </span><span class="s1">url = </span><span class="s7">''</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(aParsedUrl.scheme) {</span>
+    <span class="s1">url += aParsedUrl.scheme + </span><span class="s7">':'</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s1">url += </span><span class="s7">'//'</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(aParsedUrl.auth) {</span>
+    <span class="s1">url += aParsedUrl.auth + </span><span class="s7">'@'</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s4">if </span><span class="s1">(aParsedUrl.host) {</span>
+    <span class="s1">url += aParsedUrl.host</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s4">if </span><span class="s1">(aParsedUrl.port) {</span>
+    <span class="s1">url += </span><span class="s7">&quot;:&quot; </span><span class="s1">+ aParsedUrl.port</span>
+  <span class="s1">}</span>
+  <span class="s4">if </span><span class="s1">(aParsedUrl.path) {</span>
+    <span class="s1">url += aParsedUrl.path</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s4">return </span><span class="s1">url</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s1">exports.urlGenerate = urlGenerate</span><span class="s5">;</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* Normalizes a path, or the path portion of a URL:</span>
+ <span class="s2">*</span>
+ <span class="s2">* - Replaces consecutive slashes with one slash.</span>
+ <span class="s2">* - Removes unnecessary '.' parts.</span>
+ <span class="s2">* - Removes unnecessary '&lt;dir&gt;/..' parts.</span>
+ <span class="s2">*</span>
+ <span class="s2">* Based on code in the Node.js 'path' core module.</span>
+ <span class="s2">*</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">aPath The path or url to normalize.</span>
+ <span class="s2">*/</span>
+<span class="s4">function </span><span class="s1">normalize(aPath) {</span>
+  <span class="s4">var </span><span class="s1">path = aPath</span><span class="s5">;</span>
+  <span class="s4">var </span><span class="s1">url = urlParse(aPath)</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(url) {</span>
+    <span class="s4">if </span><span class="s1">(!url.path) {</span>
+      <span class="s4">return </span><span class="s1">aPath</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s1">path = url.path</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s4">var </span><span class="s1">isAbsolute = exports.isAbsolute(path)</span><span class="s5">;</span>
+
+  <span class="s4">var </span><span class="s1">parts = path.split(</span><span class="s6">/\/+/</span><span class="s1">)</span><span class="s5">;</span>
+  <span class="s4">for </span><span class="s1">(</span><span class="s4">var </span><span class="s1">part</span><span class="s5">, </span><span class="s1">up = </span><span class="s6">0</span><span class="s5">, </span><span class="s1">i = parts.length - </span><span class="s6">1</span><span class="s5">; </span><span class="s1">i &gt;= </span><span class="s6">0</span><span class="s5">; </span><span class="s1">i--) {</span>
+    <span class="s1">part = parts[i]</span><span class="s5">;</span>
+    <span class="s4">if </span><span class="s1">(part === </span><span class="s7">'.'</span><span class="s1">) {</span>
+      <span class="s1">parts.splice(i</span><span class="s5">, </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s1">} </span><span class="s4">else if </span><span class="s1">(part === </span><span class="s7">'..'</span><span class="s1">) {</span>
+      <span class="s1">up++</span><span class="s5">;</span>
+    <span class="s1">} </span><span class="s4">else if </span><span class="s1">(up &gt; </span><span class="s6">0</span><span class="s1">) {</span>
+      <span class="s4">if </span><span class="s1">(part === </span><span class="s7">''</span><span class="s1">) {</span>
+        <span class="s8">// The first part is blank if the path is absolute. Trying to go</span>
+        <span class="s8">// above the root is a no-op. Therefore we can remove all '..' parts</span>
+        <span class="s8">// directly after the root.</span>
+        <span class="s1">parts.splice(i + </span><span class="s6">1</span><span class="s5">, </span><span class="s1">up)</span><span class="s5">;</span>
+        <span class="s1">up = </span><span class="s6">0</span><span class="s5">;</span>
+      <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+        <span class="s1">parts.splice(i</span><span class="s5">, </span><span class="s6">2</span><span class="s1">)</span><span class="s5">;</span>
+        <span class="s1">up--</span><span class="s5">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s1">path = parts.join(</span><span class="s7">'/'</span><span class="s1">)</span><span class="s5">;</span>
+
+  <span class="s4">if </span><span class="s1">(path === </span><span class="s7">''</span><span class="s1">) {</span>
+    <span class="s1">path = isAbsolute ? </span><span class="s7">'/' </span><span class="s1">: </span><span class="s7">'.'</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">if </span><span class="s1">(url) {</span>
+    <span class="s1">url.path = path</span><span class="s5">;</span>
+    <span class="s4">return </span><span class="s1">urlGenerate(url)</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s4">return </span><span class="s1">path</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s1">exports.normalize = normalize</span><span class="s5">;</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* Joins two paths/URLs.</span>
+ <span class="s2">*</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">aRoot The root path or URL.</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">aPath The path or URL to be joined with the root.</span>
+ <span class="s2">*</span>
+ <span class="s2">* - If aPath is a URL or a data URI, aPath is returned, unless aPath is a</span>
+ <span class="s2">*   scheme-relative URL: Then the scheme of aRoot, if any, is prepended</span>
+ <span class="s2">*   first.</span>
+ <span class="s2">* - Otherwise aPath is a path. If aRoot is a URL, then its path portion</span>
+ <span class="s2">*   is updated with the result and aRoot is returned. Otherwise the result</span>
+ <span class="s2">*   is returned.</span>
+ <span class="s2">*   - If aPath is absolute, the result is aPath.</span>
+ <span class="s2">*   - Otherwise the two paths are joined with a slash.</span>
+ <span class="s2">* - Joining for example 'http://' and 'www.example.com' is also supported.</span>
+ <span class="s2">*/</span>
+<span class="s4">function </span><span class="s1">join(aRoot</span><span class="s5">, </span><span class="s1">aPath) {</span>
+  <span class="s4">if </span><span class="s1">(aRoot === </span><span class="s7">&quot;&quot;</span><span class="s1">) {</span>
+    <span class="s1">aRoot = </span><span class="s7">&quot;.&quot;</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s4">if </span><span class="s1">(aPath === </span><span class="s7">&quot;&quot;</span><span class="s1">) {</span>
+    <span class="s1">aPath = </span><span class="s7">&quot;.&quot;</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s4">var </span><span class="s1">aPathUrl = urlParse(aPath)</span><span class="s5">;</span>
+  <span class="s4">var </span><span class="s1">aRootUrl = urlParse(aRoot)</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(aRootUrl) {</span>
+    <span class="s1">aRoot = aRootUrl.path || </span><span class="s7">'/'</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s8">// `join(foo, '//www.example.org')`</span>
+  <span class="s4">if </span><span class="s1">(aPathUrl &amp;&amp; !aPathUrl.scheme) {</span>
+    <span class="s4">if </span><span class="s1">(aRootUrl) {</span>
+      <span class="s1">aPathUrl.scheme = aRootUrl.scheme</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s4">return </span><span class="s1">urlGenerate(aPathUrl)</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">if </span><span class="s1">(aPathUrl || aPath.match(dataUrlRegexp)) {</span>
+    <span class="s4">return </span><span class="s1">aPath</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s8">// `join('http://', 'www.example.com')`</span>
+  <span class="s4">if </span><span class="s1">(aRootUrl &amp;&amp; !aRootUrl.host &amp;&amp; !aRootUrl.path) {</span>
+    <span class="s1">aRootUrl.host = aPath</span><span class="s5">;</span>
+    <span class="s4">return </span><span class="s1">urlGenerate(aRootUrl)</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">var </span><span class="s1">joined = aPath.charAt(</span><span class="s6">0</span><span class="s1">) === </span><span class="s7">'/'</span>
+    <span class="s1">? aPath</span>
+    <span class="s1">: normalize(aRoot.replace(</span><span class="s6">/\/+$/</span><span class="s5">, </span><span class="s7">''</span><span class="s1">) + </span><span class="s7">'/' </span><span class="s1">+ aPath)</span><span class="s5">;</span>
+
+  <span class="s4">if </span><span class="s1">(aRootUrl) {</span>
+    <span class="s1">aRootUrl.path = joined</span><span class="s5">;</span>
+    <span class="s4">return </span><span class="s1">urlGenerate(aRootUrl)</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s4">return </span><span class="s1">joined</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s1">exports.join = join</span><span class="s5">;</span>
+
+<span class="s1">exports.isAbsolute = </span><span class="s4">function </span><span class="s1">(aPath) {</span>
+  <span class="s4">return </span><span class="s1">aPath.charAt(</span><span class="s6">0</span><span class="s1">) === </span><span class="s7">'/' </span><span class="s1">|| urlRegexp.test(aPath)</span><span class="s5">;</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* Make a path relative to a URL or another path.</span>
+ <span class="s2">*</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">aRoot The root path or URL.</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">aPath The path or URL to be made relative to aRoot.</span>
+ <span class="s2">*/</span>
+<span class="s4">function </span><span class="s1">relative(aRoot</span><span class="s5">, </span><span class="s1">aPath) {</span>
+  <span class="s4">if </span><span class="s1">(aRoot === </span><span class="s7">&quot;&quot;</span><span class="s1">) {</span>
+    <span class="s1">aRoot = </span><span class="s7">&quot;.&quot;</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">aRoot = aRoot.replace(</span><span class="s6">/\/$/</span><span class="s5">, </span><span class="s7">''</span><span class="s1">)</span><span class="s5">;</span>
+
+  <span class="s8">// It is possible for the path to be above the root. In this case, simply</span>
+  <span class="s8">// checking whether the root is a prefix of the path won't work. Instead, we</span>
+  <span class="s8">// need to remove components from the root one by one, until either we find</span>
+  <span class="s8">// a prefix that fits, or we run out of components to remove.</span>
+  <span class="s4">var </span><span class="s1">level = </span><span class="s6">0</span><span class="s5">;</span>
+  <span class="s4">while </span><span class="s1">(aPath.indexOf(aRoot + </span><span class="s7">'/'</span><span class="s1">) !== </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s4">var </span><span class="s1">index = aRoot.lastIndexOf(</span><span class="s7">&quot;/&quot;</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s4">if </span><span class="s1">(index &lt; </span><span class="s6">0</span><span class="s1">) {</span>
+      <span class="s4">return </span><span class="s1">aPath</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s8">// If the only part of the root that is left is the scheme (i.e. http://,</span>
+    <span class="s8">// file:///, etc.), one or more slashes (/), or simply nothing at all, we</span>
+    <span class="s8">// have exhausted all components, so the path is not relative to the root.</span>
+    <span class="s1">aRoot = aRoot.slice(</span><span class="s6">0</span><span class="s5">, </span><span class="s1">index)</span><span class="s5">;</span>
+    <span class="s4">if </span><span class="s1">(aRoot.match(</span><span class="s6">/^([^\/]+:\/)?\/*$/</span><span class="s1">)) {</span>
+      <span class="s4">return </span><span class="s1">aPath</span><span class="s5">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">++level</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s8">// Make sure we add a &quot;../&quot; for each component we removed from the root.</span>
+  <span class="s4">return </span><span class="s1">Array(level + </span><span class="s6">1</span><span class="s1">).join(</span><span class="s7">&quot;../&quot;</span><span class="s1">) + aPath.substr(aRoot.length + </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s1">exports.relative = relative</span><span class="s5">;</span>
+
+<span class="s4">var </span><span class="s1">supportsNullProto = (</span><span class="s4">function </span><span class="s1">() {</span>
+  <span class="s4">var </span><span class="s1">obj = Object.create(</span><span class="s4">null</span><span class="s1">)</span><span class="s5">;</span>
+  <span class="s4">return </span><span class="s1">!(</span><span class="s7">'__proto__' </span><span class="s4">in </span><span class="s1">obj)</span><span class="s5">;</span>
+<span class="s1">}())</span><span class="s5">;</span>
+
+<span class="s4">function </span><span class="s1">identity (s) {</span>
+  <span class="s4">return </span><span class="s1">s</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* Because behavior goes wacky when you set `__proto__` on objects, we</span>
+ <span class="s2">* have to prefix all the strings in our set with an arbitrary character.</span>
+ <span class="s2">*</span>
+ <span class="s2">* See https://github.com/mozilla/source-map/pull/31 and</span>
+ <span class="s2">* https://github.com/mozilla/source-map/issues/30</span>
+ <span class="s2">*</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">String aStr</span>
+ <span class="s2">*/</span>
+<span class="s4">function </span><span class="s1">toSetString(aStr) {</span>
+  <span class="s4">if </span><span class="s1">(isProtoString(aStr)) {</span>
+    <span class="s4">return </span><span class="s7">'$' </span><span class="s1">+ aStr</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">return </span><span class="s1">aStr</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s1">exports.toSetString = supportsNullProto ? identity : toSetString</span><span class="s5">;</span>
+
+<span class="s4">function </span><span class="s1">fromSetString(aStr) {</span>
+  <span class="s4">if </span><span class="s1">(isProtoString(aStr)) {</span>
+    <span class="s4">return </span><span class="s1">aStr.slice(</span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">return </span><span class="s1">aStr</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s1">exports.fromSetString = supportsNullProto ? identity : fromSetString</span><span class="s5">;</span>
+
+<span class="s4">function </span><span class="s1">isProtoString(s) {</span>
+  <span class="s4">if </span><span class="s1">(!s) {</span>
+    <span class="s4">return false</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">var </span><span class="s1">length = s.length</span><span class="s5">;</span>
+
+  <span class="s4">if </span><span class="s1">(length &lt; </span><span class="s6">9 </span><span class="s0">/* &quot;__proto__&quot;.length */</span><span class="s1">) {</span>
+    <span class="s4">return false</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">if </span><span class="s1">(s.charCodeAt(length - </span><span class="s6">1</span><span class="s1">) !== </span><span class="s6">95  </span><span class="s0">/* '_' */ </span><span class="s1">||</span>
+      <span class="s1">s.charCodeAt(length - </span><span class="s6">2</span><span class="s1">) !== </span><span class="s6">95  </span><span class="s0">/* '_' */ </span><span class="s1">||</span>
+      <span class="s1">s.charCodeAt(length - </span><span class="s6">3</span><span class="s1">) !== </span><span class="s6">111 </span><span class="s0">/* 'o' */ </span><span class="s1">||</span>
+      <span class="s1">s.charCodeAt(length - </span><span class="s6">4</span><span class="s1">) !== </span><span class="s6">116 </span><span class="s0">/* 't' */ </span><span class="s1">||</span>
+      <span class="s1">s.charCodeAt(length - </span><span class="s6">5</span><span class="s1">) !== </span><span class="s6">111 </span><span class="s0">/* 'o' */ </span><span class="s1">||</span>
+      <span class="s1">s.charCodeAt(length - </span><span class="s6">6</span><span class="s1">) !== </span><span class="s6">114 </span><span class="s0">/* 'r' */ </span><span class="s1">||</span>
+      <span class="s1">s.charCodeAt(length - </span><span class="s6">7</span><span class="s1">) !== </span><span class="s6">112 </span><span class="s0">/* 'p' */ </span><span class="s1">||</span>
+      <span class="s1">s.charCodeAt(length - </span><span class="s6">8</span><span class="s1">) !== </span><span class="s6">95  </span><span class="s0">/* '_' */ </span><span class="s1">||</span>
+      <span class="s1">s.charCodeAt(length - </span><span class="s6">9</span><span class="s1">) !== </span><span class="s6">95  </span><span class="s0">/* '_' */</span><span class="s1">) {</span>
+    <span class="s4">return false</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">for </span><span class="s1">(</span><span class="s4">var </span><span class="s1">i = length - </span><span class="s6">10</span><span class="s5">; </span><span class="s1">i &gt;= </span><span class="s6">0</span><span class="s5">; </span><span class="s1">i--) {</span>
+    <span class="s4">if </span><span class="s1">(s.charCodeAt(i) !== </span><span class="s6">36 </span><span class="s0">/* '$' */</span><span class="s1">) {</span>
+      <span class="s4">return false</span><span class="s5">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s4">return true</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* Comparator between two mappings where the original positions are compared.</span>
+ <span class="s2">*</span>
+ <span class="s2">* Optionally pass in `true` as `onlyCompareGenerated` to consider two</span>
+ <span class="s2">* mappings with the same original source/line/column, but different generated</span>
+ <span class="s2">* line and column the same. Useful when searching for a mapping with a</span>
+ <span class="s2">* stubbed out mapping.</span>
+ <span class="s2">*/</span>
+<span class="s4">function </span><span class="s1">compareByOriginalPositions(mappingA</span><span class="s5">, </span><span class="s1">mappingB</span><span class="s5">, </span><span class="s1">onlyCompareOriginal) {</span>
+  <span class="s4">var </span><span class="s1">cmp = strcmp(mappingA.source</span><span class="s5">, </span><span class="s1">mappingB.source)</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">cmp = mappingA.originalLine - mappingB.originalLine</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">cmp = mappingA.originalColumn - mappingB.originalColumn</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0 </span><span class="s1">|| onlyCompareOriginal) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">cmp = mappingA.generatedColumn - mappingB.generatedColumn</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">cmp = mappingA.generatedLine - mappingB.generatedLine</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">return </span><span class="s1">strcmp(mappingA.name</span><span class="s5">, </span><span class="s1">mappingB.name)</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s1">exports.compareByOriginalPositions = compareByOriginalPositions</span><span class="s5">;</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* Comparator between two mappings with deflated source and name indices where</span>
+ <span class="s2">* the generated positions are compared.</span>
+ <span class="s2">*</span>
+ <span class="s2">* Optionally pass in `true` as `onlyCompareGenerated` to consider two</span>
+ <span class="s2">* mappings with the same generated line and column, but different</span>
+ <span class="s2">* source/name/original line and column the same. Useful when searching for a</span>
+ <span class="s2">* mapping with a stubbed out mapping.</span>
+ <span class="s2">*/</span>
+<span class="s4">function </span><span class="s1">compareByGeneratedPositionsDeflated(mappingA</span><span class="s5">, </span><span class="s1">mappingB</span><span class="s5">, </span><span class="s1">onlyCompareGenerated) {</span>
+  <span class="s4">var </span><span class="s1">cmp = mappingA.generatedLine - mappingB.generatedLine</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">cmp = mappingA.generatedColumn - mappingB.generatedColumn</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0 </span><span class="s1">|| onlyCompareGenerated) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">cmp = strcmp(mappingA.source</span><span class="s5">, </span><span class="s1">mappingB.source)</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">cmp = mappingA.originalLine - mappingB.originalLine</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">cmp = mappingA.originalColumn - mappingB.originalColumn</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">return </span><span class="s1">strcmp(mappingA.name</span><span class="s5">, </span><span class="s1">mappingB.name)</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s1">exports.compareByGeneratedPositionsDeflated = compareByGeneratedPositionsDeflated</span><span class="s5">;</span>
+
+<span class="s4">function </span><span class="s1">strcmp(aStr1</span><span class="s5">, </span><span class="s1">aStr2) {</span>
+  <span class="s4">if </span><span class="s1">(aStr1 === aStr2) {</span>
+    <span class="s4">return </span><span class="s6">0</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">if </span><span class="s1">(aStr1 === </span><span class="s4">null</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s6">1</span><span class="s5">; </span><span class="s8">// aStr2 !== null</span>
+  <span class="s1">}</span>
+
+  <span class="s4">if </span><span class="s1">(aStr2 === </span><span class="s4">null</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">-</span><span class="s6">1</span><span class="s5">; </span><span class="s8">// aStr1 !== null</span>
+  <span class="s1">}</span>
+
+  <span class="s4">if </span><span class="s1">(aStr1 &gt; aStr2) {</span>
+    <span class="s4">return </span><span class="s6">1</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">return </span><span class="s1">-</span><span class="s6">1</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* Comparator between two mappings with inflated source and name strings where</span>
+ <span class="s2">* the generated positions are compared.</span>
+ <span class="s2">*/</span>
+<span class="s4">function </span><span class="s1">compareByGeneratedPositionsInflated(mappingA</span><span class="s5">, </span><span class="s1">mappingB) {</span>
+  <span class="s4">var </span><span class="s1">cmp = mappingA.generatedLine - mappingB.generatedLine</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">cmp = mappingA.generatedColumn - mappingB.generatedColumn</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">cmp = strcmp(mappingA.source</span><span class="s5">, </span><span class="s1">mappingB.source)</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">cmp = mappingA.originalLine - mappingB.originalLine</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">cmp = mappingA.originalColumn - mappingB.originalColumn</span><span class="s5">;</span>
+  <span class="s4">if </span><span class="s1">(cmp !== </span><span class="s6">0</span><span class="s1">) {</span>
+    <span class="s4">return </span><span class="s1">cmp</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">return </span><span class="s1">strcmp(mappingA.name</span><span class="s5">, </span><span class="s1">mappingB.name)</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s1">exports.compareByGeneratedPositionsInflated = compareByGeneratedPositionsInflated</span><span class="s5">;</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* Strip any JSON XSSI avoidance prefix from the string (as documented</span>
+ <span class="s2">* in the source maps specification), and then parse the string as</span>
+ <span class="s2">* JSON.</span>
+ <span class="s2">*/</span>
+<span class="s4">function </span><span class="s1">parseSourceMapInput(str) {</span>
+  <span class="s4">return </span><span class="s1">JSON.parse(str.replace(</span><span class="s6">/^\)]}'[^\n]*\n/</span><span class="s5">, </span><span class="s7">''</span><span class="s1">))</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s1">exports.parseSourceMapInput = parseSourceMapInput</span><span class="s5">;</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* Compute the URL of a source given the the source root, the source's</span>
+ <span class="s2">* URL, and the source map's URL.</span>
+ <span class="s2">*/</span>
+<span class="s4">function </span><span class="s1">computeSourceURL(sourceRoot</span><span class="s5">, </span><span class="s1">sourceURL</span><span class="s5">, </span><span class="s1">sourceMapURL) {</span>
+  <span class="s1">sourceURL = sourceURL || </span><span class="s7">''</span><span class="s5">;</span>
+
+  <span class="s4">if </span><span class="s1">(sourceRoot) {</span>
+    <span class="s8">// This follows what Chrome does.</span>
+    <span class="s4">if </span><span class="s1">(sourceRoot[sourceRoot.length - </span><span class="s6">1</span><span class="s1">] !== </span><span class="s7">'/' </span><span class="s1">&amp;&amp; sourceURL[</span><span class="s6">0</span><span class="s1">] !== </span><span class="s7">'/'</span><span class="s1">) {</span>
+      <span class="s1">sourceRoot += </span><span class="s7">'/'</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s8">// The spec says:</span>
+    <span class="s8">//   Line 4: An optional source root, useful for relocating source</span>
+    <span class="s8">//   files on a server or removing repeated values in the</span>
+    <span class="s8">//   “sources” entry.  This value is prepended to the individual</span>
+    <span class="s8">//   entries in the “source” field.</span>
+    <span class="s1">sourceURL = sourceRoot + sourceURL</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s8">// Historically, SourceMapConsumer did not take the sourceMapURL as</span>
+  <span class="s8">// a parameter.  This mode is still somewhat supported, which is why</span>
+  <span class="s8">// this code block is conditional.  However, it's preferable to pass</span>
+  <span class="s8">// the source map URL to SourceMapConsumer, so that this function</span>
+  <span class="s8">// can implement the source URL resolution algorithm as outlined in</span>
+  <span class="s8">// the spec.  This block is basically the equivalent of:</span>
+  <span class="s8">//    new URL(sourceURL, sourceMapURL).toString()</span>
+  <span class="s8">// ... except it avoids using URL, which wasn't available in the</span>
+  <span class="s8">// older releases of node still supported by this library.</span>
+  <span class="s8">//</span>
+  <span class="s8">// The spec says:</span>
+  <span class="s8">//   If the sources are not absolute URLs after prepending of the</span>
+  <span class="s8">//   “sourceRoot”, the sources are resolved relative to the</span>
+  <span class="s8">//   SourceMap (like resolving script src in a html document).</span>
+  <span class="s4">if </span><span class="s1">(sourceMapURL) {</span>
+    <span class="s4">var </span><span class="s1">parsed = urlParse(sourceMapURL)</span><span class="s5">;</span>
+    <span class="s4">if </span><span class="s1">(!parsed) {</span>
+      <span class="s4">throw new </span><span class="s1">Error(</span><span class="s7">&quot;sourceMapURL could not be parsed&quot;</span><span class="s1">)</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s4">if </span><span class="s1">(parsed.path) {</span>
+      <span class="s8">// Strip the last path component, but keep the &quot;/&quot;.</span>
+      <span class="s4">var </span><span class="s1">index = parsed.path.lastIndexOf(</span><span class="s7">'/'</span><span class="s1">)</span><span class="s5">;</span>
+      <span class="s4">if </span><span class="s1">(index &gt;= </span><span class="s6">0</span><span class="s1">) {</span>
+        <span class="s1">parsed.path = parsed.path.substring(</span><span class="s6">0</span><span class="s5">, </span><span class="s1">index + </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s1">sourceURL = join(urlGenerate(parsed)</span><span class="s5">, </span><span class="s1">sourceURL)</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s4">return </span><span class="s1">normalize(sourceURL)</span><span class="s5">;</span>
+<span class="s1">}</span>
+<span class="s1">exports.computeSourceURL = computeSourceURL</span><span class="s5">;</span>
+</pre>
+</body>
+</html>

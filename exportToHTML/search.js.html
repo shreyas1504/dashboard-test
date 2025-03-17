@@ -1,0 +1,86 @@
+<html>
+<head>
+<title>search.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+search.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">List = require(</span><span class="s2">'../common/List'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">getFirstMatchNode(matchNode) {</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s2">'node' </span><span class="s0">in </span><span class="s1">matchNode) {</span>
+        <span class="s0">return </span><span class="s1">matchNode.node</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">getFirstMatchNode(matchNode.match[</span><span class="s4">0</span><span class="s1">])</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">getLastMatchNode(matchNode) {</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s2">'node' </span><span class="s0">in </span><span class="s1">matchNode) {</span>
+        <span class="s0">return </span><span class="s1">matchNode.node</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">getLastMatchNode(matchNode.match[matchNode.match.length - </span><span class="s4">1</span><span class="s1">])</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">matchFragments(lexer</span><span class="s3">, </span><span class="s1">ast</span><span class="s3">, </span><span class="s1">match</span><span class="s3">, </span><span class="s1">type</span><span class="s3">, </span><span class="s1">name) {</span>
+    <span class="s0">function </span><span class="s1">findFragments(matchNode) {</span>
+        <span class="s0">if </span><span class="s1">(matchNode.syntax !== </span><span class="s0">null </span><span class="s1">&amp;&amp;</span>
+            <span class="s1">matchNode.syntax.type === type &amp;&amp;</span>
+            <span class="s1">matchNode.syntax.name === name) {</span>
+            <span class="s0">var </span><span class="s1">start = getFirstMatchNode(matchNode)</span><span class="s3">;</span>
+            <span class="s0">var </span><span class="s1">end = getLastMatchNode(matchNode)</span><span class="s3">;</span>
+
+            <span class="s1">lexer.syntax.walk(ast</span><span class="s3">, </span><span class="s0">function</span><span class="s1">(node</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">list) {</span>
+                <span class="s0">if </span><span class="s1">(node === start) {</span>
+                    <span class="s0">var </span><span class="s1">nodes = </span><span class="s0">new </span><span class="s1">List()</span><span class="s3">;</span>
+
+                    <span class="s0">do </span><span class="s1">{</span>
+                        <span class="s1">nodes.appendData(item.data)</span><span class="s3">;</span>
+
+                        <span class="s0">if </span><span class="s1">(item.data === end) {</span>
+                            <span class="s0">break</span><span class="s3">;</span>
+                        <span class="s1">}</span>
+
+                        <span class="s1">item = item.next</span><span class="s3">;</span>
+                    <span class="s1">} </span><span class="s0">while </span><span class="s1">(item !== </span><span class="s0">null</span><span class="s1">)</span><span class="s3">;</span>
+
+                    <span class="s1">fragments.push({</span>
+                        <span class="s1">parent: list</span><span class="s3">,</span>
+                        <span class="s1">nodes: nodes</span>
+                    <span class="s1">})</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s1">})</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(Array.isArray(matchNode.match)) {</span>
+            <span class="s1">matchNode.match.forEach(findFragments)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">fragments = []</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(match.matched !== </span><span class="s0">null</span><span class="s1">) {</span>
+        <span class="s1">findFragments(match.matched)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">fragments</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">matchFragments: matchFragments</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

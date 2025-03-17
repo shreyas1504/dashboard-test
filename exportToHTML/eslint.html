@@ -1,0 +1,198 @@
+<html>
+<head>
+<title>eslint</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8a8a8a; font-style: italic;}
+.s3 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s4 { color: #8a8a8a;}
+.s5 { color: #8ea765;}
+.s6 { color: #cc7832;}
+.s7 { color: #cc7832; font-weight: bold;}
+.s8 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+eslint</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* </span><span class="s3">@fileoverview </span><span class="s2">Main CLI that is run via the eslint command.</span>
+ <span class="s2">* </span><span class="s3">@author </span><span class="s2">Nicholas C. Zakas</span>
+ <span class="s2">*/</span>
+
+<span class="s4">/* eslint no-console:off -- CLI */</span>
+
+<span class="s5">&quot;use strict&quot;</span><span class="s6">;</span>
+
+<span class="s0">// must do this initialization *before* other requires in order to work</span>
+<span class="s7">if </span><span class="s1">(process.argv.includes(</span><span class="s5">&quot;--debug&quot;</span><span class="s1">)) {</span>
+    <span class="s1">require(</span><span class="s5">&quot;debug&quot;</span><span class="s1">).enable(</span><span class="s5">&quot;eslint:*,-eslint:code-path,eslintrc:*&quot;</span><span class="s1">)</span><span class="s6">;</span>
+<span class="s1">}</span>
+
+<span class="s0">//------------------------------------------------------------------------------</span>
+<span class="s0">// Helpers</span>
+<span class="s0">//------------------------------------------------------------------------------</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* Read data from stdin til the end.</span>
+ <span class="s2">*</span>
+ <span class="s2">* Note: See</span>
+ <span class="s2">* - https://github.com/nodejs/node/blob/master/doc/api/process.md#processstdin</span>
+ <span class="s2">* - https://github.com/nodejs/node/blob/master/doc/api/process.md#a-note-on-process-io</span>
+ <span class="s2">* - https://lists.gnu.org/archive/html/bug-gnu-emacs/2016-01/msg00419.html</span>
+ <span class="s2">* - https://github.com/nodejs/node/issues/7439 (historical)</span>
+ <span class="s2">*</span>
+ <span class="s2">* On Windows using `fs.readFileSync(STDIN_FILE_DESCRIPTOR, &quot;utf8&quot;)` seems</span>
+ <span class="s2">* to read 4096 bytes before blocking and never drains to read further data.</span>
+ <span class="s2">*</span>
+ <span class="s2">* The investigation on the Emacs thread indicates:</span>
+ <span class="s2">*</span>
+ <span class="s2">* &gt; Emacs on MS-Windows uses pipes to communicate with subprocesses; a</span>
+ <span class="s2">* &gt; pipe on Windows has a 4K buffer. So as soon as Emacs writes more than</span>
+ <span class="s2">* &gt; 4096 bytes to the pipe, the pipe becomes full, and Emacs then waits for</span>
+ <span class="s2">* &gt; the subprocess to read its end of the pipe, at which time Emacs will</span>
+ <span class="s2">* &gt; write the rest of the stuff.</span>
+ <span class="s2">* </span><span class="s3">@returns </span><span class="s2">{Promise&lt;string&gt;} The read text.</span>
+ <span class="s2">*/</span>
+<span class="s7">function </span><span class="s1">readStdin() {</span>
+    <span class="s7">return new </span><span class="s1">Promise((resolve</span><span class="s6">, </span><span class="s1">reject) =&gt; {</span>
+        <span class="s7">let </span><span class="s1">content = </span><span class="s5">&quot;&quot;</span><span class="s6">;</span>
+        <span class="s7">let </span><span class="s1">chunk = </span><span class="s5">&quot;&quot;</span><span class="s6">;</span>
+
+        <span class="s1">process.stdin</span>
+            <span class="s1">.setEncoding(</span><span class="s5">&quot;utf8&quot;</span><span class="s1">)</span>
+            <span class="s1">.on(</span><span class="s5">&quot;readable&quot;</span><span class="s6">, </span><span class="s1">() =&gt; {</span>
+                <span class="s7">while </span><span class="s1">((chunk = process.stdin.read()) !== </span><span class="s7">null</span><span class="s1">) {</span>
+                    <span class="s1">content += chunk</span><span class="s6">;</span>
+                <span class="s1">}</span>
+            <span class="s1">})</span>
+            <span class="s1">.on(</span><span class="s5">&quot;end&quot;</span><span class="s6">, </span><span class="s1">() =&gt; resolve(content))</span>
+            <span class="s1">.on(</span><span class="s5">&quot;error&quot;</span><span class="s6">, </span><span class="s1">reject)</span><span class="s6">;</span>
+    <span class="s1">})</span><span class="s6">;</span>
+<span class="s1">}</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* Get the error message of a given value.</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">{any} error The value to get.</span>
+ <span class="s2">* </span><span class="s3">@returns </span><span class="s2">{string} The error message.</span>
+ <span class="s2">*/</span>
+<span class="s7">function </span><span class="s1">getErrorMessage(error) {</span>
+
+    <span class="s0">// Lazy loading because this is used only if an error happened.</span>
+    <span class="s7">const </span><span class="s1">util = require(</span><span class="s5">&quot;util&quot;</span><span class="s1">)</span><span class="s6">;</span>
+
+    <span class="s0">// Foolproof -- third-party module might throw non-object.</span>
+    <span class="s7">if </span><span class="s1">(</span><span class="s7">typeof </span><span class="s1">error !== </span><span class="s5">&quot;object&quot; </span><span class="s1">|| error === </span><span class="s7">null</span><span class="s1">) {</span>
+        <span class="s7">return </span><span class="s1">String(error)</span><span class="s6">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// Use templates if `error.messageTemplate` is present.</span>
+    <span class="s7">if </span><span class="s1">(</span><span class="s7">typeof </span><span class="s1">error.messageTemplate === </span><span class="s5">&quot;string&quot;</span><span class="s1">) {</span>
+        <span class="s7">try </span><span class="s1">{</span>
+            <span class="s7">const </span><span class="s1">template = require(</span><span class="s5">`../messages/</span><span class="s1">${error.messageTemplate}</span><span class="s5">.js`</span><span class="s1">)</span><span class="s6">;</span>
+
+            <span class="s7">return </span><span class="s1">template(error.messageData || {})</span><span class="s6">;</span>
+        <span class="s1">} </span><span class="s7">catch </span><span class="s1">{</span>
+
+            <span class="s0">// Ignore template error then fallback to use `error.stack`.</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// Use the stacktrace if it's an error object.</span>
+    <span class="s7">if </span><span class="s1">(</span><span class="s7">typeof </span><span class="s1">error.stack === </span><span class="s5">&quot;string&quot;</span><span class="s1">) {</span>
+        <span class="s7">return </span><span class="s1">error.stack</span><span class="s6">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// Otherwise, dump the object.</span>
+    <span class="s7">return </span><span class="s1">util.format(</span><span class="s5">&quot;%o&quot;</span><span class="s6">, </span><span class="s1">error)</span><span class="s6">;</span>
+<span class="s1">}</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* Tracks error messages that are shown to the user so we only ever show the</span>
+ <span class="s2">* same message once.</span>
+ <span class="s2">* </span><span class="s3">@type </span><span class="s2">{Set&lt;string&gt;}</span>
+ <span class="s2">*/</span>
+<span class="s7">const </span><span class="s1">displayedErrors = </span><span class="s7">new </span><span class="s1">Set()</span><span class="s6">;</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* Tracks whether an unexpected error was caught</span>
+ <span class="s2">* </span><span class="s3">@type </span><span class="s2">{boolean}</span>
+ <span class="s2">*/</span>
+<span class="s7">let </span><span class="s1">hadFatalError = </span><span class="s7">false</span><span class="s6">;</span>
+
+<span class="s2">/**</span>
+ <span class="s2">* Catch and report unexpected error.</span>
+ <span class="s2">* </span><span class="s3">@param </span><span class="s2">{any} error The thrown error object.</span>
+ <span class="s2">* </span><span class="s3">@returns </span><span class="s2">{void}</span>
+ <span class="s2">*/</span>
+<span class="s7">function </span><span class="s1">onFatalError(error) {</span>
+    <span class="s1">process.exitCode = </span><span class="s8">2</span><span class="s6">;</span>
+    <span class="s1">hadFatalError = </span><span class="s7">true</span><span class="s6">;</span>
+
+    <span class="s7">const </span><span class="s1">{ version } = require(</span><span class="s5">&quot;../package.json&quot;</span><span class="s1">)</span><span class="s6">;</span>
+    <span class="s7">const </span><span class="s1">message = </span><span class="s5">`</span>
+<span class="s5">Oops! Something went wrong! :( 
+ 
+ESLint: </span><span class="s1">${version}</span>
+
+<span class="s1">${getErrorMessage(error)}</span><span class="s5">`</span><span class="s6">;</span>
+
+    <span class="s7">if </span><span class="s1">(!displayedErrors.has(message)) {</span>
+        <span class="s1">console.error(message)</span><span class="s6">;</span>
+        <span class="s1">displayedErrors.add(message)</span><span class="s6">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s0">//------------------------------------------------------------------------------</span>
+<span class="s0">// Execution</span>
+<span class="s0">//------------------------------------------------------------------------------</span>
+
+<span class="s1">(async </span><span class="s7">function </span><span class="s1">main() {</span>
+    <span class="s1">process.on(</span><span class="s5">&quot;uncaughtException&quot;</span><span class="s6">, </span><span class="s1">onFatalError)</span><span class="s6">;</span>
+    <span class="s1">process.on(</span><span class="s5">&quot;unhandledRejection&quot;</span><span class="s6">, </span><span class="s1">onFatalError)</span><span class="s6">;</span>
+
+    <span class="s0">// Call the config initializer if `--init` is present.</span>
+    <span class="s7">if </span><span class="s1">(process.argv.includes(</span><span class="s5">&quot;--init&quot;</span><span class="s1">)) {</span>
+
+        <span class="s0">// `eslint --init` has been moved to `@eslint/create-config`</span>
+        <span class="s1">console.warn(</span><span class="s5">&quot;You can also run this command directly using 'npm init @eslint/config'.&quot;</span><span class="s1">)</span><span class="s6">;</span>
+
+        <span class="s7">const </span><span class="s1">spawn = require(</span><span class="s5">&quot;cross-spawn&quot;</span><span class="s1">)</span><span class="s6">;</span>
+
+        <span class="s1">spawn.sync(</span><span class="s5">&quot;npm&quot;</span><span class="s6">, </span><span class="s1">[</span><span class="s5">&quot;init&quot;</span><span class="s6">, </span><span class="s5">&quot;@eslint/config&quot;</span><span class="s1">]</span><span class="s6">, </span><span class="s1">{ encoding: </span><span class="s5">&quot;utf8&quot;</span><span class="s6">, </span><span class="s1">stdio: </span><span class="s5">&quot;inherit&quot; </span><span class="s1">})</span><span class="s6">;</span>
+        <span class="s7">return</span><span class="s6">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">// Otherwise, call the CLI.</span>
+    <span class="s7">const </span><span class="s1">exitCode = </span><span class="s7">await </span><span class="s1">require(</span><span class="s5">&quot;../lib/cli&quot;</span><span class="s1">).execute(</span>
+        <span class="s1">process.argv</span><span class="s6">,</span>
+        <span class="s1">process.argv.includes(</span><span class="s5">&quot;--stdin&quot;</span><span class="s1">) ? </span><span class="s7">await </span><span class="s1">readStdin() : </span><span class="s7">null</span><span class="s6">,</span>
+        <span class="s7">true</span>
+    <span class="s1">)</span><span class="s6">;</span>
+
+    <span class="s4">/* 
+     * If an uncaught exception or unhandled rejection was detected in the meantime, 
+     * keep the fatal exit code 2 that is already assigned to `process.exitCode`. 
+     * Without this condition, exit code 2 (unsuccessful execution) could be overwritten with 
+     * 1 (successful execution, lint problems found) or even 0 (successful execution, no lint problems found). 
+     * This ensures that unexpected errors that seemingly don't affect the success 
+     * of the execution will still cause a non-zero exit code, as it's a common 
+     * practice and the default behavior of Node.js to exit with non-zero 
+     * in case of an uncaught exception or unhandled rejection. 
+     * 
+     * Otherwise, assign the exit code returned from CLI. 
+     */</span>
+    <span class="s7">if </span><span class="s1">(!hadFatalError) {</span>
+        <span class="s1">process.exitCode = exitCode</span><span class="s6">;</span>
+    <span class="s1">}</span>
+<span class="s1">}()).catch(onFatalError)</span><span class="s6">;</span>
+</pre>
+</body>
+</html>

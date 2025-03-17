@@ -1,0 +1,593 @@
+<html>
+<head>
+<title>TestScheduler.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+.s6 { color: #8a8a8a; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+TestScheduler.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">Object.defineProperty(exports</span><span class="s1">, </span><span class="s0">'__esModule'</span><span class="s1">, </span><span class="s2">{</span>
+  <span class="s2">value: </span><span class="s3">true</span>
+<span class="s2">})</span><span class="s1">;</span>
+<span class="s2">exports.createTestScheduler = createTestScheduler</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">_chalk() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'chalk'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_chalk = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_exit() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'exit'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_exit = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_reporters() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'@jest/reporters'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_reporters = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_testResult() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'@jest/test-result'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_testResult = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_transform() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'@jest/transform'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_transform = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestMessageUtil() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-message-util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestMessageUtil = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestSnapshot() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'jest-snapshot'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_jestSnapshot = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestUtil() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestUtil = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">var </span><span class="s2">_ReporterDispatcher = _interopRequireDefault(</span>
+  <span class="s2">require(</span><span class="s0">'./ReporterDispatcher'</span><span class="s2">)</span>
+<span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_testSchedulerHelper = require(</span><span class="s0">'./testSchedulerHelper'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireDefault(obj) {</span>
+  <span class="s3">return </span><span class="s2">obj &amp;&amp; obj.__esModule ? obj : {</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_defineProperty(obj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">value) {</span>
+  <span class="s3">if </span><span class="s2">(key </span><span class="s3">in </span><span class="s2">obj) {</span>
+    <span class="s2">Object.defineProperty(obj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">value: value</span><span class="s1">,</span>
+      <span class="s2">enumerable: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">configurable: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">writable: </span><span class="s3">true</span>
+    <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s2">obj[key] = value</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">obj</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s2">async </span><span class="s3">function </span><span class="s2">createTestScheduler(globalConfig</span><span class="s1">, </span><span class="s2">options</span><span class="s1">, </span><span class="s2">context) {</span>
+  <span class="s3">const </span><span class="s2">scheduler = </span><span class="s3">new </span><span class="s2">TestScheduler(globalConfig</span><span class="s1">, </span><span class="s2">options</span><span class="s1">, </span><span class="s2">context)</span><span class="s1">;</span>
+  <span class="s3">await </span><span class="s2">scheduler._setupReporters()</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">scheduler</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">class </span><span class="s2">TestScheduler {</span>
+  <span class="s2">constructor(globalConfig</span><span class="s1">, </span><span class="s2">options</span><span class="s1">, </span><span class="s2">context) {</span>
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_dispatcher'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_globalConfig'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_options'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_context'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._dispatcher = </span><span class="s3">new </span><span class="s2">_ReporterDispatcher.default()</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._globalConfig = globalConfig</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._options = options</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._context = context</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">addReporter(reporter) {</span>
+    <span class="s3">this</span><span class="s2">._dispatcher.register(reporter)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">removeReporter(ReporterClass) {</span>
+    <span class="s3">this</span><span class="s2">._dispatcher.unregister(ReporterClass)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">async scheduleTests(tests</span><span class="s1">, </span><span class="s2">watcher) {</span>
+    <span class="s3">const </span><span class="s2">onTestFileStart = </span><span class="s3">this</span><span class="s2">._dispatcher.onTestFileStart.bind(</span>
+      <span class="s3">this</span><span class="s2">._dispatcher</span>
+    <span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">const </span><span class="s2">timings = []</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">contexts = </span><span class="s3">new </span><span class="s2">Set()</span><span class="s1">;</span>
+    <span class="s2">tests.forEach(test =&gt; {</span>
+      <span class="s2">contexts.add(test.context)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(test.duration) {</span>
+        <span class="s2">timings.push(test.duration)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">})</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">aggregatedResults = createAggregatedResults(tests.length)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">estimatedTime = Math.ceil(</span>
+      <span class="s2">getEstimatedTime(timings</span><span class="s1">, </span><span class="s3">this</span><span class="s2">._globalConfig.maxWorkers) / </span><span class="s4">1000</span>
+    <span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">runInBand = (</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_testSchedulerHelper.shouldRunInBand)(</span>
+      <span class="s2">tests</span><span class="s1">,</span>
+      <span class="s2">timings</span><span class="s1">,</span>
+      <span class="s3">this</span><span class="s2">._globalConfig</span>
+    <span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">const </span><span class="s2">onResult = async (test</span><span class="s1">, </span><span class="s2">testResult) =&gt; {</span>
+      <span class="s3">if </span><span class="s2">(watcher.isInterrupted()) {</span>
+        <span class="s3">return </span><span class="s2">Promise.resolve()</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">if </span><span class="s2">(testResult.testResults.length === </span><span class="s4">0</span><span class="s2">) {</span>
+        <span class="s3">const </span><span class="s2">message = </span><span class="s0">'Your test suite must contain at least one test.'</span><span class="s1">;</span>
+        <span class="s3">return </span><span class="s2">onFailure(test</span><span class="s1">, </span><span class="s2">{</span>
+          <span class="s2">message</span><span class="s1">,</span>
+          <span class="s2">stack: </span><span class="s3">new </span><span class="s2">Error(message).stack</span>
+        <span class="s2">})</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s5">// Throws when the context is leaked after executing a test.</span>
+
+      <span class="s3">if </span><span class="s2">(testResult.leaks) {</span>
+        <span class="s3">const </span><span class="s2">message =</span>
+          <span class="s2">_chalk().default.red.bold(</span><span class="s0">'EXPERIMENTAL FEATURE!</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">) +</span>
+          <span class="s0">'Your test suite is leaking memory. Please ensure all references are cleaned.</span><span class="s1">\n</span><span class="s0">' </span><span class="s2">+</span>
+          <span class="s0">'</span><span class="s1">\n</span><span class="s0">' </span><span class="s2">+</span>
+          <span class="s0">'There is a number of things that can leak memory:</span><span class="s1">\n</span><span class="s0">' </span><span class="s2">+</span>
+          <span class="s0">'  - Async operations that have not finished (e.g. fs.readFile).</span><span class="s1">\n</span><span class="s0">' </span><span class="s2">+</span>
+          <span class="s0">'  - Timers not properly mocked (e.g. setInterval, setTimeout).</span><span class="s1">\n</span><span class="s0">' </span><span class="s2">+</span>
+          <span class="s0">'  - Keeping references to the global scope.'</span><span class="s1">;</span>
+        <span class="s3">return </span><span class="s2">onFailure(test</span><span class="s1">, </span><span class="s2">{</span>
+          <span class="s2">message</span><span class="s1">,</span>
+          <span class="s2">stack: </span><span class="s3">new </span><span class="s2">Error(message).stack</span>
+        <span class="s2">})</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_testResult().addResult)(aggregatedResults</span><span class="s1">, </span><span class="s2">testResult)</span><span class="s1">;</span>
+      <span class="s3">await this</span><span class="s2">._dispatcher.onTestFileResult(</span>
+        <span class="s2">test</span><span class="s1">,</span>
+        <span class="s2">testResult</span><span class="s1">,</span>
+        <span class="s2">aggregatedResults</span>
+      <span class="s2">)</span><span class="s1">;</span>
+      <span class="s3">return this</span><span class="s2">._bailIfNeeded(contexts</span><span class="s1">, </span><span class="s2">aggregatedResults</span><span class="s1">, </span><span class="s2">watcher)</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">;</span>
+
+    <span class="s3">const </span><span class="s2">onFailure = async (test</span><span class="s1">, </span><span class="s2">error) =&gt; {</span>
+      <span class="s3">if </span><span class="s2">(watcher.isInterrupted()) {</span>
+        <span class="s3">return</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">const </span><span class="s2">testResult = (</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_testResult().buildFailureTestResult)(</span>
+        <span class="s2">test.path</span><span class="s1">,</span>
+        <span class="s2">error</span>
+      <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">testResult.failureMessage = (</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_jestMessageUtil().formatExecError)(</span>
+        <span class="s2">testResult.testExecError</span><span class="s1">,</span>
+        <span class="s2">test.context.config</span><span class="s1">,</span>
+        <span class="s3">this</span><span class="s2">._globalConfig</span><span class="s1">,</span>
+        <span class="s2">test.path</span>
+      <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_testResult().addResult)(aggregatedResults</span><span class="s1">, </span><span class="s2">testResult)</span><span class="s1">;</span>
+      <span class="s3">await this</span><span class="s2">._dispatcher.onTestFileResult(</span>
+        <span class="s2">test</span><span class="s1">,</span>
+        <span class="s2">testResult</span><span class="s1">,</span>
+        <span class="s2">aggregatedResults</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">;</span>
+
+    <span class="s3">const </span><span class="s2">updateSnapshotState = async () =&gt; {</span>
+      <span class="s3">const </span><span class="s2">contextsWithSnapshotResolvers = </span><span class="s3">await </span><span class="s2">Promise.all(</span>
+        <span class="s2">Array.from(contexts).map(async context =&gt; [</span>
+          <span class="s2">context</span><span class="s1">,</span>
+          <span class="s3">await </span><span class="s2">_jestSnapshot().default.buildSnapshotResolver(context.config)</span>
+        <span class="s2">])</span>
+      <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">contextsWithSnapshotResolvers.forEach(([context</span><span class="s1">, </span><span class="s2">snapshotResolver]) =&gt; {</span>
+        <span class="s3">const </span><span class="s2">status = _jestSnapshot().default.cleanup(</span>
+          <span class="s2">context.hasteFS</span><span class="s1">,</span>
+          <span class="s3">this</span><span class="s2">._globalConfig.updateSnapshot</span><span class="s1">,</span>
+          <span class="s2">snapshotResolver</span><span class="s1">,</span>
+          <span class="s2">context.config.testPathIgnorePatterns</span>
+        <span class="s2">)</span><span class="s1">;</span>
+
+        <span class="s2">aggregatedResults.snapshot.filesRemoved += status.filesRemoved</span><span class="s1">;</span>
+        <span class="s2">aggregatedResults.snapshot.filesRemovedList = (</span>
+          <span class="s2">aggregatedResults.snapshot.filesRemovedList || []</span>
+        <span class="s2">).concat(status.filesRemovedList)</span><span class="s1">;</span>
+      <span class="s2">})</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">updateAll = </span><span class="s3">this</span><span class="s2">._globalConfig.updateSnapshot === </span><span class="s0">'all'</span><span class="s1">;</span>
+      <span class="s2">aggregatedResults.snapshot.didUpdate = updateAll</span><span class="s1">;</span>
+      <span class="s2">aggregatedResults.snapshot.failure = !!(</span>
+        <span class="s2">!updateAll &amp;&amp;</span>
+        <span class="s2">(aggregatedResults.snapshot.unchecked ||</span>
+          <span class="s2">aggregatedResults.snapshot.unmatched ||</span>
+          <span class="s2">aggregatedResults.snapshot.filesRemoved)</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">;</span>
+
+    <span class="s3">await this</span><span class="s2">._dispatcher.onRunStart(aggregatedResults</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">estimatedTime</span><span class="s1">,</span>
+      <span class="s2">showStatus: !runInBand</span>
+    <span class="s2">})</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">testRunners = Object.create(</span><span class="s3">null</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">contextsByTestRunner = </span><span class="s3">new </span><span class="s2">WeakMap()</span><span class="s1">;</span>
+    <span class="s3">await </span><span class="s2">Promise.all(</span>
+      <span class="s2">Array.from(contexts).map(async context =&gt; {</span>
+        <span class="s3">const </span><span class="s2">{config} = context</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(!testRunners[config.runner]) {</span>
+          <span class="s3">var </span><span class="s2">_this$_context</span><span class="s1">, </span><span class="s2">_this$_context2</span><span class="s1">;</span>
+
+          <span class="s3">const </span><span class="s2">transformer = </span><span class="s3">await </span><span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_transform().createScriptTransformer)(</span>
+            <span class="s2">config</span>
+          <span class="s2">)</span><span class="s1">;</span>
+          <span class="s3">const </span><span class="s2">Runner = </span><span class="s3">await </span><span class="s2">transformer.requireAndTranspileModule(</span>
+            <span class="s2">config.runner</span>
+          <span class="s2">)</span><span class="s1">;</span>
+          <span class="s3">const </span><span class="s2">runner = </span><span class="s3">new </span><span class="s2">Runner(</span><span class="s3">this</span><span class="s2">._globalConfig</span><span class="s1">, </span><span class="s2">{</span>
+            <span class="s2">changedFiles:</span>
+              <span class="s2">(_this$_context = </span><span class="s3">this</span><span class="s2">._context) === </span><span class="s3">null </span><span class="s2">||</span>
+              <span class="s2">_this$_context === </span><span class="s3">void </span><span class="s4">0</span>
+                <span class="s2">? </span><span class="s3">void </span><span class="s4">0</span>
+                <span class="s2">: _this$_context.changedFiles</span><span class="s1">,</span>
+            <span class="s2">sourcesRelatedToTestsInChangedFiles:</span>
+              <span class="s2">(_this$_context2 = </span><span class="s3">this</span><span class="s2">._context) === </span><span class="s3">null </span><span class="s2">||</span>
+              <span class="s2">_this$_context2 === </span><span class="s3">void </span><span class="s4">0</span>
+                <span class="s2">? </span><span class="s3">void </span><span class="s4">0</span>
+                <span class="s2">: _this$_context2.sourcesRelatedToTestsInChangedFiles</span>
+          <span class="s2">})</span><span class="s1">;</span>
+          <span class="s2">testRunners[config.runner] = runner</span><span class="s1">;</span>
+          <span class="s2">contextsByTestRunner.set(runner</span><span class="s1">, </span><span class="s2">context)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+      <span class="s2">})</span>
+    <span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">const </span><span class="s2">testsByRunner = </span><span class="s3">this</span><span class="s2">._partitionTests(testRunners</span><span class="s1">, </span><span class="s2">tests)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(testsByRunner) {</span>
+      <span class="s3">try </span><span class="s2">{</span>
+        <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">runner of Object.keys(testRunners)) {</span>
+          <span class="s3">const </span><span class="s2">testRunner = testRunners[runner]</span><span class="s1">;</span>
+          <span class="s3">const </span><span class="s2">context = contextsByTestRunner.get(testRunner)</span><span class="s1">;</span>
+          <span class="s2">invariant(context)</span><span class="s1">;</span>
+          <span class="s3">const </span><span class="s2">tests = testsByRunner[runner]</span><span class="s1">;</span>
+          <span class="s3">const </span><span class="s2">testRunnerOptions = {</span>
+            <span class="s2">serial: runInBand || Boolean(testRunner.isSerial)</span>
+          <span class="s2">}</span><span class="s1">;</span>
+          <span class="s6">/**</span>
+           <span class="s6">* Test runners with event emitters are still not supported</span>
+           <span class="s6">* for third party test runners.</span>
+           <span class="s6">*/</span>
+
+          <span class="s3">if </span><span class="s2">(testRunner.__PRIVATE_UNSTABLE_API_supportsEventEmitters__) {</span>
+            <span class="s3">const </span><span class="s2">unsubscribes = [</span>
+              <span class="s2">testRunner.on(</span><span class="s0">'test-file-start'</span><span class="s1">, </span><span class="s2">([test]) =&gt;</span>
+                <span class="s2">onTestFileStart(test)</span>
+              <span class="s2">)</span><span class="s1">,</span>
+              <span class="s2">testRunner.on(</span><span class="s0">'test-file-success'</span><span class="s1">, </span><span class="s2">([test</span><span class="s1">, </span><span class="s2">testResult]) =&gt;</span>
+                <span class="s2">onResult(test</span><span class="s1">, </span><span class="s2">testResult)</span>
+              <span class="s2">)</span><span class="s1">,</span>
+              <span class="s2">testRunner.on(</span><span class="s0">'test-file-failure'</span><span class="s1">, </span><span class="s2">([test</span><span class="s1">, </span><span class="s2">error]) =&gt;</span>
+                <span class="s2">onFailure(test</span><span class="s1">, </span><span class="s2">error)</span>
+              <span class="s2">)</span><span class="s1">,</span>
+              <span class="s2">testRunner.on(</span>
+                <span class="s0">'test-case-result'</span><span class="s1">,</span>
+                <span class="s2">([testPath</span><span class="s1">, </span><span class="s2">testCaseResult]) =&gt; {</span>
+                  <span class="s3">const </span><span class="s2">test = {</span>
+                    <span class="s2">context</span><span class="s1">,</span>
+                    <span class="s2">path: testPath</span>
+                  <span class="s2">}</span><span class="s1">;</span>
+
+                  <span class="s3">this</span><span class="s2">._dispatcher.onTestCaseResult(test</span><span class="s1">, </span><span class="s2">testCaseResult)</span><span class="s1">;</span>
+                <span class="s2">}</span>
+              <span class="s2">)</span>
+            <span class="s2">]</span><span class="s1">;</span>
+            <span class="s3">await </span><span class="s2">testRunner.runTests(</span>
+              <span class="s2">tests</span><span class="s1">,</span>
+              <span class="s2">watcher</span><span class="s1">,</span>
+              <span class="s2">undefined</span><span class="s1">,</span>
+              <span class="s2">undefined</span><span class="s1">,</span>
+              <span class="s2">undefined</span><span class="s1">,</span>
+              <span class="s2">testRunnerOptions</span>
+            <span class="s2">)</span><span class="s1">;</span>
+            <span class="s2">unsubscribes.forEach(sub =&gt; sub())</span><span class="s1">;</span>
+          <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+            <span class="s3">await </span><span class="s2">testRunner.runTests(</span>
+              <span class="s2">tests</span><span class="s1">,</span>
+              <span class="s2">watcher</span><span class="s1">,</span>
+              <span class="s2">onTestFileStart</span><span class="s1">,</span>
+              <span class="s2">onResult</span><span class="s1">,</span>
+              <span class="s2">onFailure</span><span class="s1">,</span>
+              <span class="s2">testRunnerOptions</span>
+            <span class="s2">)</span><span class="s1">;</span>
+          <span class="s2">}</span>
+        <span class="s2">}</span>
+      <span class="s2">} </span><span class="s3">catch </span><span class="s2">(error) {</span>
+        <span class="s3">if </span><span class="s2">(!watcher.isInterrupted()) {</span>
+          <span class="s3">throw </span><span class="s2">error</span><span class="s1">;</span>
+        <span class="s2">}</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+
+    <span class="s3">await </span><span class="s2">updateSnapshotState()</span><span class="s1">;</span>
+    <span class="s2">aggregatedResults.wasInterrupted = watcher.isInterrupted()</span><span class="s1">;</span>
+    <span class="s3">await this</span><span class="s2">._dispatcher.onRunComplete(contexts</span><span class="s1">, </span><span class="s2">aggregatedResults)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">anyTestFailures = !(</span>
+      <span class="s2">aggregatedResults.numFailedTests === </span><span class="s4">0 </span><span class="s2">&amp;&amp;</span>
+      <span class="s2">aggregatedResults.numRuntimeErrorTestSuites === </span><span class="s4">0</span>
+    <span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">const </span><span class="s2">anyReporterErrors = </span><span class="s3">this</span><span class="s2">._dispatcher.hasErrors()</span><span class="s1">;</span>
+
+    <span class="s2">aggregatedResults.success = !(</span>
+      <span class="s2">anyTestFailures ||</span>
+      <span class="s2">aggregatedResults.snapshot.failure ||</span>
+      <span class="s2">anyReporterErrors</span>
+    <span class="s2">)</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">aggregatedResults</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_partitionTests(testRunners</span><span class="s1">, </span><span class="s2">tests) {</span>
+    <span class="s3">if </span><span class="s2">(Object.keys(testRunners).length &gt; </span><span class="s4">1</span><span class="s2">) {</span>
+      <span class="s3">return </span><span class="s2">tests.reduce((testRuns</span><span class="s1">, </span><span class="s2">test) =&gt; {</span>
+        <span class="s3">const </span><span class="s2">runner = test.context.config.runner</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(!testRuns[runner]) {</span>
+          <span class="s2">testRuns[runner] = []</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s2">testRuns[runner].push(test)</span><span class="s1">;</span>
+        <span class="s3">return </span><span class="s2">testRuns</span><span class="s1">;</span>
+      <span class="s2">}</span><span class="s1">, </span><span class="s2">Object.create(</span><span class="s3">null</span><span class="s2">))</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(tests.length &gt; </span><span class="s4">0 </span><span class="s2">&amp;&amp; tests[</span><span class="s4">0</span><span class="s2">] != </span><span class="s3">null</span><span class="s2">) {</span>
+      <span class="s5">// If there is only one runner, don't partition the tests.</span>
+      <span class="s3">return </span><span class="s2">Object.assign(Object.create(</span><span class="s3">null</span><span class="s2">)</span><span class="s1">, </span><span class="s2">{</span>
+        <span class="s2">[tests[</span><span class="s4">0</span><span class="s2">].context.config.runner]: tests</span>
+      <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s3">return null</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_shouldAddDefaultReporters(reporters) {</span>
+    <span class="s3">return </span><span class="s2">(</span>
+      <span class="s2">!reporters ||</span>
+      <span class="s2">!!reporters.find(</span>
+        <span class="s2">reporter =&gt; </span><span class="s3">this</span><span class="s2">._getReporterProps(reporter).path === </span><span class="s0">'default'</span>
+      <span class="s2">)</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">async _setupReporters() {</span>
+    <span class="s3">const </span><span class="s2">{collectCoverage</span><span class="s1">, </span><span class="s2">notify</span><span class="s1">, </span><span class="s2">reporters} = </span><span class="s3">this</span><span class="s2">._globalConfig</span><span class="s1">;</span>
+
+    <span class="s3">const </span><span class="s2">isDefault = </span><span class="s3">this</span><span class="s2">._shouldAddDefaultReporters(reporters)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(isDefault) {</span>
+      <span class="s3">this</span><span class="s2">._setupDefaultReporters(collectCoverage)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(!isDefault &amp;&amp; collectCoverage) {</span>
+      <span class="s3">var </span><span class="s2">_this$_context3</span><span class="s1">, </span><span class="s2">_this$_context4</span><span class="s1">;</span>
+
+      <span class="s3">this</span><span class="s2">.addReporter(</span>
+        <span class="s3">new </span><span class="s2">(_reporters().CoverageReporter)(</span><span class="s3">this</span><span class="s2">._globalConfig</span><span class="s1">, </span><span class="s2">{</span>
+          <span class="s2">changedFiles:</span>
+            <span class="s2">(_this$_context3 = </span><span class="s3">this</span><span class="s2">._context) === </span><span class="s3">null </span><span class="s2">||</span>
+            <span class="s2">_this$_context3 === </span><span class="s3">void </span><span class="s4">0</span>
+              <span class="s2">? </span><span class="s3">void </span><span class="s4">0</span>
+              <span class="s2">: _this$_context3.changedFiles</span><span class="s1">,</span>
+          <span class="s2">sourcesRelatedToTestsInChangedFiles:</span>
+            <span class="s2">(_this$_context4 = </span><span class="s3">this</span><span class="s2">._context) === </span><span class="s3">null </span><span class="s2">||</span>
+            <span class="s2">_this$_context4 === </span><span class="s3">void </span><span class="s4">0</span>
+              <span class="s2">? </span><span class="s3">void </span><span class="s4">0</span>
+              <span class="s2">: _this$_context4.sourcesRelatedToTestsInChangedFiles</span>
+        <span class="s2">})</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(notify) {</span>
+      <span class="s3">this</span><span class="s2">.addReporter(</span>
+        <span class="s3">new </span><span class="s2">(_reporters().NotifyReporter)(</span>
+          <span class="s3">this</span><span class="s2">._globalConfig</span><span class="s1">,</span>
+          <span class="s3">this</span><span class="s2">._options.startRun</span><span class="s1">,</span>
+          <span class="s3">this</span><span class="s2">._context</span>
+        <span class="s2">)</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(reporters &amp;&amp; Array.isArray(reporters)) {</span>
+      <span class="s3">await this</span><span class="s2">._addCustomReporters(reporters)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_setupDefaultReporters(collectCoverage) {</span>
+    <span class="s3">this</span><span class="s2">.addReporter(</span>
+      <span class="s3">this</span><span class="s2">._globalConfig.verbose</span>
+        <span class="s2">? </span><span class="s3">new </span><span class="s2">(_reporters().VerboseReporter)(</span><span class="s3">this</span><span class="s2">._globalConfig)</span>
+        <span class="s2">: </span><span class="s3">new </span><span class="s2">(_reporters().DefaultReporter)(</span><span class="s3">this</span><span class="s2">._globalConfig)</span>
+    <span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(collectCoverage) {</span>
+      <span class="s3">var </span><span class="s2">_this$_context5</span><span class="s1">, </span><span class="s2">_this$_context6</span><span class="s1">;</span>
+
+      <span class="s3">this</span><span class="s2">.addReporter(</span>
+        <span class="s3">new </span><span class="s2">(_reporters().CoverageReporter)(</span><span class="s3">this</span><span class="s2">._globalConfig</span><span class="s1">, </span><span class="s2">{</span>
+          <span class="s2">changedFiles:</span>
+            <span class="s2">(_this$_context5 = </span><span class="s3">this</span><span class="s2">._context) === </span><span class="s3">null </span><span class="s2">||</span>
+            <span class="s2">_this$_context5 === </span><span class="s3">void </span><span class="s4">0</span>
+              <span class="s2">? </span><span class="s3">void </span><span class="s4">0</span>
+              <span class="s2">: _this$_context5.changedFiles</span><span class="s1">,</span>
+          <span class="s2">sourcesRelatedToTestsInChangedFiles:</span>
+            <span class="s2">(_this$_context6 = </span><span class="s3">this</span><span class="s2">._context) === </span><span class="s3">null </span><span class="s2">||</span>
+            <span class="s2">_this$_context6 === </span><span class="s3">void </span><span class="s4">0</span>
+              <span class="s2">? </span><span class="s3">void </span><span class="s4">0</span>
+              <span class="s2">: _this$_context6.sourcesRelatedToTestsInChangedFiles</span>
+        <span class="s2">})</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">this</span><span class="s2">.addReporter(</span><span class="s3">new </span><span class="s2">(_reporters().SummaryReporter)(</span><span class="s3">this</span><span class="s2">._globalConfig))</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">async _addCustomReporters(reporters) {</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">reporter of reporters) {</span>
+      <span class="s3">const </span><span class="s2">{options</span><span class="s1">, </span><span class="s2">path} = </span><span class="s3">this</span><span class="s2">._getReporterProps(reporter)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(path === </span><span class="s0">'default'</span><span class="s2">) </span><span class="s3">continue</span><span class="s1">;</span>
+
+      <span class="s3">try </span><span class="s2">{</span>
+        <span class="s3">const </span><span class="s2">Reporter = </span><span class="s3">await </span><span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_jestUtil().requireOrImportModule)(</span>
+          <span class="s2">path</span><span class="s1">,</span>
+          <span class="s3">true</span>
+        <span class="s2">)</span><span class="s1">;</span>
+        <span class="s3">this</span><span class="s2">.addReporter(</span><span class="s3">new </span><span class="s2">Reporter(</span><span class="s3">this</span><span class="s2">._globalConfig</span><span class="s1">, </span><span class="s2">options))</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">catch </span><span class="s2">(error) {</span>
+        <span class="s2">error.message =</span>
+          <span class="s0">'An error occurred while adding the reporter at path &quot;' </span><span class="s2">+</span>
+          <span class="s2">_chalk().default.bold(path) +</span>
+          <span class="s0">'&quot;.' </span><span class="s2">+</span>
+          <span class="s2">error.message</span><span class="s1">;</span>
+        <span class="s3">throw </span><span class="s2">error</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s6">/**</span>
+   <span class="s6">* Get properties of a reporter in an object</span>
+   <span class="s6">* to make dealing with them less painful.</span>
+   <span class="s6">*/</span>
+
+  <span class="s2">_getReporterProps(reporter) {</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">reporter === </span><span class="s0">'string'</span><span class="s2">) {</span>
+      <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">options: </span><span class="s3">this</span><span class="s2">._options</span><span class="s1">,</span>
+        <span class="s2">path: reporter</span>
+      <span class="s2">}</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(Array.isArray(reporter)) {</span>
+      <span class="s3">const </span><span class="s2">[path</span><span class="s1">, </span><span class="s2">options] = reporter</span><span class="s1">;</span>
+      <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">options</span><span class="s1">,</span>
+        <span class="s2">path</span>
+      <span class="s2">}</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'Reporter should be either a string or an array'</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">async _bailIfNeeded(contexts</span><span class="s1">, </span><span class="s2">aggregatedResults</span><span class="s1">, </span><span class="s2">watcher) {</span>
+    <span class="s3">if </span><span class="s2">(</span>
+      <span class="s3">this</span><span class="s2">._globalConfig.bail !== </span><span class="s4">0 </span><span class="s2">&amp;&amp;</span>
+      <span class="s2">aggregatedResults.numFailedTests &gt;= </span><span class="s3">this</span><span class="s2">._globalConfig.bail</span>
+    <span class="s2">) {</span>
+      <span class="s3">if </span><span class="s2">(watcher.isWatchMode()) {</span>
+        <span class="s3">await </span><span class="s2">watcher.setState({</span>
+          <span class="s2">interrupted: </span><span class="s3">true</span>
+        <span class="s2">})</span><span class="s1">;</span>
+        <span class="s3">return</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">try </span><span class="s2">{</span>
+        <span class="s3">await this</span><span class="s2">._dispatcher.onRunComplete(contexts</span><span class="s1">, </span><span class="s2">aggregatedResults)</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">finally </span><span class="s2">{</span>
+        <span class="s3">const </span><span class="s2">exitCode = </span><span class="s3">this</span><span class="s2">._globalConfig.testFailureExitCode</span><span class="s1">;</span>
+        <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_exit().default)(exitCode)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">invariant(condition</span><span class="s1">, </span><span class="s2">message) {</span>
+  <span class="s3">if </span><span class="s2">(!condition) {</span>
+    <span class="s3">throw new </span><span class="s2">Error(message)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s3">const </span><span class="s2">createAggregatedResults = numTotalTestSuites =&gt; {</span>
+  <span class="s3">const </span><span class="s2">result = (</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_testResult().makeEmptyAggregatedTestResult)()</span><span class="s1">;</span>
+  <span class="s2">result.numTotalTestSuites = numTotalTestSuites</span><span class="s1">;</span>
+  <span class="s2">result.startTime = Date.now()</span><span class="s1">;</span>
+  <span class="s2">result.success = </span><span class="s3">false</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">result</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">getEstimatedTime = (timings</span><span class="s1">, </span><span class="s2">workers) =&gt; {</span>
+  <span class="s3">if </span><span class="s2">(timings.length === </span><span class="s4">0</span><span class="s2">) {</span>
+    <span class="s3">return </span><span class="s4">0</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">const </span><span class="s2">max = Math.max(...timings)</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">timings.length &lt;= workers</span>
+    <span class="s2">? max</span>
+    <span class="s2">: Math.max(timings.reduce((sum</span><span class="s1">, </span><span class="s2">time) =&gt; sum + time) / workers</span><span class="s1">, </span><span class="s2">max)</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<html>
+<head>
+<title>rule.jake.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #8ea765;}
+.s5 { color: #808080;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+rule.jake.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * Jake JavaScript build tool 
+ * Copyright 2112 Matthew Eernisse (mde@fleegix.org) 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *         http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+*/</span>
+
+<span class="s2">const </span><span class="s1">PROJECT_DIR = process.env.PROJECT_DIR</span><span class="s3">;</span>
+
+<span class="s2">let </span><span class="s1">exec = require(</span><span class="s4">'child_process'</span><span class="s1">).execSync</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">fs = require(</span><span class="s4">'fs'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">util = require(</span><span class="s4">'util'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">{ rule</span><span class="s3">, </span><span class="s1">rmRf } = require(</span><span class="s4">`</span><span class="s1">${PROJECT_DIR}</span><span class="s4">/lib/jake`</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s1">directory(</span><span class="s4">'tmpsrc'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">directory(</span><span class="s4">'tmpbin'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s5">////////////////////////////////////////////////////////////</span>
+<span class="s5">// Simple Suffix Rule</span>
+<span class="s1">file(</span><span class="s4">'tmp'</span><span class="s3">, </span><span class="s1">[</span><span class="s4">'tmp_init'</span><span class="s3">, </span><span class="s4">'tmp_dep1.o'</span><span class="s3">, </span><span class="s4">'tmp_dep2.o'</span><span class="s1">]</span><span class="s3">, </span><span class="s2">function </span><span class="s1">(params) {</span>
+  <span class="s1">console.log(</span><span class="s4">'tmp task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s2">let </span><span class="s1">data1 = fs.readFileSync(</span><span class="s4">'tmp_dep1.o'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s2">let </span><span class="s1">data2 = fs.readFileSync(</span><span class="s4">'tmp_dep2.o'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">fs.writeFileSync(</span><span class="s4">'tmp'</span><span class="s3">, </span><span class="s1">data1 + data2)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">rule(</span><span class="s4">'.o'</span><span class="s3">, </span><span class="s4">'.c'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s2">let </span><span class="s1">cmd = util.format(</span><span class="s4">'cp %s %s'</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.source</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.name)</span><span class="s3">;</span>
+  <span class="s1">console.log(cmd + </span><span class="s4">' task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">exec(cmd)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">file(</span><span class="s4">'tmp_dep1.c'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s1">fs.writeFileSync(</span><span class="s4">'tmp_dep1.c'</span><span class="s3">, </span><span class="s4">'src_1'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">console.log(</span><span class="s4">'tmp_dep1.c task'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s5">// note that tmp_dep2.o depends on tmp_dep2.c, which is a</span>
+<span class="s5">// static file.</span>
+<span class="s1">task(</span><span class="s4">'tmp_init'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s1">fs.writeFileSync(</span><span class="s4">'tmp_dep2.c'</span><span class="s3">, </span><span class="s4">'src_2'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">console.log(</span><span class="s4">'tmp_dep2.c task'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+<span class="s5">////////////////////////////////////////////////////////////</span>
+
+<span class="s5">////////////////////////////////////////////////////////////</span>
+<span class="s5">// Pattern Rule</span>
+<span class="s1">file(</span><span class="s4">'tmp_p'</span><span class="s3">, </span><span class="s1">[</span><span class="s4">'tmp_init'</span><span class="s3">, </span><span class="s4">'tmp_dep1.oo'</span><span class="s3">, </span><span class="s4">'tmp_dep2.oo'</span><span class="s1">]</span><span class="s3">, </span><span class="s2">function </span><span class="s1">(params) {</span>
+  <span class="s1">console.log(</span><span class="s4">'tmp pattern task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s2">let </span><span class="s1">data1 = fs.readFileSync(</span><span class="s4">'tmp_dep1.oo'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s2">let </span><span class="s1">data2 = fs.readFileSync(</span><span class="s4">'tmp_dep2.oo'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">fs.writeFileSync(</span><span class="s4">'tmp_p'</span><span class="s3">, </span><span class="s1">data1 + data2 + </span><span class="s4">' pattern'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">rule(</span><span class="s4">'%.oo'</span><span class="s3">, </span><span class="s4">'%.c'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s2">let </span><span class="s1">cmd = util.format(</span><span class="s4">'cp %s %s'</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.source</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.name)</span><span class="s3">;</span>
+  <span class="s1">console.log(cmd + </span><span class="s4">' task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">exec(cmd)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+<span class="s5">////////////////////////////////////////////////////////////</span>
+
+<span class="s5">////////////////////////////////////////////////////////////</span>
+<span class="s5">// Pattern Rule with Folder</span>
+<span class="s5">// i.e.  rule('tmpbin/%.oo', 'tmpsrc/%.c', ...</span>
+<span class="s1">file(</span><span class="s4">'tmp_pf'</span><span class="s3">, </span><span class="s1">[</span>
+  <span class="s4">'tmp_src_init'</span>
+  <span class="s3">, </span><span class="s4">'tmpbin'</span>
+  <span class="s3">, </span><span class="s4">'tmpbin/tmp_dep1.oo'</span>
+  <span class="s3">, </span><span class="s4">'tmpbin/tmp_dep2.oo' </span><span class="s1">]</span><span class="s3">, </span><span class="s2">function </span><span class="s1">(params) {</span>
+  <span class="s1">console.log(</span><span class="s4">'tmp pattern folder task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s2">let </span><span class="s1">data1 = fs.readFileSync(</span><span class="s4">'tmpbin/tmp_dep1.oo'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s2">let </span><span class="s1">data2 = fs.readFileSync(</span><span class="s4">'tmpbin/tmp_dep2.oo'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">fs.writeFileSync(</span><span class="s4">'tmp_pf'</span><span class="s3">, </span><span class="s1">data1 + data2 + </span><span class="s4">' pattern folder'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">rule(</span><span class="s4">'tmpbin/%.oo'</span><span class="s3">, </span><span class="s4">'tmpsrc/%.c'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s2">let </span><span class="s1">cmd = util.format(</span><span class="s4">'cp %s %s'</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.source</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.name)</span><span class="s3">;</span>
+  <span class="s1">console.log(cmd + </span><span class="s4">' task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">exec(cmd)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">file(</span><span class="s4">'tmpsrc/tmp_dep2.c'</span><span class="s3">,</span><span class="s1">[</span><span class="s4">'tmpsrc'</span><span class="s1">]</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s1">fs.writeFileSync(</span><span class="s4">'tmpsrc/tmp_dep2.c'</span><span class="s3">, </span><span class="s4">'src/src_2'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">console.log(</span><span class="s4">'tmpsrc/tmp_dep2.c task'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s5">// Create static files in folder tmpsrc.</span>
+<span class="s1">task(</span><span class="s4">'tmp_src_init'</span><span class="s3">, </span><span class="s1">[</span><span class="s4">'tmpsrc'</span><span class="s1">]</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s1">fs.writeFileSync(</span><span class="s4">'tmpsrc/tmp_dep1.c'</span><span class="s3">, </span><span class="s4">'src/src_1'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">console.log(</span><span class="s4">'tmpsrc/tmp_dep1.c task'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+<span class="s5">////////////////////////////////////////////////////////////</span>
+
+
+<span class="s5">////////////////////////////////////////////////////////////</span>
+<span class="s5">// Namespace Test. This is a Mixed Test.</span>
+<span class="s5">// Test for</span>
+<span class="s5">// -  rules belonging to different namespace.</span>
+<span class="s5">// -  rules with folder and pattern</span>
+<span class="s1">task(</span><span class="s4">'tmp_ns'</span><span class="s3">, </span><span class="s1">[</span>
+  <span class="s4">'tmpbin'</span>
+  <span class="s3">, </span><span class="s4">'rule:init'</span>
+  <span class="s3">, </span><span class="s4">'tmpbin/tmp_dep2.oo'    </span><span class="s5">// *** This relies on a rule defined before.</span>
+  <span class="s3">, </span><span class="s4">'rule:tmpbin/dep1.oo'</span>
+  <span class="s3">, </span><span class="s4">'rule:tmpbin/file2.oo' </span><span class="s1">]</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s1">console.log(</span><span class="s4">'tmp pattern folder namespace task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s2">let </span><span class="s1">data1 = fs.readFileSync(</span><span class="s4">'tmpbin/dep1.oo'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s2">let </span><span class="s1">data2 = fs.readFileSync(</span><span class="s4">'tmpbin/tmp_dep2.oo'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s2">let </span><span class="s1">data3 = fs.readFileSync(</span><span class="s4">'tmpbin/file2.oo'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">fs.writeFileSync(</span><span class="s4">'tmp_ns'</span><span class="s3">, </span><span class="s1">data1 + data2 + data3 + </span><span class="s4">' pattern folder namespace'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">namespace(</span><span class="s4">'rule'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s1">task(</span><span class="s4">'init'</span><span class="s3">, </span><span class="s1">[</span><span class="s4">'tmpsrc'</span><span class="s1">]</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'tmpsrc/file2.c'</span><span class="s3">, </span><span class="s4">'src/src_3'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">console.log(</span><span class="s4">'tmpsrc/file2.c init task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">file(</span><span class="s4">'tmpsrc/dep1.c'</span><span class="s3">,</span><span class="s1">[</span><span class="s4">'tmpsrc'</span><span class="s1">]</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'tmpsrc/dep1.c'</span><span class="s3">, </span><span class="s4">'src/src_1'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">console.log(</span><span class="s4">'tmpsrc/dep1.c task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{async: </span><span class="s2">true</span><span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">rule(</span><span class="s4">'tmpbin/%.oo'</span><span class="s3">, </span><span class="s4">'tmpsrc/%.c'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">cmd = util.format(</span><span class="s4">'cp %s %s'</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.source</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.name)</span><span class="s3">;</span>
+    <span class="s1">console.log(cmd + </span><span class="s4">' ns task'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">exec(cmd)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+<span class="s5">////////////////////////////////////////////////////////////</span>
+
+<span class="s5">////////////////////////////////////////////////////////////</span>
+<span class="s5">// Chain rule</span>
+<span class="s5">// rule('tmpbin/%.pdf', 'tmpbin/%.dvi', function() { ...</span>
+<span class="s5">// rule('tmpbin/%.dvi', 'tmpsrc/%.tex', ['tmpbin'], function() { ...</span>
+<span class="s1">task(</span><span class="s4">'tmp_cr'</span><span class="s3">, </span><span class="s1">[</span>
+  <span class="s4">'chainrule:init'</span>
+  <span class="s3">, </span><span class="s4">'chainrule:tmpbin/file1.pdf'</span>
+  <span class="s3">, </span><span class="s4">'chainrule:tmpbin/file2.pdf' </span><span class="s1">]</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s1">console.log(</span><span class="s4">'tmp chainrule namespace task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s2">let </span><span class="s1">data1 = fs.readFileSync(</span><span class="s4">'tmpbin/file1.pdf'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s2">let </span><span class="s1">data2 = fs.readFileSync(</span><span class="s4">'tmpbin/file2.pdf'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">fs.writeFileSync(</span><span class="s4">'tmp_cr'</span><span class="s3">, </span><span class="s1">data1 + data2 + </span><span class="s4">' chainrule namespace'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">namespace(</span><span class="s4">'chainrule'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s1">task(</span><span class="s4">'init'</span><span class="s3">, </span><span class="s1">[</span><span class="s4">'tmpsrc'</span><span class="s3">, </span><span class="s4">'tmpbin'</span><span class="s1">]</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'tmpsrc/file1.tex'</span><span class="s3">, </span><span class="s4">'tex1 '</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s4">'tmpsrc/file2.tex'</span><span class="s3">, </span><span class="s4">'tex2 '</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">console.log(</span><span class="s4">'chainrule init task'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">rule(</span><span class="s4">'tmpbin/%.pdf'</span><span class="s3">, </span><span class="s4">'tmpbin/%.dvi'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">cmd = util.format(</span><span class="s4">'cp %s %s'</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.source</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.name)</span><span class="s3">;</span>
+    <span class="s1">console.log(cmd + </span><span class="s4">' dvi-&gt;pdf task'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">exec(cmd)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">rule(</span><span class="s4">'tmpbin/%.dvi'</span><span class="s3">, </span><span class="s4">'tmpsrc/%.tex'</span><span class="s3">, </span><span class="s1">[</span><span class="s4">'tmpbin'</span><span class="s1">]</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">cmd = util.format(</span><span class="s4">'cp %s %s'</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.source</span><span class="s3">, </span><span class="s2">this</span><span class="s1">.name)</span><span class="s3">;</span>
+    <span class="s1">console.log(cmd + </span><span class="s4">' tex-&gt;dvi task'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">exec(cmd)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+<span class="s5">////////////////////////////////////////////////////////////</span>
+<span class="s1">namespace(</span><span class="s4">'precedence'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s1">task(</span><span class="s4">'test'</span><span class="s3">, </span><span class="s1">[</span><span class="s4">'foo.html'</span><span class="s1">]</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s4">'ran test'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">rule(</span><span class="s4">'.html'</span><span class="s3">, </span><span class="s4">'.txt'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s4">'created html'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">data = fs.readFileSync(</span><span class="s2">this</span><span class="s1">.source)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s2">this</span><span class="s1">.name</span><span class="s3">, </span><span class="s1">data.toString())</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">namespace(</span><span class="s4">'regexPattern'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s1">task(</span><span class="s4">'test'</span><span class="s3">, </span><span class="s1">[</span><span class="s4">'foo.html'</span><span class="s1">]</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s4">'ran test'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">rule(</span><span class="s6">/\.html$/</span><span class="s3">, </span><span class="s4">'.txt'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s4">'created html'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">data = fs.readFileSync(</span><span class="s2">this</span><span class="s1">.source)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s2">this</span><span class="s1">.name</span><span class="s3">, </span><span class="s1">data.toString())</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">namespace(</span><span class="s4">'sourceFunction'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+
+  <span class="s2">let </span><span class="s1">srcFunc = </span><span class="s2">function </span><span class="s1">(taskName) {</span>
+    <span class="s2">return </span><span class="s1">taskName.replace(</span><span class="s6">/\.[^.]+$/</span><span class="s3">, </span><span class="s4">'.txt'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span><span class="s3">;</span>
+
+  <span class="s1">task(</span><span class="s4">'test'</span><span class="s3">, </span><span class="s1">[</span><span class="s4">'foo.html'</span><span class="s1">]</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s4">'ran test'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">rule(</span><span class="s4">'.html'</span><span class="s3">, </span><span class="s1">srcFunc</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">console.log(</span><span class="s4">'created html'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s2">let </span><span class="s1">data = fs.readFileSync(</span><span class="s2">this</span><span class="s1">.source)</span><span class="s3">;</span>
+    <span class="s1">fs.writeFileSync(</span><span class="s2">this</span><span class="s1">.name</span><span class="s3">, </span><span class="s1">data.toString())</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+
+<span class="s5">////////////////////////////////////////////////////////////</span>
+<span class="s1">task(</span><span class="s4">'clean'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s1">rmRf(</span><span class="s4">'./foo'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">rmRf(</span><span class="s4">'./tmp'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">})</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

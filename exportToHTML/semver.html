@@ -1,0 +1,211 @@
+<html>
+<head>
+<title>semver</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #6897bb;}
+.s4 { color: #8ea765;}
+.s5 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+semver</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+<span class="s0">// Standalone semver comparison program.</span>
+<span class="s0">// Exits successfully and prints matching version(s) if</span>
+<span class="s0">// any supplied version is valid and passes all tests.</span>
+
+<span class="s2">const </span><span class="s1">argv = process.argv.slice(</span><span class="s3">2</span><span class="s1">)</span>
+
+<span class="s2">let </span><span class="s1">versions = []</span>
+
+<span class="s2">const </span><span class="s1">range = []</span>
+
+<span class="s2">let </span><span class="s1">inc = </span><span class="s2">null</span>
+
+<span class="s2">const </span><span class="s1">version = require(</span><span class="s4">'../package.json'</span><span class="s1">).version</span>
+
+<span class="s2">let </span><span class="s1">loose = </span><span class="s2">false</span>
+
+<span class="s2">let </span><span class="s1">includePrerelease = </span><span class="s2">false</span>
+
+<span class="s2">let </span><span class="s1">coerce = </span><span class="s2">false</span>
+
+<span class="s2">let </span><span class="s1">rtl = </span><span class="s2">false</span>
+
+<span class="s2">let </span><span class="s1">identifier</span>
+
+<span class="s2">let </span><span class="s1">identifierBase</span>
+
+<span class="s2">const </span><span class="s1">semver = require(</span><span class="s4">'../'</span><span class="s1">)</span>
+<span class="s2">const </span><span class="s1">parseOptions = require(</span><span class="s4">'../internal/parse-options'</span><span class="s1">)</span>
+
+<span class="s2">let </span><span class="s1">reverse = </span><span class="s2">false</span>
+
+<span class="s2">let </span><span class="s1">options = {}</span>
+
+<span class="s2">const </span><span class="s1">main = () =&gt; {</span>
+  <span class="s2">if </span><span class="s1">(!argv.length) {</span>
+    <span class="s2">return </span><span class="s1">help()</span>
+  <span class="s1">}</span>
+  <span class="s2">while </span><span class="s1">(argv.length) {</span>
+    <span class="s2">let </span><span class="s1">a = argv.shift()</span>
+    <span class="s2">const </span><span class="s1">indexOfEqualSign = a.indexOf(</span><span class="s4">'='</span><span class="s1">)</span>
+    <span class="s2">if </span><span class="s1">(indexOfEqualSign !== -</span><span class="s3">1</span><span class="s1">) {</span>
+      <span class="s2">const </span><span class="s1">value = a.slice(indexOfEqualSign + </span><span class="s3">1</span><span class="s1">)</span>
+      <span class="s1">a = a.slice(</span><span class="s3">0</span><span class="s5">, </span><span class="s1">indexOfEqualSign)</span>
+      <span class="s1">argv.unshift(value)</span>
+    <span class="s1">}</span>
+    <span class="s2">switch </span><span class="s1">(a) {</span>
+      <span class="s2">case </span><span class="s4">'-rv'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'-rev'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'--rev'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'--reverse'</span><span class="s1">:</span>
+        <span class="s1">reverse = </span><span class="s2">true</span>
+        <span class="s2">break</span>
+      <span class="s2">case </span><span class="s4">'-l'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'--loose'</span><span class="s1">:</span>
+        <span class="s1">loose = </span><span class="s2">true</span>
+        <span class="s2">break</span>
+      <span class="s2">case </span><span class="s4">'-p'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'--include-prerelease'</span><span class="s1">:</span>
+        <span class="s1">includePrerelease = </span><span class="s2">true</span>
+        <span class="s2">break</span>
+      <span class="s2">case </span><span class="s4">'-v'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'--version'</span><span class="s1">:</span>
+        <span class="s1">versions.push(argv.shift())</span>
+        <span class="s2">break</span>
+      <span class="s2">case </span><span class="s4">'-i'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'--inc'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'--increment'</span><span class="s1">:</span>
+        <span class="s2">switch </span><span class="s1">(argv[</span><span class="s3">0</span><span class="s1">]) {</span>
+          <span class="s2">case </span><span class="s4">'major'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'minor'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'patch'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'prerelease'</span><span class="s1">:</span>
+          <span class="s2">case </span><span class="s4">'premajor'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'preminor'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'prepatch'</span><span class="s1">:</span>
+          <span class="s2">case </span><span class="s4">'release'</span><span class="s1">:</span>
+            <span class="s1">inc = argv.shift()</span>
+            <span class="s2">break</span>
+          <span class="s2">default</span><span class="s1">:</span>
+            <span class="s1">inc = </span><span class="s4">'patch'</span>
+            <span class="s2">break</span>
+        <span class="s1">}</span>
+        <span class="s2">break</span>
+      <span class="s2">case </span><span class="s4">'--preid'</span><span class="s1">:</span>
+        <span class="s1">identifier = argv.shift()</span>
+        <span class="s2">break</span>
+      <span class="s2">case </span><span class="s4">'-r'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'--range'</span><span class="s1">:</span>
+        <span class="s1">range.push(argv.shift())</span>
+        <span class="s2">break</span>
+      <span class="s2">case </span><span class="s4">'-n'</span><span class="s1">:</span>
+        <span class="s1">identifierBase = argv.shift()</span>
+        <span class="s2">if </span><span class="s1">(identifierBase === </span><span class="s4">'false'</span><span class="s1">) {</span>
+          <span class="s1">identifierBase = </span><span class="s2">false</span>
+        <span class="s1">}</span>
+        <span class="s2">break</span>
+      <span class="s2">case </span><span class="s4">'-c'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'--coerce'</span><span class="s1">:</span>
+        <span class="s1">coerce = </span><span class="s2">true</span>
+        <span class="s2">break</span>
+      <span class="s2">case </span><span class="s4">'--rtl'</span><span class="s1">:</span>
+        <span class="s1">rtl = </span><span class="s2">true</span>
+        <span class="s2">break</span>
+      <span class="s2">case </span><span class="s4">'--ltr'</span><span class="s1">:</span>
+        <span class="s1">rtl = </span><span class="s2">false</span>
+        <span class="s2">break</span>
+      <span class="s2">case </span><span class="s4">'-h'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'--help'</span><span class="s1">: </span><span class="s2">case </span><span class="s4">'-?'</span><span class="s1">:</span>
+        <span class="s2">return </span><span class="s1">help()</span>
+      <span class="s2">default</span><span class="s1">:</span>
+        <span class="s1">versions.push(a)</span>
+        <span class="s2">break</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s1">options = parseOptions({ loose</span><span class="s5">, </span><span class="s1">includePrerelease</span><span class="s5">, </span><span class="s1">rtl })</span>
+
+  <span class="s1">versions = versions.map((v) =&gt; {</span>
+    <span class="s2">return </span><span class="s1">coerce ? (semver.coerce(v</span><span class="s5">, </span><span class="s1">options) || { version: v }).version : v</span>
+  <span class="s1">}).filter((v) =&gt; {</span>
+    <span class="s2">return </span><span class="s1">semver.valid(v)</span>
+  <span class="s1">})</span>
+  <span class="s2">if </span><span class="s1">(!versions.length) {</span>
+    <span class="s2">return </span><span class="s1">fail()</span>
+  <span class="s1">}</span>
+  <span class="s2">if </span><span class="s1">(inc &amp;&amp; (versions.length !== </span><span class="s3">1 </span><span class="s1">|| range.length)) {</span>
+    <span class="s2">return </span><span class="s1">failInc()</span>
+  <span class="s1">}</span>
+
+  <span class="s2">for </span><span class="s1">(</span><span class="s2">let </span><span class="s1">i = </span><span class="s3">0</span><span class="s5">, </span><span class="s1">l = range.length</span><span class="s5">; </span><span class="s1">i &lt; l</span><span class="s5">; </span><span class="s1">i++) {</span>
+    <span class="s1">versions = versions.filter((v) =&gt; {</span>
+      <span class="s2">return </span><span class="s1">semver.satisfies(v</span><span class="s5">, </span><span class="s1">range[i]</span><span class="s5">, </span><span class="s1">options)</span>
+    <span class="s1">})</span>
+    <span class="s2">if </span><span class="s1">(!versions.length) {</span>
+      <span class="s2">return </span><span class="s1">fail()</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s1">versions</span>
+    <span class="s1">.sort((a</span><span class="s5">, </span><span class="s1">b) =&gt; semver[reverse ? </span><span class="s4">'rcompare' </span><span class="s1">: </span><span class="s4">'compare'</span><span class="s1">](a</span><span class="s5">, </span><span class="s1">b</span><span class="s5">, </span><span class="s1">options))</span>
+    <span class="s1">.map(v =&gt; semver.clean(v</span><span class="s5">, </span><span class="s1">options))</span>
+    <span class="s1">.map(v =&gt; inc ? semver.inc(v</span><span class="s5">, </span><span class="s1">inc</span><span class="s5">, </span><span class="s1">options</span><span class="s5">, </span><span class="s1">identifier</span><span class="s5">, </span><span class="s1">identifierBase) : v)</span>
+    <span class="s1">.forEach(v =&gt; console.log(v))</span>
+<span class="s1">}</span>
+
+<span class="s2">const </span><span class="s1">failInc = () =&gt; {</span>
+  <span class="s1">console.error(</span><span class="s4">'--inc can only be used on a single version with no range'</span><span class="s1">)</span>
+  <span class="s1">fail()</span>
+<span class="s1">}</span>
+
+<span class="s2">const </span><span class="s1">fail = () =&gt; process.exit(</span><span class="s3">1</span><span class="s1">)</span>
+
+<span class="s2">const </span><span class="s1">help = () =&gt; console.log(</span>
+<span class="s4">`SemVer </span><span class="s1">${version}</span>
+
+<span class="s4">A JavaScript implementation of the https://semver.org/ specification 
+Copyright Isaac Z. Schlueter 
+ 
+Usage: semver [options] &lt;version&gt; [&lt;version&gt; [...]] 
+Prints valid versions sorted by SemVer precedence 
+ 
+Options: 
+-r --range &lt;range&gt; 
+        Print versions that match the specified range. 
+ 
+-i --increment [&lt;level&gt;] 
+        Increment a version by the specified level.  Level can 
+        be one of: major, minor, patch, premajor, preminor, 
+        prepatch, prerelease, or release.  Default level is 'patch'. 
+        Only one version may be specified. 
+ 
+--preid &lt;identifier&gt; 
+        Identifier to be used to prefix premajor, preminor, 
+        prepatch or prerelease version increments. 
+ 
+-l --loose 
+        Interpret versions and ranges loosely 
+ 
+-p --include-prerelease 
+        Always include prerelease versions in range matching 
+ 
+-c --coerce 
+        Coerce a string into SemVer if possible 
+        (does not imply --loose) 
+ 
+--rtl 
+        Coerce version strings right to left 
+ 
+--ltr 
+        Coerce version strings left to right (default) 
+ 
+-n &lt;base&gt; 
+        Base number to be used for the prerelease identifier. 
+        Can be either 0 or 1, or false to omit the number altogether. 
+        Defaults to 0. 
+ 
+Program exits successfully if any valid version satisfies 
+all supplied ranges, and prints all satisfying versions. 
+ 
+If no satisfying versions are found, then exits failure. 
+ 
+Versions are printed in ascending order, so supplying 
+multiple versions to the utility will just sort them.`</span><span class="s1">)</span>
+
+<span class="s1">main()</span>
+</pre>
+</body>
+</html>

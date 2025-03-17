@@ -1,0 +1,146 @@
+<html>
+<head>
+<title>ref.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ref.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+<span class="s2">module.exports = </span><span class="s3">function </span><span class="s2">generate_ref(it</span><span class="s1">, </span><span class="s2">$keyword</span><span class="s1">, </span><span class="s2">$ruleType) {</span>
+  <span class="s3">var </span><span class="s2">out = </span><span class="s0">' '</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$lvl = it.level</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$dataLvl = it.dataLevel</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$schema = it.schema[$keyword]</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$errSchemaPath = it.errSchemaPath + </span><span class="s0">'/' </span><span class="s2">+ $keyword</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$breakOnError = !it.opts.allErrors</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$data = </span><span class="s0">'data' </span><span class="s2">+ ($dataLvl || </span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$valid = </span><span class="s0">'valid' </span><span class="s2">+ $lvl</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$async</span><span class="s1">, </span><span class="s2">$refCode</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">($schema == </span><span class="s0">'#' </span><span class="s2">|| $schema == </span><span class="s0">'#/'</span><span class="s2">) {</span>
+    <span class="s3">if </span><span class="s2">(it.isRoot) {</span>
+      <span class="s2">$async = it.async</span><span class="s1">;</span>
+      <span class="s2">$refCode = </span><span class="s0">'validate'</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">$async = it.root.schema.$async === </span><span class="s3">true</span><span class="s1">;</span>
+      <span class="s2">$refCode = </span><span class="s0">'root.refVal[0]'</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s3">var </span><span class="s2">$refVal = it.resolveRef(it.baseId</span><span class="s1">, </span><span class="s2">$schema</span><span class="s1">, </span><span class="s2">it.isRoot)</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">($refVal === undefined) {</span>
+      <span class="s3">var </span><span class="s2">$message = it.MissingRefError.message(it.baseId</span><span class="s1">, </span><span class="s2">$schema)</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(it.opts.missingRefs == </span><span class="s0">'fail'</span><span class="s2">) {</span>
+        <span class="s2">it.logger.error($message)</span><span class="s1">;</span>
+        <span class="s3">var </span><span class="s2">$$outStack = $$outStack || []</span><span class="s1">;</span>
+        <span class="s2">$$outStack.push(out)</span><span class="s1">;</span>
+        <span class="s2">out = </span><span class="s0">''</span><span class="s1">; </span><span class="s4">/* istanbul ignore else */</span>
+        <span class="s3">if </span><span class="s2">(it.createErrors !== </span><span class="s3">false</span><span class="s2">) {</span>
+          <span class="s2">out += </span><span class="s0">' { keyword: </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ (</span><span class="s0">'$ref'</span><span class="s2">) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">, dataPath: (dataPath || </span><span class="s1">\'\'</span><span class="s0">) + ' </span><span class="s2">+ (it.errorPath) + </span><span class="s0">' , schemaPath: ' </span><span class="s2">+ (it.util.toQuotedString($errSchemaPath)) + </span><span class="s0">' , params: { ref: </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ (it.util.escapeQuotes($schema)) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">} '</span><span class="s1">;</span>
+          <span class="s3">if </span><span class="s2">(it.opts.messages !== </span><span class="s3">false</span><span class="s2">) {</span>
+            <span class="s2">out += </span><span class="s0">' , message: </span><span class="s1">\'</span><span class="s0">can</span><span class="s1">\\\'</span><span class="s0">t resolve reference ' </span><span class="s2">+ (it.util.escapeQuotes($schema)) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">'</span><span class="s1">;</span>
+          <span class="s2">}</span>
+          <span class="s3">if </span><span class="s2">(it.opts.verbose) {</span>
+            <span class="s2">out += </span><span class="s0">' , schema: ' </span><span class="s2">+ (it.util.toQuotedString($schema)) + </span><span class="s0">' , parentSchema: validate.schema' </span><span class="s2">+ (it.schemaPath) + </span><span class="s0">' , data: ' </span><span class="s2">+ ($data) + </span><span class="s0">' '</span><span class="s1">;</span>
+          <span class="s2">}</span>
+          <span class="s2">out += </span><span class="s0">' } '</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+          <span class="s2">out += </span><span class="s0">' {} '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">var </span><span class="s2">__err = out</span><span class="s1">;</span>
+        <span class="s2">out = $$outStack.pop()</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(!it.compositeRule &amp;&amp; $breakOnError) {</span>
+          <span class="s4">/* istanbul ignore if */</span>
+          <span class="s3">if </span><span class="s2">(it.async) {</span>
+            <span class="s2">out += </span><span class="s0">' throw new ValidationError([' </span><span class="s2">+ (__err) + </span><span class="s0">']); '</span><span class="s1">;</span>
+          <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+            <span class="s2">out += </span><span class="s0">' validate.errors = [' </span><span class="s2">+ (__err) + </span><span class="s0">']; return false; '</span><span class="s1">;</span>
+          <span class="s2">}</span>
+        <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+          <span class="s2">out += </span><span class="s0">' var err = ' </span><span class="s2">+ (__err) + </span><span class="s0">';  if (vErrors === null) vErrors = [err]; else vErrors.push(err); errors++; '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">if </span><span class="s2">($breakOnError) {</span>
+          <span class="s2">out += </span><span class="s0">' if (false) { '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+      <span class="s2">} </span><span class="s3">else if </span><span class="s2">(it.opts.missingRefs == </span><span class="s0">'ignore'</span><span class="s2">) {</span>
+        <span class="s2">it.logger.warn($message)</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">($breakOnError) {</span>
+          <span class="s2">out += </span><span class="s0">' if (true) { '</span><span class="s1">;</span>
+        <span class="s2">}</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s3">throw new </span><span class="s2">it.MissingRefError(it.baseId</span><span class="s1">, </span><span class="s2">$schema</span><span class="s1">, </span><span class="s2">$message)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">} </span><span class="s3">else if </span><span class="s2">($refVal.inline) {</span>
+      <span class="s3">var </span><span class="s2">$it = it.util.copy(it)</span><span class="s1">;</span>
+      <span class="s2">$it.level++</span><span class="s1">;</span>
+      <span class="s3">var </span><span class="s2">$nextValid = </span><span class="s0">'valid' </span><span class="s2">+ $it.level</span><span class="s1">;</span>
+      <span class="s2">$it.schema = $refVal.schema</span><span class="s1">;</span>
+      <span class="s2">$it.schemaPath = </span><span class="s0">''</span><span class="s1">;</span>
+      <span class="s2">$it.errSchemaPath = $schema</span><span class="s1">;</span>
+      <span class="s3">var </span><span class="s2">$code = it.validate($it).replace(</span><span class="s5">/validate\.schema/g</span><span class="s1">, </span><span class="s2">$refVal.code)</span><span class="s1">;</span>
+      <span class="s2">out += </span><span class="s0">' ' </span><span class="s2">+ ($code) + </span><span class="s0">' '</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">($breakOnError) {</span>
+        <span class="s2">out += </span><span class="s0">' if (' </span><span class="s2">+ ($nextValid) + </span><span class="s0">') { '</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">$async = $refVal.$async === </span><span class="s3">true </span><span class="s2">|| (it.async &amp;&amp; $refVal.$async !== </span><span class="s3">false</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">$refCode = $refVal.code</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s3">if </span><span class="s2">($refCode) {</span>
+    <span class="s3">var </span><span class="s2">$$outStack = $$outStack || []</span><span class="s1">;</span>
+    <span class="s2">$$outStack.push(out)</span><span class="s1">;</span>
+    <span class="s2">out = </span><span class="s0">''</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(it.opts.passContext) {</span>
+      <span class="s2">out += </span><span class="s0">' ' </span><span class="s2">+ ($refCode) + </span><span class="s0">'.call(this, '</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">out += </span><span class="s0">' ' </span><span class="s2">+ ($refCode) + </span><span class="s0">'( '</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">out += </span><span class="s0">' ' </span><span class="s2">+ ($data) + </span><span class="s0">', (dataPath || </span><span class="s1">\'\'</span><span class="s0">)'</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(it.errorPath != </span><span class="s0">'&quot;&quot;'</span><span class="s2">) {</span>
+      <span class="s2">out += </span><span class="s0">' + ' </span><span class="s2">+ (it.errorPath)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s3">var </span><span class="s2">$parentData = $dataLvl ? </span><span class="s0">'data' </span><span class="s2">+ (($dataLvl - </span><span class="s5">1</span><span class="s2">) || </span><span class="s0">''</span><span class="s2">) : </span><span class="s0">'parentData'</span><span class="s1">,</span>
+      <span class="s2">$parentDataProperty = $dataLvl ? it.dataPathArr[$dataLvl] : </span><span class="s0">'parentDataProperty'</span><span class="s1">;</span>
+    <span class="s2">out += </span><span class="s0">' , ' </span><span class="s2">+ ($parentData) + </span><span class="s0">' , ' </span><span class="s2">+ ($parentDataProperty) + </span><span class="s0">', rootData)  '</span><span class="s1">;</span>
+    <span class="s3">var </span><span class="s2">__callValidate = out</span><span class="s1">;</span>
+    <span class="s2">out = $$outStack.pop()</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">($async) {</span>
+      <span class="s3">if </span><span class="s2">(!it.async) </span><span class="s3">throw new </span><span class="s2">Error(</span><span class="s0">'async schema referenced by sync schema'</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">($breakOnError) {</span>
+        <span class="s2">out += </span><span class="s0">' var ' </span><span class="s2">+ ($valid) + </span><span class="s0">'; '</span><span class="s1">;</span>
+      <span class="s2">}</span>
+      <span class="s2">out += </span><span class="s0">' try { await ' </span><span class="s2">+ (__callValidate) + </span><span class="s0">'; '</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">($breakOnError) {</span>
+        <span class="s2">out += </span><span class="s0">' ' </span><span class="s2">+ ($valid) + </span><span class="s0">' = true; '</span><span class="s1">;</span>
+      <span class="s2">}</span>
+      <span class="s2">out += </span><span class="s0">' } catch (e) { if (!(e instanceof ValidationError)) throw e; if (vErrors === null) vErrors = e.errors; else vErrors = vErrors.concat(e.errors); errors = vErrors.length; '</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">($breakOnError) {</span>
+        <span class="s2">out += </span><span class="s0">' ' </span><span class="s2">+ ($valid) + </span><span class="s0">' = false; '</span><span class="s1">;</span>
+      <span class="s2">}</span>
+      <span class="s2">out += </span><span class="s0">' } '</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">($breakOnError) {</span>
+        <span class="s2">out += </span><span class="s0">' if (' </span><span class="s2">+ ($valid) + </span><span class="s0">') { '</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">out += </span><span class="s0">' if (!' </span><span class="s2">+ (__callValidate) + </span><span class="s0">') { if (vErrors === null) vErrors = ' </span><span class="s2">+ ($refCode) + </span><span class="s0">'.errors; else vErrors = vErrors.concat(' </span><span class="s2">+ ($refCode) + </span><span class="s0">'.errors); errors = vErrors.length; } '</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">($breakOnError) {</span>
+        <span class="s2">out += </span><span class="s0">' else { '</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">out</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

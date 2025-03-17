@@ -1,0 +1,103 @@
+<html>
+<head>
+<title>sort.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #cc7832;}
+.s2 { color: #8a8a8a;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8ea765;}
+.s5 { color: #6897bb;}
+.s6 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+sort.js</font>
+</center></td></tr></table>
+<pre><span class="s0">module.exports = sortByProcedure</span><span class="s1">;</span>
+
+<span class="s2">/* 
+    sort the parts of the passed selector, 
+    as there is potential for optimization 
+    (some types of selectors are faster than others) 
+*/</span>
+
+<span class="s3">var </span><span class="s0">procedure = require(</span><span class="s4">&quot;./procedure.json&quot;</span><span class="s0">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s0">attributes = {</span>
+    <span class="s0">__proto__: </span><span class="s3">null</span><span class="s1">,</span>
+    <span class="s0">exists: </span><span class="s5">10</span><span class="s1">,</span>
+    <span class="s0">equals: </span><span class="s5">8</span><span class="s1">,</span>
+    <span class="s0">not: </span><span class="s5">7</span><span class="s1">,</span>
+    <span class="s0">start: </span><span class="s5">6</span><span class="s1">,</span>
+    <span class="s0">end: </span><span class="s5">6</span><span class="s1">,</span>
+    <span class="s0">any: </span><span class="s5">5</span><span class="s1">,</span>
+    <span class="s0">hyphen: </span><span class="s5">4</span><span class="s1">,</span>
+    <span class="s0">element: </span><span class="s5">4</span>
+<span class="s0">}</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s0">sortByProcedure(arr) {</span>
+    <span class="s3">var </span><span class="s0">procs = arr.map(getProcedure)</span><span class="s1">;</span>
+    <span class="s3">for </span><span class="s0">(</span><span class="s3">var </span><span class="s0">i = </span><span class="s5">1</span><span class="s1">; </span><span class="s0">i &lt; arr.length</span><span class="s1">; </span><span class="s0">i++) {</span>
+        <span class="s3">var </span><span class="s0">procNew = procs[i]</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s0">(procNew &lt; </span><span class="s5">0</span><span class="s0">) </span><span class="s3">continue</span><span class="s1">;</span>
+
+        <span class="s3">for </span><span class="s0">(</span><span class="s3">var </span><span class="s0">j = i - </span><span class="s5">1</span><span class="s1">; </span><span class="s0">j &gt;= </span><span class="s5">0 </span><span class="s0">&amp;&amp; procNew &lt; procs[j]</span><span class="s1">; </span><span class="s0">j--) {</span>
+            <span class="s3">var </span><span class="s0">token = arr[j + </span><span class="s5">1</span><span class="s0">]</span><span class="s1">;</span>
+            <span class="s0">arr[j + </span><span class="s5">1</span><span class="s0">] = arr[j]</span><span class="s1">;</span>
+            <span class="s0">arr[j] = token</span><span class="s1">;</span>
+            <span class="s0">procs[j + </span><span class="s5">1</span><span class="s0">] = procs[j]</span><span class="s1">;</span>
+            <span class="s0">procs[j] = procNew</span><span class="s1">;</span>
+        <span class="s0">}</span>
+    <span class="s0">}</span>
+<span class="s0">}</span>
+
+<span class="s3">function </span><span class="s0">getProcedure(token) {</span>
+    <span class="s3">var </span><span class="s0">proc = procedure[token.type]</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s0">(proc === procedure.attribute) {</span>
+        <span class="s0">proc = attributes[token.action]</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s0">(proc === attributes.equals &amp;&amp; token.name === </span><span class="s4">&quot;id&quot;</span><span class="s0">) {</span>
+            <span class="s6">//prefer ID selectors (eg. #ID)</span>
+            <span class="s0">proc = </span><span class="s5">9</span><span class="s1">;</span>
+        <span class="s0">}</span>
+
+        <span class="s3">if </span><span class="s0">(token.ignoreCase) {</span>
+            <span class="s6">//ignoreCase adds some overhead, prefer &quot;normal&quot; token</span>
+            <span class="s6">//this is a binary operation, to ensure it's still an int</span>
+            <span class="s0">proc &gt;&gt;= </span><span class="s5">1</span><span class="s1">;</span>
+        <span class="s0">}</span>
+    <span class="s0">} </span><span class="s3">else if </span><span class="s0">(proc === procedure.pseudo) {</span>
+        <span class="s3">if </span><span class="s0">(!token.data) {</span>
+            <span class="s0">proc = </span><span class="s5">3</span><span class="s1">;</span>
+        <span class="s0">} </span><span class="s3">else if </span><span class="s0">(token.name === </span><span class="s4">&quot;has&quot; </span><span class="s0">|| token.name === </span><span class="s4">&quot;contains&quot;</span><span class="s0">) {</span>
+            <span class="s0">proc = </span><span class="s5">0</span><span class="s1">; </span><span class="s6">//expensive in any case</span>
+        <span class="s0">} </span><span class="s3">else if </span><span class="s0">(token.name === </span><span class="s4">&quot;matches&quot; </span><span class="s0">|| token.name === </span><span class="s4">&quot;not&quot;</span><span class="s0">) {</span>
+            <span class="s0">proc = </span><span class="s5">0</span><span class="s1">;</span>
+            <span class="s3">for </span><span class="s0">(</span><span class="s3">var </span><span class="s0">i = </span><span class="s5">0</span><span class="s1">; </span><span class="s0">i &lt; token.data.length</span><span class="s1">; </span><span class="s0">i++) {</span>
+                <span class="s6">//TODO better handling of complex selectors</span>
+                <span class="s3">if </span><span class="s0">(token.data[i].length !== </span><span class="s5">1</span><span class="s0">) </span><span class="s3">continue</span><span class="s1">;</span>
+                <span class="s3">var </span><span class="s0">cur = getProcedure(token.data[i][</span><span class="s5">0</span><span class="s0">])</span><span class="s1">;</span>
+                <span class="s6">//avoid executing :has or :contains</span>
+                <span class="s3">if </span><span class="s0">(cur === </span><span class="s5">0</span><span class="s0">) {</span>
+                    <span class="s0">proc = </span><span class="s5">0</span><span class="s1">;</span>
+                    <span class="s3">break</span><span class="s1">;</span>
+                <span class="s0">}</span>
+                <span class="s3">if </span><span class="s0">(cur &gt; proc) proc = cur</span><span class="s1">;</span>
+            <span class="s0">}</span>
+            <span class="s3">if </span><span class="s0">(token.data.length &gt; </span><span class="s5">1 </span><span class="s0">&amp;&amp; proc &gt; </span><span class="s5">0</span><span class="s0">) proc -= </span><span class="s5">1</span><span class="s1">;</span>
+        <span class="s0">} </span><span class="s3">else </span><span class="s0">{</span>
+            <span class="s0">proc = </span><span class="s5">1</span><span class="s1">;</span>
+        <span class="s0">}</span>
+    <span class="s0">}</span>
+    <span class="s3">return </span><span class="s0">proc</span><span class="s1">;</span>
+<span class="s0">}</span>
+</pre>
+</body>
+</html>

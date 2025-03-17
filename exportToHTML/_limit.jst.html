@@ -1,0 +1,130 @@
+<html>
+<head>
+<title>_limit.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_limit.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+<span class="s0">{{# def.$data }}</span>
+
+<span class="s0">{{## def.setExclusiveLimit:</span>
+  <span class="s0">$exclusive = true;</span>
+  <span class="s0">$errorKeyword = $exclusiveKeyword;</span>
+  <span class="s0">$errSchemaPath = it.errSchemaPath + '/' + $exclusiveKeyword;</span>
+<span class="s0">#}}</span>
+
+<span class="s0">{{</span>
+  <span class="s0">var $isMax = $keyword == 'maximum'</span>
+    <span class="s0">, $exclusiveKeyword = $isMax ? 'exclusiveMaximum' : 'exclusiveMinimum'</span>
+    <span class="s0">, $schemaExcl = it.schema[$exclusiveKeyword]</span>
+    <span class="s0">, $isDataExcl = it.opts.$data &amp;&amp; $schemaExcl &amp;&amp; $schemaExcl.$data</span>
+    <span class="s0">, $op = $isMax ? '&lt;' : '&gt;'</span>
+    <span class="s0">, $notOp = $isMax ? '&gt;' : '&lt;'</span>
+    <span class="s0">, $errorKeyword = undefined;</span>
+
+  <span class="s0">if (!($isData || typeof $schema == 'number' || $schema === undefined)) {</span>
+    <span class="s0">throw new Error($keyword + ' must be number');</span>
+  <span class="s0">}</span>
+  <span class="s0">if (!($isDataExcl || $schemaExcl === undefined</span>
+                    <span class="s0">|| typeof $schemaExcl == 'number'</span>
+                    <span class="s0">|| typeof $schemaExcl == 'boolean')) {</span>
+    <span class="s0">throw new Error($exclusiveKeyword + ' must be number or boolean');</span>
+  <span class="s0">}</span>
+<span class="s0">}}</span>
+
+<span class="s0">{{? $isDataExcl }}</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $schemaValueExcl = it.util.getData($schemaExcl.$data, $dataLvl, it.dataPathArr)</span>
+      <span class="s0">, $exclusive = 'exclusive' + $lvl</span>
+      <span class="s0">, $exclType = 'exclType' + $lvl</span>
+      <span class="s0">, $exclIsNumber = 'exclIsNumber' + $lvl</span>
+      <span class="s0">, $opExpr = 'op' + $lvl</span>
+      <span class="s0">, $opStr = '\' + ' + $opExpr + ' + \'';</span>
+  <span class="s0">}}</span>
+  <span class="s0">var schemaExcl{{=$lvl}} = {{=$schemaValueExcl}};</span>
+  <span class="s0">{{ $schemaValueExcl = 'schemaExcl' + $lvl; }}</span>
+
+  <span class="s0">var {{=$exclusive}};</span>
+  <span class="s0">var {{=$exclType}} = typeof {{=$schemaValueExcl}};</span>
+  <span class="s0">if ({{=$exclType}} != 'boolean' &amp;&amp; {{=$exclType}} != 'undefined' &amp;&amp; {{=$exclType}} != 'number') {</span>
+    <span class="s0">{{ var $errorKeyword = $exclusiveKeyword; }}</span>
+    <span class="s0">{{# def.error:'_exclusiveLimit' }}</span>
+  <span class="s0">} else if ({{# def.$dataNotType:'number' }}</span>
+            <span class="s0">{{=$exclType}} == 'number'</span>
+              <span class="s0">? (</span>
+                  <span class="s0">({{=$exclusive}} = {{=$schemaValue}} === undefined || {{=$schemaValueExcl}} {{=$op}}= {{=$schemaValue}})</span>
+                    <span class="s0">? {{=$data}} {{=$notOp}}= {{=$schemaValueExcl}}</span>
+                    <span class="s0">: {{=$data}} {{=$notOp}} {{=$schemaValue}}</span>
+                <span class="s0">)</span>
+              <span class="s0">: (</span>
+                  <span class="s0">({{=$exclusive}} = {{=$schemaValueExcl}} === true)</span>
+                    <span class="s0">? {{=$data}} {{=$notOp}}= {{=$schemaValue}}</span>
+                    <span class="s0">: {{=$data}} {{=$notOp}} {{=$schemaValue}}</span>
+                <span class="s0">)</span>
+            <span class="s0">|| {{=$data}} !== {{=$data}}) {</span>
+    <span class="s0">var op{{=$lvl}} = {{=$exclusive}} ? '{{=$op}}' : '{{=$op}}=';</span>
+    <span class="s0">{{</span>
+      <span class="s0">if ($schema === undefined) {</span>
+        <span class="s0">$errorKeyword = $exclusiveKeyword;</span>
+        <span class="s0">$errSchemaPath = it.errSchemaPath + '/' + $exclusiveKeyword;</span>
+        <span class="s0">$schemaValue = $schemaValueExcl;</span>
+        <span class="s0">$isData = $isDataExcl;</span>
+      <span class="s0">}</span>
+    <span class="s0">}}</span>
+<span class="s0">{{??}}</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $exclIsNumber = typeof $schemaExcl == 'number'</span>
+      <span class="s0">, $opStr = $op;  /*used in error*/</span>
+  <span class="s0">}}</span>
+
+  <span class="s0">{{? $exclIsNumber &amp;&amp; $isData }}</span>
+    <span class="s0">{{ var $opExpr = '\'' + $opStr + '\''; /*used in error*/ }}</span>
+    <span class="s0">if ({{# def.$dataNotType:'number' }}</span>
+        <span class="s0">( {{=$schemaValue}} === undefined</span>
+          <span class="s0">|| {{=$schemaExcl}} {{=$op}}= {{=$schemaValue}}</span>
+            <span class="s0">? {{=$data}} {{=$notOp}}= {{=$schemaExcl}}</span>
+            <span class="s0">: {{=$data}} {{=$notOp}} {{=$schemaValue}} )</span>
+        <span class="s0">|| {{=$data}} !== {{=$data}}) {</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">{{</span>
+      <span class="s0">if ($exclIsNumber &amp;&amp; $schema === undefined) {</span>
+          <span class="s0">{{# def.setExclusiveLimit }}</span>
+          <span class="s0">$schemaValue = $schemaExcl;</span>
+          <span class="s0">$notOp += '=';</span>
+      <span class="s0">} else {</span>
+        <span class="s0">if ($exclIsNumber)</span>
+          <span class="s0">$schemaValue = Math[$isMax ? 'min' : 'max']($schemaExcl, $schema);</span>
+
+        <span class="s0">if ($schemaExcl === ($exclIsNumber ? $schemaValue : true)) {</span>
+          <span class="s0">{{# def.setExclusiveLimit }}</span>
+          <span class="s0">$notOp += '=';</span>
+        <span class="s0">} else {</span>
+          <span class="s0">$exclusive = false;</span>
+          <span class="s0">$opStr += '=';</span>
+        <span class="s0">}</span>
+      <span class="s0">}</span>
+
+      <span class="s0">var $opExpr = '\'' + $opStr + '\''; /*used in error*/</span>
+    <span class="s0">}}</span>
+
+    <span class="s0">if ({{# def.$dataNotType:'number' }}</span>
+        <span class="s0">{{=$data}} {{=$notOp}} {{=$schemaValue}}</span>
+        <span class="s0">|| {{=$data}} !== {{=$data}}) {</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{?}}</span>
+    <span class="s0">{{ $errorKeyword = $errorKeyword || $keyword; }}</span>
+    <span class="s0">{{# def.error:'_limit' }}</span>
+  <span class="s0">} {{? $breakOnError }} else { {{?}}</span>
+</pre>
+</body>
+</html>

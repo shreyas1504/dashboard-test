@@ -1,0 +1,59 @@
+<html>
+<head>
+<title>socket.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+socket.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span>
+
+<span class="s2">var </span><span class="s1">util = require(</span><span class="s0">'util'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">net = require(</span><span class="s0">'net'</span><span class="s1">)</span>
+
+<span class="s2">function </span><span class="s1">Socket (parent</span><span class="s3">, </span><span class="s1">options) {</span>
+  <span class="s1">net.Socket.call(</span><span class="s2">this</span><span class="s3">, </span><span class="s1">options)</span>
+
+  <span class="s2">var </span><span class="s1">state = {}</span>
+
+  <span class="s2">this</span><span class="s1">._spdyState = state</span>
+
+  <span class="s1">state.parent = parent</span>
+
+  <span class="s2">this</span><span class="s1">.servername = parent.servername</span>
+  <span class="s2">this</span><span class="s1">.npnProtocol = parent.npnProtocol</span>
+  <span class="s2">this</span><span class="s1">.alpnProtocol = parent.alpnProtocol</span>
+  <span class="s2">this</span><span class="s1">.authorized = parent.authorized</span>
+  <span class="s2">this</span><span class="s1">.authorizationError = parent.authorizationError</span>
+  <span class="s2">this</span><span class="s1">.encrypted = </span><span class="s2">true</span>
+  <span class="s2">this</span><span class="s1">.allowHalfOpen = </span><span class="s2">true</span>
+<span class="s1">}</span>
+
+<span class="s1">util.inherits(Socket</span><span class="s3">, </span><span class="s1">net.Socket)</span>
+
+<span class="s1">module.exports = Socket</span>
+
+<span class="s2">var </span><span class="s1">methods = [</span>
+  <span class="s0">'renegotiate'</span><span class="s3">, </span><span class="s0">'setMaxSendFragment'</span><span class="s3">, </span><span class="s0">'getTLSTicket'</span><span class="s3">, </span><span class="s0">'setServername'</span><span class="s3">,</span>
+  <span class="s0">'setSession'</span><span class="s3">, </span><span class="s0">'getPeerCertificate'</span><span class="s3">, </span><span class="s0">'getSession'</span><span class="s3">, </span><span class="s0">'isSessionReused'</span><span class="s3">,</span>
+  <span class="s0">'getCipher'</span><span class="s3">, </span><span class="s0">'getEphemeralKeyInfo'</span>
+<span class="s1">]</span>
+
+<span class="s1">methods.forEach(</span><span class="s2">function </span><span class="s1">(method) {</span>
+  <span class="s1">Socket.prototype[method] = </span><span class="s2">function </span><span class="s1">methodWrap () {</span>
+    <span class="s2">var </span><span class="s1">parent = </span><span class="s2">this</span><span class="s1">._spdyState.parent</span>
+    <span class="s2">return </span><span class="s1">parent[method].apply(parent</span><span class="s3">, </span><span class="s1">arguments)</span>
+  <span class="s1">}</span>
+<span class="s1">})</span>
+</pre>
+</body>
+</html>

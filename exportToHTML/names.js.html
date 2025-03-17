@@ -1,0 +1,126 @@
+<html>
+<head>
+<title>names.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #6897bb;}
+.s4 { color: #808080;}
+.s5 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+names.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">hasOwnProperty = Object.prototype.hasOwnProperty</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">keywords = Object.create(</span><span class="s0">null</span><span class="s1">)</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">properties = Object.create(</span><span class="s0">null</span><span class="s1">)</span><span class="s2">;</span>
+<span class="s0">var </span><span class="s1">HYPHENMINUS = </span><span class="s3">45</span><span class="s2">; </span><span class="s4">// '-'.charCodeAt()</span>
+
+<span class="s0">function </span><span class="s1">isCustomProperty(str</span><span class="s2">, </span><span class="s1">offset) {</span>
+    <span class="s1">offset = offset || </span><span class="s3">0</span><span class="s2">;</span>
+
+    <span class="s0">return </span><span class="s1">str.length - offset &gt;= </span><span class="s3">2 </span><span class="s1">&amp;&amp;</span>
+           <span class="s1">str.charCodeAt(offset) === HYPHENMINUS &amp;&amp;</span>
+           <span class="s1">str.charCodeAt(offset + </span><span class="s3">1</span><span class="s1">) === HYPHENMINUS</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">getVendorPrefix(str</span><span class="s2">, </span><span class="s1">offset) {</span>
+    <span class="s1">offset = offset || </span><span class="s3">0</span><span class="s2">;</span>
+
+    <span class="s4">// verdor prefix should be at least 3 chars length</span>
+    <span class="s0">if </span><span class="s1">(str.length - offset &gt;= </span><span class="s3">3</span><span class="s1">) {</span>
+        <span class="s4">// vendor prefix starts with hyper minus following non-hyper minus</span>
+        <span class="s0">if </span><span class="s1">(str.charCodeAt(offset) === HYPHENMINUS &amp;&amp;</span>
+            <span class="s1">str.charCodeAt(offset + </span><span class="s3">1</span><span class="s1">) !== HYPHENMINUS) {</span>
+            <span class="s4">// vendor prefix should contain a hyper minus at the ending</span>
+            <span class="s0">var </span><span class="s1">secondDashIndex = str.indexOf(</span><span class="s5">'-'</span><span class="s2">, </span><span class="s1">offset + </span><span class="s3">2</span><span class="s1">)</span><span class="s2">;</span>
+
+            <span class="s0">if </span><span class="s1">(secondDashIndex !== -</span><span class="s3">1</span><span class="s1">) {</span>
+                <span class="s0">return </span><span class="s1">str.substring(offset</span><span class="s2">, </span><span class="s1">secondDashIndex + </span><span class="s3">1</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s5">''</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">getKeywordDescriptor(keyword) {</span>
+    <span class="s0">if </span><span class="s1">(hasOwnProperty.call(keywords</span><span class="s2">, </span><span class="s1">keyword)) {</span>
+        <span class="s0">return </span><span class="s1">keywords[keyword]</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">name = keyword.toLowerCase()</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(hasOwnProperty.call(keywords</span><span class="s2">, </span><span class="s1">name)) {</span>
+        <span class="s0">return </span><span class="s1">keywords[keyword] = keywords[name]</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">custom = isCustomProperty(name</span><span class="s2">, </span><span class="s3">0</span><span class="s1">)</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">vendor = !custom ? getVendorPrefix(name</span><span class="s2">, </span><span class="s3">0</span><span class="s1">) : </span><span class="s5">''</span><span class="s2">;</span>
+
+    <span class="s0">return </span><span class="s1">keywords[keyword] = Object.freeze({</span>
+        <span class="s1">basename: name.substr(vendor.length)</span><span class="s2">,</span>
+        <span class="s1">name: name</span><span class="s2">,</span>
+        <span class="s1">vendor: vendor</span><span class="s2">,</span>
+        <span class="s1">prefix: vendor</span><span class="s2">,</span>
+        <span class="s1">custom: custom</span>
+    <span class="s1">})</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">getPropertyDescriptor(property) {</span>
+    <span class="s0">if </span><span class="s1">(hasOwnProperty.call(properties</span><span class="s2">, </span><span class="s1">property)) {</span>
+        <span class="s0">return </span><span class="s1">properties[property]</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">name = property</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">hack = property[</span><span class="s3">0</span><span class="s1">]</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s1">(hack === </span><span class="s5">'/'</span><span class="s1">) {</span>
+        <span class="s1">hack = property[</span><span class="s3">1</span><span class="s1">] === </span><span class="s5">'/' </span><span class="s1">? </span><span class="s5">'//' </span><span class="s1">: </span><span class="s5">'/'</span><span class="s2">;</span>
+    <span class="s1">} </span><span class="s0">else if </span><span class="s1">(hack !== </span><span class="s5">'_' </span><span class="s1">&amp;&amp;</span>
+               <span class="s1">hack !== </span><span class="s5">'*' </span><span class="s1">&amp;&amp;</span>
+               <span class="s1">hack !== </span><span class="s5">'$' </span><span class="s1">&amp;&amp;</span>
+               <span class="s1">hack !== </span><span class="s5">'#' </span><span class="s1">&amp;&amp;</span>
+               <span class="s1">hack !== </span><span class="s5">'+' </span><span class="s1">&amp;&amp;</span>
+               <span class="s1">hack !== </span><span class="s5">'&amp;'</span><span class="s1">) {</span>
+        <span class="s1">hack = </span><span class="s5">''</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">custom = isCustomProperty(name</span><span class="s2">, </span><span class="s1">hack.length)</span><span class="s2">;</span>
+
+    <span class="s4">// re-use result when possible (the same as for lower case)</span>
+    <span class="s0">if </span><span class="s1">(!custom) {</span>
+        <span class="s1">name = name.toLowerCase()</span><span class="s2">;</span>
+        <span class="s0">if </span><span class="s1">(hasOwnProperty.call(properties</span><span class="s2">, </span><span class="s1">name)) {</span>
+            <span class="s0">return </span><span class="s1">properties[property] = properties[name]</span><span class="s2">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">vendor = !custom ? getVendorPrefix(name</span><span class="s2">, </span><span class="s1">hack.length) : </span><span class="s5">''</span><span class="s2">;</span>
+    <span class="s0">var </span><span class="s1">prefix = name.substr(</span><span class="s3">0</span><span class="s2">, </span><span class="s1">hack.length + vendor.length)</span><span class="s2">;</span>
+
+    <span class="s0">return </span><span class="s1">properties[property] = Object.freeze({</span>
+        <span class="s1">basename: name.substr(prefix.length)</span><span class="s2">,</span>
+        <span class="s1">name: name.substr(hack.length)</span><span class="s2">,</span>
+        <span class="s1">hack: hack</span><span class="s2">,</span>
+        <span class="s1">vendor: vendor</span><span class="s2">,</span>
+        <span class="s1">prefix: prefix</span><span class="s2">,</span>
+        <span class="s1">custom: custom</span>
+    <span class="s1">})</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">keyword: getKeywordDescriptor</span><span class="s2">,</span>
+    <span class="s1">property: getPropertyDescriptor</span><span class="s2">,</span>
+    <span class="s1">isCustomProperty: isCustomProperty</span><span class="s2">,</span>
+    <span class="s1">vendorPrefix: getVendorPrefix</span>
+<span class="s1">}</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<html>
+<head>
+<title>parser.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #cc7832; font-weight: bold;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+parser.js</font>
+</center></td></tr></table>
+<pre><span class="s0">module.exports = {</span>
+    <span class="s0">parseContext: {</span>
+        <span class="s1">default</span><span class="s0">: </span><span class="s2">'StyleSheet'</span><span class="s3">,</span>
+        <span class="s0">stylesheet: </span><span class="s2">'StyleSheet'</span><span class="s3">,</span>
+        <span class="s0">atrule: </span><span class="s2">'Atrule'</span><span class="s3">,</span>
+        <span class="s0">atrulePrelude: </span><span class="s1">function</span><span class="s0">(options) {</span>
+            <span class="s1">return this</span><span class="s0">.AtrulePrelude(options.atrule ? String(options.atrule) : </span><span class="s1">null</span><span class="s0">)</span><span class="s3">;</span>
+        <span class="s0">}</span><span class="s3">,</span>
+        <span class="s0">mediaQueryList: </span><span class="s2">'MediaQueryList'</span><span class="s3">,</span>
+        <span class="s0">mediaQuery: </span><span class="s2">'MediaQuery'</span><span class="s3">,</span>
+        <span class="s0">rule: </span><span class="s2">'Rule'</span><span class="s3">,</span>
+        <span class="s0">selectorList: </span><span class="s2">'SelectorList'</span><span class="s3">,</span>
+        <span class="s0">selector: </span><span class="s2">'Selector'</span><span class="s3">,</span>
+        <span class="s0">block: </span><span class="s1">function</span><span class="s0">() {</span>
+            <span class="s1">return this</span><span class="s0">.Block(</span><span class="s1">true</span><span class="s0">)</span><span class="s3">;</span>
+        <span class="s0">}</span><span class="s3">,</span>
+        <span class="s0">declarationList: </span><span class="s2">'DeclarationList'</span><span class="s3">,</span>
+        <span class="s0">declaration: </span><span class="s2">'Declaration'</span><span class="s3">,</span>
+        <span class="s0">value: </span><span class="s2">'Value'</span>
+    <span class="s0">}</span><span class="s3">,</span>
+    <span class="s0">scope: require(</span><span class="s2">'../scope'</span><span class="s0">)</span><span class="s3">,</span>
+    <span class="s0">atrule: require(</span><span class="s2">'../atrule'</span><span class="s0">)</span><span class="s3">,</span>
+    <span class="s0">pseudo: require(</span><span class="s2">'../pseudo'</span><span class="s0">)</span><span class="s3">,</span>
+    <span class="s0">node: require(</span><span class="s2">'../node'</span><span class="s0">)</span>
+<span class="s0">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

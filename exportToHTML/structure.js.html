@@ -1,0 +1,185 @@
+<html>
+<head>
+<title>structure.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+structure.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">List = require(</span><span class="s2">'../common/List'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">hasOwnProperty = Object.prototype.hasOwnProperty</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">isValidNumber(value) {</span>
+    <span class="s4">// Number.isInteger(value) &amp;&amp; value &gt;= 0</span>
+    <span class="s0">return </span><span class="s1">(</span>
+        <span class="s0">typeof </span><span class="s1">value === </span><span class="s2">'number' </span><span class="s1">&amp;&amp;</span>
+        <span class="s1">isFinite(value) &amp;&amp;</span>
+        <span class="s1">Math.floor(value) === value &amp;&amp;</span>
+        <span class="s1">value &gt;= </span><span class="s5">0</span>
+    <span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">isValidLocation(loc) {</span>
+    <span class="s0">return </span><span class="s1">(</span>
+        <span class="s1">Boolean(loc) &amp;&amp;</span>
+        <span class="s1">isValidNumber(loc.offset) &amp;&amp;</span>
+        <span class="s1">isValidNumber(loc.line) &amp;&amp;</span>
+        <span class="s1">isValidNumber(loc.column)</span>
+    <span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">createNodeStructureChecker(type</span><span class="s3">, </span><span class="s1">fields) {</span>
+    <span class="s0">return function </span><span class="s1">checkNode(node</span><span class="s3">, </span><span class="s1">warn) {</span>
+        <span class="s0">if </span><span class="s1">(!node || node.constructor !== Object) {</span>
+            <span class="s0">return </span><span class="s1">warn(node</span><span class="s3">, </span><span class="s2">'Type of node should be an Object'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">key </span><span class="s0">in </span><span class="s1">node) {</span>
+            <span class="s0">var </span><span class="s1">valid = </span><span class="s0">true</span><span class="s3">;</span>
+
+            <span class="s0">if </span><span class="s1">(hasOwnProperty.call(node</span><span class="s3">, </span><span class="s1">key) === </span><span class="s0">false</span><span class="s1">) {</span>
+                <span class="s0">continue</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">if </span><span class="s1">(key === </span><span class="s2">'type'</span><span class="s1">) {</span>
+                <span class="s0">if </span><span class="s1">(node.type !== type) {</span>
+                    <span class="s1">warn(node</span><span class="s3">, </span><span class="s2">'Wrong node type `' </span><span class="s1">+ node.type + </span><span class="s2">'`, expected `' </span><span class="s1">+ type + </span><span class="s2">'`'</span><span class="s1">)</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s1">} </span><span class="s0">else if </span><span class="s1">(key === </span><span class="s2">'loc'</span><span class="s1">) {</span>
+                <span class="s0">if </span><span class="s1">(node.loc === </span><span class="s0">null</span><span class="s1">) {</span>
+                    <span class="s0">continue</span><span class="s3">;</span>
+                <span class="s1">} </span><span class="s0">else if </span><span class="s1">(node.loc &amp;&amp; node.loc.constructor === Object) {</span>
+                    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">node.loc.source !== </span><span class="s2">'string'</span><span class="s1">) {</span>
+                        <span class="s1">key += </span><span class="s2">'.source'</span><span class="s3">;</span>
+                    <span class="s1">} </span><span class="s0">else if </span><span class="s1">(!isValidLocation(node.loc.start)) {</span>
+                        <span class="s1">key += </span><span class="s2">'.start'</span><span class="s3">;</span>
+                    <span class="s1">} </span><span class="s0">else if </span><span class="s1">(!isValidLocation(node.loc.end)) {</span>
+                        <span class="s1">key += </span><span class="s2">'.end'</span><span class="s3">;</span>
+                    <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                        <span class="s0">continue</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+
+                <span class="s1">valid = </span><span class="s0">false</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s0">else if </span><span class="s1">(fields.hasOwnProperty(key)) {</span>
+                <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">, </span><span class="s1">valid = </span><span class="s0">false</span><span class="s3">; </span><span class="s1">!valid &amp;&amp; i &lt; fields[key].length</span><span class="s3">; </span><span class="s1">i++) {</span>
+                    <span class="s0">var </span><span class="s1">fieldType = fields[key][i]</span><span class="s3">;</span>
+
+                    <span class="s0">switch </span><span class="s1">(fieldType) {</span>
+                        <span class="s0">case </span><span class="s1">String:</span>
+                            <span class="s1">valid = </span><span class="s0">typeof </span><span class="s1">node[key] === </span><span class="s2">'string'</span><span class="s3">;</span>
+                            <span class="s0">break</span><span class="s3">;</span>
+
+                        <span class="s0">case </span><span class="s1">Boolean:</span>
+                            <span class="s1">valid = </span><span class="s0">typeof </span><span class="s1">node[key] === </span><span class="s2">'boolean'</span><span class="s3">;</span>
+                            <span class="s0">break</span><span class="s3">;</span>
+
+                        <span class="s0">case null</span><span class="s1">:</span>
+                            <span class="s1">valid = node[key] === </span><span class="s0">null</span><span class="s3">;</span>
+                            <span class="s0">break</span><span class="s3">;</span>
+
+                        <span class="s0">default</span><span class="s1">:</span>
+                            <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">fieldType === </span><span class="s2">'string'</span><span class="s1">) {</span>
+                                <span class="s1">valid = node[key] &amp;&amp; node[key].type === fieldType</span><span class="s3">;</span>
+                            <span class="s1">} </span><span class="s0">else if </span><span class="s1">(Array.isArray(fieldType)) {</span>
+                                <span class="s1">valid = node[key] </span><span class="s0">instanceof </span><span class="s1">List</span><span class="s3">;</span>
+                            <span class="s1">}</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                <span class="s1">warn(node</span><span class="s3">, </span><span class="s2">'Unknown field `' </span><span class="s1">+ key + </span><span class="s2">'` for ' </span><span class="s1">+ type + </span><span class="s2">' node type'</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">if </span><span class="s1">(!valid) {</span>
+                <span class="s1">warn(node</span><span class="s3">, </span><span class="s2">'Bad value for `' </span><span class="s1">+ type + </span><span class="s2">'.' </span><span class="s1">+ key + </span><span class="s2">'`'</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">key </span><span class="s0">in </span><span class="s1">fields) {</span>
+            <span class="s0">if </span><span class="s1">(hasOwnProperty.call(fields</span><span class="s3">, </span><span class="s1">key) &amp;&amp;</span>
+                <span class="s1">hasOwnProperty.call(node</span><span class="s3">, </span><span class="s1">key) === </span><span class="s0">false</span><span class="s1">) {</span>
+                <span class="s1">warn(node</span><span class="s3">, </span><span class="s2">'Field `' </span><span class="s1">+ type + </span><span class="s2">'.' </span><span class="s1">+ key + </span><span class="s2">'` is missed'</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">processStructure(name</span><span class="s3">, </span><span class="s1">nodeType) {</span>
+    <span class="s0">var </span><span class="s1">structure = nodeType.structure</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">fields = {</span>
+        <span class="s1">type: String</span><span class="s3">,</span>
+        <span class="s1">loc: </span><span class="s0">true</span>
+    <span class="s1">}</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">docs = {</span>
+        <span class="s1">type: </span><span class="s2">'&quot;' </span><span class="s1">+ name + </span><span class="s2">'&quot;'</span>
+    <span class="s1">}</span><span class="s3">;</span>
+
+    <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">key </span><span class="s0">in </span><span class="s1">structure) {</span>
+        <span class="s0">if </span><span class="s1">(hasOwnProperty.call(structure</span><span class="s3">, </span><span class="s1">key) === </span><span class="s0">false</span><span class="s1">) {</span>
+            <span class="s0">continue</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">var </span><span class="s1">docsTypes = []</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">fieldTypes = fields[key] = Array.isArray(structure[key])</span>
+            <span class="s1">? structure[key].slice()</span>
+            <span class="s1">: [structure[key]]</span><span class="s3">;</span>
+
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; fieldTypes.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+            <span class="s0">var </span><span class="s1">fieldType = fieldTypes[i]</span><span class="s3">;</span>
+            <span class="s0">if </span><span class="s1">(fieldType === String || fieldType === Boolean) {</span>
+                <span class="s1">docsTypes.push(fieldType.name)</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s0">else if </span><span class="s1">(fieldType === </span><span class="s0">null</span><span class="s1">) {</span>
+                <span class="s1">docsTypes.push(</span><span class="s2">'null'</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s0">else if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">fieldType === </span><span class="s2">'string'</span><span class="s1">) {</span>
+                <span class="s1">docsTypes.push(</span><span class="s2">'&lt;' </span><span class="s1">+ fieldType + </span><span class="s2">'&gt;'</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s0">else if </span><span class="s1">(Array.isArray(fieldType)) {</span>
+                <span class="s1">docsTypes.push(</span><span class="s2">'List'</span><span class="s1">)</span><span class="s3">; </span><span class="s4">// TODO: use type enum</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">'Wrong value `' </span><span class="s1">+ fieldType + </span><span class="s2">'` in `' </span><span class="s1">+ name + </span><span class="s2">'.' </span><span class="s1">+ key + </span><span class="s2">'` structure definition'</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s1">docs[key] = docsTypes.join(</span><span class="s2">' | '</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">{</span>
+        <span class="s1">docs: docs</span><span class="s3">,</span>
+        <span class="s1">check: createNodeStructureChecker(name</span><span class="s3">, </span><span class="s1">fields)</span>
+    <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">getStructureFromConfig: </span><span class="s0">function</span><span class="s1">(config) {</span>
+        <span class="s0">var </span><span class="s1">structure = {}</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(config.node) {</span>
+            <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">name </span><span class="s0">in </span><span class="s1">config.node) {</span>
+                <span class="s0">if </span><span class="s1">(hasOwnProperty.call(config.node</span><span class="s3">, </span><span class="s1">name)) {</span>
+                    <span class="s0">var </span><span class="s1">nodeType = config.node[name]</span><span class="s3">;</span>
+
+                    <span class="s0">if </span><span class="s1">(nodeType.structure) {</span>
+                        <span class="s1">structure[name] = processStructure(name</span><span class="s3">, </span><span class="s1">nodeType)</span><span class="s3">;</span>
+                    <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                        <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">'Missed `structure` field in `' </span><span class="s1">+ name + </span><span class="s2">'` node type definition'</span><span class="s1">)</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">structure</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

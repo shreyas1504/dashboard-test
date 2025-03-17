@@ -1,0 +1,67 @@
+<html>
+<head>
+<title>memory.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+memory.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span>
+
+<span class="s2">const </span><span class="s1">PROPERTIES = [ </span><span class="s0">'rss'</span><span class="s3">, </span><span class="s0">'heapTotal'</span><span class="s3">, </span><span class="s0">'heapUsed'</span><span class="s3">, </span><span class="s0">'external' </span><span class="s1">]</span>
+
+<span class="s2">let </span><span class="s1">memory</span>
+
+<span class="s1">module.exports = {</span>
+  <span class="s1">initialise</span><span class="s3">,</span>
+  <span class="s1">update</span><span class="s3">,</span>
+  <span class="s1">report</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">initialise () {</span>
+  <span class="s1">memory = PROPERTIES.reduce((result</span><span class="s3">, </span><span class="s1">name) =&gt; {</span>
+    <span class="s1">result[name] = {</span>
+      <span class="s1">sum: </span><span class="s4">0</span><span class="s3">,</span>
+      <span class="s1">hwm: </span><span class="s4">0</span>
+    <span class="s1">}</span>
+    <span class="s2">return </span><span class="s1">result</span>
+  <span class="s1">}</span><span class="s3">, </span><span class="s1">{ count: </span><span class="s4">0 </span><span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">update () {</span>
+  <span class="s2">const </span><span class="s1">currentMemory = process.memoryUsage()</span>
+  <span class="s1">PROPERTIES.forEach(name =&gt; updateProperty(name</span><span class="s3">, </span><span class="s1">currentMemory))</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">updateProperty (name</span><span class="s3">, </span><span class="s1">currentMemory) {</span>
+  <span class="s2">const </span><span class="s1">m = memory[name]</span>
+  <span class="s2">const </span><span class="s1">c = currentMemory[name]</span>
+  <span class="s1">m.sum += c</span>
+  <span class="s2">if </span><span class="s1">(c &gt; m.hwm) {</span>
+    <span class="s1">m.hwm = c</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">report () {</span>
+  <span class="s1">PROPERTIES.forEach(name =&gt; reportProperty(name))</span>
+<span class="s1">}</span>
+
+<span class="s2">function </span><span class="s1">reportProperty (name) {</span>
+  <span class="s2">const </span><span class="s1">m = memory[name]</span>
+  <span class="s5">// eslint-disable-next-line no-console</span>
+  <span class="s1">console.log(</span><span class="s0">`mean </span><span class="s1">${name}</span><span class="s0">: </span><span class="s1">${m.sum / memory.count}</span><span class="s0">; hwm: </span><span class="s1">${m.hwm}</span><span class="s0">`</span><span class="s1">)</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

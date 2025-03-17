@@ -1,0 +1,55 @@
+<html>
+<head>
+<title>publish-built-version</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cfd2d5;}
+.s4 { color: #8ea765;}
+.s5 { color: #c57633;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+publish-built-version</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env bash</span>
+
+<span class="s1">set -e</span>
+
+<span class="s2">if [[ </span><span class="s1">-n </span><span class="s3">$TRAVIS_TAG </span><span class="s2">&amp;&amp; </span><span class="s3">$TRAVIS_JOB_NUMBER </span><span class="s2">=~ </span><span class="s4">&quot;.3&quot; </span><span class="s2">]]</span><span class="s1">; </span><span class="s2">then</span>
+  <span class="s1">echo </span><span class="s4">&quot;About to publish </span><span class="s3">$TRAVIS_TAG </span><span class="s4">to ajv-dist...&quot;</span>
+
+  <span class="s1">git config user.email </span><span class="s4">&quot;</span><span class="s3">$GIT_USER_EMAIL</span><span class="s4">&quot;</span>
+  <span class="s1">git config user.name </span><span class="s4">&quot;</span><span class="s3">$GIT_USER_NAME</span><span class="s4">&quot;</span>
+
+  <span class="s1">git clone https://</span><span class="s2">$</span><span class="s1">{GITHUB_TOKEN}@github.com/ajv-validator/ajv-dist.git ../ajv-dist</span>
+
+  <span class="s1">rm -rf ../ajv-dist/dist</span>
+  <span class="s1">mkdir ../ajv-dist/dist</span>
+  <span class="s1">cp ./dist/ajv.* ../ajv-dist/dist</span>
+  <span class="s1">cat bower.json | sed </span><span class="s4">'s/&quot;name&quot;: &quot;ajv&quot;/&quot;name&quot;: &quot;ajv-dist&quot;/' </span><span class="s2">&gt; </span><span class="s1">../ajv-dist/bower.json</span>
+  <span class="s1">cd ../ajv-dist</span>
+
+  <span class="s2">if [[ </span><span class="s5">`</span><span class="s1">git status --porcelain</span><span class="s5">` </span><span class="s2">]]</span><span class="s1">; </span><span class="s2">then</span>
+    <span class="s1">echo </span><span class="s4">&quot;Changes detected. Updating master branch...&quot;</span>
+    <span class="s1">git add -A</span>
+    <span class="s1">git commit -m </span><span class="s4">&quot;updated by travis build #</span><span class="s3">$TRAVIS_BUILD_NUMBER</span><span class="s4">&quot;</span>
+    <span class="s1">git push --quiet origin master </span><span class="s2">&gt; </span><span class="s1">/dev/null </span><span class="s6">2</span><span class="s1">&gt;&amp;</span><span class="s6">1</span>
+  <span class="s2">fi</span>
+
+  <span class="s1">echo </span><span class="s4">&quot;Publishing tag...&quot;</span>
+
+  <span class="s1">git tag </span><span class="s3">$TRAVIS_TAG</span>
+  <span class="s1">git push --tags </span><span class="s2">&gt; </span><span class="s1">/dev/null </span><span class="s6">2</span><span class="s1">&gt;&amp;</span><span class="s6">1</span>
+
+  <span class="s1">echo </span><span class="s4">&quot;Done&quot;</span>
+<span class="s2">fi</span>
+</pre>
+</body>
+</html>

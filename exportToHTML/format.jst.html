@@ -1,0 +1,123 @@
+<html>
+<head>
+<title>format.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+format.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.setupKeyword }}</span>
+
+<span class="s0">{{## def.skipFormat:</span>
+  <span class="s0">{{? $breakOnError }} if (true) { {{?}}</span>
+  <span class="s0">{{ return out; }}</span>
+<span class="s0">#}}</span>
+
+<span class="s0">{{? it.opts.format === false }}{{# def.skipFormat }}{{?}}</span>
+
+
+<span class="s0">{{# def.$data }}</span>
+
+
+<span class="s0">{{## def.$dataCheckFormat:</span>
+  <span class="s0">{{# def.$dataNotType:'string' }}</span>
+  <span class="s0">({{? $unknownFormats != 'ignore' }}</span>
+     <span class="s0">({{=$schemaValue}} &amp;&amp; !{{=$format}}</span>
+      <span class="s0">{{? $allowUnknown }}</span>
+        <span class="s0">&amp;&amp; self._opts.unknownFormats.indexOf({{=$schemaValue}}) == -1</span>
+      <span class="s0">{{?}}) ||</span>
+   <span class="s0">{{?}}</span>
+   <span class="s0">({{=$format}} &amp;&amp; {{=$formatType}} == '{{=$ruleType}}'</span>
+                 <span class="s0">&amp;&amp; !(typeof {{=$format}} == 'function'</span>
+                     <span class="s0">? {{? it.async}}</span>
+                        <span class="s0">(async{{=$lvl}} ? await {{=$format}}({{=$data}}) : {{=$format}}({{=$data}}))</span>
+                       <span class="s0">{{??}}</span>
+                        <span class="s0">{{=$format}}({{=$data}})</span>
+                       <span class="s0">{{?}}</span>
+                     <span class="s0">: {{=$format}}.test({{=$data}}))))</span>
+<span class="s0">#}}</span>
+
+<span class="s0">{{## def.checkFormat:</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $formatRef = 'formats' + it.util.getProperty($schema);</span>
+    <span class="s0">if ($isObject) $formatRef += '.validate';</span>
+  <span class="s0">}}</span>
+  <span class="s0">{{? typeof $format == 'function' }}</span>
+    <span class="s0">{{=$formatRef}}({{=$data}})</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">{{=$formatRef}}.test({{=$data}})</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{</span>
+  <span class="s0">var $unknownFormats = it.opts.unknownFormats</span>
+    <span class="s0">, $allowUnknown = Array.isArray($unknownFormats);</span>
+<span class="s0">}}</span>
+
+<span class="s0">{{? $isData }}</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $format = 'format' + $lvl</span>
+      <span class="s0">, $isObject = 'isObject' + $lvl</span>
+      <span class="s0">, $formatType = 'formatType' + $lvl;</span>
+  <span class="s0">}}</span>
+  <span class="s0">var {{=$format}} = formats[{{=$schemaValue}}];</span>
+  <span class="s0">var {{=$isObject}} = typeof {{=$format}} == 'object'</span>
+                        <span class="s0">&amp;&amp; !({{=$format}} instanceof RegExp)</span>
+                        <span class="s0">&amp;&amp; {{=$format}}.validate;</span>
+  <span class="s0">var {{=$formatType}} = {{=$isObject}} &amp;&amp; {{=$format}}.type || 'string';</span>
+  <span class="s0">if ({{=$isObject}}) {</span>
+    <span class="s0">{{? it.async}}</span>
+      <span class="s0">var async{{=$lvl}} = {{=$format}}.async;</span>
+    <span class="s0">{{?}}</span>
+    <span class="s0">{{=$format}} = {{=$format}}.validate;</span>
+  <span class="s0">}</span>
+  <span class="s0">if ({{# def.$dataCheckFormat }}) {</span>
+<span class="s0">{{??}}</span>
+  <span class="s0">{{ var $format = it.formats[$schema]; }}</span>
+  <span class="s0">{{? !$format }}</span>
+    <span class="s0">{{? $unknownFormats == 'ignore' }}</span>
+      <span class="s0">{{ it.logger.warn('unknown format &quot;' + $schema + '&quot; ignored in schema at path &quot;' + it.errSchemaPath + '&quot;'); }}</span>
+      <span class="s0">{{# def.skipFormat }}</span>
+    <span class="s0">{{?? $allowUnknown &amp;&amp; $unknownFormats.indexOf($schema) &gt;= 0 }}</span>
+      <span class="s0">{{# def.skipFormat }}</span>
+    <span class="s0">{{??}}</span>
+      <span class="s0">{{ throw new Error('unknown format &quot;' + $schema + '&quot; is used in schema at path &quot;' + it.errSchemaPath + '&quot;'); }}</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{?}}</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $isObject = typeof $format == 'object'</span>
+                    <span class="s0">&amp;&amp; !($format instanceof RegExp)</span>
+                    <span class="s0">&amp;&amp; $format.validate;</span>
+    <span class="s0">var $formatType = $isObject &amp;&amp; $format.type || 'string';</span>
+    <span class="s0">if ($isObject) {</span>
+      <span class="s0">var $async = $format.async === true;</span>
+      <span class="s0">$format = $format.validate;</span>
+    <span class="s0">}</span>
+  <span class="s0">}}</span>
+  <span class="s0">{{? $formatType != $ruleType }}</span>
+    <span class="s0">{{# def.skipFormat }}</span>
+  <span class="s0">{{?}}</span>
+  <span class="s0">{{? $async }}</span>
+    <span class="s0">{{</span>
+      <span class="s0">if (!it.async) throw new Error('async format in sync schema');</span>
+      <span class="s0">var $formatRef = 'formats' + it.util.getProperty($schema) + '.validate';</span>
+    <span class="s0">}}</span>
+    <span class="s0">if (!(await {{=$formatRef}}({{=$data}}))) {</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">if (!{{# def.checkFormat }}) {</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{?}}</span>
+    <span class="s0">{{# def.error:'format' }}</span>
+  <span class="s0">} {{? $breakOnError }} else { {{?}}</span>
+</pre>
+</body>
+</html>

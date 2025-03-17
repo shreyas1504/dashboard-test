@@ -1,0 +1,242 @@
+<html>
+<head>
+<title>compile.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8ea765;}
+.s5 { color: #808080;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+compile.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+    compiles a selector to an executable function 
+*/</span>
+
+<span class="s1">module.exports = compile</span><span class="s2">;</span>
+
+<span class="s3">var </span><span class="s1">parse = require(</span><span class="s4">&quot;css-what&quot;</span><span class="s1">).parse</span><span class="s2">;</span>
+<span class="s3">var </span><span class="s1">BaseFuncs = require(</span><span class="s4">&quot;boolbase&quot;</span><span class="s1">)</span><span class="s2">;</span>
+<span class="s3">var </span><span class="s1">sortRules = require(</span><span class="s4">&quot;./sort.js&quot;</span><span class="s1">)</span><span class="s2">;</span>
+<span class="s3">var </span><span class="s1">procedure = require(</span><span class="s4">&quot;./procedure.json&quot;</span><span class="s1">)</span><span class="s2">;</span>
+<span class="s3">var </span><span class="s1">Rules = require(</span><span class="s4">&quot;./general.js&quot;</span><span class="s1">)</span><span class="s2">;</span>
+<span class="s3">var </span><span class="s1">Pseudos = require(</span><span class="s4">&quot;./pseudos.js&quot;</span><span class="s1">)</span><span class="s2">;</span>
+<span class="s3">var </span><span class="s1">trueFunc = BaseFuncs.trueFunc</span><span class="s2">;</span>
+<span class="s3">var </span><span class="s1">falseFunc = BaseFuncs.falseFunc</span><span class="s2">;</span>
+
+<span class="s3">var </span><span class="s1">filters = Pseudos.filters</span><span class="s2">;</span>
+
+<span class="s3">function </span><span class="s1">compile(selector</span><span class="s2">, </span><span class="s1">options</span><span class="s2">, </span><span class="s1">context) {</span>
+    <span class="s3">var </span><span class="s1">next = compileUnsafe(selector</span><span class="s2">, </span><span class="s1">options</span><span class="s2">, </span><span class="s1">context)</span><span class="s2">;</span>
+    <span class="s3">return </span><span class="s1">wrap(next</span><span class="s2">, </span><span class="s1">options)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">wrap(next</span><span class="s2">, </span><span class="s1">options) {</span>
+    <span class="s3">var </span><span class="s1">adapter = options.adapter</span><span class="s2">;</span>
+
+    <span class="s3">return function </span><span class="s1">base(elem) {</span>
+        <span class="s3">return </span><span class="s1">adapter.isTag(elem) &amp;&amp; next(elem)</span><span class="s2">;</span>
+    <span class="s1">}</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">compileUnsafe(selector</span><span class="s2">, </span><span class="s1">options</span><span class="s2">, </span><span class="s1">context) {</span>
+    <span class="s3">var </span><span class="s1">token = parse(selector</span><span class="s2">, </span><span class="s1">options)</span><span class="s2">;</span>
+    <span class="s3">return </span><span class="s1">compileToken(token</span><span class="s2">, </span><span class="s1">options</span><span class="s2">, </span><span class="s1">context)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">includesScopePseudo(t) {</span>
+    <span class="s3">return </span><span class="s1">(</span>
+        <span class="s1">t.type === </span><span class="s4">&quot;pseudo&quot; </span><span class="s1">&amp;&amp;</span>
+        <span class="s1">(t.name === </span><span class="s4">&quot;scope&quot; </span><span class="s1">||</span>
+            <span class="s1">(Array.isArray(t.data) &amp;&amp;</span>
+                <span class="s1">t.data.some(</span><span class="s3">function</span><span class="s1">(data) {</span>
+                    <span class="s3">return </span><span class="s1">data.some(includesScopePseudo)</span><span class="s2">;</span>
+                <span class="s1">})))</span>
+    <span class="s1">)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s3">var </span><span class="s1">DESCENDANT_TOKEN = { type: </span><span class="s4">&quot;descendant&quot; </span><span class="s1">}</span><span class="s2">;</span>
+<span class="s3">var </span><span class="s1">FLEXIBLE_DESCENDANT_TOKEN = { type: </span><span class="s4">&quot;_flexibleDescendant&quot; </span><span class="s1">}</span><span class="s2">;</span>
+<span class="s3">var </span><span class="s1">SCOPE_TOKEN = { type: </span><span class="s4">&quot;pseudo&quot;</span><span class="s2">, </span><span class="s1">name: </span><span class="s4">&quot;scope&quot; </span><span class="s1">}</span><span class="s2">;</span>
+<span class="s3">var </span><span class="s1">PLACEHOLDER_ELEMENT = {}</span><span class="s2">;</span>
+
+<span class="s5">//CSS 4 Spec (Draft): 3.3.1. Absolutizing a Scope-relative Selector</span>
+<span class="s5">//http://www.w3.org/TR/selectors4/#absolutizing</span>
+<span class="s3">function </span><span class="s1">absolutize(token</span><span class="s2">, </span><span class="s1">options</span><span class="s2">, </span><span class="s1">context) {</span>
+    <span class="s3">var </span><span class="s1">adapter = options.adapter</span><span class="s2">;</span>
+
+    <span class="s5">//TODO better check if context is document</span>
+    <span class="s3">var </span><span class="s1">hasContext =</span>
+        <span class="s1">!!context &amp;&amp;</span>
+        <span class="s1">!!context.length &amp;&amp;</span>
+        <span class="s1">context.every(</span><span class="s3">function</span><span class="s1">(e) {</span>
+            <span class="s3">return </span><span class="s1">e === PLACEHOLDER_ELEMENT || !!adapter.getParent(e)</span><span class="s2">;</span>
+        <span class="s1">})</span><span class="s2">;</span>
+
+    <span class="s1">token.forEach(</span><span class="s3">function</span><span class="s1">(t) {</span>
+        <span class="s3">if </span><span class="s1">(t.length &gt; </span><span class="s6">0 </span><span class="s1">&amp;&amp; isTraversal(t[</span><span class="s6">0</span><span class="s1">]) &amp;&amp; t[</span><span class="s6">0</span><span class="s1">].type !== </span><span class="s4">&quot;descendant&quot;</span><span class="s1">) {</span>
+            <span class="s5">//don't return in else branch</span>
+        <span class="s1">} </span><span class="s3">else if </span><span class="s1">(hasContext &amp;&amp; !(Array.isArray(t) ? t.some(includesScopePseudo) : includesScopePseudo(t))) {</span>
+            <span class="s1">t.unshift(DESCENDANT_TOKEN)</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s3">else </span><span class="s1">{</span>
+            <span class="s3">return</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">t.unshift(SCOPE_TOKEN)</span><span class="s2">;</span>
+    <span class="s1">})</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">compileToken(token</span><span class="s2">, </span><span class="s1">options</span><span class="s2">, </span><span class="s1">context) {</span>
+    <span class="s1">token = token.filter(</span><span class="s3">function</span><span class="s1">(t) {</span>
+        <span class="s3">return </span><span class="s1">t.length &gt; </span><span class="s6">0</span><span class="s2">;</span>
+    <span class="s1">})</span><span class="s2">;</span>
+
+    <span class="s1">token.forEach(sortRules)</span><span class="s2">;</span>
+
+    <span class="s3">var </span><span class="s1">isArrayContext = Array.isArray(context)</span><span class="s2">;</span>
+
+    <span class="s1">context = (options &amp;&amp; options.context) || context</span><span class="s2">;</span>
+
+    <span class="s3">if </span><span class="s1">(context &amp;&amp; !isArrayContext) context = [context]</span><span class="s2">;</span>
+
+    <span class="s1">absolutize(token</span><span class="s2">, </span><span class="s1">options</span><span class="s2">, </span><span class="s1">context)</span><span class="s2">;</span>
+
+    <span class="s3">var </span><span class="s1">shouldTestNextSiblings = </span><span class="s3">false</span><span class="s2">;</span>
+
+    <span class="s3">var </span><span class="s1">query = token</span>
+        <span class="s1">.map(</span><span class="s3">function</span><span class="s1">(rules) {</span>
+            <span class="s3">if </span><span class="s1">(rules[</span><span class="s6">0</span><span class="s1">] &amp;&amp; rules[</span><span class="s6">1</span><span class="s1">] &amp;&amp; rules[</span><span class="s6">0</span><span class="s1">].name === </span><span class="s4">&quot;scope&quot;</span><span class="s1">) {</span>
+                <span class="s3">var </span><span class="s1">ruleType = rules[</span><span class="s6">1</span><span class="s1">].type</span><span class="s2">;</span>
+                <span class="s3">if </span><span class="s1">(isArrayContext &amp;&amp; ruleType === </span><span class="s4">&quot;descendant&quot;</span><span class="s1">) {</span>
+                    <span class="s1">rules[</span><span class="s6">1</span><span class="s1">] = FLEXIBLE_DESCENDANT_TOKEN</span><span class="s2">;</span>
+                <span class="s1">} </span><span class="s3">else if </span><span class="s1">(ruleType === </span><span class="s4">&quot;adjacent&quot; </span><span class="s1">|| ruleType === </span><span class="s4">&quot;sibling&quot;</span><span class="s1">) {</span>
+                    <span class="s1">shouldTestNextSiblings = </span><span class="s3">true</span><span class="s2">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+            <span class="s3">return </span><span class="s1">compileRules(rules</span><span class="s2">, </span><span class="s1">options</span><span class="s2">, </span><span class="s1">context)</span><span class="s2">;</span>
+        <span class="s1">})</span>
+        <span class="s1">.reduce(reduceRules</span><span class="s2">, </span><span class="s1">falseFunc)</span><span class="s2">;</span>
+
+    <span class="s1">query.shouldTestNextSiblings = shouldTestNextSiblings</span><span class="s2">;</span>
+
+    <span class="s3">return </span><span class="s1">query</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">isTraversal(t) {</span>
+    <span class="s3">return </span><span class="s1">procedure[t.type] &lt; </span><span class="s6">0</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">compileRules(rules</span><span class="s2">, </span><span class="s1">options</span><span class="s2">, </span><span class="s1">context) {</span>
+    <span class="s3">return </span><span class="s1">rules.reduce(</span><span class="s3">function</span><span class="s1">(func</span><span class="s2">, </span><span class="s1">rule) {</span>
+        <span class="s3">if </span><span class="s1">(func === falseFunc) </span><span class="s3">return </span><span class="s1">func</span><span class="s2">;</span>
+
+        <span class="s3">if </span><span class="s1">(!(rule.type </span><span class="s3">in </span><span class="s1">Rules)) {</span>
+            <span class="s3">throw new </span><span class="s1">Error(</span><span class="s4">&quot;Rule type &quot; </span><span class="s1">+ rule.type + </span><span class="s4">&quot; is not supported by css-select&quot;</span><span class="s1">)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s3">return </span><span class="s1">Rules[rule.type](func</span><span class="s2">, </span><span class="s1">rule</span><span class="s2">, </span><span class="s1">options</span><span class="s2">, </span><span class="s1">context)</span><span class="s2">;</span>
+    <span class="s1">}</span><span class="s2">, </span><span class="s1">(options &amp;&amp; options.rootFunc) || trueFunc)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">reduceRules(a</span><span class="s2">, </span><span class="s1">b) {</span>
+    <span class="s3">if </span><span class="s1">(b === falseFunc || a === trueFunc) {</span>
+        <span class="s3">return </span><span class="s1">a</span><span class="s2">;</span>
+    <span class="s1">}</span>
+    <span class="s3">if </span><span class="s1">(a === falseFunc || b === trueFunc) {</span>
+        <span class="s3">return </span><span class="s1">b</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s3">return function </span><span class="s1">combine(elem) {</span>
+        <span class="s3">return </span><span class="s1">a(elem) || b(elem)</span><span class="s2">;</span>
+    <span class="s1">}</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s3">function </span><span class="s1">containsTraversal(t) {</span>
+    <span class="s3">return </span><span class="s1">t.some(isTraversal)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s5">//:not, :has and :matches have to compile selectors</span>
+<span class="s5">//doing this in lib/pseudos.js would lead to circular dependencies,</span>
+<span class="s5">//so we add them here</span>
+<span class="s1">filters.not = </span><span class="s3">function</span><span class="s1">(next</span><span class="s2">, </span><span class="s1">token</span><span class="s2">, </span><span class="s1">options</span><span class="s2">, </span><span class="s1">context) {</span>
+    <span class="s3">var </span><span class="s1">opts = {</span>
+        <span class="s1">xmlMode: !!(options &amp;&amp; options.xmlMode)</span><span class="s2">,</span>
+        <span class="s1">strict: !!(options &amp;&amp; options.strict)</span><span class="s2">,</span>
+        <span class="s1">adapter: options.adapter</span>
+    <span class="s1">}</span><span class="s2">;</span>
+
+    <span class="s3">if </span><span class="s1">(opts.strict) {</span>
+        <span class="s3">if </span><span class="s1">(token.length &gt; </span><span class="s6">1 </span><span class="s1">|| token.some(containsTraversal)) {</span>
+            <span class="s3">throw new </span><span class="s1">Error(</span><span class="s4">&quot;complex selectors in :not aren't allowed in strict mode&quot;</span><span class="s1">)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s3">var </span><span class="s1">func = compileToken(token</span><span class="s2">, </span><span class="s1">opts</span><span class="s2">, </span><span class="s1">context)</span><span class="s2">;</span>
+
+    <span class="s3">if </span><span class="s1">(func === falseFunc) </span><span class="s3">return </span><span class="s1">next</span><span class="s2">;</span>
+    <span class="s3">if </span><span class="s1">(func === trueFunc) </span><span class="s3">return </span><span class="s1">falseFunc</span><span class="s2">;</span>
+
+    <span class="s3">return function </span><span class="s1">not(elem) {</span>
+        <span class="s3">return </span><span class="s1">!func(elem) &amp;&amp; next(elem)</span><span class="s2">;</span>
+    <span class="s1">}</span><span class="s2">;</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s1">filters.has = </span><span class="s3">function</span><span class="s1">(next</span><span class="s2">, </span><span class="s1">token</span><span class="s2">, </span><span class="s1">options) {</span>
+    <span class="s3">var </span><span class="s1">adapter = options.adapter</span><span class="s2">;</span>
+    <span class="s3">var </span><span class="s1">opts = {</span>
+        <span class="s1">xmlMode: !!(options &amp;&amp; options.xmlMode)</span><span class="s2">,</span>
+        <span class="s1">strict: !!(options &amp;&amp; options.strict)</span><span class="s2">,</span>
+        <span class="s1">adapter: adapter</span>
+    <span class="s1">}</span><span class="s2">;</span>
+
+    <span class="s5">//FIXME: Uses an array as a pointer to the current element (side effects)</span>
+    <span class="s3">var </span><span class="s1">context = token.some(containsTraversal) ? [PLACEHOLDER_ELEMENT] : </span><span class="s3">null</span><span class="s2">;</span>
+
+    <span class="s3">var </span><span class="s1">func = compileToken(token</span><span class="s2">, </span><span class="s1">opts</span><span class="s2">, </span><span class="s1">context)</span><span class="s2">;</span>
+
+    <span class="s3">if </span><span class="s1">(func === falseFunc) </span><span class="s3">return </span><span class="s1">falseFunc</span><span class="s2">;</span>
+    <span class="s3">if </span><span class="s1">(func === trueFunc) {</span>
+        <span class="s3">return function </span><span class="s1">hasChild(elem) {</span>
+            <span class="s3">return </span><span class="s1">adapter.getChildren(elem).some(adapter.isTag) &amp;&amp; next(elem)</span><span class="s2">;</span>
+        <span class="s1">}</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">func = wrap(func</span><span class="s2">, </span><span class="s1">options)</span><span class="s2">;</span>
+
+    <span class="s3">if </span><span class="s1">(context) {</span>
+        <span class="s3">return function </span><span class="s1">has(elem) {</span>
+            <span class="s3">return </span><span class="s1">next(elem) &amp;&amp; ((context[</span><span class="s6">0</span><span class="s1">] = elem)</span><span class="s2">, </span><span class="s1">adapter.existsOne(func</span><span class="s2">, </span><span class="s1">adapter.getChildren(elem)))</span><span class="s2">;</span>
+        <span class="s1">}</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s3">return function </span><span class="s1">has(elem) {</span>
+        <span class="s3">return </span><span class="s1">next(elem) &amp;&amp; adapter.existsOne(func</span><span class="s2">, </span><span class="s1">adapter.getChildren(elem))</span><span class="s2">;</span>
+    <span class="s1">}</span><span class="s2">;</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s1">filters.matches = </span><span class="s3">function</span><span class="s1">(next</span><span class="s2">, </span><span class="s1">token</span><span class="s2">, </span><span class="s1">options</span><span class="s2">, </span><span class="s1">context) {</span>
+    <span class="s3">var </span><span class="s1">opts = {</span>
+        <span class="s1">xmlMode: !!(options &amp;&amp; options.xmlMode)</span><span class="s2">,</span>
+        <span class="s1">strict: !!(options &amp;&amp; options.strict)</span><span class="s2">,</span>
+        <span class="s1">rootFunc: next</span><span class="s2">,</span>
+        <span class="s1">adapter: options.adapter</span>
+    <span class="s1">}</span><span class="s2">;</span>
+
+    <span class="s3">return </span><span class="s1">compileToken(token</span><span class="s2">, </span><span class="s1">opts</span><span class="s2">, </span><span class="s1">context)</span><span class="s2">;</span>
+<span class="s1">}</span><span class="s2">;</span>
+
+<span class="s1">compile.compileToken = compileToken</span><span class="s2">;</span>
+<span class="s1">compile.compileUnsafe = compileUnsafe</span><span class="s2">;</span>
+<span class="s1">compile.Pseudos = Pseudos</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

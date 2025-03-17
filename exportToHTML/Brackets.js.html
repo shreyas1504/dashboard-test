@@ -1,0 +1,54 @@
+<html>
+<head>
+<title>Brackets.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Brackets.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).TYPE</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">LEFTSQUAREBRACKET = TYPE.LeftSquareBracket</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">RIGHTSQUAREBRACKET = TYPE.RightSquareBracket</span><span class="s3">;</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">name: </span><span class="s2">'Brackets'</span><span class="s3">,</span>
+    <span class="s1">structure: {</span>
+        <span class="s1">children: [[]]</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">parse: </span><span class="s0">function</span><span class="s1">(readSequence</span><span class="s3">, </span><span class="s1">recognizer) {</span>
+        <span class="s0">var </span><span class="s1">start = </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">children = </span><span class="s0">null</span><span class="s3">;</span>
+
+        <span class="s0">this</span><span class="s1">.eat(LEFTSQUAREBRACKET)</span><span class="s3">;</span>
+
+        <span class="s1">children = readSequence.call(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">recognizer)</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.scanner.eof) {</span>
+            <span class="s0">this</span><span class="s1">.eat(RIGHTSQUAREBRACKET)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">type: </span><span class="s2">'Brackets'</span><span class="s3">,</span>
+            <span class="s1">loc: </span><span class="s0">this</span><span class="s1">.getLocation(start</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart)</span><span class="s3">,</span>
+            <span class="s1">children: children</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">generate: </span><span class="s0">function</span><span class="s1">(node) {</span>
+        <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">'['</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.children(node)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">']'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

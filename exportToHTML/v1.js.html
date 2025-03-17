@@ -1,0 +1,116 @@
+<html>
+<head>
+<title>v1.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+v1.js</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">rng from </span><span class="s2">'./rng.js'</span><span class="s3">;</span>
+<span class="s0">import </span><span class="s1">stringify from </span><span class="s2">'./stringify.js'</span><span class="s3">; </span><span class="s4">// **`v1()` - Generate time-based UUID**</span>
+<span class="s4">//</span>
+<span class="s4">// Inspired by https://github.com/LiosK/UUID.js</span>
+<span class="s4">// and http://docs.python.org/library/uuid.html</span>
+
+<span class="s0">var </span><span class="s1">_nodeId</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">_clockseq</span><span class="s3">; </span><span class="s4">// Previous uuid creation time</span>
+
+
+<span class="s0">var </span><span class="s1">_lastMSecs = </span><span class="s5">0</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">_lastNSecs = </span><span class="s5">0</span><span class="s3">; </span><span class="s4">// See https://github.com/uuidjs/uuid for API details</span>
+
+<span class="s0">function </span><span class="s1">v1(options</span><span class="s3">, </span><span class="s1">buf</span><span class="s3">, </span><span class="s1">offset) {</span>
+  <span class="s0">var </span><span class="s1">i = buf &amp;&amp; offset || </span><span class="s5">0</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">b = buf || </span><span class="s0">new </span><span class="s1">Array(</span><span class="s5">16</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">options = options || {}</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">node = options.node || _nodeId</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq</span><span class="s3">; </span><span class="s4">// node and clockseq need to be initialized to random values if they're not</span>
+  <span class="s4">// specified.  We do this lazily to minimize issues related to insufficient</span>
+  <span class="s4">// system entropy.  See #189</span>
+
+  <span class="s0">if </span><span class="s1">(node == </span><span class="s0">null </span><span class="s1">|| clockseq == </span><span class="s0">null</span><span class="s1">) {</span>
+    <span class="s0">var </span><span class="s1">seedBytes = options.random || (options.rng || rng)()</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(node == </span><span class="s0">null</span><span class="s1">) {</span>
+      <span class="s4">// Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)</span>
+      <span class="s1">node = _nodeId = [seedBytes[</span><span class="s5">0</span><span class="s1">] | </span><span class="s5">0x01</span><span class="s3">, </span><span class="s1">seedBytes[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">seedBytes[</span><span class="s5">2</span><span class="s1">]</span><span class="s3">, </span><span class="s1">seedBytes[</span><span class="s5">3</span><span class="s1">]</span><span class="s3">, </span><span class="s1">seedBytes[</span><span class="s5">4</span><span class="s1">]</span><span class="s3">, </span><span class="s1">seedBytes[</span><span class="s5">5</span><span class="s1">]]</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(clockseq == </span><span class="s0">null</span><span class="s1">) {</span>
+      <span class="s4">// Per 4.2.2, randomize (14 bit) clockseq</span>
+      <span class="s1">clockseq = _clockseq = (seedBytes[</span><span class="s5">6</span><span class="s1">] &lt;&lt; </span><span class="s5">8 </span><span class="s1">| seedBytes[</span><span class="s5">7</span><span class="s1">]) &amp; </span><span class="s5">0x3fff</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">} </span><span class="s4">// UUID timestamps are 100 nano-second units since the Gregorian epoch,</span>
+  <span class="s4">// (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so</span>
+  <span class="s4">// time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'</span>
+  <span class="s4">// (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.</span>
+
+
+  <span class="s0">var </span><span class="s1">msecs = options.msecs !== undefined ? options.msecs : Date.now()</span><span class="s3">; </span><span class="s4">// Per 4.2.1.2, use count of uuid's generated during the current clock</span>
+  <span class="s4">// cycle to simulate higher resolution clock</span>
+
+  <span class="s0">var </span><span class="s1">nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + </span><span class="s5">1</span><span class="s3">; </span><span class="s4">// Time since last uuid creation (in msecs)</span>
+
+  <span class="s0">var </span><span class="s1">dt = msecs - _lastMSecs + (nsecs - _lastNSecs) / </span><span class="s5">10000</span><span class="s3">; </span><span class="s4">// Per 4.2.1.2, Bump clockseq on clock regression</span>
+
+  <span class="s0">if </span><span class="s1">(dt &lt; </span><span class="s5">0 </span><span class="s1">&amp;&amp; options.clockseq === undefined) {</span>
+    <span class="s1">clockseq = clockseq + </span><span class="s5">1 </span><span class="s1">&amp; </span><span class="s5">0x3fff</span><span class="s3">;</span>
+  <span class="s1">} </span><span class="s4">// Reset nsecs if clock regresses (new clockseq) or we've moved onto a new</span>
+  <span class="s4">// time interval</span>
+
+
+  <span class="s0">if </span><span class="s1">((dt &lt; </span><span class="s5">0 </span><span class="s1">|| msecs &gt; _lastMSecs) &amp;&amp; options.nsecs === undefined) {</span>
+    <span class="s1">nsecs = </span><span class="s5">0</span><span class="s3">;</span>
+  <span class="s1">} </span><span class="s4">// Per 4.2.1.2 Throw error if too many uuids are requested</span>
+
+
+  <span class="s0">if </span><span class="s1">(nsecs &gt;= </span><span class="s5">10000</span><span class="s1">) {</span>
+    <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">&quot;uuid.v1(): Can't create more than 10M uuids/sec&quot;</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_lastMSecs = msecs</span><span class="s3">;</span>
+  <span class="s1">_lastNSecs = nsecs</span><span class="s3">;</span>
+  <span class="s1">_clockseq = clockseq</span><span class="s3">; </span><span class="s4">// Per 4.1.4 - Convert from unix epoch to Gregorian epoch</span>
+
+  <span class="s1">msecs += </span><span class="s5">12219292800000</span><span class="s3">; </span><span class="s4">// `time_low`</span>
+
+  <span class="s0">var </span><span class="s1">tl = ((msecs &amp; </span><span class="s5">0xfffffff</span><span class="s1">) * </span><span class="s5">10000 </span><span class="s1">+ nsecs) % </span><span class="s5">0x100000000</span><span class="s3">;</span>
+  <span class="s1">b[i++] = tl &gt;&gt;&gt; </span><span class="s5">24 </span><span class="s1">&amp; </span><span class="s5">0xff</span><span class="s3">;</span>
+  <span class="s1">b[i++] = tl &gt;&gt;&gt; </span><span class="s5">16 </span><span class="s1">&amp; </span><span class="s5">0xff</span><span class="s3">;</span>
+  <span class="s1">b[i++] = tl &gt;&gt;&gt; </span><span class="s5">8 </span><span class="s1">&amp; </span><span class="s5">0xff</span><span class="s3">;</span>
+  <span class="s1">b[i++] = tl &amp; </span><span class="s5">0xff</span><span class="s3">; </span><span class="s4">// `time_mid`</span>
+
+  <span class="s0">var </span><span class="s1">tmh = msecs / </span><span class="s5">0x100000000 </span><span class="s1">* </span><span class="s5">10000 </span><span class="s1">&amp; </span><span class="s5">0xfffffff</span><span class="s3">;</span>
+  <span class="s1">b[i++] = tmh &gt;&gt;&gt; </span><span class="s5">8 </span><span class="s1">&amp; </span><span class="s5">0xff</span><span class="s3">;</span>
+  <span class="s1">b[i++] = tmh &amp; </span><span class="s5">0xff</span><span class="s3">; </span><span class="s4">// `time_high_and_version`</span>
+
+  <span class="s1">b[i++] = tmh &gt;&gt;&gt; </span><span class="s5">24 </span><span class="s1">&amp; </span><span class="s5">0xf </span><span class="s1">| </span><span class="s5">0x10</span><span class="s3">; </span><span class="s4">// include version</span>
+
+  <span class="s1">b[i++] = tmh &gt;&gt;&gt; </span><span class="s5">16 </span><span class="s1">&amp; </span><span class="s5">0xff</span><span class="s3">; </span><span class="s4">// `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)</span>
+
+  <span class="s1">b[i++] = clockseq &gt;&gt;&gt; </span><span class="s5">8 </span><span class="s1">| </span><span class="s5">0x80</span><span class="s3">; </span><span class="s4">// `clock_seq_low`</span>
+
+  <span class="s1">b[i++] = clockseq &amp; </span><span class="s5">0xff</span><span class="s3">; </span><span class="s4">// `node`</span>
+
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">n = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">n &lt; </span><span class="s5">6</span><span class="s3">; </span><span class="s1">++n) {</span>
+    <span class="s1">b[i + n] = node[n]</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">return </span><span class="s1">buf || stringify(b)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export default </span><span class="s1">v1</span><span class="s3">;</span></pre>
+</body>
+</html>

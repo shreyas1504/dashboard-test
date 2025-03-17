@@ -1,0 +1,995 @@
+<html>
+<head>
+<title>convertPathData.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+.s6 { color: #8a8a8a; font-style: italic;}
+.s7 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+convertPathData.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">exports.type = </span><span class="s0">'perItem'</span><span class="s1">;</span>
+
+<span class="s2">exports.active = </span><span class="s3">true</span><span class="s1">;</span>
+
+<span class="s2">exports.description = </span><span class="s0">'optimizes path data: writes in shorter form, applies transformations'</span><span class="s1">;</span>
+
+<span class="s2">exports.params = {</span>
+    <span class="s2">applyTransforms: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">applyTransformsStroked: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">makeArcs: {</span>
+        <span class="s2">threshold: </span><span class="s4">2.5</span><span class="s1">, </span><span class="s5">// coefficient of rounding error</span>
+        <span class="s2">tolerance: </span><span class="s4">0.5  </span><span class="s5">// percentage of radius</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">straightCurves: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">lineShorthands: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">curveSmoothShorthands: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">floatPrecision: </span><span class="s4">3</span><span class="s1">,</span>
+    <span class="s2">transformPrecision: </span><span class="s4">5</span><span class="s1">,</span>
+    <span class="s2">removeUseless: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">collapseRepeated: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">utilizeAbsolute: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">leadingZero: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">negativeExtraSpace: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">noSpaceAfterFlags: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">forceAbsolutePath: </span><span class="s3">false</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">pathElems = require(</span><span class="s0">'./_collections.js'</span><span class="s2">).pathElems</span><span class="s1">,</span>
+    <span class="s2">path2js = require(</span><span class="s0">'./_path.js'</span><span class="s2">).path2js</span><span class="s1">,</span>
+    <span class="s2">js2path = require(</span><span class="s0">'./_path.js'</span><span class="s2">).js2path</span><span class="s1">,</span>
+    <span class="s2">applyTransforms = require(</span><span class="s0">'./_path.js'</span><span class="s2">).applyTransforms</span><span class="s1">,</span>
+    <span class="s2">cleanupOutData = require(</span><span class="s0">'../lib/svgo/tools'</span><span class="s2">).cleanupOutData</span><span class="s1">,</span>
+    <span class="s2">roundData</span><span class="s1">,</span>
+    <span class="s2">precision</span><span class="s1">,</span>
+    <span class="s2">error</span><span class="s1">,</span>
+    <span class="s2">arcThreshold</span><span class="s1">,</span>
+    <span class="s2">arcTolerance</span><span class="s1">,</span>
+    <span class="s2">hasMarkerMid</span><span class="s1">,</span>
+    <span class="s2">hasStrokeLinecap</span><span class="s1">;</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Convert absolute Path to relative,</span>
+ <span class="s6">* collapse repeated instructions,</span>
+ <span class="s6">* detect and convert Lineto shorthands,</span>
+ <span class="s6">* remove useless instructions like &quot;l0,0&quot;,</span>
+ <span class="s6">* trim useless delimiters and leading zeros,</span>
+ <span class="s6">* decrease accuracy of floating-point numbers.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@see </span><span class="s6">http://www.w3.org/TR/SVG/paths.html#PathData</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} item current iteration item</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} params plugin params</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Boolean} if false, item will be filtered out</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@author </span><span class="s6">Kir Belevich</span>
+ <span class="s6">*/</span>
+<span class="s2">exports.fn = </span><span class="s3">function</span><span class="s2">(item</span><span class="s1">, </span><span class="s2">params) {</span>
+
+    <span class="s3">if </span><span class="s2">(item.isElem(pathElems) &amp;&amp; item.hasAttr(</span><span class="s0">'d'</span><span class="s2">)) {</span>
+
+        <span class="s2">precision = params.floatPrecision</span><span class="s1">;</span>
+        <span class="s2">error = precision !== </span><span class="s3">false </span><span class="s2">? +Math.pow(</span><span class="s4">.1</span><span class="s1">, </span><span class="s2">precision).toFixed(precision) : </span><span class="s4">1e-2</span><span class="s1">;</span>
+        <span class="s2">roundData = precision &gt; </span><span class="s4">0 </span><span class="s2">&amp;&amp; precision &lt; </span><span class="s4">20 </span><span class="s2">? strongRound : round</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(params.makeArcs) {</span>
+            <span class="s2">arcThreshold = params.makeArcs.threshold</span><span class="s1">;</span>
+            <span class="s2">arcTolerance = params.makeArcs.tolerance</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s2">hasMarkerMid = item.hasAttr(</span><span class="s0">'marker-mid'</span><span class="s2">)</span><span class="s1">;</span>
+
+        <span class="s3">var </span><span class="s2">stroke = item.computedAttr(</span><span class="s0">'stroke'</span><span class="s2">)</span><span class="s1">,</span>
+            <span class="s2">strokeLinecap = item.computedAttr(</span><span class="s0">'stroke'</span><span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">hasStrokeLinecap = stroke &amp;&amp; stroke != </span><span class="s0">'none' </span><span class="s2">&amp;&amp; strokeLinecap &amp;&amp; strokeLinecap != </span><span class="s0">'butt'</span><span class="s1">;</span>
+
+        <span class="s3">var </span><span class="s2">data = path2js(item)</span><span class="s1">;</span>
+
+        <span class="s5">// TODO: get rid of functions returns</span>
+        <span class="s3">if </span><span class="s2">(data.length) {</span>
+            <span class="s2">convertToRelative(data)</span><span class="s1">;</span>
+
+            <span class="s3">if </span><span class="s2">(params.applyTransforms) {</span>
+                <span class="s2">data = applyTransforms(item</span><span class="s1">, </span><span class="s2">data</span><span class="s1">, </span><span class="s2">params)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+
+            <span class="s2">data = filters(data</span><span class="s1">, </span><span class="s2">params)</span><span class="s1">;</span>
+
+            <span class="s3">if </span><span class="s2">(params.utilizeAbsolute) {</span>
+                <span class="s2">data = convertToMixed(data</span><span class="s1">, </span><span class="s2">params)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+
+            <span class="s2">js2path(item</span><span class="s1">, </span><span class="s2">data</span><span class="s1">, </span><span class="s2">params)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+    <span class="s2">}</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Convert absolute path data coordinates to relative.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} path input path data</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} params plugin params</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Array} output path data</span>
+ <span class="s6">*/</span>
+<span class="s3">function </span><span class="s2">convertToRelative(path) {</span>
+
+    <span class="s3">var </span><span class="s2">point = [</span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">subpathPoint = [</span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">baseItem</span><span class="s1">;</span>
+
+    <span class="s2">path.forEach(</span><span class="s3">function</span><span class="s2">(item</span><span class="s1">, </span><span class="s2">index) {</span>
+
+        <span class="s3">var </span><span class="s2">instruction = item.instruction</span><span class="s1">,</span>
+            <span class="s2">data = item.data</span><span class="s1">;</span>
+
+        <span class="s5">// data !== !z</span>
+        <span class="s3">if </span><span class="s2">(data) {</span>
+
+            <span class="s5">// already relative</span>
+            <span class="s5">// recalculate current point</span>
+            <span class="s3">if </span><span class="s2">(</span><span class="s0">'mcslqta'</span><span class="s2">.indexOf(instruction) &gt; -</span><span class="s4">1</span><span class="s2">) {</span>
+
+                <span class="s2">point[</span><span class="s4">0</span><span class="s2">] += data[data.length - </span><span class="s4">2</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">point[</span><span class="s4">1</span><span class="s2">] += data[data.length - </span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+
+                <span class="s3">if </span><span class="s2">(instruction === </span><span class="s0">'m'</span><span class="s2">) {</span>
+                    <span class="s2">subpathPoint[</span><span class="s4">0</span><span class="s2">] = point[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                    <span class="s2">subpathPoint[</span><span class="s4">1</span><span class="s2">] = point[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+                    <span class="s2">baseItem = item</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+            <span class="s2">} </span><span class="s3">else if </span><span class="s2">(instruction === </span><span class="s0">'h'</span><span class="s2">) {</span>
+
+                <span class="s2">point[</span><span class="s4">0</span><span class="s2">] += data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+
+            <span class="s2">} </span><span class="s3">else if </span><span class="s2">(instruction === </span><span class="s0">'v'</span><span class="s2">) {</span>
+
+                <span class="s2">point[</span><span class="s4">1</span><span class="s2">] += data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+
+            <span class="s2">}</span>
+
+            <span class="s5">// convert absolute path data coordinates to relative</span>
+            <span class="s5">// if &quot;M&quot; was not transformed from &quot;m&quot;</span>
+            <span class="s5">// M → m</span>
+            <span class="s3">if </span><span class="s2">(instruction === </span><span class="s0">'M'</span><span class="s2">) {</span>
+
+                <span class="s3">if </span><span class="s2">(index &gt; </span><span class="s4">0</span><span class="s2">) instruction = </span><span class="s0">'m'</span><span class="s1">;</span>
+
+                <span class="s2">data[</span><span class="s4">0</span><span class="s2">] -= point[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">data[</span><span class="s4">1</span><span class="s2">] -= point[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+
+                <span class="s2">subpathPoint[</span><span class="s4">0</span><span class="s2">] = point[</span><span class="s4">0</span><span class="s2">] += data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">subpathPoint[</span><span class="s4">1</span><span class="s2">] = point[</span><span class="s4">1</span><span class="s2">] += data[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+
+                <span class="s2">baseItem = item</span><span class="s1">;</span>
+
+            <span class="s2">}</span>
+
+            <span class="s5">// L → l</span>
+            <span class="s5">// T → t</span>
+            <span class="s3">else if </span><span class="s2">(</span><span class="s0">'LT'</span><span class="s2">.indexOf(instruction) &gt; -</span><span class="s4">1</span><span class="s2">) {</span>
+
+                <span class="s2">instruction = instruction.toLowerCase()</span><span class="s1">;</span>
+
+                <span class="s5">// x y</span>
+                <span class="s5">// 0 1</span>
+                <span class="s2">data[</span><span class="s4">0</span><span class="s2">] -= point[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">data[</span><span class="s4">1</span><span class="s2">] -= point[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+
+                <span class="s2">point[</span><span class="s4">0</span><span class="s2">] += data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">point[</span><span class="s4">1</span><span class="s2">] += data[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+
+            <span class="s5">// C → c</span>
+            <span class="s2">} </span><span class="s3">else if </span><span class="s2">(instruction === </span><span class="s0">'C'</span><span class="s2">) {</span>
+
+                <span class="s2">instruction = </span><span class="s0">'c'</span><span class="s1">;</span>
+
+                <span class="s5">// x1 y1 x2 y2 x y</span>
+                <span class="s5">// 0  1  2  3  4 5</span>
+                <span class="s2">data[</span><span class="s4">0</span><span class="s2">] -= point[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">data[</span><span class="s4">1</span><span class="s2">] -= point[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">data[</span><span class="s4">2</span><span class="s2">] -= point[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">data[</span><span class="s4">3</span><span class="s2">] -= point[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">data[</span><span class="s4">4</span><span class="s2">] -= point[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">data[</span><span class="s4">5</span><span class="s2">] -= point[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+
+                <span class="s2">point[</span><span class="s4">0</span><span class="s2">] += data[</span><span class="s4">4</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">point[</span><span class="s4">1</span><span class="s2">] += data[</span><span class="s4">5</span><span class="s2">]</span><span class="s1">;</span>
+
+            <span class="s5">// S → s</span>
+            <span class="s5">// Q → q</span>
+            <span class="s2">} </span><span class="s3">else if </span><span class="s2">(</span><span class="s0">'SQ'</span><span class="s2">.indexOf(instruction) &gt; -</span><span class="s4">1</span><span class="s2">) {</span>
+
+                <span class="s2">instruction = instruction.toLowerCase()</span><span class="s1">;</span>
+
+                <span class="s5">// x1 y1 x y</span>
+                <span class="s5">// 0  1  2 3</span>
+                <span class="s2">data[</span><span class="s4">0</span><span class="s2">] -= point[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">data[</span><span class="s4">1</span><span class="s2">] -= point[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">data[</span><span class="s4">2</span><span class="s2">] -= point[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">data[</span><span class="s4">3</span><span class="s2">] -= point[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+
+                <span class="s2">point[</span><span class="s4">0</span><span class="s2">] += data[</span><span class="s4">2</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">point[</span><span class="s4">1</span><span class="s2">] += data[</span><span class="s4">3</span><span class="s2">]</span><span class="s1">;</span>
+
+            <span class="s5">// A → a</span>
+            <span class="s2">} </span><span class="s3">else if </span><span class="s2">(instruction === </span><span class="s0">'A'</span><span class="s2">) {</span>
+
+                <span class="s2">instruction = </span><span class="s0">'a'</span><span class="s1">;</span>
+
+                <span class="s5">// rx ry x-axis-rotation large-arc-flag sweep-flag x y</span>
+                <span class="s5">// 0  1  2               3              4          5 6</span>
+                <span class="s2">data[</span><span class="s4">5</span><span class="s2">] -= point[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">data[</span><span class="s4">6</span><span class="s2">] -= point[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+
+                <span class="s2">point[</span><span class="s4">0</span><span class="s2">] += data[</span><span class="s4">5</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">point[</span><span class="s4">1</span><span class="s2">] += data[</span><span class="s4">6</span><span class="s2">]</span><span class="s1">;</span>
+
+            <span class="s5">// H → h</span>
+            <span class="s2">} </span><span class="s3">else if </span><span class="s2">(instruction === </span><span class="s0">'H'</span><span class="s2">) {</span>
+
+                <span class="s2">instruction = </span><span class="s0">'h'</span><span class="s1">;</span>
+
+                <span class="s2">data[</span><span class="s4">0</span><span class="s2">] -= point[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+
+                <span class="s2">point[</span><span class="s4">0</span><span class="s2">] += data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+
+            <span class="s5">// V → v</span>
+            <span class="s2">} </span><span class="s3">else if </span><span class="s2">(instruction === </span><span class="s0">'V'</span><span class="s2">) {</span>
+
+                <span class="s2">instruction = </span><span class="s0">'v'</span><span class="s1">;</span>
+
+                <span class="s2">data[</span><span class="s4">0</span><span class="s2">] -= point[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+
+                <span class="s2">point[</span><span class="s4">1</span><span class="s2">] += data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+
+            <span class="s2">}</span>
+
+            <span class="s2">item.instruction = instruction</span><span class="s1">;</span>
+            <span class="s2">item.data = data</span><span class="s1">;</span>
+
+            <span class="s5">// store absolute coordinates for later use</span>
+            <span class="s2">item.coords = point.slice(-</span><span class="s4">2</span><span class="s2">)</span><span class="s1">;</span>
+
+        <span class="s2">}</span>
+
+        <span class="s5">// !data === z, reset current point</span>
+        <span class="s3">else if </span><span class="s2">(instruction == </span><span class="s0">'z'</span><span class="s2">) {</span>
+            <span class="s3">if </span><span class="s2">(baseItem) {</span>
+                <span class="s2">item.coords = baseItem.coords</span><span class="s1">;</span>
+            <span class="s2">}</span>
+            <span class="s2">point[</span><span class="s4">0</span><span class="s2">] = subpathPoint[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+            <span class="s2">point[</span><span class="s4">1</span><span class="s2">] = subpathPoint[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s2">item.base = index &gt; </span><span class="s4">0 </span><span class="s2">? path[index - </span><span class="s4">1</span><span class="s2">].coords : [</span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s3">return </span><span class="s2">path</span><span class="s1">;</span>
+
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Main filters loop.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} path input path data</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} params plugin params</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Array} output path data</span>
+ <span class="s6">*/</span>
+<span class="s3">function </span><span class="s2">filters(path</span><span class="s1">, </span><span class="s2">params) {</span>
+
+    <span class="s3">var </span><span class="s2">stringify = data2Path.bind(</span><span class="s3">null</span><span class="s1">, </span><span class="s2">params)</span><span class="s1">,</span>
+        <span class="s2">relSubpoint = [</span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">pathBase = [</span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">prev = {}</span><span class="s1">;</span>
+
+    <span class="s2">path = path.filter(</span><span class="s3">function</span><span class="s2">(item</span><span class="s1">, </span><span class="s2">index</span><span class="s1">, </span><span class="s2">path) {</span>
+
+        <span class="s3">var </span><span class="s2">instruction = item.instruction</span><span class="s1">,</span>
+            <span class="s2">data = item.data</span><span class="s1">,</span>
+            <span class="s2">next = path[index + </span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(data) {</span>
+
+            <span class="s3">var </span><span class="s2">sdata = data</span><span class="s1">,</span>
+                <span class="s2">circle</span><span class="s1">;</span>
+
+            <span class="s3">if </span><span class="s2">(instruction === </span><span class="s0">'s'</span><span class="s2">) {</span>
+                <span class="s2">sdata = [</span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s2">].concat(data)</span><span class="s1">;</span>
+
+                <span class="s3">if </span><span class="s2">(</span><span class="s0">'cs'</span><span class="s2">.indexOf(prev.instruction) &gt; -</span><span class="s4">1</span><span class="s2">) {</span>
+                    <span class="s3">var </span><span class="s2">pdata = prev.data</span><span class="s1">,</span>
+                        <span class="s2">n = pdata.length</span><span class="s1">;</span>
+
+                    <span class="s5">// (-x, -y) of the prev tangent point relative to the current point</span>
+                    <span class="s2">sdata[</span><span class="s4">0</span><span class="s2">] = pdata[n - </span><span class="s4">2</span><span class="s2">] - pdata[n - </span><span class="s4">4</span><span class="s2">]</span><span class="s1">;</span>
+                    <span class="s2">sdata[</span><span class="s4">1</span><span class="s2">] = pdata[n - </span><span class="s4">1</span><span class="s2">] - pdata[n - </span><span class="s4">3</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+            <span class="s2">}</span>
+
+            <span class="s5">// convert curves to arcs if possible</span>
+            <span class="s3">if </span><span class="s2">(</span>
+                <span class="s2">params.makeArcs &amp;&amp;</span>
+                <span class="s2">(instruction == </span><span class="s0">'c' </span><span class="s2">|| instruction == </span><span class="s0">'s'</span><span class="s2">) &amp;&amp;</span>
+                <span class="s2">isConvex(sdata) &amp;&amp;</span>
+                <span class="s2">(circle = findCircle(sdata))</span>
+            <span class="s2">) {</span>
+                <span class="s3">var </span><span class="s2">r = roundData([circle.radius])[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">,</span>
+                    <span class="s2">angle = findArcAngle(sdata</span><span class="s1">, </span><span class="s2">circle)</span><span class="s1">,</span>
+                    <span class="s2">sweep = sdata[</span><span class="s4">5</span><span class="s2">] * sdata[</span><span class="s4">0</span><span class="s2">] - sdata[</span><span class="s4">4</span><span class="s2">] * sdata[</span><span class="s4">1</span><span class="s2">] &gt; </span><span class="s4">0 </span><span class="s2">? </span><span class="s4">1 </span><span class="s2">: </span><span class="s4">0</span><span class="s1">,</span>
+                    <span class="s2">arc = {</span>
+                        <span class="s2">instruction: </span><span class="s0">'a'</span><span class="s1">,</span>
+                        <span class="s2">data: [r</span><span class="s1">, </span><span class="s2">r</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s2">sweep</span><span class="s1">, </span><span class="s2">sdata[</span><span class="s4">4</span><span class="s2">]</span><span class="s1">, </span><span class="s2">sdata[</span><span class="s4">5</span><span class="s2">]]</span><span class="s1">,</span>
+                        <span class="s2">coords: item.coords.slice()</span><span class="s1">,</span>
+                        <span class="s2">base: item.base</span>
+                    <span class="s2">}</span><span class="s1">,</span>
+                    <span class="s2">output = [arc]</span><span class="s1">,</span>
+                    <span class="s5">// relative coordinates to adjust the found circle</span>
+                    <span class="s2">relCenter = [circle.center[</span><span class="s4">0</span><span class="s2">] - sdata[</span><span class="s4">4</span><span class="s2">]</span><span class="s1">, </span><span class="s2">circle.center[</span><span class="s4">1</span><span class="s2">] - sdata[</span><span class="s4">5</span><span class="s2">]]</span><span class="s1">,</span>
+                    <span class="s2">relCircle = { center: relCenter</span><span class="s1">, </span><span class="s2">radius: circle.radius }</span><span class="s1">,</span>
+                    <span class="s2">arcCurves = [item]</span><span class="s1">,</span>
+                    <span class="s2">hasPrev = </span><span class="s4">0</span><span class="s1">,</span>
+                    <span class="s2">suffix = </span><span class="s0">''</span><span class="s1">,</span>
+                    <span class="s2">nextLonghand</span><span class="s1">;</span>
+
+                <span class="s3">if </span><span class="s2">(</span>
+                    <span class="s2">prev.instruction == </span><span class="s0">'c' </span><span class="s2">&amp;&amp; isConvex(prev.data) &amp;&amp; isArcPrev(prev.data</span><span class="s1">, </span><span class="s2">circle) ||</span>
+                    <span class="s2">prev.instruction == </span><span class="s0">'a' </span><span class="s2">&amp;&amp; prev.sdata &amp;&amp; isArcPrev(prev.sdata</span><span class="s1">, </span><span class="s2">circle)</span>
+                <span class="s2">) {</span>
+                    <span class="s2">arcCurves.unshift(prev)</span><span class="s1">;</span>
+                    <span class="s2">arc.base = prev.base</span><span class="s1">;</span>
+                    <span class="s2">arc.data[</span><span class="s4">5</span><span class="s2">] = arc.coords[</span><span class="s4">0</span><span class="s2">] - arc.base[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                    <span class="s2">arc.data[</span><span class="s4">6</span><span class="s2">] = arc.coords[</span><span class="s4">1</span><span class="s2">] - arc.base[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+                    <span class="s3">var </span><span class="s2">prevData = prev.instruction == </span><span class="s0">'a' </span><span class="s2">? prev.sdata : prev.data</span><span class="s1">;</span>
+                    <span class="s3">var </span><span class="s2">prevAngle = findArcAngle(prevData</span><span class="s1">,</span>
+                        <span class="s2">{</span>
+                            <span class="s2">center: [prevData[</span><span class="s4">4</span><span class="s2">] + circle.center[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s2">prevData[</span><span class="s4">5</span><span class="s2">] + circle.center[</span><span class="s4">1</span><span class="s2">]]</span><span class="s1">,</span>
+                            <span class="s2">radius: circle.radius</span>
+                        <span class="s2">}</span>
+                    <span class="s2">)</span><span class="s1">;</span>
+                    <span class="s2">angle += prevAngle</span><span class="s1">;</span>
+                    <span class="s3">if </span><span class="s2">(angle &gt; Math.PI) arc.data[</span><span class="s4">3</span><span class="s2">] = </span><span class="s4">1</span><span class="s1">;</span>
+                    <span class="s2">hasPrev = </span><span class="s4">1</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+                <span class="s5">// check if next curves are fitting the arc</span>
+                <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">j = index</span><span class="s1">; </span><span class="s2">(next = path[++j]) &amp;&amp; ~</span><span class="s0">'cs'</span><span class="s2">.indexOf(next.instruction)</span><span class="s1">;</span><span class="s2">) {</span>
+                    <span class="s3">var </span><span class="s2">nextData = next.data</span><span class="s1">;</span>
+                    <span class="s3">if </span><span class="s2">(next.instruction == </span><span class="s0">'s'</span><span class="s2">) {</span>
+                        <span class="s2">nextLonghand = makeLonghand({instruction: </span><span class="s0">'s'</span><span class="s1">, </span><span class="s2">data: next.data.slice() }</span><span class="s1">,</span>
+                            <span class="s2">path[j - </span><span class="s4">1</span><span class="s2">].data)</span><span class="s1">;</span>
+                        <span class="s2">nextData = nextLonghand.data</span><span class="s1">;</span>
+                        <span class="s2">nextLonghand.data = nextData.slice(</span><span class="s4">0</span><span class="s1">, </span><span class="s4">2</span><span class="s2">)</span><span class="s1">;</span>
+                        <span class="s2">suffix = stringify([nextLonghand])</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+                    <span class="s3">if </span><span class="s2">(isConvex(nextData) &amp;&amp; isArc(nextData</span><span class="s1">, </span><span class="s2">relCircle)) {</span>
+                        <span class="s2">angle += findArcAngle(nextData</span><span class="s1">, </span><span class="s2">relCircle)</span><span class="s1">;</span>
+                        <span class="s3">if </span><span class="s2">(angle - </span><span class="s4">2 </span><span class="s2">* Math.PI &gt; </span><span class="s4">1e-3</span><span class="s2">) </span><span class="s3">break</span><span class="s1">; </span><span class="s5">// more than 360°</span>
+                        <span class="s3">if </span><span class="s2">(angle &gt; Math.PI) arc.data[</span><span class="s4">3</span><span class="s2">] = </span><span class="s4">1</span><span class="s1">;</span>
+                        <span class="s2">arcCurves.push(next)</span><span class="s1">;</span>
+                        <span class="s3">if </span><span class="s2">(</span><span class="s4">2 </span><span class="s2">* Math.PI - angle &gt; </span><span class="s4">1e-3</span><span class="s2">) { </span><span class="s5">// less than 360°</span>
+                            <span class="s2">arc.coords = next.coords</span><span class="s1">;</span>
+                            <span class="s2">arc.data[</span><span class="s4">5</span><span class="s2">] = arc.coords[</span><span class="s4">0</span><span class="s2">] - arc.base[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                            <span class="s2">arc.data[</span><span class="s4">6</span><span class="s2">] = arc.coords[</span><span class="s4">1</span><span class="s2">] - arc.base[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+                        <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+                            <span class="s5">// full circle, make a half-circle arc and add a second one</span>
+                            <span class="s2">arc.data[</span><span class="s4">5</span><span class="s2">] = </span><span class="s4">2 </span><span class="s2">* (relCircle.center[</span><span class="s4">0</span><span class="s2">] - nextData[</span><span class="s4">4</span><span class="s2">])</span><span class="s1">;</span>
+                            <span class="s2">arc.data[</span><span class="s4">6</span><span class="s2">] = </span><span class="s4">2 </span><span class="s2">* (relCircle.center[</span><span class="s4">1</span><span class="s2">] - nextData[</span><span class="s4">5</span><span class="s2">])</span><span class="s1">;</span>
+                            <span class="s2">arc.coords = [arc.base[</span><span class="s4">0</span><span class="s2">] + arc.data[</span><span class="s4">5</span><span class="s2">]</span><span class="s1">, </span><span class="s2">arc.base[</span><span class="s4">1</span><span class="s2">] + arc.data[</span><span class="s4">6</span><span class="s2">]]</span><span class="s1">;</span>
+                            <span class="s2">arc = {</span>
+                                <span class="s2">instruction: </span><span class="s0">'a'</span><span class="s1">,</span>
+                                <span class="s2">data: [r</span><span class="s1">, </span><span class="s2">r</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s2">sweep</span><span class="s1">,</span>
+                                    <span class="s2">next.coords[</span><span class="s4">0</span><span class="s2">] - arc.coords[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s2">next.coords[</span><span class="s4">1</span><span class="s2">] - arc.coords[</span><span class="s4">1</span><span class="s2">]]</span><span class="s1">,</span>
+                                <span class="s2">coords: next.coords</span><span class="s1">,</span>
+                                <span class="s2">base: arc.coords</span>
+                            <span class="s2">}</span><span class="s1">;</span>
+                            <span class="s2">output.push(arc)</span><span class="s1">;</span>
+                            <span class="s2">j++</span><span class="s1">;</span>
+                            <span class="s3">break</span><span class="s1">;</span>
+                        <span class="s2">}</span>
+                        <span class="s2">relCenter[</span><span class="s4">0</span><span class="s2">] -= nextData[</span><span class="s4">4</span><span class="s2">]</span><span class="s1">;</span>
+                        <span class="s2">relCenter[</span><span class="s4">1</span><span class="s2">] -= nextData[</span><span class="s4">5</span><span class="s2">]</span><span class="s1">;</span>
+                    <span class="s2">} </span><span class="s3">else break</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+                <span class="s3">if </span><span class="s2">((stringify(output) + suffix).length &lt; stringify(arcCurves).length) {</span>
+                    <span class="s3">if </span><span class="s2">(path[j] &amp;&amp; path[j].instruction == </span><span class="s0">'s'</span><span class="s2">) {</span>
+                        <span class="s2">makeLonghand(path[j]</span><span class="s1">, </span><span class="s2">path[j - </span><span class="s4">1</span><span class="s2">].data)</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+                    <span class="s3">if </span><span class="s2">(hasPrev) {</span>
+                        <span class="s3">var </span><span class="s2">prevArc = output.shift()</span><span class="s1">;</span>
+                        <span class="s2">roundData(prevArc.data)</span><span class="s1">;</span>
+                        <span class="s2">relSubpoint[</span><span class="s4">0</span><span class="s2">] += prevArc.data[</span><span class="s4">5</span><span class="s2">] - prev.data[prev.data.length - </span><span class="s4">2</span><span class="s2">]</span><span class="s1">;</span>
+                        <span class="s2">relSubpoint[</span><span class="s4">1</span><span class="s2">] += prevArc.data[</span><span class="s4">6</span><span class="s2">] - prev.data[prev.data.length - </span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+                        <span class="s2">prev.instruction = </span><span class="s0">'a'</span><span class="s1">;</span>
+                        <span class="s2">prev.data = prevArc.data</span><span class="s1">;</span>
+                        <span class="s2">item.base = prev.coords = prevArc.coords</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+                    <span class="s2">arc = output.shift()</span><span class="s1">;</span>
+                    <span class="s3">if </span><span class="s2">(arcCurves.length == </span><span class="s4">1</span><span class="s2">) {</span>
+                        <span class="s2">item.sdata = sdata.slice()</span><span class="s1">; </span><span class="s5">// preserve curve data for future checks</span>
+                    <span class="s2">} </span><span class="s3">else if </span><span class="s2">(arcCurves.length - </span><span class="s4">1 </span><span class="s2">- hasPrev &gt; </span><span class="s4">0</span><span class="s2">) {</span>
+                        <span class="s5">// filter out consumed next items</span>
+                        <span class="s2">path.splice.apply(path</span><span class="s1">, </span><span class="s2">[index + </span><span class="s4">1</span><span class="s1">, </span><span class="s2">arcCurves.length - </span><span class="s4">1 </span><span class="s2">- hasPrev].concat(output))</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+                    <span class="s3">if </span><span class="s2">(!arc) </span><span class="s3">return false</span><span class="s1">;</span>
+                    <span class="s2">instruction = </span><span class="s0">'a'</span><span class="s1">;</span>
+                    <span class="s2">data = arc.data</span><span class="s1">;</span>
+                    <span class="s2">item.coords = arc.coords</span><span class="s1">;</span>
+                <span class="s2">}</span>
+            <span class="s2">}</span>
+
+            <span class="s5">// Rounding relative coordinates, taking in account accummulating error</span>
+            <span class="s5">// to get closer to absolute coordinates. Sum of rounded value remains same:</span>
+            <span class="s5">// l .25 3 .25 2 .25 3 .25 2 -&gt; l .3 3 .2 2 .3 3 .2 2</span>
+            <span class="s3">if </span><span class="s2">(precision !== </span><span class="s3">false</span><span class="s2">) {</span>
+                <span class="s3">if </span><span class="s2">(</span><span class="s0">'mltqsc'</span><span class="s2">.indexOf(instruction) &gt; -</span><span class="s4">1</span><span class="s2">) {</span>
+                    <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i = data.length</span><span class="s1">; </span><span class="s2">i--</span><span class="s1">;</span><span class="s2">) {</span>
+                        <span class="s2">data[i] += item.base[i % </span><span class="s4">2</span><span class="s2">] - relSubpoint[i % </span><span class="s4">2</span><span class="s2">]</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+                <span class="s2">} </span><span class="s3">else if </span><span class="s2">(instruction == </span><span class="s0">'h'</span><span class="s2">) {</span>
+                    <span class="s2">data[</span><span class="s4">0</span><span class="s2">] += item.base[</span><span class="s4">0</span><span class="s2">] - relSubpoint[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">} </span><span class="s3">else if </span><span class="s2">(instruction == </span><span class="s0">'v'</span><span class="s2">) {</span>
+                    <span class="s2">data[</span><span class="s4">0</span><span class="s2">] += item.base[</span><span class="s4">1</span><span class="s2">] - relSubpoint[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">} </span><span class="s3">else if </span><span class="s2">(instruction == </span><span class="s0">'a'</span><span class="s2">) {</span>
+                    <span class="s2">data[</span><span class="s4">5</span><span class="s2">] += item.base[</span><span class="s4">0</span><span class="s2">] - relSubpoint[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                    <span class="s2">data[</span><span class="s4">6</span><span class="s2">] += item.base[</span><span class="s4">1</span><span class="s2">] - relSubpoint[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">}</span>
+                <span class="s2">roundData(data)</span><span class="s1">;</span>
+
+                <span class="s3">if      </span><span class="s2">(instruction == </span><span class="s0">'h'</span><span class="s2">) relSubpoint[</span><span class="s4">0</span><span class="s2">] += data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s3">else if </span><span class="s2">(instruction == </span><span class="s0">'v'</span><span class="s2">) relSubpoint[</span><span class="s4">1</span><span class="s2">] += data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s3">else </span><span class="s2">{</span>
+                    <span class="s2">relSubpoint[</span><span class="s4">0</span><span class="s2">] += data[data.length - </span><span class="s4">2</span><span class="s2">]</span><span class="s1">;</span>
+                    <span class="s2">relSubpoint[</span><span class="s4">1</span><span class="s2">] += data[data.length - </span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">}</span>
+                <span class="s2">roundData(relSubpoint)</span><span class="s1">;</span>
+
+                <span class="s3">if </span><span class="s2">(instruction.toLowerCase() == </span><span class="s0">'m'</span><span class="s2">) {</span>
+                    <span class="s2">pathBase[</span><span class="s4">0</span><span class="s2">] = relSubpoint[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                    <span class="s2">pathBase[</span><span class="s4">1</span><span class="s2">] = relSubpoint[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">}</span>
+            <span class="s2">}</span>
+
+            <span class="s5">// convert straight curves into lines segments</span>
+            <span class="s3">if </span><span class="s2">(params.straightCurves) {</span>
+
+                <span class="s3">if </span><span class="s2">(</span>
+                    <span class="s2">instruction === </span><span class="s0">'c' </span><span class="s2">&amp;&amp;</span>
+                    <span class="s2">isCurveStraightLine(data) ||</span>
+                    <span class="s2">instruction === </span><span class="s0">'s' </span><span class="s2">&amp;&amp;</span>
+                    <span class="s2">isCurveStraightLine(sdata)</span>
+                <span class="s2">) {</span>
+                    <span class="s3">if </span><span class="s2">(next &amp;&amp; next.instruction == </span><span class="s0">'s'</span><span class="s2">)</span>
+                        <span class="s2">makeLonghand(next</span><span class="s1">, </span><span class="s2">data)</span><span class="s1">; </span><span class="s5">// fix up next curve</span>
+                    <span class="s2">instruction = </span><span class="s0">'l'</span><span class="s1">;</span>
+                    <span class="s2">data = data.slice(-</span><span class="s4">2</span><span class="s2">)</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+                <span class="s3">else if </span><span class="s2">(</span>
+                    <span class="s2">instruction === </span><span class="s0">'q' </span><span class="s2">&amp;&amp;</span>
+                    <span class="s2">isCurveStraightLine(data)</span>
+                <span class="s2">) {</span>
+                    <span class="s3">if </span><span class="s2">(next &amp;&amp; next.instruction == </span><span class="s0">'t'</span><span class="s2">)</span>
+                        <span class="s2">makeLonghand(next</span><span class="s1">, </span><span class="s2">data)</span><span class="s1">; </span><span class="s5">// fix up next curve</span>
+                    <span class="s2">instruction = </span><span class="s0">'l'</span><span class="s1">;</span>
+                    <span class="s2">data = data.slice(-</span><span class="s4">2</span><span class="s2">)</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+                <span class="s3">else if </span><span class="s2">(</span>
+                    <span class="s2">instruction === </span><span class="s0">'t' </span><span class="s2">&amp;&amp;</span>
+                    <span class="s2">prev.instruction !== </span><span class="s0">'q' </span><span class="s2">&amp;&amp;</span>
+                    <span class="s2">prev.instruction !== </span><span class="s0">'t'</span>
+                <span class="s2">) {</span>
+                    <span class="s2">instruction = </span><span class="s0">'l'</span><span class="s1">;</span>
+                    <span class="s2">data = data.slice(-</span><span class="s4">2</span><span class="s2">)</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+                <span class="s3">else if </span><span class="s2">(</span>
+                    <span class="s2">instruction === </span><span class="s0">'a' </span><span class="s2">&amp;&amp;</span>
+                    <span class="s2">(data[</span><span class="s4">0</span><span class="s2">] === </span><span class="s4">0 </span><span class="s2">|| data[</span><span class="s4">1</span><span class="s2">] === </span><span class="s4">0</span><span class="s2">)</span>
+                <span class="s2">) {</span>
+                    <span class="s2">instruction = </span><span class="s0">'l'</span><span class="s1">;</span>
+                    <span class="s2">data = data.slice(-</span><span class="s4">2</span><span class="s2">)</span><span class="s1">;</span>
+                <span class="s2">}</span>
+            <span class="s2">}</span>
+
+            <span class="s5">// horizontal and vertical line shorthands</span>
+            <span class="s5">// l 50 0 → h 50</span>
+            <span class="s5">// l 0 50 → v 50</span>
+            <span class="s3">if </span><span class="s2">(</span>
+                <span class="s2">params.lineShorthands &amp;&amp;</span>
+                <span class="s2">instruction === </span><span class="s0">'l'</span>
+            <span class="s2">) {</span>
+                <span class="s3">if </span><span class="s2">(data[</span><span class="s4">1</span><span class="s2">] === </span><span class="s4">0</span><span class="s2">) {</span>
+                    <span class="s2">instruction = </span><span class="s0">'h'</span><span class="s1">;</span>
+                    <span class="s2">data.pop()</span><span class="s1">;</span>
+                <span class="s2">} </span><span class="s3">else if </span><span class="s2">(data[</span><span class="s4">0</span><span class="s2">] === </span><span class="s4">0</span><span class="s2">) {</span>
+                    <span class="s2">instruction = </span><span class="s0">'v'</span><span class="s1">;</span>
+                    <span class="s2">data.shift()</span><span class="s1">;</span>
+                <span class="s2">}</span>
+            <span class="s2">}</span>
+
+            <span class="s5">// collapse repeated commands</span>
+            <span class="s5">// h 20 h 30 -&gt; h 50</span>
+            <span class="s3">if </span><span class="s2">(</span>
+                <span class="s2">params.collapseRepeated &amp;&amp;</span>
+                <span class="s2">!hasMarkerMid &amp;&amp;</span>
+                <span class="s2">(</span><span class="s0">'mhv'</span><span class="s2">.indexOf(instruction) &gt; -</span><span class="s4">1</span><span class="s2">) &amp;&amp;</span>
+                <span class="s2">prev.instruction &amp;&amp;</span>
+                <span class="s2">instruction == prev.instruction.toLowerCase() &amp;&amp;</span>
+                <span class="s2">(</span>
+                    <span class="s2">(instruction != </span><span class="s0">'h' </span><span class="s2">&amp;&amp; instruction != </span><span class="s0">'v'</span><span class="s2">) ||</span>
+                    <span class="s2">(prev.data[</span><span class="s4">0</span><span class="s2">] &gt;= </span><span class="s4">0</span><span class="s2">) == (item.data[</span><span class="s4">0</span><span class="s2">] &gt;= </span><span class="s4">0</span><span class="s2">)</span>
+            <span class="s2">)) {</span>
+                <span class="s2">prev.data[</span><span class="s4">0</span><span class="s2">] += data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s3">if </span><span class="s2">(instruction != </span><span class="s0">'h' </span><span class="s2">&amp;&amp; instruction != </span><span class="s0">'v'</span><span class="s2">) {</span>
+                    <span class="s2">prev.data[</span><span class="s4">1</span><span class="s2">] += data[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">}</span>
+                <span class="s2">prev.coords = item.coords</span><span class="s1">;</span>
+                <span class="s2">path[index] = prev</span><span class="s1">;</span>
+                <span class="s3">return false</span><span class="s1">;</span>
+            <span class="s2">}</span>
+
+            <span class="s5">// convert curves into smooth shorthands</span>
+            <span class="s3">if </span><span class="s2">(params.curveSmoothShorthands &amp;&amp; prev.instruction) {</span>
+
+                <span class="s5">// curveto</span>
+                <span class="s3">if </span><span class="s2">(instruction === </span><span class="s0">'c'</span><span class="s2">) {</span>
+
+                    <span class="s5">// c + c → c + s</span>
+                    <span class="s3">if </span><span class="s2">(</span>
+                        <span class="s2">prev.instruction === </span><span class="s0">'c' </span><span class="s2">&amp;&amp;</span>
+                        <span class="s2">data[</span><span class="s4">0</span><span class="s2">] === -(prev.data[</span><span class="s4">2</span><span class="s2">] - prev.data[</span><span class="s4">4</span><span class="s2">]) &amp;&amp;</span>
+                        <span class="s2">data[</span><span class="s4">1</span><span class="s2">] === -(prev.data[</span><span class="s4">3</span><span class="s2">] - prev.data[</span><span class="s4">5</span><span class="s2">])</span>
+                    <span class="s2">) {</span>
+                        <span class="s2">instruction = </span><span class="s0">'s'</span><span class="s1">;</span>
+                        <span class="s2">data = data.slice(</span><span class="s4">2</span><span class="s2">)</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+
+                    <span class="s5">// s + c → s + s</span>
+                    <span class="s3">else if </span><span class="s2">(</span>
+                        <span class="s2">prev.instruction === </span><span class="s0">'s' </span><span class="s2">&amp;&amp;</span>
+                        <span class="s2">data[</span><span class="s4">0</span><span class="s2">] === -(prev.data[</span><span class="s4">0</span><span class="s2">] - prev.data[</span><span class="s4">2</span><span class="s2">]) &amp;&amp;</span>
+                        <span class="s2">data[</span><span class="s4">1</span><span class="s2">] === -(prev.data[</span><span class="s4">1</span><span class="s2">] - prev.data[</span><span class="s4">3</span><span class="s2">])</span>
+                    <span class="s2">) {</span>
+                        <span class="s2">instruction = </span><span class="s0">'s'</span><span class="s1">;</span>
+                        <span class="s2">data = data.slice(</span><span class="s4">2</span><span class="s2">)</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+
+                    <span class="s5">// [^cs] + c → [^cs] + s</span>
+                    <span class="s3">else if </span><span class="s2">(</span>
+                        <span class="s0">'cs'</span><span class="s2">.indexOf(prev.instruction) === -</span><span class="s4">1 </span><span class="s2">&amp;&amp;</span>
+                        <span class="s2">data[</span><span class="s4">0</span><span class="s2">] === </span><span class="s4">0 </span><span class="s2">&amp;&amp;</span>
+                        <span class="s2">data[</span><span class="s4">1</span><span class="s2">] === </span><span class="s4">0</span>
+                    <span class="s2">) {</span>
+                        <span class="s2">instruction = </span><span class="s0">'s'</span><span class="s1">;</span>
+                        <span class="s2">data = data.slice(</span><span class="s4">2</span><span class="s2">)</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+
+                <span class="s2">}</span>
+
+                <span class="s5">// quadratic Bézier curveto</span>
+                <span class="s3">else if </span><span class="s2">(instruction === </span><span class="s0">'q'</span><span class="s2">) {</span>
+
+                    <span class="s5">// q + q → q + t</span>
+                    <span class="s3">if </span><span class="s2">(</span>
+                        <span class="s2">prev.instruction === </span><span class="s0">'q' </span><span class="s2">&amp;&amp;</span>
+                        <span class="s2">data[</span><span class="s4">0</span><span class="s2">] === (prev.data[</span><span class="s4">2</span><span class="s2">] - prev.data[</span><span class="s4">0</span><span class="s2">]) &amp;&amp;</span>
+                        <span class="s2">data[</span><span class="s4">1</span><span class="s2">] === (prev.data[</span><span class="s4">3</span><span class="s2">] - prev.data[</span><span class="s4">1</span><span class="s2">])</span>
+                    <span class="s2">) {</span>
+                        <span class="s2">instruction = </span><span class="s0">'t'</span><span class="s1">;</span>
+                        <span class="s2">data = data.slice(</span><span class="s4">2</span><span class="s2">)</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+
+                    <span class="s5">// t + q → t + t</span>
+                    <span class="s3">else if </span><span class="s2">(</span>
+                        <span class="s2">prev.instruction === </span><span class="s0">'t' </span><span class="s2">&amp;&amp;</span>
+                        <span class="s2">data[</span><span class="s4">2</span><span class="s2">] === prev.data[</span><span class="s4">0</span><span class="s2">] &amp;&amp;</span>
+                        <span class="s2">data[</span><span class="s4">3</span><span class="s2">] === prev.data[</span><span class="s4">1</span><span class="s2">]</span>
+                    <span class="s2">) {</span>
+                        <span class="s2">instruction = </span><span class="s0">'t'</span><span class="s1">;</span>
+                        <span class="s2">data = data.slice(</span><span class="s4">2</span><span class="s2">)</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+
+                <span class="s2">}</span>
+
+            <span class="s2">}</span>
+
+            <span class="s5">// remove useless non-first path segments</span>
+            <span class="s3">if </span><span class="s2">(params.removeUseless &amp;&amp; !hasStrokeLinecap) {</span>
+
+                <span class="s5">// l 0,0 / h 0 / v 0 / q 0,0 0,0 / t 0,0 / c 0,0 0,0 0,0 / s 0,0 0,0</span>
+                <span class="s3">if </span><span class="s2">(</span>
+                    <span class="s2">(</span>
+                     <span class="s0">'lhvqtcs'</span><span class="s2">.indexOf(instruction) &gt; -</span><span class="s4">1</span>
+                    <span class="s2">) &amp;&amp;</span>
+                    <span class="s2">data.every(</span><span class="s3">function</span><span class="s2">(i) { </span><span class="s3">return </span><span class="s2">i === </span><span class="s4">0</span><span class="s1">; </span><span class="s2">})</span>
+                <span class="s2">) {</span>
+                    <span class="s2">path[index] = prev</span><span class="s1">;</span>
+                    <span class="s3">return false</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+                <span class="s5">// a 25,25 -30 0,1 0,0</span>
+                <span class="s3">if </span><span class="s2">(</span>
+                    <span class="s2">instruction === </span><span class="s0">'a' </span><span class="s2">&amp;&amp;</span>
+                    <span class="s2">data[</span><span class="s4">5</span><span class="s2">] === </span><span class="s4">0 </span><span class="s2">&amp;&amp;</span>
+                    <span class="s2">data[</span><span class="s4">6</span><span class="s2">] === </span><span class="s4">0</span>
+                <span class="s2">) {</span>
+                    <span class="s2">path[index] = prev</span><span class="s1">;</span>
+                    <span class="s3">return false</span><span class="s1">;</span>
+                <span class="s2">}</span>
+
+            <span class="s2">}</span>
+
+            <span class="s2">item.instruction = instruction</span><span class="s1">;</span>
+            <span class="s2">item.data = data</span><span class="s1">;</span>
+
+            <span class="s2">prev = item</span><span class="s1">;</span>
+
+        <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+
+            <span class="s5">// z resets coordinates</span>
+            <span class="s2">relSubpoint[</span><span class="s4">0</span><span class="s2">] = pathBase[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+            <span class="s2">relSubpoint[</span><span class="s4">1</span><span class="s2">] = pathBase[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+            <span class="s3">if </span><span class="s2">(prev.instruction == </span><span class="s0">'z'</span><span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+            <span class="s2">prev = item</span><span class="s1">;</span>
+
+        <span class="s2">}</span>
+
+        <span class="s3">return true</span><span class="s1">;</span>
+
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s3">return </span><span class="s2">path</span><span class="s1">;</span>
+
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Writes data in shortest form using absolute or relative coordinates.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} data input path data</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Boolean} output</span>
+ <span class="s6">*/</span>
+<span class="s3">function </span><span class="s2">convertToMixed(path</span><span class="s1">, </span><span class="s2">params) {</span>
+
+    <span class="s3">var </span><span class="s2">prev = path[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+
+    <span class="s2">path = path.filter(</span><span class="s3">function</span><span class="s2">(item</span><span class="s1">, </span><span class="s2">index) {</span>
+
+        <span class="s3">if </span><span class="s2">(index == </span><span class="s4">0</span><span class="s2">) </span><span class="s3">return true</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(!item.data) {</span>
+            <span class="s2">prev = item</span><span class="s1">;</span>
+            <span class="s3">return true</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s3">var </span><span class="s2">instruction = item.instruction</span><span class="s1">,</span>
+            <span class="s2">data = item.data</span><span class="s1">,</span>
+            <span class="s2">adata = data &amp;&amp; data.slice(</span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(</span><span class="s0">'mltqsc'</span><span class="s2">.indexOf(instruction) &gt; -</span><span class="s4">1</span><span class="s2">) {</span>
+            <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i = adata.length</span><span class="s1">; </span><span class="s2">i--</span><span class="s1">;</span><span class="s2">) {</span>
+                <span class="s2">adata[i] += item.base[i % </span><span class="s4">2</span><span class="s2">]</span><span class="s1">;</span>
+            <span class="s2">}</span>
+        <span class="s2">} </span><span class="s3">else if </span><span class="s2">(instruction == </span><span class="s0">'h'</span><span class="s2">) {</span>
+                <span class="s2">adata[</span><span class="s4">0</span><span class="s2">] += item.base[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s3">else if </span><span class="s2">(instruction == </span><span class="s0">'v'</span><span class="s2">) {</span>
+                <span class="s2">adata[</span><span class="s4">0</span><span class="s2">] += item.base[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+        <span class="s2">} </span><span class="s3">else if </span><span class="s2">(instruction == </span><span class="s0">'a'</span><span class="s2">) {</span>
+                <span class="s2">adata[</span><span class="s4">5</span><span class="s2">] += item.base[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">;</span>
+                <span class="s2">adata[</span><span class="s4">6</span><span class="s2">] += item.base[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s2">roundData(adata)</span><span class="s1">;</span>
+
+        <span class="s3">var </span><span class="s2">absoluteDataStr = cleanupOutData(adata</span><span class="s1">, </span><span class="s2">params)</span><span class="s1">,</span>
+            <span class="s2">relativeDataStr = cleanupOutData(data</span><span class="s1">, </span><span class="s2">params)</span><span class="s1">;</span>
+
+        <span class="s5">// Convert to absolute coordinates if it's shorter or forceAbsolutePath is true.</span>
+        <span class="s5">// v-20 -&gt; V0</span>
+        <span class="s5">// Don't convert if it fits following previous instruction.</span>
+        <span class="s5">// l20 30-10-50 instead of l20 30L20 30</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.forceAbsolutePath || (</span>
+            <span class="s2">absoluteDataStr.length &lt; relativeDataStr.length &amp;&amp;</span>
+            <span class="s2">!(</span>
+                <span class="s2">params.negativeExtraSpace &amp;&amp;</span>
+                <span class="s2">instruction == prev.instruction &amp;&amp;</span>
+                <span class="s2">prev.instruction.charCodeAt(</span><span class="s4">0</span><span class="s2">) &gt; </span><span class="s4">96 </span><span class="s2">&amp;&amp;</span>
+                <span class="s2">absoluteDataStr.length == relativeDataStr.length - </span><span class="s4">1 </span><span class="s2">&amp;&amp;</span>
+                <span class="s2">(data[</span><span class="s4">0</span><span class="s2">] &lt; </span><span class="s4">0 </span><span class="s2">|| </span><span class="s4">/^0\./</span><span class="s2">.test(data[</span><span class="s4">0</span><span class="s2">]) &amp;&amp; prev.data[prev.data.length - </span><span class="s4">1</span><span class="s2">] % </span><span class="s4">1</span><span class="s2">)</span>
+            <span class="s2">))</span>
+        <span class="s2">) {</span>
+            <span class="s2">item.instruction = instruction.toUpperCase()</span><span class="s1">;</span>
+            <span class="s2">item.data = adata</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s2">prev = item</span><span class="s1">;</span>
+
+        <span class="s3">return true</span><span class="s1">;</span>
+
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s3">return </span><span class="s2">path</span><span class="s1">;</span>
+
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Checks if curve is convex. Control points of such a curve must form</span>
+ <span class="s6">* a convex quadrilateral with diagonals crosspoint inside of it.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} data input path data</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Boolean} output</span>
+ <span class="s6">*/</span>
+<span class="s3">function </span><span class="s2">isConvex(data) {</span>
+
+    <span class="s3">var </span><span class="s2">center = getIntersection([</span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s2">data[</span><span class="s4">2</span><span class="s2">]</span><span class="s1">, </span><span class="s2">data[</span><span class="s4">3</span><span class="s2">]</span><span class="s1">, </span><span class="s2">data[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s2">data[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">, </span><span class="s2">data[</span><span class="s4">4</span><span class="s2">]</span><span class="s1">, </span><span class="s2">data[</span><span class="s4">5</span><span class="s2">]])</span><span class="s1">;</span>
+
+    <span class="s3">return </span><span class="s2">center &amp;&amp;</span>
+        <span class="s2">(data[</span><span class="s4">2</span><span class="s2">] &lt; center[</span><span class="s4">0</span><span class="s2">] == center[</span><span class="s4">0</span><span class="s2">] &lt; </span><span class="s4">0</span><span class="s2">) &amp;&amp;</span>
+        <span class="s2">(data[</span><span class="s4">3</span><span class="s2">] &lt; center[</span><span class="s4">1</span><span class="s2">] == center[</span><span class="s4">1</span><span class="s2">] &lt; </span><span class="s4">0</span><span class="s2">) &amp;&amp;</span>
+        <span class="s2">(data[</span><span class="s4">4</span><span class="s2">] &lt; center[</span><span class="s4">0</span><span class="s2">] == center[</span><span class="s4">0</span><span class="s2">] &lt; data[</span><span class="s4">0</span><span class="s2">]) &amp;&amp;</span>
+        <span class="s2">(data[</span><span class="s4">5</span><span class="s2">] &lt; center[</span><span class="s4">1</span><span class="s2">] == center[</span><span class="s4">1</span><span class="s2">] &lt; data[</span><span class="s4">1</span><span class="s2">])</span><span class="s1">;</span>
+
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Computes lines equations by two points and returns their intersection point.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} coords 8 numbers for 4 pairs of coordinates (x,y)</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Array|undefined} output coordinate of lines' crosspoint</span>
+ <span class="s6">*/</span>
+<span class="s3">function </span><span class="s2">getIntersection(coords) {</span>
+
+        <span class="s5">// Prev line equation parameters.</span>
+    <span class="s3">var </span><span class="s2">a1 = coords[</span><span class="s4">1</span><span class="s2">] - coords[</span><span class="s4">3</span><span class="s2">]</span><span class="s1">, </span><span class="s5">// y1 - y2</span>
+        <span class="s2">b1 = coords[</span><span class="s4">2</span><span class="s2">] - coords[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s5">// x2 - x1</span>
+        <span class="s2">c1 = coords[</span><span class="s4">0</span><span class="s2">] * coords[</span><span class="s4">3</span><span class="s2">] - coords[</span><span class="s4">2</span><span class="s2">] * coords[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">, </span><span class="s5">// x1 * y2 - x2 * y1</span>
+
+        <span class="s5">// Next line equation parameters</span>
+        <span class="s2">a2 = coords[</span><span class="s4">5</span><span class="s2">] - coords[</span><span class="s4">7</span><span class="s2">]</span><span class="s1">, </span><span class="s5">// y1 - y2</span>
+        <span class="s2">b2 = coords[</span><span class="s4">6</span><span class="s2">] - coords[</span><span class="s4">4</span><span class="s2">]</span><span class="s1">, </span><span class="s5">// x2 - x1</span>
+        <span class="s2">c2 = coords[</span><span class="s4">4</span><span class="s2">] * coords[</span><span class="s4">7</span><span class="s2">] - coords[</span><span class="s4">5</span><span class="s2">] * coords[</span><span class="s4">6</span><span class="s2">]</span><span class="s1">, </span><span class="s5">// x1 * y2 - x2 * y1</span>
+        <span class="s2">denom = (a1 * b2 - a2 * b1)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(!denom) </span><span class="s3">return</span><span class="s1">; </span><span class="s5">// parallel lines havn't an intersection</span>
+
+    <span class="s3">var </span><span class="s2">cross = [</span>
+            <span class="s2">(b1 * c2 - b2 * c1) / denom</span><span class="s1">,</span>
+            <span class="s2">(a1 * c2 - a2 * c1) / -denom</span>
+        <span class="s2">]</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(</span>
+        <span class="s2">!isNaN(cross[</span><span class="s4">0</span><span class="s2">]) &amp;&amp; !isNaN(cross[</span><span class="s4">1</span><span class="s2">]) &amp;&amp;</span>
+        <span class="s2">isFinite(cross[</span><span class="s4">0</span><span class="s2">]) &amp;&amp; isFinite(cross[</span><span class="s4">1</span><span class="s2">])</span>
+    <span class="s2">) {</span>
+        <span class="s3">return </span><span class="s2">cross</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Decrease accuracy of floating-point numbers</span>
+ <span class="s6">* in path data keeping a specified number of decimals.</span>
+ <span class="s6">* Smart rounds values like 2.3491 to 2.35 instead of 2.349.</span>
+ <span class="s6">* Doesn't apply &quot;smartness&quot; if the number precision fits already.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} data input data array</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Array} output data array</span>
+ <span class="s6">*/</span>
+<span class="s3">function </span><span class="s2">strongRound(data) {</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i = data.length</span><span class="s1">; </span><span class="s2">i-- &gt; </span><span class="s4">0</span><span class="s1">;</span><span class="s2">) {</span>
+        <span class="s3">if </span><span class="s2">(data[i].toFixed(precision) != data[i]) {</span>
+            <span class="s3">var </span><span class="s2">rounded = +data[i].toFixed(precision - </span><span class="s4">1</span><span class="s2">)</span><span class="s1">;</span>
+            <span class="s2">data[i] = +Math.abs(rounded - data[i]).toFixed(precision + </span><span class="s4">1</span><span class="s2">) &gt;= error ?</span>
+                <span class="s2">+data[i].toFixed(precision) :</span>
+                <span class="s2">rounded</span><span class="s1">;</span>
+        <span class="s2">}</span>
+    <span class="s2">}</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Simple rounding function if precision is 0.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} data input data array</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Array} output data array</span>
+ <span class="s6">*/</span>
+<span class="s3">function </span><span class="s2">round(data) {</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">i = data.length</span><span class="s1">; </span><span class="s2">i-- &gt; </span><span class="s4">0</span><span class="s1">;</span><span class="s2">) {</span>
+        <span class="s2">data[i] = Math.round(data[i])</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Checks if a curve is a straight line by measuring distance</span>
+ <span class="s6">* from middle points to the line formed by end points.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} xs array of curve points x-coordinates</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} ys array of curve points y-coordinates</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Boolean}</span>
+ <span class="s6">*/</span>
+
+<span class="s3">function </span><span class="s2">isCurveStraightLine(data) {</span>
+
+    <span class="s5">// Get line equation a·x + b·y + c = 0 coefficients a, b (c = 0) by start and end points.</span>
+    <span class="s3">var </span><span class="s2">i = data.length - </span><span class="s4">2</span><span class="s1">,</span>
+        <span class="s2">a = -data[i + </span><span class="s4">1</span><span class="s2">]</span><span class="s1">, </span><span class="s5">// y1 − y2 (y1 = 0)</span>
+        <span class="s2">b = data[i]</span><span class="s1">,      </span><span class="s5">// x2 − x1 (x1 = 0)</span>
+        <span class="s2">d = </span><span class="s4">1 </span><span class="s2">/ (a * a + b * b)</span><span class="s1">; </span><span class="s5">// same part for all points</span>
+
+    <span class="s3">if </span><span class="s2">(i &lt;= </span><span class="s4">1 </span><span class="s2">|| !isFinite(d)) </span><span class="s3">return false</span><span class="s1">; </span><span class="s5">// curve that ends at start point isn't the case</span>
+
+    <span class="s5">// Distance from point (x0, y0) to the line is sqrt((c − a·x0 − b·y0)² / (a² + b²))</span>
+    <span class="s3">while </span><span class="s2">((i -= </span><span class="s4">2</span><span class="s2">) &gt;= </span><span class="s4">0</span><span class="s2">) {</span>
+        <span class="s3">if </span><span class="s2">(Math.sqrt(Math.pow(a * data[i] + b * data[i + </span><span class="s4">1</span><span class="s2">]</span><span class="s1">, </span><span class="s4">2</span><span class="s2">) * d) &gt; error)</span>
+            <span class="s3">return false</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return true</span><span class="s1">;</span>
+
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Converts next curve from shorthand to full form using the current curve data.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} item curve to convert</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} data current curve data</span>
+ <span class="s6">*/</span>
+
+<span class="s3">function </span><span class="s2">makeLonghand(item</span><span class="s1">, </span><span class="s2">data) {</span>
+    <span class="s3">switch </span><span class="s2">(item.instruction) {</span>
+        <span class="s3">case </span><span class="s0">'s'</span><span class="s2">: item.instruction = </span><span class="s0">'c'</span><span class="s1">; </span><span class="s3">break</span><span class="s1">;</span>
+        <span class="s3">case </span><span class="s0">'t'</span><span class="s2">: item.instruction = </span><span class="s0">'q'</span><span class="s1">; </span><span class="s3">break</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">item.data.unshift(data[data.length - </span><span class="s4">2</span><span class="s2">] - data[data.length - </span><span class="s4">4</span><span class="s2">]</span><span class="s1">, </span><span class="s2">data[data.length - </span><span class="s4">1</span><span class="s2">] - data[data.length - </span><span class="s4">3</span><span class="s2">])</span><span class="s1">;</span>
+    <span class="s3">return </span><span class="s2">item</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Returns distance between two points</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} point1 first point coordinates</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} point2 second point coordinates</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Number} distance</span>
+ <span class="s6">*/</span>
+
+<span class="s3">function </span><span class="s2">getDistance(point1</span><span class="s1">, </span><span class="s2">point2) {</span>
+    <span class="s3">return </span><span class="s2">Math.hypot(point1[</span><span class="s4">0</span><span class="s2">] - point2[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s2">point1[</span><span class="s4">1</span><span class="s2">] - point2[</span><span class="s4">1</span><span class="s2">])</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Returns coordinates of the curve point corresponding to the certain t</span>
+ <span class="s6">* a·(1 - t)³·p1 + b·(1 - t)²·t·p2 + c·(1 - t)·t²·p3 + d·t³·p4,</span>
+ <span class="s6">* where pN are control points and p1 is zero due to relative coordinates.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} curve array of curve points coordinates</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Number} t parametric position from 0 to 1</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Array} Point coordinates</span>
+ <span class="s6">*/</span>
+
+<span class="s3">function </span><span class="s2">getCubicBezierPoint(curve</span><span class="s1">, </span><span class="s2">t) {</span>
+    <span class="s3">var </span><span class="s2">sqrT = t * t</span><span class="s1">,</span>
+        <span class="s2">cubT = sqrT * t</span><span class="s1">,</span>
+        <span class="s2">mt = </span><span class="s4">1 </span><span class="s2">- t</span><span class="s1">,</span>
+        <span class="s2">sqrMt = mt * mt</span><span class="s1">;</span>
+
+    <span class="s3">return </span><span class="s2">[</span>
+        <span class="s4">3 </span><span class="s2">* sqrMt * t * curve[</span><span class="s4">0</span><span class="s2">] + </span><span class="s4">3 </span><span class="s2">* mt * sqrT * curve[</span><span class="s4">2</span><span class="s2">] + cubT * curve[</span><span class="s4">4</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s4">3 </span><span class="s2">* sqrMt * t * curve[</span><span class="s4">1</span><span class="s2">] + </span><span class="s4">3 </span><span class="s2">* mt * sqrT * curve[</span><span class="s4">3</span><span class="s2">] + cubT * curve[</span><span class="s4">5</span><span class="s2">]</span>
+    <span class="s2">]</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Finds circle by 3 points of the curve and checks if the curve fits the found circle.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} curve</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Object|undefined} circle</span>
+ <span class="s6">*/</span>
+
+<span class="s3">function </span><span class="s2">findCircle(curve) {</span>
+    <span class="s3">var </span><span class="s2">midPoint = getCubicBezierPoint(curve</span><span class="s1">, </span><span class="s4">1</span><span class="s2">/</span><span class="s4">2</span><span class="s2">)</span><span class="s1">,</span>
+        <span class="s2">m1 = [midPoint[</span><span class="s4">0</span><span class="s2">] / </span><span class="s4">2</span><span class="s1">, </span><span class="s2">midPoint[</span><span class="s4">1</span><span class="s2">] / </span><span class="s4">2</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">m2 = [(midPoint[</span><span class="s4">0</span><span class="s2">] + curve[</span><span class="s4">4</span><span class="s2">]) / </span><span class="s4">2</span><span class="s1">, </span><span class="s2">(midPoint[</span><span class="s4">1</span><span class="s2">] + curve[</span><span class="s4">5</span><span class="s2">]) / </span><span class="s4">2</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">center = getIntersection([</span>
+            <span class="s2">m1[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s2">m1[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">,</span>
+            <span class="s2">m1[</span><span class="s4">0</span><span class="s2">] + m1[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">, </span><span class="s2">m1[</span><span class="s4">1</span><span class="s2">] - m1[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">,</span>
+            <span class="s2">m2[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s2">m2[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">,</span>
+            <span class="s2">m2[</span><span class="s4">0</span><span class="s2">] + (m2[</span><span class="s4">1</span><span class="s2">] - midPoint[</span><span class="s4">1</span><span class="s2">])</span><span class="s1">, </span><span class="s2">m2[</span><span class="s4">1</span><span class="s2">] - (m2[</span><span class="s4">0</span><span class="s2">] - midPoint[</span><span class="s4">0</span><span class="s2">])</span>
+        <span class="s2">])</span><span class="s1">,</span>
+        <span class="s2">radius = center &amp;&amp; getDistance([</span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s2">center)</span><span class="s1">,</span>
+        <span class="s2">tolerance = Math.min(arcThreshold * error</span><span class="s1">, </span><span class="s2">arcTolerance * radius / </span><span class="s4">100</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(center &amp;&amp; radius &lt; </span><span class="s4">1e15 </span><span class="s2">&amp;&amp;</span>
+        <span class="s2">[</span><span class="s4">1</span><span class="s2">/</span><span class="s4">4</span><span class="s1">, </span><span class="s4">3</span><span class="s2">/</span><span class="s4">4</span><span class="s2">].every(</span><span class="s3">function</span><span class="s2">(point) {</span>
+        <span class="s3">return </span><span class="s2">Math.abs(getDistance(getCubicBezierPoint(curve</span><span class="s1">, </span><span class="s2">point)</span><span class="s1">, </span><span class="s2">center) - radius) &lt;= tolerance</span><span class="s1">;</span>
+    <span class="s2">}))</span>
+        <span class="s3">return </span><span class="s2">{ center: center</span><span class="s1">, </span><span class="s2">radius: radius}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Checks if a curve fits the given circle.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} circle</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} curve</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Boolean}</span>
+ <span class="s6">*/</span>
+
+<span class="s3">function </span><span class="s2">isArc(curve</span><span class="s1">, </span><span class="s2">circle) {</span>
+    <span class="s3">var </span><span class="s2">tolerance = Math.min(arcThreshold * error</span><span class="s1">, </span><span class="s2">arcTolerance * circle.radius / </span><span class="s4">100</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">return </span><span class="s2">[</span><span class="s4">0</span><span class="s1">, </span><span class="s4">1</span><span class="s2">/</span><span class="s4">4</span><span class="s1">, </span><span class="s4">1</span><span class="s2">/</span><span class="s4">2</span><span class="s1">, </span><span class="s4">3</span><span class="s2">/</span><span class="s4">4</span><span class="s1">, </span><span class="s4">1</span><span class="s2">].every(</span><span class="s3">function</span><span class="s2">(point) {</span>
+        <span class="s3">return </span><span class="s2">Math.abs(getDistance(getCubicBezierPoint(curve</span><span class="s1">, </span><span class="s2">point)</span><span class="s1">, </span><span class="s2">circle.center) - circle.radius) &lt;= tolerance</span><span class="s1">;</span>
+    <span class="s2">})</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Checks if a previous curve fits the given circle.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} circle</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} curve</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Boolean}</span>
+ <span class="s6">*/</span>
+
+<span class="s3">function </span><span class="s2">isArcPrev(curve</span><span class="s1">, </span><span class="s2">circle) {</span>
+    <span class="s3">return </span><span class="s2">isArc(curve</span><span class="s1">, </span><span class="s2">{</span>
+        <span class="s2">center: [circle.center[</span><span class="s4">0</span><span class="s2">] + curve[</span><span class="s4">4</span><span class="s2">]</span><span class="s1">, </span><span class="s2">circle.center[</span><span class="s4">1</span><span class="s2">] + curve[</span><span class="s4">5</span><span class="s2">]]</span><span class="s1">,</span>
+        <span class="s2">radius: circle.radius</span>
+    <span class="s2">})</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Finds angle of a curve fitting the given arc.</span>
+
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} curve</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} relCircle</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Number} angle</span>
+ <span class="s6">*/</span>
+
+<span class="s3">function </span><span class="s2">findArcAngle(curve</span><span class="s1">, </span><span class="s2">relCircle) {</span>
+    <span class="s3">var </span><span class="s2">x1 = -relCircle.center[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">y1 = -relCircle.center[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">x2 = curve[</span><span class="s4">4</span><span class="s2">] - relCircle.center[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">y2 = curve[</span><span class="s4">5</span><span class="s2">] - relCircle.center[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">;</span>
+
+    <span class="s3">return </span><span class="s2">Math.acos(</span>
+            <span class="s2">(x1 * x2 + y1 * y2) /</span>
+            <span class="s2">Math.sqrt((x1 * x1 + y1 * y1) * (x2 * x2 + y2 * y2))</span>
+        <span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Converts given path data to string.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} params</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} pathData</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{String}</span>
+ <span class="s6">*/</span>
+
+<span class="s3">function </span><span class="s2">data2Path(params</span><span class="s1">, </span><span class="s2">pathData) {</span>
+    <span class="s3">return </span><span class="s2">pathData.reduce(</span><span class="s3">function</span><span class="s2">(pathString</span><span class="s1">, </span><span class="s2">item) {</span>
+        <span class="s3">var </span><span class="s2">strData = </span><span class="s0">''</span><span class="s1">;</span>
+        <span class="s3">if </span><span class="s2">(item.data) {</span>
+            <span class="s2">strData = cleanupOutData(roundData(item.data.slice())</span><span class="s1">, </span><span class="s2">params)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+        <span class="s3">return </span><span class="s2">pathString + item.instruction + strData</span><span class="s1">;</span>
+    <span class="s2">}</span><span class="s1">, </span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

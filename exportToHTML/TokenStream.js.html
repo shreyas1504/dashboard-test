@@ -1,0 +1,241 @@
+<html>
+<head>
+<title>TokenStream.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+TokenStream.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">constants = require(</span><span class="s2">'../tokenizer/const'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">TYPE = constants.TYPE</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">NAME = constants.NAME</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">utils = require(</span><span class="s2">'../tokenizer/utils'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">cmpStr = utils.cmpStr</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">EOF = TYPE.EOF</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">WHITESPACE = TYPE.WhiteSpace</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">COMMENT = TYPE.Comment</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">OFFSET_MASK = </span><span class="s4">0x00FFFFFF</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">TYPE_SHIFT = </span><span class="s4">24</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">TokenStream = </span><span class="s0">function</span><span class="s1">() {</span>
+    <span class="s0">this</span><span class="s1">.offsetAndType = </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.balance = </span><span class="s0">null</span><span class="s3">;</span>
+
+    <span class="s0">this</span><span class="s1">.reset()</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">TokenStream.prototype = {</span>
+    <span class="s1">reset: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">this</span><span class="s1">.eof = </span><span class="s0">false</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.tokenIndex = -</span><span class="s4">1</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.tokenType = </span><span class="s4">0</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.tokenStart = </span><span class="s0">this</span><span class="s1">.firstCharOffset</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.tokenEnd = </span><span class="s0">this</span><span class="s1">.firstCharOffset</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+
+    <span class="s1">lookupType: </span><span class="s0">function</span><span class="s1">(offset) {</span>
+        <span class="s1">offset += </span><span class="s0">this</span><span class="s1">.tokenIndex</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(offset &lt; </span><span class="s0">this</span><span class="s1">.tokenCount) {</span>
+            <span class="s0">return this</span><span class="s1">.offsetAndType[offset] &gt;&gt; TYPE_SHIFT</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">EOF</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">lookupOffset: </span><span class="s0">function</span><span class="s1">(offset) {</span>
+        <span class="s1">offset += </span><span class="s0">this</span><span class="s1">.tokenIndex</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(offset &lt; </span><span class="s0">this</span><span class="s1">.tokenCount) {</span>
+            <span class="s0">return this</span><span class="s1">.offsetAndType[offset - </span><span class="s4">1</span><span class="s1">] &amp; OFFSET_MASK</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return this</span><span class="s1">.source.length</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">lookupValue: </span><span class="s0">function</span><span class="s1">(offset</span><span class="s3">, </span><span class="s1">referenceStr) {</span>
+        <span class="s1">offset += </span><span class="s0">this</span><span class="s1">.tokenIndex</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(offset &lt; </span><span class="s0">this</span><span class="s1">.tokenCount) {</span>
+            <span class="s0">return </span><span class="s1">cmpStr(</span>
+                <span class="s0">this</span><span class="s1">.source</span><span class="s3">,</span>
+                <span class="s0">this</span><span class="s1">.offsetAndType[offset - </span><span class="s4">1</span><span class="s1">] &amp; OFFSET_MASK</span><span class="s3">,</span>
+                <span class="s0">this</span><span class="s1">.offsetAndType[offset] &amp; OFFSET_MASK</span><span class="s3">,</span>
+                <span class="s1">referenceStr</span>
+            <span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return false</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">getTokenStart: </span><span class="s0">function</span><span class="s1">(tokenIndex) {</span>
+        <span class="s0">if </span><span class="s1">(tokenIndex === </span><span class="s0">this</span><span class="s1">.tokenIndex) {</span>
+            <span class="s0">return this</span><span class="s1">.tokenStart</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(tokenIndex &gt; </span><span class="s4">0</span><span class="s1">) {</span>
+            <span class="s0">return </span><span class="s1">tokenIndex &lt; </span><span class="s0">this</span><span class="s1">.tokenCount</span>
+                <span class="s1">? </span><span class="s0">this</span><span class="s1">.offsetAndType[tokenIndex - </span><span class="s4">1</span><span class="s1">] &amp; OFFSET_MASK</span>
+                <span class="s1">: </span><span class="s0">this</span><span class="s1">.offsetAndType[</span><span class="s0">this</span><span class="s1">.tokenCount] &amp; OFFSET_MASK</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return this</span><span class="s1">.firstCharOffset</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+
+    <span class="s5">// TODO: -&gt; skipUntilBalanced</span>
+    <span class="s1">getRawLength: </span><span class="s0">function</span><span class="s1">(startToken</span><span class="s3">, </span><span class="s1">mode) {</span>
+        <span class="s0">var </span><span class="s1">cursor = startToken</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">balanceEnd</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">offset = </span><span class="s0">this</span><span class="s1">.offsetAndType[Math.max(cursor - </span><span class="s4">1</span><span class="s3">, </span><span class="s4">0</span><span class="s1">)] &amp; OFFSET_MASK</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">type</span><span class="s3">;</span>
+
+        <span class="s1">loop:</span>
+        <span class="s0">for </span><span class="s1">(</span><span class="s3">; </span><span class="s1">cursor &lt; </span><span class="s0">this</span><span class="s1">.tokenCount</span><span class="s3">; </span><span class="s1">cursor++) {</span>
+            <span class="s1">balanceEnd = </span><span class="s0">this</span><span class="s1">.balance[cursor]</span><span class="s3">;</span>
+
+            <span class="s5">// stop scanning on balance edge that points to offset before start token</span>
+            <span class="s0">if </span><span class="s1">(balanceEnd &lt; startToken) {</span>
+                <span class="s0">break </span><span class="s1">loop</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s1">type = </span><span class="s0">this</span><span class="s1">.offsetAndType[cursor] &gt;&gt; TYPE_SHIFT</span><span class="s3">;</span>
+
+            <span class="s5">// check token is stop type</span>
+            <span class="s0">switch </span><span class="s1">(mode(type</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.source</span><span class="s3">, </span><span class="s1">offset)) {</span>
+                <span class="s0">case </span><span class="s4">1</span><span class="s1">:</span>
+                    <span class="s0">break </span><span class="s1">loop</span><span class="s3">;</span>
+
+                <span class="s0">case </span><span class="s4">2</span><span class="s1">:</span>
+                    <span class="s1">cursor++</span><span class="s3">;</span>
+                    <span class="s0">break </span><span class="s1">loop</span><span class="s3">;</span>
+
+                <span class="s0">default</span><span class="s1">:</span>
+                    <span class="s5">// fast forward to the end of balanced block</span>
+                    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.balance[balanceEnd] === cursor) {</span>
+                        <span class="s1">cursor = balanceEnd</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+
+                    <span class="s1">offset = </span><span class="s0">this</span><span class="s1">.offsetAndType[cursor] &amp; OFFSET_MASK</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">cursor - </span><span class="s0">this</span><span class="s1">.tokenIndex</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">isBalanceEdge: </span><span class="s0">function</span><span class="s1">(pos) {</span>
+        <span class="s0">return this</span><span class="s1">.balance[</span><span class="s0">this</span><span class="s1">.tokenIndex] &lt; pos</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">isDelim: </span><span class="s0">function</span><span class="s1">(code</span><span class="s3">, </span><span class="s1">offset) {</span>
+        <span class="s0">if </span><span class="s1">(offset) {</span>
+            <span class="s0">return </span><span class="s1">(</span>
+                <span class="s0">this</span><span class="s1">.lookupType(offset) === TYPE.Delim &amp;&amp;</span>
+                <span class="s0">this</span><span class="s1">.source.charCodeAt(</span><span class="s0">this</span><span class="s1">.lookupOffset(offset)) === code</span>
+            <span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">(</span>
+            <span class="s0">this</span><span class="s1">.tokenType === TYPE.Delim &amp;&amp;</span>
+            <span class="s0">this</span><span class="s1">.source.charCodeAt(</span><span class="s0">this</span><span class="s1">.tokenStart) === code</span>
+        <span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+
+    <span class="s1">getTokenValue: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">return this</span><span class="s1">.source.substring(</span><span class="s0">this</span><span class="s1">.tokenStart</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.tokenEnd)</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">getTokenLength: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">return this</span><span class="s1">.tokenEnd - </span><span class="s0">this</span><span class="s1">.tokenStart</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">substrToCursor: </span><span class="s0">function</span><span class="s1">(start) {</span>
+        <span class="s0">return this</span><span class="s1">.source.substring(start</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.tokenStart)</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+
+    <span class="s1">skipWS: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s0">this</span><span class="s1">.tokenIndex</span><span class="s3">, </span><span class="s1">skipTokenCount = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s0">this</span><span class="s1">.tokenCount</span><span class="s3">; </span><span class="s1">i++</span><span class="s3">, </span><span class="s1">skipTokenCount++) {</span>
+            <span class="s0">if </span><span class="s1">((</span><span class="s0">this</span><span class="s1">.offsetAndType[i] &gt;&gt; TYPE_SHIFT) !== WHITESPACE) {</span>
+                <span class="s0">break</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(skipTokenCount &gt; </span><span class="s4">0</span><span class="s1">) {</span>
+            <span class="s0">this</span><span class="s1">.skip(skipTokenCount)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">skipSC: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">while </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.tokenType === WHITESPACE || </span><span class="s0">this</span><span class="s1">.tokenType === COMMENT) {</span>
+            <span class="s0">this</span><span class="s1">.next()</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">skip: </span><span class="s0">function</span><span class="s1">(tokenCount) {</span>
+        <span class="s0">var </span><span class="s1">next = </span><span class="s0">this</span><span class="s1">.tokenIndex + tokenCount</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(next &lt; </span><span class="s0">this</span><span class="s1">.tokenCount) {</span>
+            <span class="s0">this</span><span class="s1">.tokenIndex = next</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.tokenStart = </span><span class="s0">this</span><span class="s1">.offsetAndType[next - </span><span class="s4">1</span><span class="s1">] &amp; OFFSET_MASK</span><span class="s3">;</span>
+            <span class="s1">next = </span><span class="s0">this</span><span class="s1">.offsetAndType[next]</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.tokenType = next &gt;&gt; TYPE_SHIFT</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.tokenEnd = next &amp; OFFSET_MASK</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s0">this</span><span class="s1">.tokenIndex = </span><span class="s0">this</span><span class="s1">.tokenCount</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.next()</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">next: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">var </span><span class="s1">next = </span><span class="s0">this</span><span class="s1">.tokenIndex + </span><span class="s4">1</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(next &lt; </span><span class="s0">this</span><span class="s1">.tokenCount) {</span>
+            <span class="s0">this</span><span class="s1">.tokenIndex = next</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.tokenStart = </span><span class="s0">this</span><span class="s1">.tokenEnd</span><span class="s3">;</span>
+            <span class="s1">next = </span><span class="s0">this</span><span class="s1">.offsetAndType[next]</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.tokenType = next &gt;&gt; TYPE_SHIFT</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.tokenEnd = next &amp; OFFSET_MASK</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s0">this</span><span class="s1">.tokenIndex = </span><span class="s0">this</span><span class="s1">.tokenCount</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.eof = </span><span class="s0">true</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.tokenType = EOF</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.tokenStart = </span><span class="s0">this</span><span class="s1">.tokenEnd = </span><span class="s0">this</span><span class="s1">.source.length</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s3">,</span>
+
+    <span class="s1">forEachToken(fn) {</span>
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">, </span><span class="s1">offset = </span><span class="s0">this</span><span class="s1">.firstCharOffset</span><span class="s3">; </span><span class="s1">i &lt; </span><span class="s0">this</span><span class="s1">.tokenCount</span><span class="s3">; </span><span class="s1">i++) {</span>
+            <span class="s0">var </span><span class="s1">start = offset</span><span class="s3">;</span>
+            <span class="s0">var </span><span class="s1">item = </span><span class="s0">this</span><span class="s1">.offsetAndType[i]</span><span class="s3">;</span>
+            <span class="s0">var </span><span class="s1">end = item &amp; OFFSET_MASK</span><span class="s3">;</span>
+            <span class="s0">var </span><span class="s1">type = item &gt;&gt; TYPE_SHIFT</span><span class="s3">;</span>
+
+            <span class="s1">offset = end</span><span class="s3">;</span>
+
+            <span class="s1">fn(type</span><span class="s3">, </span><span class="s1">start</span><span class="s3">, </span><span class="s1">end</span><span class="s3">, </span><span class="s1">i)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s3">,</span>
+
+    <span class="s1">dump() {</span>
+        <span class="s0">var </span><span class="s1">tokens = </span><span class="s0">new </span><span class="s1">Array(</span><span class="s0">this</span><span class="s1">.tokenCount)</span><span class="s3">;</span>
+
+        <span class="s0">this</span><span class="s1">.forEachToken((type</span><span class="s3">, </span><span class="s1">start</span><span class="s3">, </span><span class="s1">end</span><span class="s3">, </span><span class="s1">index) =&gt; {</span>
+            <span class="s1">tokens[index] = {</span>
+                <span class="s1">idx: index</span><span class="s3">,</span>
+                <span class="s1">type: NAME[type]</span><span class="s3">,</span>
+                <span class="s1">chunk: </span><span class="s0">this</span><span class="s1">.source.substring(start</span><span class="s3">, </span><span class="s1">end)</span><span class="s3">,</span>
+                <span class="s1">balance: </span><span class="s0">this</span><span class="s1">.balance[index]</span>
+            <span class="s1">}</span><span class="s3">;</span>
+        <span class="s1">})</span><span class="s3">;</span>
+
+        <span class="s0">return </span><span class="s1">tokens</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">module.exports = TokenStream</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

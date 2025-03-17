@@ -1,0 +1,213 @@
+<html>
+<head>
+<title>attributes.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+.s6 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+attributes.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">falseFunc = require(</span><span class="s2">&quot;boolbase&quot;</span><span class="s1">).falseFunc</span><span class="s3">;</span>
+
+<span class="s4">//https://github.com/slevithan/XRegExp/blob/master/src/xregexp.js#L469</span>
+<span class="s0">var </span><span class="s1">reChars = </span><span class="s5">/[-[\]{}()*+?.,\\^$|#\s]/g</span><span class="s3">;</span>
+
+<span class="s6">/* 
+    attribute selectors 
+*/</span>
+<span class="s0">var </span><span class="s1">attributeRules = {</span>
+    <span class="s1">__proto__: </span><span class="s0">null</span><span class="s3">,</span>
+    <span class="s1">equals: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">var </span><span class="s1">name = data.name</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">value = data.value</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(data.ignoreCase) {</span>
+            <span class="s1">value = value.toLowerCase()</span><span class="s3">;</span>
+
+            <span class="s0">return function </span><span class="s1">equalsIC(elem) {</span>
+                <span class="s0">var </span><span class="s1">attr = adapter.getAttributeValue(elem</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">;</span>
+                <span class="s0">return </span><span class="s1">attr != </span><span class="s0">null </span><span class="s1">&amp;&amp; attr.toLowerCase() === value &amp;&amp; next(elem)</span><span class="s3">;</span>
+            <span class="s1">}</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return function </span><span class="s1">equals(elem) {</span>
+            <span class="s0">return </span><span class="s1">adapter.getAttributeValue(elem</span><span class="s3">, </span><span class="s1">name) === value &amp;&amp; next(elem)</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">hyphen: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">var </span><span class="s1">name = data.name</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">value = data.value</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">len = value.length</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(data.ignoreCase) {</span>
+            <span class="s1">value = value.toLowerCase()</span><span class="s3">;</span>
+
+            <span class="s0">return function </span><span class="s1">hyphenIC(elem) {</span>
+                <span class="s0">var </span><span class="s1">attr = adapter.getAttributeValue(elem</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">;</span>
+                <span class="s0">return </span><span class="s1">(</span>
+                    <span class="s1">attr != </span><span class="s0">null </span><span class="s1">&amp;&amp;</span>
+                    <span class="s1">(attr.length === len || attr.charAt(len) === </span><span class="s2">&quot;-&quot;</span><span class="s1">) &amp;&amp;</span>
+                    <span class="s1">attr.substr(</span><span class="s5">0</span><span class="s3">, </span><span class="s1">len).toLowerCase() === value &amp;&amp;</span>
+                    <span class="s1">next(elem)</span>
+                <span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">}</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return function </span><span class="s1">hyphen(elem) {</span>
+            <span class="s0">var </span><span class="s1">attr = adapter.getAttributeValue(elem</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">;</span>
+            <span class="s0">return </span><span class="s1">(</span>
+                <span class="s1">attr != </span><span class="s0">null </span><span class="s1">&amp;&amp;</span>
+                <span class="s1">attr.substr(</span><span class="s5">0</span><span class="s3">, </span><span class="s1">len) === value &amp;&amp;</span>
+                <span class="s1">(attr.length === len || attr.charAt(len) === </span><span class="s2">&quot;-&quot;</span><span class="s1">) &amp;&amp;</span>
+                <span class="s1">next(elem)</span>
+            <span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">element: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">var </span><span class="s1">name = data.name</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">value = data.value</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(</span><span class="s5">/\s/</span><span class="s1">.test(value)) {</span>
+            <span class="s0">return </span><span class="s1">falseFunc</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">value = value.replace(reChars</span><span class="s3">, </span><span class="s2">&quot;</span><span class="s3">\\</span><span class="s2">$&amp;&quot;</span><span class="s1">)</span><span class="s3">;</span>
+
+        <span class="s0">var </span><span class="s1">pattern = </span><span class="s2">&quot;(?:^|</span><span class="s3">\\</span><span class="s2">s)&quot; </span><span class="s1">+ value + </span><span class="s2">&quot;(?:$|</span><span class="s3">\\</span><span class="s2">s)&quot;</span><span class="s3">,</span>
+            <span class="s1">flags = data.ignoreCase ? </span><span class="s2">&quot;i&quot; </span><span class="s1">: </span><span class="s2">&quot;&quot;</span><span class="s3">,</span>
+            <span class="s1">regex = </span><span class="s0">new </span><span class="s1">RegExp(pattern</span><span class="s3">, </span><span class="s1">flags)</span><span class="s3">;</span>
+
+        <span class="s0">return function </span><span class="s1">element(elem) {</span>
+            <span class="s0">var </span><span class="s1">attr = adapter.getAttributeValue(elem</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">;</span>
+            <span class="s0">return </span><span class="s1">attr != </span><span class="s0">null </span><span class="s1">&amp;&amp; regex.test(attr) &amp;&amp; next(elem)</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">exists: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">var </span><span class="s1">name = data.name</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s0">return function </span><span class="s1">exists(elem) {</span>
+            <span class="s0">return </span><span class="s1">adapter.hasAttrib(elem</span><span class="s3">, </span><span class="s1">name) &amp;&amp; next(elem)</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">start: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">var </span><span class="s1">name = data.name</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">value = data.value</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">len = value.length</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(len === </span><span class="s5">0</span><span class="s1">) {</span>
+            <span class="s0">return </span><span class="s1">falseFunc</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(data.ignoreCase) {</span>
+            <span class="s1">value = value.toLowerCase()</span><span class="s3">;</span>
+
+            <span class="s0">return function </span><span class="s1">startIC(elem) {</span>
+                <span class="s0">var </span><span class="s1">attr = adapter.getAttributeValue(elem</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">;</span>
+                <span class="s0">return </span><span class="s1">attr != </span><span class="s0">null </span><span class="s1">&amp;&amp; attr.substr(</span><span class="s5">0</span><span class="s3">, </span><span class="s1">len).toLowerCase() === value &amp;&amp; next(elem)</span><span class="s3">;</span>
+            <span class="s1">}</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return function </span><span class="s1">start(elem) {</span>
+            <span class="s0">var </span><span class="s1">attr = adapter.getAttributeValue(elem</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">;</span>
+            <span class="s0">return </span><span class="s1">attr != </span><span class="s0">null </span><span class="s1">&amp;&amp; attr.substr(</span><span class="s5">0</span><span class="s3">, </span><span class="s1">len) === value &amp;&amp; next(elem)</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">end: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">var </span><span class="s1">name = data.name</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">value = data.value</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">len = -value.length</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(len === </span><span class="s5">0</span><span class="s1">) {</span>
+            <span class="s0">return </span><span class="s1">falseFunc</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(data.ignoreCase) {</span>
+            <span class="s1">value = value.toLowerCase()</span><span class="s3">;</span>
+
+            <span class="s0">return function </span><span class="s1">endIC(elem) {</span>
+                <span class="s0">var </span><span class="s1">attr = adapter.getAttributeValue(elem</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">;</span>
+                <span class="s0">return </span><span class="s1">attr != </span><span class="s0">null </span><span class="s1">&amp;&amp; attr.substr(len).toLowerCase() === value &amp;&amp; next(elem)</span><span class="s3">;</span>
+            <span class="s1">}</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return function </span><span class="s1">end(elem) {</span>
+            <span class="s0">var </span><span class="s1">attr = adapter.getAttributeValue(elem</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">;</span>
+            <span class="s0">return </span><span class="s1">attr != </span><span class="s0">null </span><span class="s1">&amp;&amp; attr.substr(len) === value &amp;&amp; next(elem)</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">any: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">var </span><span class="s1">name = data.name</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">value = data.value</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(value === </span><span class="s2">&quot;&quot;</span><span class="s1">) {</span>
+            <span class="s0">return </span><span class="s1">falseFunc</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(data.ignoreCase) {</span>
+            <span class="s0">var </span><span class="s1">regex = </span><span class="s0">new </span><span class="s1">RegExp(value.replace(reChars</span><span class="s3">, </span><span class="s2">&quot;</span><span class="s3">\\</span><span class="s2">$&amp;&quot;</span><span class="s1">)</span><span class="s3">, </span><span class="s2">&quot;i&quot;</span><span class="s1">)</span><span class="s3">;</span>
+
+            <span class="s0">return function </span><span class="s1">anyIC(elem) {</span>
+                <span class="s0">var </span><span class="s1">attr = adapter.getAttributeValue(elem</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">;</span>
+                <span class="s0">return </span><span class="s1">attr != </span><span class="s0">null </span><span class="s1">&amp;&amp; regex.test(attr) &amp;&amp; next(elem)</span><span class="s3">;</span>
+            <span class="s1">}</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return function </span><span class="s1">any(elem) {</span>
+            <span class="s0">var </span><span class="s1">attr = adapter.getAttributeValue(elem</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">;</span>
+            <span class="s0">return </span><span class="s1">attr != </span><span class="s0">null </span><span class="s1">&amp;&amp; attr.indexOf(value) &gt;= </span><span class="s5">0 </span><span class="s1">&amp;&amp; next(elem)</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">not: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">var </span><span class="s1">name = data.name</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">value = data.value</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">adapter = options.adapter</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(value === </span><span class="s2">&quot;&quot;</span><span class="s1">) {</span>
+            <span class="s0">return function </span><span class="s1">notEmpty(elem) {</span>
+                <span class="s0">return </span><span class="s1">!!adapter.getAttributeValue(elem</span><span class="s3">, </span><span class="s1">name) &amp;&amp; next(elem)</span><span class="s3">;</span>
+            <span class="s1">}</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else if </span><span class="s1">(data.ignoreCase) {</span>
+            <span class="s1">value = value.toLowerCase()</span><span class="s3">;</span>
+
+            <span class="s0">return function </span><span class="s1">notIC(elem) {</span>
+                <span class="s0">var </span><span class="s1">attr = adapter.getAttributeValue(elem</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">;</span>
+                <span class="s0">return </span><span class="s1">attr != </span><span class="s0">null </span><span class="s1">&amp;&amp; attr.toLowerCase() !== value &amp;&amp; next(elem)</span><span class="s3">;</span>
+            <span class="s1">}</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return function </span><span class="s1">not(elem) {</span>
+            <span class="s0">return </span><span class="s1">adapter.getAttributeValue(elem</span><span class="s3">, </span><span class="s1">name) !== value &amp;&amp; next(elem)</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">compile: </span><span class="s0">function</span><span class="s1">(next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options) {</span>
+        <span class="s0">if </span><span class="s1">(options &amp;&amp; options.strict &amp;&amp; (data.ignoreCase || data.action === </span><span class="s2">&quot;not&quot;</span><span class="s1">)) {</span>
+            <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">&quot;Unsupported attribute selector&quot;</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s0">return </span><span class="s1">attributeRules[data.action](next</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">options)</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">rules: attributeRules</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

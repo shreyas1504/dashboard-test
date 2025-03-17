@@ -1,0 +1,38 @@
+<html>
+<head>
+<title>jiti</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+jiti</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+
+<span class="s2">const </span><span class="s1">{ resolve } = require(</span><span class="s3">&quot;node:path&quot;</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s2">const </span><span class="s1">script = process.argv.splice(</span><span class="s5">2</span><span class="s4">, </span><span class="s5">1</span><span class="s1">)[</span><span class="s5">0</span><span class="s1">]</span><span class="s4">;</span>
+
+<span class="s2">if </span><span class="s1">(!script) {</span>
+   
+  <span class="s1">console.error(</span><span class="s3">&quot;Usage: jiti &lt;path&gt; [...arguments]&quot;</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">process.exit(</span><span class="s5">1</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s2">const </span><span class="s1">pwd = process.cwd()</span><span class="s4">;</span>
+<span class="s2">const </span><span class="s1">jiti = require(</span><span class="s3">&quot;..&quot;</span><span class="s1">)(pwd)</span><span class="s4">;</span>
+<span class="s2">const </span><span class="s1">resolved = (process.argv[</span><span class="s5">1</span><span class="s1">] = jiti.resolve(resolve(pwd</span><span class="s4">, </span><span class="s1">script)))</span><span class="s4">;</span>
+<span class="s1">jiti(resolved)</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

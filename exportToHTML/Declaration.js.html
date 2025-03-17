@@ -1,0 +1,191 @@
+<html>
+<head>
+<title>Declaration.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Declaration.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">isCustomProperty = require(</span><span class="s2">'../../utils/names'</span><span class="s1">).isCustomProperty</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).TYPE</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">rawMode = require(</span><span class="s2">'./Raw'</span><span class="s1">).mode</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">IDENT = TYPE.Ident</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">HASH = TYPE.Hash</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">COLON = TYPE.Colon</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">SEMICOLON = TYPE.Semicolon</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">DELIM = TYPE.Delim</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">WHITESPACE = TYPE.WhiteSpace</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">EXCLAMATIONMARK = </span><span class="s4">0x0021</span><span class="s3">; </span><span class="s5">// U+0021 EXCLAMATION MARK (!)</span>
+<span class="s0">var </span><span class="s1">NUMBERSIGN = </span><span class="s4">0x0023</span><span class="s3">;      </span><span class="s5">// U+0023 NUMBER SIGN (#)</span>
+<span class="s0">var </span><span class="s1">DOLLARSIGN = </span><span class="s4">0x0024</span><span class="s3">;      </span><span class="s5">// U+0024 DOLLAR SIGN ($)</span>
+<span class="s0">var </span><span class="s1">AMPERSAND = </span><span class="s4">0x0026</span><span class="s3">;       </span><span class="s5">// U+0026 ANPERSAND (&amp;)</span>
+<span class="s0">var </span><span class="s1">ASTERISK = </span><span class="s4">0x002A</span><span class="s3">;        </span><span class="s5">// U+002A ASTERISK (*)</span>
+<span class="s0">var </span><span class="s1">PLUSSIGN = </span><span class="s4">0x002B</span><span class="s3">;        </span><span class="s5">// U+002B PLUS SIGN (+)</span>
+<span class="s0">var </span><span class="s1">SOLIDUS = </span><span class="s4">0x002F</span><span class="s3">;         </span><span class="s5">// U+002F SOLIDUS (/)</span>
+
+<span class="s0">function </span><span class="s1">consumeValueRaw(startToken) {</span>
+    <span class="s0">return this</span><span class="s1">.Raw(startToken</span><span class="s3">, </span><span class="s1">rawMode.exclamationMarkOrSemicolon</span><span class="s3">, </span><span class="s0">true</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">consumeCustomPropertyRaw(startToken) {</span>
+    <span class="s0">return this</span><span class="s1">.Raw(startToken</span><span class="s3">, </span><span class="s1">rawMode.exclamationMarkOrSemicolon</span><span class="s3">, </span><span class="s0">false</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">consumeValue() {</span>
+    <span class="s0">var </span><span class="s1">startValueToken = </span><span class="s0">this</span><span class="s1">.scanner.tokenIndex</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">value = </span><span class="s0">this</span><span class="s1">.Value()</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(value.type !== </span><span class="s2">'Raw' </span><span class="s1">&amp;&amp;</span>
+        <span class="s0">this</span><span class="s1">.scanner.eof === </span><span class="s0">false </span><span class="s1">&amp;&amp;</span>
+        <span class="s0">this</span><span class="s1">.scanner.tokenType !== SEMICOLON &amp;&amp;</span>
+        <span class="s0">this</span><span class="s1">.scanner.isDelim(EXCLAMATIONMARK) === </span><span class="s0">false </span><span class="s1">&amp;&amp;</span>
+        <span class="s0">this</span><span class="s1">.scanner.isBalanceEdge(startValueToken) === </span><span class="s0">false</span><span class="s1">) {</span>
+        <span class="s0">this</span><span class="s1">.error()</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">value</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">name: </span><span class="s2">'Declaration'</span><span class="s3">,</span>
+    <span class="s1">structure: {</span>
+        <span class="s1">important: [Boolean</span><span class="s3">, </span><span class="s1">String]</span><span class="s3">,</span>
+        <span class="s1">property: String</span><span class="s3">,</span>
+        <span class="s1">value: [</span><span class="s2">'Value'</span><span class="s3">, </span><span class="s2">'Raw'</span><span class="s1">]</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">parse: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">var </span><span class="s1">start = </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">startToken = </span><span class="s0">this</span><span class="s1">.scanner.tokenIndex</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">property = readProperty.call(</span><span class="s0">this</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">customProperty = isCustomProperty(property)</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">parseValue = customProperty ? </span><span class="s0">this</span><span class="s1">.parseCustomProperty : </span><span class="s0">this</span><span class="s1">.parseValue</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">consumeRaw = customProperty ? consumeCustomPropertyRaw : consumeValueRaw</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">important = </span><span class="s0">false</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">value</span><span class="s3">;</span>
+
+        <span class="s0">this</span><span class="s1">.scanner.skipSC()</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.eat(COLON)</span><span class="s3">;</span>
+
+        <span class="s0">const </span><span class="s1">valueStart = </span><span class="s0">this</span><span class="s1">.scanner.tokenIndex</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(!customProperty) {</span>
+            <span class="s0">this</span><span class="s1">.scanner.skipSC()</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(parseValue) {</span>
+            <span class="s1">value = </span><span class="s0">this</span><span class="s1">.parseWithFallback(consumeValue</span><span class="s3">, </span><span class="s1">consumeRaw)</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s1">value = consumeRaw.call(</span><span class="s0">this</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenIndex)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(customProperty &amp;&amp; value.type === </span><span class="s2">'Value' </span><span class="s1">&amp;&amp; value.children.isEmpty()) {</span>
+            <span class="s0">for </span><span class="s1">(</span><span class="s0">let </span><span class="s1">offset = valueStart - </span><span class="s0">this</span><span class="s1">.scanner.tokenIndex</span><span class="s3">; </span><span class="s1">offset &lt;= </span><span class="s4">0</span><span class="s3">; </span><span class="s1">offset++) {</span>
+                <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.lookupType(offset) === WHITESPACE) {</span>
+                    <span class="s1">value.children.appendData({</span>
+                        <span class="s1">type: </span><span class="s2">'WhiteSpace'</span><span class="s3">,</span>
+                        <span class="s1">loc: </span><span class="s0">null</span><span class="s3">,</span>
+                        <span class="s1">value: </span><span class="s2">' '</span>
+                    <span class="s1">})</span><span class="s3">;</span>
+                    <span class="s0">break</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.isDelim(EXCLAMATIONMARK)) {</span>
+            <span class="s1">important = getImportant.call(</span><span class="s0">this</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s0">this</span><span class="s1">.scanner.skipSC()</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s5">// Do not include semicolon to range per spec</span>
+        <span class="s5">// https://drafts.csswg.org/css-syntax/#declaration-diagram</span>
+
+        <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.eof === </span><span class="s0">false </span><span class="s1">&amp;&amp;</span>
+            <span class="s0">this</span><span class="s1">.scanner.tokenType !== SEMICOLON &amp;&amp;</span>
+            <span class="s0">this</span><span class="s1">.scanner.isBalanceEdge(startToken) === </span><span class="s0">false</span><span class="s1">) {</span>
+            <span class="s0">this</span><span class="s1">.error()</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">type: </span><span class="s2">'Declaration'</span><span class="s3">,</span>
+            <span class="s1">loc: </span><span class="s0">this</span><span class="s1">.getLocation(start</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart)</span><span class="s3">,</span>
+            <span class="s1">important: important</span><span class="s3">,</span>
+            <span class="s1">property: property</span><span class="s3">,</span>
+            <span class="s1">value: value</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">generate: </span><span class="s0">function</span><span class="s1">(node) {</span>
+        <span class="s0">this</span><span class="s1">.chunk(node.property)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">':'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.node(node.value)</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(node.important) {</span>
+            <span class="s0">this</span><span class="s1">.chunk(node.important === </span><span class="s0">true </span><span class="s1">? </span><span class="s2">'!important' </span><span class="s1">: </span><span class="s2">'!' </span><span class="s1">+ node.important)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">walkContext: </span><span class="s2">'declaration'</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">readProperty() {</span>
+    <span class="s0">var </span><span class="s1">start = </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">prefix = </span><span class="s4">0</span><span class="s3">;</span>
+
+    <span class="s5">// hacks</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenType === DELIM) {</span>
+        <span class="s0">switch </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.source.charCodeAt(</span><span class="s0">this</span><span class="s1">.scanner.tokenStart)) {</span>
+            <span class="s0">case </span><span class="s1">ASTERISK:</span>
+            <span class="s0">case </span><span class="s1">DOLLARSIGN:</span>
+            <span class="s0">case </span><span class="s1">PLUSSIGN:</span>
+            <span class="s0">case </span><span class="s1">NUMBERSIGN:</span>
+            <span class="s0">case </span><span class="s1">AMPERSAND:</span>
+                <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+                <span class="s0">break</span><span class="s3">;</span>
+
+            <span class="s5">// TODO: not sure we should support this hack</span>
+            <span class="s0">case </span><span class="s1">SOLIDUS:</span>
+                <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+                <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.isDelim(SOLIDUS)) {</span>
+                    <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+                <span class="s1">}</span>
+                <span class="s0">break</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(prefix) {</span>
+        <span class="s0">this</span><span class="s1">.scanner.skip(prefix)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenType === HASH) {</span>
+        <span class="s0">this</span><span class="s1">.eat(HASH)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+        <span class="s0">this</span><span class="s1">.eat(IDENT)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return this</span><span class="s1">.scanner.substrToCursor(start)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s5">// ! ws* important</span>
+<span class="s0">function </span><span class="s1">getImportant() {</span>
+    <span class="s0">this</span><span class="s1">.eat(DELIM)</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.scanner.skipSC()</span><span class="s3">;</span>
+
+    <span class="s0">var </span><span class="s1">important = </span><span class="s0">this</span><span class="s1">.consume(IDENT)</span><span class="s3">;</span>
+
+    <span class="s5">// store original value in case it differ from `important`</span>
+    <span class="s5">// for better original source restoring and hacks like `!ie` support</span>
+    <span class="s0">return </span><span class="s1">important === </span><span class="s2">'important' </span><span class="s1">? </span><span class="s0">true </span><span class="s1">: important</span><span class="s3">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<html>
+<head>
+<title>clone.mjs</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a; font-style: italic;}
+.s1 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #cc7832;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+clone.mjs</font>
+</center></td></tr></table>
+<pre><span class="s0">/**</span>
+ <span class="s0">* Creates a deep copy of a process coverage.</span>
+ <span class="s0">*</span>
+ <span class="s0">* </span><span class="s1">@param </span><span class="s0">processCov Process coverage to clone.</span>
+ <span class="s0">* </span><span class="s1">@return </span><span class="s0">Cloned process coverage.</span>
+ <span class="s0">*/</span>
+<span class="s3">export function </span><span class="s2">cloneProcessCov(processCov) {</span>
+    <span class="s3">const </span><span class="s2">result = []</span><span class="s4">;</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">scriptCov of processCov.result) {</span>
+        <span class="s2">result.push(cloneScriptCov(scriptCov))</span><span class="s4">;</span>
+    <span class="s2">}</span>
+    <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">result</span><span class="s4">,</span>
+    <span class="s2">}</span><span class="s4">;</span>
+<span class="s2">}</span>
+<span class="s0">/**</span>
+ <span class="s0">* Creates a deep copy of a script coverage.</span>
+ <span class="s0">*</span>
+ <span class="s0">* </span><span class="s1">@param </span><span class="s0">scriptCov Script coverage to clone.</span>
+ <span class="s0">* </span><span class="s1">@return </span><span class="s0">Cloned script coverage.</span>
+ <span class="s0">*/</span>
+<span class="s3">export function </span><span class="s2">cloneScriptCov(scriptCov) {</span>
+    <span class="s3">const </span><span class="s2">functions = []</span><span class="s4">;</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">functionCov of scriptCov.functions) {</span>
+        <span class="s2">functions.push(cloneFunctionCov(functionCov))</span><span class="s4">;</span>
+    <span class="s2">}</span>
+    <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">scriptId: scriptCov.scriptId</span><span class="s4">,</span>
+        <span class="s2">url: scriptCov.url</span><span class="s4">,</span>
+        <span class="s2">functions</span><span class="s4">,</span>
+    <span class="s2">}</span><span class="s4">;</span>
+<span class="s2">}</span>
+<span class="s0">/**</span>
+ <span class="s0">* Creates a deep copy of a function coverage.</span>
+ <span class="s0">*</span>
+ <span class="s0">* </span><span class="s1">@param </span><span class="s0">functionCov Function coverage to clone.</span>
+ <span class="s0">* </span><span class="s1">@return </span><span class="s0">Cloned function coverage.</span>
+ <span class="s0">*/</span>
+<span class="s3">export function </span><span class="s2">cloneFunctionCov(functionCov) {</span>
+    <span class="s3">const </span><span class="s2">ranges = []</span><span class="s4">;</span>
+    <span class="s3">for </span><span class="s2">(</span><span class="s3">const </span><span class="s2">rangeCov of functionCov.ranges) {</span>
+        <span class="s2">ranges.push(cloneRangeCov(rangeCov))</span><span class="s4">;</span>
+    <span class="s2">}</span>
+    <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">functionName: functionCov.functionName</span><span class="s4">,</span>
+        <span class="s2">ranges</span><span class="s4">,</span>
+        <span class="s2">isBlockCoverage: functionCov.isBlockCoverage</span><span class="s4">,</span>
+    <span class="s2">}</span><span class="s4">;</span>
+<span class="s2">}</span>
+<span class="s0">/**</span>
+ <span class="s0">* Creates a deep copy of a function coverage.</span>
+ <span class="s0">*</span>
+ <span class="s0">* </span><span class="s1">@param </span><span class="s0">rangeCov Range coverage to clone.</span>
+ <span class="s0">* </span><span class="s1">@return </span><span class="s0">Cloned range coverage.</span>
+ <span class="s0">*/</span>
+<span class="s3">export function </span><span class="s2">cloneRangeCov(rangeCov) {</span>
+    <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">startOffset: rangeCov.startOffset</span><span class="s4">,</span>
+        <span class="s2">endOffset: rangeCov.endOffset</span><span class="s4">,</span>
+        <span class="s2">count: rangeCov.count</span><span class="s4">,</span>
+    <span class="s2">}</span><span class="s4">;</span>
+<span class="s2">}</span>
+
+<span class="s5">//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIl9zcmMvY2xvbmUudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBRUE7Ozs7O0dBS0c7QUFDSCxNQUFNLFVBQVUsZUFBZSxDQUFDLFVBQWdDO0lBQzlELE1BQU0sTUFBTSxHQUFnQixFQUFFLENBQUM7SUFDL0IsS0FBSyxNQUFNLFNBQVMsSUFBSSxVQUFVLENBQUMsTUFBTSxFQUFFO1FBQ3pDLE1BQU0sQ0FBQyxJQUFJLENBQUMsY0FBYyxDQUFDLFNBQVMsQ0FBQyxDQUFDLENBQUM7S0FDeEM7SUFFRCxPQUFPO1FBQ0wsTUFBTTtLQUNQLENBQUM7QUFDSixDQUFDO0FBRUQ7Ozs7O0dBS0c7QUFDSCxNQUFNLFVBQVUsY0FBYyxDQUFDLFNBQThCO0lBQzNELE1BQU0sU0FBUyxHQUFrQixFQUFFLENBQUM7SUFDcEMsS0FBSyxNQUFNLFdBQVcsSUFBSSxTQUFTLENBQUMsU0FBUyxFQUFFO1FBQzdDLFNBQVMsQ0FBQyxJQUFJLENBQUMsZ0JBQWdCLENBQUMsV0FBVyxDQUFDLENBQUMsQ0FBQztLQUMvQztJQUVELE9BQU87UUFDTCxRQUFRLEVBQUUsU0FBUyxDQUFDLFFBQVE7UUFDNUIsR0FBRyxFQUFFLFNBQVMsQ0FBQyxHQUFHO1FBQ2xCLFNBQVM7S0FDVixDQUFDO0FBQ0osQ0FBQztBQUVEOzs7OztHQUtHO0FBQ0gsTUFBTSxVQUFVLGdCQUFnQixDQUFDLFdBQWtDO0lBQ2pFLE1BQU0sTUFBTSxHQUFlLEVBQUUsQ0FBQztJQUM5QixLQUFLLE1BQU0sUUFBUSxJQUFJLFdBQVcsQ0FBQyxNQUFNLEVBQUU7UUFDekMsTUFBTSxDQUFDLElBQUksQ0FBQyxhQUFhLENBQUMsUUFBUSxDQUFDLENBQUMsQ0FBQztLQUN0QztJQUVELE9BQU87UUFDTCxZQUFZLEVBQUUsV0FBVyxDQUFDLFlBQVk7UUFDdEMsTUFBTTtRQUNOLGVBQWUsRUFBRSxXQUFXLENBQUMsZUFBZTtLQUM3QyxDQUFDO0FBQ0osQ0FBQztBQUVEOzs7OztHQUtHO0FBQ0gsTUFBTSxVQUFVLGFBQWEsQ0FBQyxRQUE0QjtJQUN4RCxPQUFPO1FBQ0wsV0FBVyxFQUFFLFFBQVEsQ0FBQyxXQUFXO1FBQ2pDLFNBQVMsRUFBRSxRQUFRLENBQUMsU0FBUztRQUM3QixLQUFLLEVBQUUsUUFBUSxDQUFDLEtBQUs7S0FDdEIsQ0FBQztBQUNKLENBQUMiLCJmaWxlIjoiY2xvbmUuanMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBGdW5jdGlvbkNvdiwgUHJvY2Vzc0NvdiwgUmFuZ2VDb3YsIFNjcmlwdENvdiB9IGZyb20gXCIuL3R5cGVzXCI7XG5cbi8qKlxuICogQ3JlYXRlcyBhIGRlZXAgY29weSBvZiBhIHByb2Nlc3MgY292ZXJhZ2UuXG4gKlxuICogQHBhcmFtIHByb2Nlc3NDb3YgUHJvY2VzcyBjb3ZlcmFnZSB0byBjbG9uZS5cbiAqIEByZXR1cm4gQ2xvbmVkIHByb2Nlc3MgY292ZXJhZ2UuXG4gKi9cbmV4cG9ydCBmdW5jdGlvbiBjbG9uZVByb2Nlc3NDb3YocHJvY2Vzc0NvdjogUmVhZG9ubHk8UHJvY2Vzc0Nvdj4pOiBQcm9jZXNzQ292IHtcbiAgY29uc3QgcmVzdWx0OiBTY3JpcHRDb3ZbXSA9IFtdO1xuICBmb3IgKGNvbnN0IHNjcmlwdENvdiBvZiBwcm9jZXNzQ292LnJlc3VsdCkge1xuICAgIHJlc3VsdC5wdXNoKGNsb25lU2NyaXB0Q292KHNjcmlwdENvdikpO1xuICB9XG5cbiAgcmV0dXJuIHtcbiAgICByZXN1bHQsXG4gIH07XG59XG5cbi8qKlxuICogQ3JlYXRlcyBhIGRlZXAgY29weSBvZiBhIHNjcmlwdCBjb3ZlcmFnZS5cbiAqXG4gKiBAcGFyYW0gc2NyaXB0Q292IFNjcmlwdCBjb3ZlcmFnZSB0byBjbG9uZS5cbiAqIEByZXR1cm4gQ2xvbmVkIHNjcmlwdCBjb3ZlcmFnZS5cbiAqL1xuZXhwb3J0IGZ1bmN0aW9uIGNsb25lU2NyaXB0Q292KHNjcmlwdENvdjogUmVhZG9ubHk8U2NyaXB0Q292Pik6IFNjcmlwdENvdiB7XG4gIGNvbnN0IGZ1bmN0aW9uczogRnVuY3Rpb25Db3ZbXSA9IFtdO1xuICBmb3IgKGNvbnN0IGZ1bmN0aW9uQ292IG9mIHNjcmlwdENvdi5mdW5jdGlvbnMpIHtcbiAgICBmdW5jdGlvbnMucHVzaChjbG9uZUZ1bmN0aW9uQ292KGZ1bmN0aW9uQ292KSk7XG4gIH1cblxuICByZXR1cm4ge1xuICAgIHNjcmlwdElkOiBzY3JpcHRDb3Yuc2NyaXB0SWQsXG4gICAgdXJsOiBzY3JpcHRDb3YudXJsLFxuICAgIGZ1bmN0aW9ucyxcbiAgfTtcbn1cblxuLyoqXG4gKiBDcmVhdGVzIGEgZGVlcCBjb3B5IG9mIGEgZnVuY3Rpb24gY292ZXJhZ2UuXG4gKlxuICogQHBhcmFtIGZ1bmN0aW9uQ292IEZ1bmN0aW9uIGNvdmVyYWdlIHRvIGNsb25lLlxuICogQHJldHVybiBDbG9uZWQgZnVuY3Rpb24gY292ZXJhZ2UuXG4gKi9cbmV4cG9ydCBmdW5jdGlvbiBjbG9uZUZ1bmN0aW9uQ292KGZ1bmN0aW9uQ292OiBSZWFkb25seTxGdW5jdGlvbkNvdj4pOiBGdW5jdGlvbkNvdiB7XG4gIGNvbnN0IHJhbmdlczogUmFuZ2VDb3ZbXSA9IFtdO1xuICBmb3IgKGNvbnN0IHJhbmdlQ292IG9mIGZ1bmN0aW9uQ292LnJhbmdlcykge1xuICAgIHJhbmdlcy5wdXNoKGNsb25lUmFuZ2VDb3YocmFuZ2VDb3YpKTtcbiAgfVxuXG4gIHJldHVybiB7XG4gICAgZnVuY3Rpb25OYW1lOiBmdW5jdGlvbkNvdi5mdW5jdGlvbk5hbWUsXG4gICAgcmFuZ2VzLFxuICAgIGlzQmxvY2tDb3ZlcmFnZTogZnVuY3Rpb25Db3YuaXNCbG9ja0NvdmVyYWdlLFxuICB9O1xufVxuXG4vKipcbiAqIENyZWF0ZXMgYSBkZWVwIGNvcHkgb2YgYSBmdW5jdGlvbiBjb3ZlcmFnZS5cbiAqXG4gKiBAcGFyYW0gcmFuZ2VDb3YgUmFuZ2UgY292ZXJhZ2UgdG8gY2xvbmUuXG4gKiBAcmV0dXJuIENsb25lZCByYW5nZSBjb3ZlcmFnZS5cbiAqL1xuZXhwb3J0IGZ1bmN0aW9uIGNsb25lUmFuZ2VDb3YocmFuZ2VDb3Y6IFJlYWRvbmx5PFJhbmdlQ292Pik6IFJhbmdlQ292IHtcbiAgcmV0dXJuIHtcbiAgICBzdGFydE9mZnNldDogcmFuZ2VDb3Yuc3RhcnRPZmZzZXQsXG4gICAgZW5kT2Zmc2V0OiByYW5nZUNvdi5lbmRPZmZzZXQsXG4gICAgY291bnQ6IHJhbmdlQ292LmNvdW50LFxuICB9O1xufVxuIl0sInNvdXJjZVJvb3QiOiIifQ==</span>
+</pre>
+</body>
+</html>

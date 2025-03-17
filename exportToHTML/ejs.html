@@ -1,0 +1,234 @@
+<html>
+<head>
+<title>ejs</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8a8a8a;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8ea765;}
+.s5 { color: #cc7832;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ejs</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+<span class="s2">/* 
+ * EJS Embedded JavaScript templates 
+ * Copyright 2112 Matthew Eernisse (mde@fleegix.org) 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *         http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+*/</span>
+
+<span class="s3">let </span><span class="s1">path = require(</span><span class="s4">'path'</span><span class="s1">)</span><span class="s5">;</span>
+
+<span class="s3">let </span><span class="s1">program = require(</span><span class="s4">'jake'</span><span class="s1">).program</span><span class="s5">;</span>
+<span class="s3">delete </span><span class="s1">global.jake</span><span class="s5">; </span><span class="s0">// NO NOT WANT</span>
+<span class="s1">program.setTaskNames = </span><span class="s3">function </span><span class="s1">(n) { </span><span class="s3">this</span><span class="s1">.taskNames = n</span><span class="s5">; </span><span class="s1">}</span><span class="s5">;</span>
+
+<span class="s3">let </span><span class="s1">ejs = require(</span><span class="s4">'../lib/ejs'</span><span class="s1">)</span><span class="s5">;</span>
+<span class="s3">let </span><span class="s1">{ hyphenToCamel } = require(</span><span class="s4">'../lib/utils'</span><span class="s1">)</span><span class="s5">;</span>
+<span class="s3">let </span><span class="s1">fs = require(</span><span class="s4">'fs'</span><span class="s1">)</span><span class="s5">;</span>
+<span class="s3">let </span><span class="s1">args = process.argv.slice(</span><span class="s6">2</span><span class="s1">)</span><span class="s5">;</span>
+<span class="s3">let </span><span class="s1">usage = fs.readFileSync(</span><span class="s4">`</span><span class="s1">${__dirname}</span><span class="s4">/../usage.txt`</span><span class="s1">).toString()</span><span class="s5">;</span>
+
+<span class="s3">const </span><span class="s1">CLI_OPTS = [</span>
+  <span class="s1">{ full: </span><span class="s4">'output-file'</span><span class="s5">,</span>
+    <span class="s1">abbr: </span><span class="s4">'o'</span><span class="s5">,</span>
+    <span class="s1">expectValue: </span><span class="s3">true</span><span class="s5">,</span>
+  <span class="s1">}</span><span class="s5">,</span>
+  <span class="s1">{ full: </span><span class="s4">'data-file'</span><span class="s5">,</span>
+    <span class="s1">abbr: </span><span class="s4">'f'</span><span class="s5">,</span>
+    <span class="s1">expectValue: </span><span class="s3">true</span><span class="s5">,</span>
+  <span class="s1">}</span><span class="s5">,</span>
+  <span class="s1">{ full: </span><span class="s4">'data-input'</span><span class="s5">,</span>
+    <span class="s1">abbr: </span><span class="s4">'i'</span><span class="s5">,</span>
+    <span class="s1">expectValue: </span><span class="s3">true</span><span class="s5">,</span>
+  <span class="s1">}</span><span class="s5">,</span>
+  <span class="s1">{ full: </span><span class="s4">'delimiter'</span><span class="s5">,</span>
+    <span class="s1">abbr: </span><span class="s4">'m'</span><span class="s5">,</span>
+    <span class="s1">expectValue: </span><span class="s3">true</span><span class="s5">,</span>
+    <span class="s1">passThrough: </span><span class="s3">true</span><span class="s5">,</span>
+  <span class="s1">}</span><span class="s5">,</span>
+  <span class="s1">{ full: </span><span class="s4">'open-delimiter'</span><span class="s5">,</span>
+    <span class="s1">abbr: </span><span class="s4">'p'</span><span class="s5">,</span>
+    <span class="s1">expectValue: </span><span class="s3">true</span><span class="s5">,</span>
+    <span class="s1">passThrough: </span><span class="s3">true</span><span class="s5">,</span>
+  <span class="s1">}</span><span class="s5">,</span>
+  <span class="s1">{ full: </span><span class="s4">'close-delimiter'</span><span class="s5">,</span>
+    <span class="s1">abbr: </span><span class="s4">'c'</span><span class="s5">,</span>
+    <span class="s1">expectValue: </span><span class="s3">true</span><span class="s5">,</span>
+    <span class="s1">passThrough: </span><span class="s3">true</span><span class="s5">,</span>
+  <span class="s1">}</span><span class="s5">,</span>
+  <span class="s1">{ full: </span><span class="s4">'strict'</span><span class="s5">,</span>
+    <span class="s1">abbr: </span><span class="s4">'s'</span><span class="s5">,</span>
+    <span class="s1">expectValue: </span><span class="s3">false</span><span class="s5">,</span>
+    <span class="s1">allowValue: </span><span class="s3">false</span><span class="s5">,</span>
+    <span class="s1">passThrough: </span><span class="s3">true</span><span class="s5">,</span>
+  <span class="s1">}</span><span class="s5">,</span>
+  <span class="s1">{ full: </span><span class="s4">'no-with'</span><span class="s5">,</span>
+    <span class="s1">abbr: </span><span class="s4">'n'</span><span class="s5">,</span>
+    <span class="s1">expectValue: </span><span class="s3">false</span><span class="s5">,</span>
+    <span class="s1">allowValue: </span><span class="s3">false</span><span class="s5">,</span>
+  <span class="s1">}</span><span class="s5">,</span>
+  <span class="s1">{ full: </span><span class="s4">'locals-name'</span><span class="s5">,</span>
+    <span class="s1">abbr: </span><span class="s4">'l'</span><span class="s5">,</span>
+    <span class="s1">expectValue: </span><span class="s3">true</span><span class="s5">,</span>
+    <span class="s1">passThrough: </span><span class="s3">true</span><span class="s5">,</span>
+  <span class="s1">}</span><span class="s5">,</span>
+  <span class="s1">{ full: </span><span class="s4">'rm-whitespace'</span><span class="s5">,</span>
+    <span class="s1">abbr: </span><span class="s4">'w'</span><span class="s5">,</span>
+    <span class="s1">expectValue: </span><span class="s3">false</span><span class="s5">,</span>
+    <span class="s1">allowValue: </span><span class="s3">false</span><span class="s5">,</span>
+    <span class="s1">passThrough: </span><span class="s3">true</span><span class="s5">,</span>
+  <span class="s1">}</span><span class="s5">,</span>
+  <span class="s1">{ full: </span><span class="s4">'debug'</span><span class="s5">,</span>
+    <span class="s1">abbr: </span><span class="s4">'d'</span><span class="s5">,</span>
+    <span class="s1">expectValue: </span><span class="s3">false</span><span class="s5">,</span>
+    <span class="s1">allowValue: </span><span class="s3">false</span><span class="s5">,</span>
+    <span class="s1">passThrough: </span><span class="s3">true</span><span class="s5">,</span>
+  <span class="s1">}</span><span class="s5">,</span>
+  <span class="s1">{ full: </span><span class="s4">'help'</span><span class="s5">,</span>
+    <span class="s1">abbr: </span><span class="s4">'h'</span><span class="s5">,</span>
+    <span class="s1">passThrough: </span><span class="s3">true</span><span class="s5">,</span>
+  <span class="s1">}</span><span class="s5">,</span>
+  <span class="s1">{ full: </span><span class="s4">'version'</span><span class="s5">,</span>
+    <span class="s1">abbr: </span><span class="s4">'V'</span><span class="s5">,</span>
+    <span class="s1">passThrough: </span><span class="s3">true</span><span class="s5">,</span>
+  <span class="s1">}</span><span class="s5">,</span>
+  <span class="s0">// Alias lowercase v</span>
+  <span class="s1">{ full: </span><span class="s4">'version'</span><span class="s5">,</span>
+    <span class="s1">abbr: </span><span class="s4">'v'</span><span class="s5">,</span>
+    <span class="s1">passThrough: </span><span class="s3">true</span><span class="s5">,</span>
+  <span class="s1">}</span><span class="s5">,</span>
+<span class="s1">]</span><span class="s5">;</span>
+
+<span class="s3">let </span><span class="s1">preempts = {</span>
+  <span class="s1">version: </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s1">program.die(ejs.VERSION)</span><span class="s5">;</span>
+  <span class="s1">}</span><span class="s5">,</span>
+  <span class="s1">help: </span><span class="s3">function </span><span class="s1">() {</span>
+    <span class="s1">program.die(usage)</span><span class="s5">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s5">;</span>
+
+<span class="s3">let </span><span class="s1">stdin = </span><span class="s4">''</span><span class="s5">;</span>
+<span class="s1">process.stdin.setEncoding(</span><span class="s4">'utf8'</span><span class="s1">)</span><span class="s5">;</span>
+<span class="s1">process.stdin.on(</span><span class="s4">'readable'</span><span class="s5">, </span><span class="s1">() =&gt; {</span>
+  <span class="s3">let </span><span class="s1">chunk</span><span class="s5">;</span>
+  <span class="s3">while </span><span class="s1">((chunk = process.stdin.read()) !== </span><span class="s3">null</span><span class="s1">) {</span>
+    <span class="s1">stdin += chunk</span><span class="s5">;</span>
+  <span class="s1">}</span>
+<span class="s1">})</span><span class="s5">;</span>
+
+<span class="s3">function </span><span class="s1">run() {</span>
+
+  <span class="s1">program.availableOpts = CLI_OPTS</span><span class="s5">;</span>
+  <span class="s1">program.parseArgs(args)</span><span class="s5">;</span>
+
+  <span class="s3">let </span><span class="s1">templatePath = program.taskNames[</span><span class="s6">0</span><span class="s1">]</span><span class="s5">;</span>
+  <span class="s3">let </span><span class="s1">pVals = program.envVars</span><span class="s5">;</span>
+  <span class="s3">let </span><span class="s1">pOpts = {}</span><span class="s5">;</span>
+
+  <span class="s3">for </span><span class="s1">(</span><span class="s3">let </span><span class="s1">p </span><span class="s3">in </span><span class="s1">program.opts) {</span>
+    <span class="s3">let </span><span class="s1">name = hyphenToCamel(p)</span><span class="s5">;</span>
+    <span class="s1">pOpts[name] = program.opts[p]</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s3">let </span><span class="s1">opts = {}</span><span class="s5">;</span>
+  <span class="s3">let </span><span class="s1">vals = {}</span><span class="s5">;</span>
+
+  <span class="s0">// Same-named 'passthrough' opts</span>
+  <span class="s1">CLI_OPTS.forEach((opt) =&gt; {</span>
+    <span class="s3">let </span><span class="s1">optName = hyphenToCamel(opt.full)</span><span class="s5">;</span>
+    <span class="s3">if </span><span class="s1">(opt.passThrough &amp;&amp; </span><span class="s3">typeof </span><span class="s1">pOpts[optName] != </span><span class="s4">'undefined'</span><span class="s1">) {</span>
+      <span class="s1">opts[optName] = pOpts[optName]</span><span class="s5">;</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span><span class="s5">;</span>
+
+  <span class="s0">// Bail out for help/version</span>
+  <span class="s3">for </span><span class="s1">(</span><span class="s3">let </span><span class="s1">p </span><span class="s3">in </span><span class="s1">opts) {</span>
+    <span class="s3">if </span><span class="s1">(preempts[p]) {</span>
+      <span class="s3">return </span><span class="s1">preempts[p]()</span><span class="s5">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s0">// Ensure there's a template to render</span>
+  <span class="s3">if </span><span class="s1">(!templatePath) {</span>
+    <span class="s3">throw new </span><span class="s1">Error(</span><span class="s4">'Please provide a template path. (Run ejs -h for help)'</span><span class="s1">)</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s3">if </span><span class="s1">(opts.strict) {</span>
+    <span class="s1">pOpts.noWith = </span><span class="s3">true</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s3">if </span><span class="s1">(pOpts.noWith) {</span>
+    <span class="s1">opts._with = </span><span class="s3">false</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">// Grab and parse any input data, in order of precedence:</span>
+  <span class="s0">// 1. Stdin</span>
+  <span class="s0">// 2. CLI arg via -i</span>
+  <span class="s0">// 3. Data file via -f</span>
+  <span class="s0">// Any individual vals passed at the end (e.g., foo=bar) will override</span>
+  <span class="s0">// any vals previously set</span>
+  <span class="s3">let </span><span class="s1">input</span><span class="s5">;</span>
+  <span class="s3">let </span><span class="s1">err = </span><span class="s3">new </span><span class="s1">Error(</span><span class="s4">'Please do not pass data multiple ways. Pick one of stdin, -f, or -i.'</span><span class="s1">)</span><span class="s5">;</span>
+  <span class="s3">if </span><span class="s1">(stdin) {</span>
+    <span class="s1">input = stdin</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s3">else if </span><span class="s1">(pOpts.dataInput) {</span>
+    <span class="s3">if </span><span class="s1">(input) {</span>
+      <span class="s3">throw </span><span class="s1">err</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s1">input = decodeURIComponent(pOpts.dataInput)</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s3">else if </span><span class="s1">(pOpts.dataFile) {</span>
+    <span class="s3">if </span><span class="s1">(input) {</span>
+      <span class="s3">throw </span><span class="s1">err</span><span class="s5">;</span>
+    <span class="s1">}</span>
+    <span class="s1">input = fs.readFileSync(pOpts.dataFile).toString()</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s3">if </span><span class="s1">(input) {</span>
+    <span class="s1">vals = JSON.parse(input)</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">// Override / set any individual values passed from the command line</span>
+  <span class="s3">for </span><span class="s1">(</span><span class="s3">let </span><span class="s1">p </span><span class="s3">in </span><span class="s1">pVals) {</span>
+    <span class="s1">vals[p] = pVals[p]</span><span class="s5">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">opts.filename = path.resolve(process.cwd()</span><span class="s5">, </span><span class="s1">templatePath)</span><span class="s5">;</span>
+  <span class="s3">let </span><span class="s1">template = fs.readFileSync(opts.filename).toString()</span><span class="s5">;</span>
+  <span class="s3">let </span><span class="s1">output = ejs.render(template</span><span class="s5">, </span><span class="s1">vals</span><span class="s5">, </span><span class="s1">opts)</span><span class="s5">;</span>
+  <span class="s3">if </span><span class="s1">(pOpts.outputFile) {</span>
+    <span class="s1">fs.writeFileSync(pOpts.outputFile</span><span class="s5">, </span><span class="s1">output)</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s3">else </span><span class="s1">{</span>
+    <span class="s1">process.stdout.write(output)</span><span class="s5">;</span>
+  <span class="s1">}</span>
+  <span class="s1">process.exit()</span><span class="s5">;</span>
+<span class="s1">}</span>
+
+<span class="s0">// Defer execution so that stdin can be read if necessary</span>
+<span class="s1">setImmediate(run)</span><span class="s5">;</span>
+</pre>
+</body>
+</html>

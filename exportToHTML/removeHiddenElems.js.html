@@ -1,0 +1,249 @@
+<html>
+<head>
+<title>removeHiddenElems.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s7 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+removeHiddenElems.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">exports.type = </span><span class="s0">'perItem'</span><span class="s1">;</span>
+
+<span class="s2">exports.active = </span><span class="s3">true</span><span class="s1">;</span>
+
+<span class="s2">exports.description = </span><span class="s0">'removes hidden elements (zero sized, with absent attributes)'</span><span class="s1">;</span>
+
+<span class="s2">exports.params = {</span>
+    <span class="s2">isHidden: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">displayNone: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">opacity0: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">circleR0: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">ellipseRX0: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">ellipseRY0: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">rectWidth0: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">rectHeight0: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">patternWidth0: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">patternHeight0: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">imageWidth0: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">imageHeight0: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">pathEmptyD: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">polylineEmptyPoints: </span><span class="s3">true</span><span class="s1">,</span>
+    <span class="s2">polygonEmptyPoints: </span><span class="s3">true</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">regValidPath = </span><span class="s4">/M\s*(?:[-+]?(?:\d*\.\d+|\d+(?:\.|(?!\.)))([eE][-+]?\d+)?(?!\d)\s*,?\s*){2}\D*\d/i</span><span class="s1">;</span>
+
+<span class="s5">/**</span>
+ <span class="s5">* Remove hidden elements with disabled rendering:</span>
+ <span class="s5">* - display=&quot;none&quot;</span>
+ <span class="s5">* - opacity=&quot;0&quot;</span>
+ <span class="s5">* - circle with zero radius</span>
+ <span class="s5">* - ellipse with zero x-axis or y-axis radius</span>
+ <span class="s5">* - rectangle with zero width or height</span>
+ <span class="s5">* - pattern with zero width or height</span>
+ <span class="s5">* - image with zero width or height</span>
+ <span class="s5">* - path with empty data</span>
+ <span class="s5">* - polyline with empty points</span>
+ <span class="s5">* - polygon with empty points</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Object} item current iteration item</span>
+ <span class="s5">* </span><span class="s6">@param </span><span class="s5">{Object} params plugin params</span>
+ <span class="s5">* </span><span class="s6">@return </span><span class="s5">{Boolean} if false, item will be filtered out</span>
+ <span class="s5">*</span>
+ <span class="s5">* </span><span class="s6">@author </span><span class="s5">Kir Belevich</span>
+ <span class="s5">*/</span>
+<span class="s2">exports.fn = </span><span class="s3">function </span><span class="s2">(item</span><span class="s1">, </span><span class="s2">params) {</span>
+
+    <span class="s3">if </span><span class="s2">(item.elem) {</span>
+        <span class="s7">// Removes hidden elements</span>
+        <span class="s7">// https://www.w3schools.com/cssref/pr_class_visibility.asp</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.isHidden &amp;&amp;</span>
+            <span class="s2">item.hasAttr(</span><span class="s0">'visibility'</span><span class="s1">, </span><span class="s0">'hidden'</span><span class="s2">)</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+        <span class="s7">// display=&quot;none&quot;</span>
+        <span class="s7">//</span>
+        <span class="s7">// http://www.w3.org/TR/SVG/painting.html#DisplayProperty</span>
+        <span class="s7">// &quot;A value of display: none indicates that the given element</span>
+        <span class="s7">// and its children shall not be rendered directly&quot;</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.displayNone &amp;&amp;</span>
+            <span class="s2">item.hasAttr(</span><span class="s0">'display'</span><span class="s1">, </span><span class="s0">'none'</span><span class="s2">)</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+        <span class="s7">// opacity=&quot;0&quot;</span>
+        <span class="s7">//</span>
+        <span class="s7">// http://www.w3.org/TR/SVG/masking.html#ObjectAndGroupOpacityProperties</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.opacity0 &amp;&amp;</span>
+            <span class="s2">item.hasAttr(</span><span class="s0">'opacity'</span><span class="s1">, </span><span class="s0">'0'</span><span class="s2">)</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+        <span class="s7">// Circles with zero radius</span>
+        <span class="s7">//</span>
+        <span class="s7">// http://www.w3.org/TR/SVG/shapes.html#CircleElementRAttribute</span>
+        <span class="s7">// &quot;A value of zero disables rendering of the element&quot;</span>
+        <span class="s7">//</span>
+        <span class="s7">// &lt;circle r=&quot;0&quot;&gt;</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.circleR0 &amp;&amp;</span>
+            <span class="s2">item.isElem(</span><span class="s0">'circle'</span><span class="s2">) &amp;&amp;</span>
+            <span class="s2">item.isEmpty() &amp;&amp;</span>
+            <span class="s2">item.hasAttr(</span><span class="s0">'r'</span><span class="s1">, </span><span class="s0">'0'</span><span class="s2">)</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+        <span class="s7">// Ellipse with zero x-axis radius</span>
+        <span class="s7">//</span>
+        <span class="s7">// http://www.w3.org/TR/SVG/shapes.html#EllipseElementRXAttribute</span>
+        <span class="s7">// &quot;A value of zero disables rendering of the element&quot;</span>
+        <span class="s7">//</span>
+        <span class="s7">// &lt;ellipse rx=&quot;0&quot;&gt;</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.ellipseRX0 &amp;&amp;</span>
+            <span class="s2">item.isElem(</span><span class="s0">'ellipse'</span><span class="s2">) &amp;&amp;</span>
+            <span class="s2">item.isEmpty() &amp;&amp;</span>
+            <span class="s2">item.hasAttr(</span><span class="s0">'rx'</span><span class="s1">, </span><span class="s0">'0'</span><span class="s2">)</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+        <span class="s7">// Ellipse with zero y-axis radius</span>
+        <span class="s7">//</span>
+        <span class="s7">// http://www.w3.org/TR/SVG/shapes.html#EllipseElementRYAttribute</span>
+        <span class="s7">// &quot;A value of zero disables rendering of the element&quot;</span>
+        <span class="s7">//</span>
+        <span class="s7">// &lt;ellipse ry=&quot;0&quot;&gt;</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.ellipseRY0 &amp;&amp;</span>
+            <span class="s2">item.isElem(</span><span class="s0">'ellipse'</span><span class="s2">) &amp;&amp;</span>
+            <span class="s2">item.isEmpty() &amp;&amp;</span>
+            <span class="s2">item.hasAttr(</span><span class="s0">'ry'</span><span class="s1">, </span><span class="s0">'0'</span><span class="s2">)</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+        <span class="s7">// Rectangle with zero width</span>
+        <span class="s7">//</span>
+        <span class="s7">// http://www.w3.org/TR/SVG/shapes.html#RectElementWidthAttribute</span>
+        <span class="s7">// &quot;A value of zero disables rendering of the element&quot;</span>
+        <span class="s7">//</span>
+        <span class="s7">// &lt;rect width=&quot;0&quot;&gt;</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.rectWidth0 &amp;&amp;</span>
+            <span class="s2">item.isElem(</span><span class="s0">'rect'</span><span class="s2">) &amp;&amp;</span>
+            <span class="s2">item.isEmpty() &amp;&amp;</span>
+            <span class="s2">item.hasAttr(</span><span class="s0">'width'</span><span class="s1">, </span><span class="s0">'0'</span><span class="s2">)</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+        <span class="s7">// Rectangle with zero height</span>
+        <span class="s7">//</span>
+        <span class="s7">// http://www.w3.org/TR/SVG/shapes.html#RectElementHeightAttribute</span>
+        <span class="s7">// &quot;A value of zero disables rendering of the element&quot;</span>
+        <span class="s7">//</span>
+        <span class="s7">// &lt;rect height=&quot;0&quot;&gt;</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.rectHeight0 &amp;&amp;</span>
+            <span class="s2">params.rectWidth0 &amp;&amp;</span>
+            <span class="s2">item.isElem(</span><span class="s0">'rect'</span><span class="s2">) &amp;&amp;</span>
+            <span class="s2">item.isEmpty() &amp;&amp;</span>
+            <span class="s2">item.hasAttr(</span><span class="s0">'height'</span><span class="s1">, </span><span class="s0">'0'</span><span class="s2">)</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+        <span class="s7">// Pattern with zero width</span>
+        <span class="s7">//</span>
+        <span class="s7">// http://www.w3.org/TR/SVG/pservers.html#PatternElementWidthAttribute</span>
+        <span class="s7">// &quot;A value of zero disables rendering of the element (i.e., no paint is applied)&quot;</span>
+        <span class="s7">//</span>
+        <span class="s7">// &lt;pattern width=&quot;0&quot;&gt;</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.patternWidth0 &amp;&amp;</span>
+            <span class="s2">item.isElem(</span><span class="s0">'pattern'</span><span class="s2">) &amp;&amp;</span>
+            <span class="s2">item.hasAttr(</span><span class="s0">'width'</span><span class="s1">, </span><span class="s0">'0'</span><span class="s2">)</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+        <span class="s7">// Pattern with zero height</span>
+        <span class="s7">//</span>
+        <span class="s7">// http://www.w3.org/TR/SVG/pservers.html#PatternElementHeightAttribute</span>
+        <span class="s7">// &quot;A value of zero disables rendering of the element (i.e., no paint is applied)&quot;</span>
+        <span class="s7">//</span>
+        <span class="s7">// &lt;pattern height=&quot;0&quot;&gt;</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.patternHeight0 &amp;&amp;</span>
+            <span class="s2">item.isElem(</span><span class="s0">'pattern'</span><span class="s2">) &amp;&amp;</span>
+            <span class="s2">item.hasAttr(</span><span class="s0">'height'</span><span class="s1">, </span><span class="s0">'0'</span><span class="s2">)</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+        <span class="s7">// Image with zero width</span>
+        <span class="s7">//</span>
+        <span class="s7">// http://www.w3.org/TR/SVG/struct.html#ImageElementWidthAttribute</span>
+        <span class="s7">// &quot;A value of zero disables rendering of the element&quot;</span>
+        <span class="s7">//</span>
+        <span class="s7">// &lt;image width=&quot;0&quot;&gt;</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.imageWidth0 &amp;&amp;</span>
+            <span class="s2">item.isElem(</span><span class="s0">'image'</span><span class="s2">) &amp;&amp;</span>
+            <span class="s2">item.hasAttr(</span><span class="s0">'width'</span><span class="s1">, </span><span class="s0">'0'</span><span class="s2">)</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+        <span class="s7">// Image with zero height</span>
+        <span class="s7">//</span>
+        <span class="s7">// http://www.w3.org/TR/SVG/struct.html#ImageElementHeightAttribute</span>
+        <span class="s7">// &quot;A value of zero disables rendering of the element&quot;</span>
+        <span class="s7">//</span>
+        <span class="s7">// &lt;image height=&quot;0&quot;&gt;</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.imageHeight0 &amp;&amp;</span>
+            <span class="s2">item.isElem(</span><span class="s0">'image'</span><span class="s2">) &amp;&amp;</span>
+            <span class="s2">item.hasAttr(</span><span class="s0">'height'</span><span class="s1">, </span><span class="s0">'0'</span><span class="s2">)</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+        <span class="s7">// Path with empty data</span>
+        <span class="s7">//</span>
+        <span class="s7">// http://www.w3.org/TR/SVG/paths.html#DAttribute</span>
+        <span class="s7">//</span>
+        <span class="s7">// &lt;path d=&quot;&quot;/&gt;</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.pathEmptyD &amp;&amp;</span>
+            <span class="s2">item.isElem(</span><span class="s0">'path'</span><span class="s2">) &amp;&amp;</span>
+            <span class="s2">(!item.hasAttr(</span><span class="s0">'d'</span><span class="s2">) || !regValidPath.test(item.attr(</span><span class="s0">'d'</span><span class="s2">).value))</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+        <span class="s7">// Polyline with empty points</span>
+        <span class="s7">//</span>
+        <span class="s7">// http://www.w3.org/TR/SVG/shapes.html#PolylineElementPointsAttribute</span>
+        <span class="s7">//</span>
+        <span class="s7">// &lt;polyline points=&quot;&quot;&gt;</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.polylineEmptyPoints &amp;&amp;</span>
+            <span class="s2">item.isElem(</span><span class="s0">'polyline'</span><span class="s2">) &amp;&amp;</span>
+            <span class="s2">!item.hasAttr(</span><span class="s0">'points'</span><span class="s2">)</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+        <span class="s7">// Polygon with empty points</span>
+        <span class="s7">//</span>
+        <span class="s7">// http://www.w3.org/TR/SVG/shapes.html#PolygonElementPointsAttribute</span>
+        <span class="s7">//</span>
+        <span class="s7">// &lt;polygon points=&quot;&quot;&gt;</span>
+        <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">params.polygonEmptyPoints &amp;&amp;</span>
+            <span class="s2">item.isElem(</span><span class="s0">'polygon'</span><span class="s2">) &amp;&amp;</span>
+            <span class="s2">!item.hasAttr(</span><span class="s0">'points'</span><span class="s2">)</span>
+        <span class="s2">) </span><span class="s3">return false</span><span class="s1">;</span>
+
+    <span class="s2">}</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<html>
+<head>
+<title>Url.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Url.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">isWhiteSpace = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).isWhiteSpace</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">cmpStr = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).cmpStr</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).TYPE</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">FUNCTION = TYPE.Function</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">URL = TYPE.Url</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">RIGHTPARENTHESIS = TYPE.RightParenthesis</span><span class="s3">;</span>
+
+<span class="s4">// &lt;url-token&gt; | &lt;function-token&gt; &lt;string&gt; )</span>
+<span class="s1">module.exports = {</span>
+    <span class="s1">name: </span><span class="s2">'Url'</span><span class="s3">,</span>
+    <span class="s1">structure: {</span>
+        <span class="s1">value: [</span><span class="s2">'String'</span><span class="s3">, </span><span class="s2">'Raw'</span><span class="s1">]</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">parse: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">var </span><span class="s1">start = </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">value</span><span class="s3">;</span>
+
+        <span class="s0">switch </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenType) {</span>
+            <span class="s0">case </span><span class="s1">URL:</span>
+                <span class="s0">var </span><span class="s1">rawStart = start + </span><span class="s5">4</span><span class="s3">;</span>
+                <span class="s0">var </span><span class="s1">rawEnd = </span><span class="s0">this</span><span class="s1">.scanner.tokenEnd - </span><span class="s5">1</span><span class="s3">;</span>
+
+                <span class="s0">while </span><span class="s1">(rawStart &lt; rawEnd &amp;&amp; isWhiteSpace(</span><span class="s0">this</span><span class="s1">.scanner.source.charCodeAt(rawStart))) {</span>
+                    <span class="s1">rawStart++</span><span class="s3">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">while </span><span class="s1">(rawStart &lt; rawEnd &amp;&amp; isWhiteSpace(</span><span class="s0">this</span><span class="s1">.scanner.source.charCodeAt(rawEnd - </span><span class="s5">1</span><span class="s1">))) {</span>
+                    <span class="s1">rawEnd--</span><span class="s3">;</span>
+                <span class="s1">}</span>
+
+                <span class="s1">value = {</span>
+                    <span class="s1">type: </span><span class="s2">'Raw'</span><span class="s3">,</span>
+                    <span class="s1">loc: </span><span class="s0">this</span><span class="s1">.getLocation(rawStart</span><span class="s3">, </span><span class="s1">rawEnd)</span><span class="s3">,</span>
+                    <span class="s1">value: </span><span class="s0">this</span><span class="s1">.scanner.source.substring(rawStart</span><span class="s3">, </span><span class="s1">rawEnd)</span>
+                <span class="s1">}</span><span class="s3">;</span>
+
+                <span class="s0">this</span><span class="s1">.eat(URL)</span><span class="s3">;</span>
+                <span class="s0">break</span><span class="s3">;</span>
+
+            <span class="s0">case </span><span class="s1">FUNCTION:</span>
+                <span class="s0">if </span><span class="s1">(!cmpStr(</span><span class="s0">this</span><span class="s1">.scanner.source</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenEnd</span><span class="s3">, </span><span class="s2">'url('</span><span class="s1">)) {</span>
+                    <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Function name must be `url`'</span><span class="s1">)</span><span class="s3">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">this</span><span class="s1">.eat(FUNCTION)</span><span class="s3">;</span>
+                <span class="s0">this</span><span class="s1">.scanner.skipSC()</span><span class="s3">;</span>
+                <span class="s1">value = </span><span class="s0">this</span><span class="s1">.String()</span><span class="s3">;</span>
+                <span class="s0">this</span><span class="s1">.scanner.skipSC()</span><span class="s3">;</span>
+                <span class="s0">this</span><span class="s1">.eat(RIGHTPARENTHESIS)</span><span class="s3">;</span>
+                <span class="s0">break</span><span class="s3">;</span>
+
+            <span class="s0">default</span><span class="s1">:</span>
+                <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Url or Function is expected'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">type: </span><span class="s2">'Url'</span><span class="s3">,</span>
+            <span class="s1">loc: </span><span class="s0">this</span><span class="s1">.getLocation(start</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart)</span><span class="s3">,</span>
+            <span class="s1">value: value</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">generate: </span><span class="s0">function</span><span class="s1">(node) {</span>
+        <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">'url'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">'('</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.node(node.value)</span><span class="s3">;</span>
+        <span class="s0">this</span><span class="s1">.chunk(</span><span class="s2">')'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

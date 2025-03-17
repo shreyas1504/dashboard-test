@@ -1,0 +1,109 @@
+<html>
+<head>
+<title>Raw.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Raw.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">tokenizer = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">TYPE = tokenizer.TYPE</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">WhiteSpace = TYPE.WhiteSpace</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">Semicolon = TYPE.Semicolon</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">LeftCurlyBracket = TYPE.LeftCurlyBracket</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">Delim = TYPE.Delim</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">EXCLAMATIONMARK = </span><span class="s4">0x0021</span><span class="s3">; </span><span class="s5">// U+0021 EXCLAMATION MARK (!)</span>
+
+<span class="s0">function </span><span class="s1">getOffsetExcludeWS() {</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenIndex &gt; </span><span class="s4">0</span><span class="s1">) {</span>
+        <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.lookupType(-</span><span class="s4">1</span><span class="s1">) === WhiteSpace) {</span>
+            <span class="s0">return this</span><span class="s1">.scanner.tokenIndex &gt; </span><span class="s4">1</span>
+                <span class="s1">? </span><span class="s0">this</span><span class="s1">.scanner.getTokenStart(</span><span class="s0">this</span><span class="s1">.scanner.tokenIndex - </span><span class="s4">1</span><span class="s1">)</span>
+                <span class="s1">: </span><span class="s0">this</span><span class="s1">.scanner.firstCharOffset</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s5">// 0, 0, false</span>
+<span class="s0">function </span><span class="s1">balanceEnd() {</span>
+    <span class="s0">return </span><span class="s4">0</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s5">// LEFTCURLYBRACKET, 0, false</span>
+<span class="s0">function </span><span class="s1">leftCurlyBracket(tokenType) {</span>
+    <span class="s0">return </span><span class="s1">tokenType === LeftCurlyBracket ? </span><span class="s4">1 </span><span class="s1">: </span><span class="s4">0</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s5">// LEFTCURLYBRACKET, SEMICOLON, false</span>
+<span class="s0">function </span><span class="s1">leftCurlyBracketOrSemicolon(tokenType) {</span>
+    <span class="s0">return </span><span class="s1">tokenType === LeftCurlyBracket || tokenType === Semicolon ? </span><span class="s4">1 </span><span class="s1">: </span><span class="s4">0</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s5">// EXCLAMATIONMARK, SEMICOLON, false</span>
+<span class="s0">function </span><span class="s1">exclamationMarkOrSemicolon(tokenType</span><span class="s3">, </span><span class="s1">source</span><span class="s3">, </span><span class="s1">offset) {</span>
+    <span class="s0">if </span><span class="s1">(tokenType === Delim &amp;&amp; source.charCodeAt(offset) === EXCLAMATIONMARK) {</span>
+        <span class="s0">return </span><span class="s4">1</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">tokenType === Semicolon ? </span><span class="s4">1 </span><span class="s1">: </span><span class="s4">0</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s5">// 0, SEMICOLON, true</span>
+<span class="s0">function </span><span class="s1">semicolonIncluded(tokenType) {</span>
+    <span class="s0">return </span><span class="s1">tokenType === Semicolon ? </span><span class="s4">2 </span><span class="s1">: </span><span class="s4">0</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = {</span>
+    <span class="s1">name: </span><span class="s2">'Raw'</span><span class="s3">,</span>
+    <span class="s1">structure: {</span>
+        <span class="s1">value: String</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">parse: </span><span class="s0">function</span><span class="s1">(startToken</span><span class="s3">, </span><span class="s1">mode</span><span class="s3">, </span><span class="s1">excludeWhiteSpace) {</span>
+        <span class="s0">var </span><span class="s1">startOffset = </span><span class="s0">this</span><span class="s1">.scanner.getTokenStart(startToken)</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">endOffset</span><span class="s3">;</span>
+
+        <span class="s0">this</span><span class="s1">.scanner.skip(</span>
+            <span class="s0">this</span><span class="s1">.scanner.getRawLength(startToken</span><span class="s3">, </span><span class="s1">mode || balanceEnd)</span>
+        <span class="s1">)</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(excludeWhiteSpace &amp;&amp; </span><span class="s0">this</span><span class="s1">.scanner.tokenStart &gt; startOffset) {</span>
+            <span class="s1">endOffset = getOffsetExcludeWS.call(</span><span class="s0">this</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s1">endOffset = </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">type: </span><span class="s2">'Raw'</span><span class="s3">,</span>
+            <span class="s1">loc: </span><span class="s0">this</span><span class="s1">.getLocation(startOffset</span><span class="s3">, </span><span class="s1">endOffset)</span><span class="s3">,</span>
+            <span class="s1">value: </span><span class="s0">this</span><span class="s1">.scanner.source.substring(startOffset</span><span class="s3">, </span><span class="s1">endOffset)</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">generate: </span><span class="s0">function</span><span class="s1">(node) {</span>
+        <span class="s0">this</span><span class="s1">.chunk(node.value)</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+
+    <span class="s1">mode: {</span>
+        <span class="s0">default</span><span class="s1">: balanceEnd</span><span class="s3">,</span>
+        <span class="s1">leftCurlyBracket: leftCurlyBracket</span><span class="s3">,</span>
+        <span class="s1">leftCurlyBracketOrSemicolon: leftCurlyBracketOrSemicolon</span><span class="s3">,</span>
+        <span class="s1">exclamationMarkOrSemicolon: exclamationMarkOrSemicolon</span><span class="s3">,</span>
+        <span class="s1">semicolonIncluded: semicolonIncluded</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

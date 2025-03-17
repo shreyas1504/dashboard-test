@@ -1,0 +1,107 @@
+<html>
+<head>
+<title>normalize.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+normalize.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">{ compareFunctionCovs</span><span class="s2">, </span><span class="s1">compareRangeCovs</span><span class="s2">, </span><span class="s1">compareScriptCovs } from </span><span class="s3">&quot;./compare&quot;</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">{ RangeTree } from </span><span class="s3">&quot;./range-tree&quot;</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">{ FunctionCov</span><span class="s2">, </span><span class="s1">ProcessCov</span><span class="s2">, </span><span class="s1">ScriptCov } from </span><span class="s3">&quot;./types&quot;</span><span class="s2">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Normalizes a process coverage.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Sorts the scripts alphabetically by `url`.</span>
+ <span class="s4">* Reassigns script ids: the script at index `0` receives `&quot;0&quot;`, the script at</span>
+ <span class="s4">* index `1` receives `&quot;1&quot;` etc.</span>
+ <span class="s4">* This does not normalize the script coverages.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">processCov Process coverage to normalize.</span>
+ <span class="s4">*/</span>
+<span class="s0">export function </span><span class="s1">normalizeProcessCov(processCov: ProcessCov): </span><span class="s0">void </span><span class="s1">{</span>
+  <span class="s1">processCov.result.sort(compareScriptCovs)</span><span class="s2">;</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">[scriptId</span><span class="s2">, </span><span class="s1">scriptCov] of processCov.result.entries()) {</span>
+    <span class="s1">scriptCov.scriptId = scriptId.toString(</span><span class="s6">10</span><span class="s1">)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Normalizes a process coverage deeply.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Normalizes the script coverages deeply, then normalizes the process coverage</span>
+ <span class="s4">* itself.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">processCov Process coverage to normalize.</span>
+ <span class="s4">*/</span>
+<span class="s0">export function </span><span class="s1">deepNormalizeProcessCov(processCov: ProcessCov): </span><span class="s0">void </span><span class="s1">{</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">scriptCov of processCov.result) {</span>
+    <span class="s1">deepNormalizeScriptCov(scriptCov)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+  <span class="s1">normalizeProcessCov(processCov)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Normalizes a script coverage.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Sorts the function by root range (pre-order sort).</span>
+ <span class="s4">* This does not normalize the function coverages.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">scriptCov Script coverage to normalize.</span>
+ <span class="s4">*/</span>
+<span class="s0">export function </span><span class="s1">normalizeScriptCov(scriptCov: ScriptCov): </span><span class="s0">void </span><span class="s1">{</span>
+  <span class="s1">scriptCov.functions.sort(compareFunctionCovs)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Normalizes a script coverage deeply.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Normalizes the function coverages deeply, then normalizes the script coverage</span>
+ <span class="s4">* itself.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">scriptCov Script coverage to normalize.</span>
+ <span class="s4">*/</span>
+<span class="s0">export function </span><span class="s1">deepNormalizeScriptCov(scriptCov: ScriptCov): </span><span class="s0">void </span><span class="s1">{</span>
+  <span class="s0">for </span><span class="s1">(</span><span class="s0">const </span><span class="s1">funcCov of scriptCov.functions) {</span>
+    <span class="s1">normalizeFunctionCov(funcCov)</span><span class="s2">;</span>
+  <span class="s1">}</span>
+  <span class="s1">normalizeScriptCov(scriptCov)</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Normalizes a function coverage.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Sorts the ranges (pre-order sort).</span>
+ <span class="s4">* TODO: Tree-based normalization of the ranges.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">funcCov Function coverage to normalize.</span>
+ <span class="s4">*/</span>
+<span class="s0">export function </span><span class="s1">normalizeFunctionCov(funcCov: FunctionCov): </span><span class="s0">void </span><span class="s1">{</span>
+  <span class="s1">funcCov.ranges.sort(compareRangeCovs)</span><span class="s2">;</span>
+  <span class="s0">const </span><span class="s1">tree: RangeTree = RangeTree.fromSortedRanges(funcCov.ranges)!</span><span class="s2">;</span>
+  <span class="s1">normalizeRangeTree(tree)</span><span class="s2">;</span>
+  <span class="s1">funcCov.ranges = tree.toRanges()</span><span class="s2">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* </span><span class="s5">@internal</span>
+ <span class="s4">*/</span>
+<span class="s0">export function </span><span class="s1">normalizeRangeTree(tree: RangeTree): </span><span class="s0">void </span><span class="s1">{</span>
+  <span class="s1">tree.normalize()</span><span class="s2">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

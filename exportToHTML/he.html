@@ -1,0 +1,170 @@
+<html>
+<head>
+<title>he</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+he</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+<span class="s1">(</span><span class="s2">function</span><span class="s1">() {</span>
+
+	<span class="s2">var </span><span class="s1">fs = require(</span><span class="s3">'fs'</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">he = require(</span><span class="s3">'../he.js'</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">strings = process.argv.splice(</span><span class="s5">2</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">stdin = process.stdin</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">data</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">timeout</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">action</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">options = {}</span><span class="s4">;</span>
+	<span class="s2">var </span><span class="s1">log = console.log</span><span class="s4">;</span>
+
+	<span class="s2">var </span><span class="s1">main = </span><span class="s2">function</span><span class="s1">() {</span>
+		<span class="s2">var </span><span class="s1">option = strings[</span><span class="s5">0</span><span class="s1">]</span><span class="s4">;</span>
+		<span class="s2">var </span><span class="s1">count = </span><span class="s5">0</span><span class="s4">;</span>
+
+		<span class="s2">if </span><span class="s1">(</span><span class="s5">/^(?:-h|--help|undefined)$/</span><span class="s1">.test(option)) {</span>
+			<span class="s1">log(</span>
+				<span class="s3">'he v%s - https://mths.be/he'</span><span class="s4">,</span>
+				<span class="s1">he.version</span>
+			<span class="s1">)</span><span class="s4">;</span>
+			<span class="s1">log([</span>
+				<span class="s3">'</span><span class="s4">\n</span><span class="s3">Usage:</span><span class="s4">\n</span><span class="s3">'</span><span class="s4">,</span>
+				<span class="s3">'</span><span class="s4">\t</span><span class="s3">he [--escape] string'</span><span class="s4">,</span>
+				<span class="s3">'</span><span class="s4">\t</span><span class="s3">he [--encode] [--use-named-refs] [--everything] [--allow-unsafe] [--decimal] string'</span><span class="s4">,</span>
+				<span class="s3">'</span><span class="s4">\t</span><span class="s3">he [--decode] [--attribute] [--strict] string'</span><span class="s4">,</span>
+				<span class="s3">'</span><span class="s4">\t</span><span class="s3">he [-v | --version]'</span><span class="s4">,</span>
+				<span class="s3">'</span><span class="s4">\t</span><span class="s3">he [-h | --help]'</span><span class="s4">,</span>
+				<span class="s3">'</span><span class="s4">\n</span><span class="s3">Examples:</span><span class="s4">\n</span><span class="s3">'</span><span class="s4">,</span>
+				<span class="s3">'</span><span class="s4">\t</span><span class="s3">he --escape </span><span class="s4">\\</span><span class="s3">&lt;img</span><span class="s4">\\ </span><span class="s3">src</span><span class="s4">\\</span><span class="s3">=</span><span class="s4">\\\'</span><span class="s3">x</span><span class="s4">\\\'\\ </span><span class="s3">onerror</span><span class="s4">\\</span><span class="s3">=</span><span class="s4">\\</span><span class="s3">&quot;prompt</span><span class="s4">\\</span><span class="s3">(1</span><span class="s4">\\</span><span class="s3">)</span><span class="s4">\\</span><span class="s3">&quot;</span><span class="s4">\\</span><span class="s3">&gt;'</span><span class="s4">,</span>
+				<span class="s3">'</span><span class="s4">\t</span><span class="s3">echo </span><span class="s4">\'</span><span class="s3">&amp;copy; &amp;#x1D306;</span><span class="s4">\' </span><span class="s3">| he --decode'</span>
+			<span class="s1">].join(</span><span class="s3">'</span><span class="s4">\n</span><span class="s3">'</span><span class="s1">))</span><span class="s4">;</span>
+			<span class="s2">return </span><span class="s1">process.exit(option ? </span><span class="s5">0 </span><span class="s1">: </span><span class="s5">1</span><span class="s1">)</span><span class="s4">;</span>
+		<span class="s1">}</span>
+
+		<span class="s2">if </span><span class="s1">(</span><span class="s5">/^(?:-v|--version)$/</span><span class="s1">.test(option)) {</span>
+			<span class="s1">log(</span><span class="s3">'v%s'</span><span class="s4">, </span><span class="s1">he.version)</span><span class="s4">;</span>
+			<span class="s2">return </span><span class="s1">process.exit(</span><span class="s5">0</span><span class="s1">)</span><span class="s4">;</span>
+		<span class="s1">}</span>
+
+		<span class="s1">strings.forEach(</span><span class="s2">function</span><span class="s1">(string) {</span>
+			<span class="s0">// Process options</span>
+			<span class="s2">if </span><span class="s1">(string == </span><span class="s3">'--escape'</span><span class="s1">) {</span>
+				<span class="s1">action = </span><span class="s3">'escape'</span><span class="s4">;</span>
+				<span class="s2">return</span><span class="s4">;</span>
+			<span class="s1">}</span>
+			<span class="s2">if </span><span class="s1">(string == </span><span class="s3">'--encode'</span><span class="s1">) {</span>
+				<span class="s1">action = </span><span class="s3">'encode'</span><span class="s4">;</span>
+				<span class="s2">return</span><span class="s4">;</span>
+			<span class="s1">}</span>
+			<span class="s2">if </span><span class="s1">(string == </span><span class="s3">'--use-named-refs'</span><span class="s1">) {</span>
+				<span class="s1">action = </span><span class="s3">'encode'</span><span class="s4">;</span>
+				<span class="s1">options.useNamedReferences = </span><span class="s2">true</span><span class="s4">;</span>
+				<span class="s2">return</span><span class="s4">;</span>
+			<span class="s1">}</span>
+			<span class="s2">if </span><span class="s1">(string == </span><span class="s3">'--everything'</span><span class="s1">) {</span>
+				<span class="s1">action = </span><span class="s3">'encode'</span><span class="s4">;</span>
+				<span class="s1">options.encodeEverything = </span><span class="s2">true</span><span class="s4">;</span>
+				<span class="s2">return</span><span class="s4">;</span>
+			<span class="s1">}</span>
+			<span class="s2">if </span><span class="s1">(string == </span><span class="s3">'--allow-unsafe'</span><span class="s1">) {</span>
+				<span class="s1">action = </span><span class="s3">'encode'</span><span class="s4">;</span>
+				<span class="s1">options.allowUnsafeSymbols = </span><span class="s2">true</span><span class="s4">;</span>
+				<span class="s2">return</span><span class="s4">;</span>
+			<span class="s1">}</span>
+			<span class="s2">if </span><span class="s1">(string == </span><span class="s3">'--decimal'</span><span class="s1">) {</span>
+				<span class="s1">action = </span><span class="s3">'encode'</span><span class="s4">;</span>
+				<span class="s1">options.decimal = </span><span class="s2">true</span><span class="s4">;</span>
+				<span class="s2">return</span><span class="s4">;</span>
+			<span class="s1">}</span>
+			<span class="s2">if </span><span class="s1">(string == </span><span class="s3">'--decode'</span><span class="s1">) {</span>
+				<span class="s1">action = </span><span class="s3">'decode'</span><span class="s4">;</span>
+				<span class="s2">return</span><span class="s4">;</span>
+			<span class="s1">}</span>
+			<span class="s2">if </span><span class="s1">(string == </span><span class="s3">'--attribute'</span><span class="s1">) {</span>
+				<span class="s1">action = </span><span class="s3">'decode'</span><span class="s4">;</span>
+				<span class="s1">options.isAttributeValue = </span><span class="s2">true</span><span class="s4">;</span>
+				<span class="s2">return</span><span class="s4">;</span>
+			<span class="s1">}</span>
+			<span class="s2">if </span><span class="s1">(string == </span><span class="s3">'--strict'</span><span class="s1">) {</span>
+				<span class="s1">action = </span><span class="s3">'decode'</span><span class="s4">;</span>
+				<span class="s1">options.strict = </span><span class="s2">true</span><span class="s4">;</span>
+				<span class="s2">return</span><span class="s4">;</span>
+			<span class="s1">}</span>
+			<span class="s0">// Process string(s)</span>
+			<span class="s2">var </span><span class="s1">result</span><span class="s4">;</span>
+			<span class="s2">if </span><span class="s1">(!action) {</span>
+				<span class="s1">log(</span><span class="s3">'Error: he requires at least one option and a string argument.'</span><span class="s1">)</span><span class="s4">;</span>
+				<span class="s1">log(</span><span class="s3">'Try `he --help` for more information.'</span><span class="s1">)</span><span class="s4">;</span>
+				<span class="s2">return </span><span class="s1">process.exit(</span><span class="s5">1</span><span class="s1">)</span><span class="s4">;</span>
+			<span class="s1">}</span>
+			<span class="s2">try </span><span class="s1">{</span>
+				<span class="s1">result = he[action](string</span><span class="s4">, </span><span class="s1">options)</span><span class="s4">;</span>
+				<span class="s1">log(result)</span><span class="s4">;</span>
+				<span class="s1">count++</span><span class="s4">;</span>
+			<span class="s1">} </span><span class="s2">catch</span><span class="s1">(error) {</span>
+				<span class="s1">log(error.message + </span><span class="s3">'</span><span class="s4">\n</span><span class="s3">'</span><span class="s1">)</span><span class="s4">;</span>
+				<span class="s1">log(</span><span class="s3">'Error: failed to %s.'</span><span class="s4">, </span><span class="s1">action)</span><span class="s4">;</span>
+				<span class="s1">log(</span><span class="s3">'If you think this is a bug in he, please report it:'</span><span class="s1">)</span><span class="s4">;</span>
+				<span class="s1">log(</span><span class="s3">'https://github.com/mathiasbynens/he/issues/new'</span><span class="s1">)</span><span class="s4">;</span>
+				<span class="s1">log(</span>
+					<span class="s3">'</span><span class="s4">\n</span><span class="s3">Stack trace using he@%s:</span><span class="s4">\n</span><span class="s3">'</span><span class="s4">,</span>
+					<span class="s1">he.version</span>
+				<span class="s1">)</span><span class="s4">;</span>
+				<span class="s1">log(error.stack)</span><span class="s4">;</span>
+				<span class="s2">return </span><span class="s1">process.exit(</span><span class="s5">1</span><span class="s1">)</span><span class="s4">;</span>
+			<span class="s1">}</span>
+		<span class="s1">})</span><span class="s4">;</span>
+		<span class="s2">if </span><span class="s1">(!count) {</span>
+			<span class="s1">log(</span><span class="s3">'Error: he requires a string argument.'</span><span class="s1">)</span><span class="s4">;</span>
+			<span class="s1">log(</span><span class="s3">'Try `he --help` for more information.'</span><span class="s1">)</span><span class="s4">;</span>
+			<span class="s2">return </span><span class="s1">process.exit(</span><span class="s5">1</span><span class="s1">)</span><span class="s4">;</span>
+		<span class="s1">}</span>
+		<span class="s0">// Return with exit status 0 outside of the `forEach` loop, in case</span>
+		<span class="s0">// multiple strings were passed in.</span>
+		<span class="s2">return </span><span class="s1">process.exit(</span><span class="s5">0</span><span class="s1">)</span><span class="s4">;</span>
+	<span class="s1">}</span><span class="s4">;</span>
+
+	<span class="s2">if </span><span class="s1">(stdin.isTTY) {</span>
+		<span class="s0">// handle shell arguments</span>
+		<span class="s1">main()</span><span class="s4">;</span>
+	<span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+		<span class="s0">// Either the script is called from within a non-TTY context, or `stdin`</span>
+		<span class="s0">// content is being piped in.</span>
+		<span class="s2">if </span><span class="s1">(!process.stdout.isTTY) {</span>
+			<span class="s0">// The script was called from a non-TTY context. This is a rather uncommon</span>
+			<span class="s0">// use case we don’t actively support. However, we don’t want the script</span>
+			<span class="s0">// to wait forever in such cases, so…</span>
+			<span class="s1">timeout = setTimeout(</span><span class="s2">function</span><span class="s1">() {</span>
+				<span class="s0">// …if no piped data arrived after a whole minute, handle shell</span>
+				<span class="s0">// arguments instead.</span>
+				<span class="s1">main()</span><span class="s4">;</span>
+			<span class="s1">}</span><span class="s4">, </span><span class="s5">60000</span><span class="s1">)</span><span class="s4">;</span>
+		<span class="s1">}</span>
+		<span class="s1">data = </span><span class="s3">''</span><span class="s4">;</span>
+		<span class="s1">stdin.on(</span><span class="s3">'data'</span><span class="s4">, </span><span class="s2">function</span><span class="s1">(chunk) {</span>
+			<span class="s1">clearTimeout(timeout)</span><span class="s4">;</span>
+			<span class="s1">data += chunk</span><span class="s4">;</span>
+		<span class="s1">})</span><span class="s4">;</span>
+		<span class="s1">stdin.on(</span><span class="s3">'end'</span><span class="s4">, </span><span class="s2">function</span><span class="s1">() {</span>
+			<span class="s1">strings.push(data.trim())</span><span class="s4">;</span>
+			<span class="s1">main()</span><span class="s4">;</span>
+		<span class="s1">})</span><span class="s4">;</span>
+		<span class="s1">stdin.resume()</span><span class="s4">;</span>
+	<span class="s1">}</span>
+
+<span class="s1">}())</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

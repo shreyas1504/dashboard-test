@@ -1,0 +1,49 @@
+<html>
+<head>
+<title>runJest.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a; font-style: italic;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #808080;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8ea765;}
+.s5 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+runJest.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">/**</span>
+ <span class="s0">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s0">*</span>
+ <span class="s0">* This source code is licensed under the MIT license found in the</span>
+ <span class="s0">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s0">*/</span>
+<span class="s2">/// &lt;reference types=&quot;node&quot; /&gt;</span>
+<span class="s3">import </span><span class="s1">{ AggregatedResult } from </span><span class="s4">'@jest/test-result'</span><span class="s5">;</span>
+<span class="s3">import </span><span class="s1">type { Config } from </span><span class="s4">'@jest/types'</span><span class="s5">;</span>
+<span class="s3">import </span><span class="s1">type { ChangedFilesPromise } from </span><span class="s4">'jest-changed-files'</span><span class="s5">;</span>
+<span class="s3">import </span><span class="s1">type { Context } from </span><span class="s4">'jest-runtime'</span><span class="s5">;</span>
+<span class="s3">import </span><span class="s1">{ JestHookEmitter } from </span><span class="s4">'jest-watcher'</span><span class="s5">;</span>
+<span class="s3">import </span><span class="s1">type FailedTestsCache from </span><span class="s4">'./FailedTestsCache'</span><span class="s5">;</span>
+<span class="s3">import </span><span class="s1">type TestWatcher from </span><span class="s4">'./TestWatcher'</span><span class="s5">;</span>
+<span class="s3">import </span><span class="s1">type { Filter } from </span><span class="s4">'./types'</span><span class="s5">;</span>
+<span class="s3">export default function </span><span class="s1">runJest({ contexts</span><span class="s5">, </span><span class="s1">globalConfig</span><span class="s5">, </span><span class="s1">outputStream</span><span class="s5">, </span><span class="s1">testWatcher</span><span class="s5">, </span><span class="s1">jestHooks</span><span class="s5">, </span><span class="s1">startRun</span><span class="s5">, </span><span class="s1">changedFilesPromise</span><span class="s5">, </span><span class="s1">onComplete</span><span class="s5">, </span><span class="s1">failedTestsCache</span><span class="s5">, </span><span class="s1">filter</span><span class="s5">, </span><span class="s1">}: {</span>
+    <span class="s1">globalConfig: Config.GlobalConfig</span><span class="s5">;</span>
+    <span class="s1">contexts: Array&lt;Context&gt;</span><span class="s5">;</span>
+    <span class="s1">outputStream: NodeJS.WriteStream</span><span class="s5">;</span>
+    <span class="s1">testWatcher: TestWatcher</span><span class="s5">;</span>
+    <span class="s1">jestHooks?: JestHookEmitter</span><span class="s5">;</span>
+    <span class="s1">startRun: (globalConfig: Config.GlobalConfig) =&gt; </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">changedFilesPromise?: ChangedFilesPromise</span><span class="s5">;</span>
+    <span class="s1">onComplete: (testResults: AggregatedResult) =&gt; </span><span class="s3">void</span><span class="s5">;</span>
+    <span class="s1">failedTestsCache?: FailedTestsCache</span><span class="s5">;</span>
+    <span class="s1">filter?: Filter</span><span class="s5">;</span>
+<span class="s1">}): Promise&lt;</span><span class="s3">void</span><span class="s1">&gt;</span><span class="s5">;</span>
+</pre>
+</body>
+</html>

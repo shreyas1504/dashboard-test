@@ -1,0 +1,125 @@
+<html>
+<head>
+<title>plugins.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #8a8a8a; font-style: italic;}
+.s4 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s5 { color: #cc7832; font-weight: bold;}
+.s6 { color: #6897bb;}
+.s7 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+plugins.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* Plugins engine.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@module </span><span class="s3">plugins</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Object} data input data</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Object} info extra information</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Object} plugins plugins object from config</span>
+ <span class="s3">* </span><span class="s4">@return </span><span class="s3">{Object} output data</span>
+ <span class="s3">*/</span>
+<span class="s2">module.exports = </span><span class="s5">function</span><span class="s2">(data</span><span class="s1">, </span><span class="s2">info</span><span class="s1">, </span><span class="s2">plugins) {</span>
+
+    <span class="s2">plugins.forEach(</span><span class="s5">function</span><span class="s2">(group) {</span>
+
+        <span class="s5">switch</span><span class="s2">(group[</span><span class="s6">0</span><span class="s2">].type) {</span>
+            <span class="s5">case </span><span class="s0">'perItem'</span><span class="s2">:</span>
+                <span class="s2">data = perItem(data</span><span class="s1">, </span><span class="s2">info</span><span class="s1">, </span><span class="s2">group)</span><span class="s1">;</span>
+                <span class="s5">break</span><span class="s1">;</span>
+            <span class="s5">case </span><span class="s0">'perItemReverse'</span><span class="s2">:</span>
+                <span class="s2">data = perItem(data</span><span class="s1">, </span><span class="s2">info</span><span class="s1">, </span><span class="s2">group</span><span class="s1">, </span><span class="s5">true</span><span class="s2">)</span><span class="s1">;</span>
+                <span class="s5">break</span><span class="s1">;</span>
+            <span class="s5">case </span><span class="s0">'full'</span><span class="s2">:</span>
+                <span class="s2">data = full(data</span><span class="s1">, </span><span class="s2">info</span><span class="s1">, </span><span class="s2">group)</span><span class="s1">;</span>
+                <span class="s5">break</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s5">return </span><span class="s2">data</span><span class="s1">;</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* Direct or reverse per-item loop.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Object} data input data</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Object} info extra information</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Array} plugins plugins list to process</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Boolean} [reverse] reverse pass?</span>
+ <span class="s3">* </span><span class="s4">@return </span><span class="s3">{Object} output data</span>
+ <span class="s3">*/</span>
+<span class="s5">function </span><span class="s2">perItem(data</span><span class="s1">, </span><span class="s2">info</span><span class="s1">, </span><span class="s2">plugins</span><span class="s1">, </span><span class="s2">reverse) {</span>
+
+    <span class="s5">function </span><span class="s2">monkeys(items) {</span>
+
+        <span class="s2">items.content = items.content.filter(</span><span class="s5">function</span><span class="s2">(item) {</span>
+
+            <span class="s7">// reverse pass</span>
+            <span class="s5">if </span><span class="s2">(reverse &amp;&amp; item.content) {</span>
+                <span class="s2">monkeys(item)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+
+            <span class="s7">// main filter</span>
+            <span class="s5">var </span><span class="s2">filter = </span><span class="s5">true</span><span class="s1">;</span>
+
+            <span class="s5">for </span><span class="s2">(</span><span class="s5">var </span><span class="s2">i = </span><span class="s6">0</span><span class="s1">; </span><span class="s2">filter &amp;&amp; i &lt; plugins.length</span><span class="s1">; </span><span class="s2">i++) {</span>
+                <span class="s5">var </span><span class="s2">plugin = plugins[i]</span><span class="s1">;</span>
+
+                <span class="s5">if </span><span class="s2">(plugin.active &amp;&amp; plugin.fn(item</span><span class="s1">, </span><span class="s2">plugin.params</span><span class="s1">, </span><span class="s2">info) === </span><span class="s5">false</span><span class="s2">) {</span>
+                    <span class="s2">filter = </span><span class="s5">false</span><span class="s1">;</span>
+                <span class="s2">}</span>
+            <span class="s2">}</span>
+
+            <span class="s7">// direct pass</span>
+            <span class="s5">if </span><span class="s2">(!reverse &amp;&amp; item.content) {</span>
+                <span class="s2">monkeys(item)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+
+            <span class="s5">return </span><span class="s2">filter</span><span class="s1">;</span>
+
+        <span class="s2">})</span><span class="s1">;</span>
+
+        <span class="s5">return </span><span class="s2">items</span><span class="s1">;</span>
+
+    <span class="s2">}</span>
+
+    <span class="s5">return </span><span class="s2">monkeys(data)</span><span class="s1">;</span>
+
+<span class="s2">}</span>
+
+<span class="s3">/**</span>
+ <span class="s3">* &quot;Full&quot; plugins.</span>
+ <span class="s3">*</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Object} data input data</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Object} info extra information</span>
+ <span class="s3">* </span><span class="s4">@param </span><span class="s3">{Array} plugins plugins list to process</span>
+ <span class="s3">* </span><span class="s4">@return </span><span class="s3">{Object} output data</span>
+ <span class="s3">*/</span>
+<span class="s5">function </span><span class="s2">full(data</span><span class="s1">, </span><span class="s2">info</span><span class="s1">, </span><span class="s2">plugins) {</span>
+
+    <span class="s2">plugins.forEach(</span><span class="s5">function</span><span class="s2">(plugin) {</span>
+        <span class="s5">if </span><span class="s2">(plugin.active) {</span>
+            <span class="s2">data = plugin.fn(data</span><span class="s1">, </span><span class="s2">plugin.params</span><span class="s1">, </span><span class="s2">info)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s5">return </span><span class="s2">data</span><span class="s1">;</span>
+
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

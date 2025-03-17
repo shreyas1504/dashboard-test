@@ -1,0 +1,220 @@
+<html>
+<head>
+<title>definitions.def</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+definitions.def</font>
+</center></td></tr></table>
+<pre><span class="s0">{{## def.setupKeyword:</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $lvl = it.level;</span>
+    <span class="s0">var $dataLvl = it.dataLevel;</span>
+    <span class="s0">var $schema = it.schema[$keyword];</span>
+    <span class="s0">var $schemaPath = it.schemaPath + it.util.getProperty($keyword);</span>
+    <span class="s0">var $errSchemaPath = it.errSchemaPath + '/' + $keyword;</span>
+    <span class="s0">var $breakOnError = !it.opts.allErrors;</span>
+    <span class="s0">var $errorKeyword;</span>
+
+    <span class="s0">var $data = 'data' + ($dataLvl || '');</span>
+    <span class="s0">var $valid = 'valid' + $lvl;</span>
+    <span class="s0">var $errs = 'errs__' + $lvl;</span>
+  <span class="s0">}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.setCompositeRule:</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $wasComposite = it.compositeRule;</span>
+    <span class="s0">it.compositeRule = $it.compositeRule = true;</span>
+  <span class="s0">}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.resetCompositeRule:</span>
+  <span class="s0">{{ it.compositeRule = $it.compositeRule = $wasComposite; }}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.setupNextLevel:</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $it = it.util.copy(it);</span>
+    <span class="s0">var $closingBraces = '';</span>
+    <span class="s0">$it.level++;</span>
+    <span class="s0">var $nextValid = 'valid' + $it.level;</span>
+  <span class="s0">}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.ifValid:</span>
+  <span class="s0">{{? $breakOnError }}</span>
+    <span class="s0">if ({{=$valid}}) {</span>
+    <span class="s0">{{ $closingBraces += '}'; }}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.ifResultValid:</span>
+  <span class="s0">{{? $breakOnError }}</span>
+    <span class="s0">if ({{=$nextValid}}) {</span>
+    <span class="s0">{{ $closingBraces += '}'; }}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.elseIfValid:</span>
+  <span class="s0">{{? $breakOnError }}</span>
+    <span class="s0">{{ $closingBraces += '}'; }}</span>
+    <span class="s0">else {</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.nonEmptySchema:_schema:</span>
+  <span class="s0">(it.opts.strictKeywords</span>
+    <span class="s0">? (typeof _schema == 'object' &amp;&amp; Object.keys(_schema).length &gt; 0)</span>
+      <span class="s0">|| _schema === false</span>
+    <span class="s0">: it.util.schemaHasRules(_schema, it.RULES.all))</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.strLength:</span>
+  <span class="s0">{{? it.opts.unicode === false }}</span>
+    <span class="s0">{{=$data}}.length</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">ucs2length({{=$data}})</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.willOptimize:</span>
+  <span class="s0">it.util.varOccurences($code, $nextData) &lt; 2</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.generateSubschemaCode:</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $code = it.validate($it);</span>
+    <span class="s0">$it.baseId = $currentBaseId;</span>
+  <span class="s0">}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.insertSubschemaCode:</span>
+  <span class="s0">{{= it.validate($it) }}</span>
+  <span class="s0">{{ $it.baseId = $currentBaseId; }}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def._optimizeValidate:</span>
+  <span class="s0">it.util.varReplace($code, $nextData, $passData)</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.optimizeValidate:</span>
+  <span class="s0">{{? {{# def.willOptimize}} }}</span>
+    <span class="s0">{{= {{# def._optimizeValidate }} }}</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">var {{=$nextData}} = {{=$passData}};</span>
+    <span class="s0">{{= $code }}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.$data:</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $isData = it.opts.$data &amp;&amp; $schema &amp;&amp; $schema.$data</span>
+      <span class="s0">, $schemaValue;</span>
+  <span class="s0">}}</span>
+  <span class="s0">{{? $isData }}</span>
+    <span class="s0">var schema{{=$lvl}} = {{= it.util.getData($schema.$data, $dataLvl, it.dataPathArr) }};</span>
+    <span class="s0">{{ $schemaValue = 'schema' + $lvl; }}</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">{{ $schemaValue = $schema; }}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.$dataNotType:_type:</span>
+  <span class="s0">{{?$isData}} ({{=$schemaValue}} !== undefined &amp;&amp; typeof {{=$schemaValue}} != _type) || {{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.check$dataIsArray:</span>
+  <span class="s0">if (schema{{=$lvl}} === undefined) {{=$valid}} = true;</span>
+  <span class="s0">else if (!Array.isArray(schema{{=$lvl}})) {{=$valid}} = false;</span>
+  <span class="s0">else {</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.numberKeyword:</span>
+  <span class="s0">{{? !($isData || typeof $schema == 'number') }}</span>
+    <span class="s0">{{ throw new Error($keyword + ' must be number'); }}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.beginDefOut:</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $$outStack = $$outStack || [];</span>
+    <span class="s0">$$outStack.push(out);</span>
+    <span class="s0">out = '';</span>
+  <span class="s0">}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.storeDefOut:_variable:</span>
+  <span class="s0">{{</span>
+    <span class="s0">var _variable = out;</span>
+    <span class="s0">out = $$outStack.pop();</span>
+  <span class="s0">}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.dataPath:(dataPath || ''){{? it.errorPath != '&quot;&quot;'}} + {{= it.errorPath }}{{?}}#}}</span>
+
+<span class="s0">{{## def.setParentData:</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $parentData = $dataLvl ? 'data' + (($dataLvl-1)||'') : 'parentData'</span>
+      <span class="s0">, $parentDataProperty = $dataLvl ? it.dataPathArr[$dataLvl] : 'parentDataProperty';</span>
+  <span class="s0">}}</span>
+<span class="s0">#}}</span>
+
+<span class="s0">{{## def.passParentData:</span>
+  <span class="s0">{{# def.setParentData }}</span>
+  <span class="s0">, {{= $parentData }}</span>
+  <span class="s0">, {{= $parentDataProperty }}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.iterateProperties:</span>
+  <span class="s0">{{? $ownProperties }}</span>
+    <span class="s0">{{=$dataProperties}} = {{=$dataProperties}} || Object.keys({{=$data}});</span>
+    <span class="s0">for (var {{=$idx}}=0; {{=$idx}}&lt;{{=$dataProperties}}.length; {{=$idx}}++) {</span>
+      <span class="s0">var {{=$key}} = {{=$dataProperties}}[{{=$idx}}];</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">for (var {{=$key}} in {{=$data}}) {</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.noPropertyInData:</span>
+  <span class="s0">{{=$useData}} === undefined</span>
+  <span class="s0">{{? $ownProperties }}</span>
+    <span class="s0">|| !{{# def.isOwnProperty }}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.isOwnProperty:</span>
+  <span class="s0">Object.prototype.hasOwnProperty.call({{=$data}}, '{{=it.util.escapeQuotes($propertyKey)}}')</span>
+<span class="s0">#}}</span>
+</pre>
+</body>
+</html>

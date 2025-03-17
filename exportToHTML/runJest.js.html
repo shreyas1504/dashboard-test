@@ -1,0 +1,447 @@
+<html>
+<head>
+<title>runJest.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #6897bb;}
+.s6 { color: #808080;}
+.s7 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+runJest.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">Object.defineProperty(exports</span><span class="s1">, </span><span class="s0">'__esModule'</span><span class="s1">, </span><span class="s2">{</span>
+  <span class="s2">value: </span><span class="s3">true</span>
+<span class="s2">})</span><span class="s1">;</span>
+<span class="s2">exports.default = runJest</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">path() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireWildcard(require(</span><span class="s0">'path'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">path = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_chalk() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'chalk'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_chalk = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_exit() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'exit'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_exit = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">fs() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireWildcard(require(</span><span class="s0">'graceful-fs'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">fs = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_console() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'@jest/console'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_console = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_testResult() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'@jest/test-result'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_testResult = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestResolve() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'jest-resolve'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_jestResolve = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestUtil() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestUtil = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestWatcher() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-watcher'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestWatcher = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">var </span><span class="s2">_SearchSource = _interopRequireDefault(require(</span><span class="s0">'./SearchSource'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_TestScheduler = require(</span><span class="s0">'./TestScheduler'</span><span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_collectHandles = _interopRequireDefault(require(</span><span class="s0">'./collectHandles'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_getNoTestsFoundMessage = _interopRequireDefault(</span>
+  <span class="s2">require(</span><span class="s0">'./getNoTestsFoundMessage'</span><span class="s2">)</span>
+<span class="s2">)</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_runGlobalHook = _interopRequireDefault(require(</span><span class="s0">'./runGlobalHook'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireDefault(obj) {</span>
+  <span class="s3">return </span><span class="s2">obj &amp;&amp; obj.__esModule ? obj : {</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_getRequireWildcardCache(nodeInterop) {</span>
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">WeakMap !== </span><span class="s0">'function'</span><span class="s2">) </span><span class="s3">return null</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">cacheBabelInterop = </span><span class="s3">new </span><span class="s2">WeakMap()</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">cacheNodeInterop = </span><span class="s3">new </span><span class="s2">WeakMap()</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">(_getRequireWildcardCache = </span><span class="s3">function </span><span class="s2">(nodeInterop) {</span>
+    <span class="s3">return </span><span class="s2">nodeInterop ? cacheNodeInterop : cacheBabelInterop</span><span class="s1">;</span>
+  <span class="s2">})(nodeInterop)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireWildcard(obj</span><span class="s1">, </span><span class="s2">nodeInterop) {</span>
+  <span class="s3">if </span><span class="s2">(!nodeInterop &amp;&amp; obj &amp;&amp; obj.__esModule) {</span>
+    <span class="s3">return </span><span class="s2">obj</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">if </span><span class="s2">(obj === </span><span class="s3">null </span><span class="s2">|| (</span><span class="s3">typeof </span><span class="s2">obj !== </span><span class="s0">'object' </span><span class="s2">&amp;&amp; </span><span class="s3">typeof </span><span class="s2">obj !== </span><span class="s0">'function'</span><span class="s2">)) {</span>
+    <span class="s3">return </span><span class="s2">{</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">cache = _getRequireWildcardCache(nodeInterop)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(cache &amp;&amp; cache.has(obj)) {</span>
+    <span class="s3">return </span><span class="s2">cache.get(obj)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">newObj = {}</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">hasPropertyDescriptor =</span>
+    <span class="s2">Object.defineProperty &amp;&amp; Object.getOwnPropertyDescriptor</span><span class="s1">;</span>
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">key </span><span class="s3">in </span><span class="s2">obj) {</span>
+    <span class="s3">if </span><span class="s2">(key !== </span><span class="s0">'default' </span><span class="s2">&amp;&amp; Object.prototype.hasOwnProperty.call(obj</span><span class="s1">, </span><span class="s2">key)) {</span>
+      <span class="s3">var </span><span class="s2">desc = hasPropertyDescriptor</span>
+        <span class="s2">? Object.getOwnPropertyDescriptor(obj</span><span class="s1">, </span><span class="s2">key)</span>
+        <span class="s2">: </span><span class="s3">null</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(desc &amp;&amp; (desc.get || desc.set)) {</span>
+        <span class="s2">Object.defineProperty(newObj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">desc)</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s2">newObj[key] = obj[key]</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s2">newObj.default = obj</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(cache) {</span>
+    <span class="s2">cache.set(obj</span><span class="s1">, </span><span class="s2">newObj)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">newObj</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s4">*</span>
+ <span class="s4">* This source code is licensed under the MIT license found in the</span>
+ <span class="s4">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s4">*/</span>
+<span class="s3">const </span><span class="s2">getTestPaths = async (</span>
+  <span class="s2">globalConfig</span><span class="s1">,</span>
+  <span class="s2">source</span><span class="s1">,</span>
+  <span class="s2">outputStream</span><span class="s1">,</span>
+  <span class="s2">changedFiles</span><span class="s1">,</span>
+  <span class="s2">jestHooks</span><span class="s1">,</span>
+  <span class="s2">filter</span>
+<span class="s2">) =&gt; {</span>
+  <span class="s3">const </span><span class="s2">data = </span><span class="s3">await </span><span class="s2">source.getTestPaths(globalConfig</span><span class="s1">, </span><span class="s2">changedFiles</span><span class="s1">, </span><span class="s2">filter)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(!data.tests.length &amp;&amp; globalConfig.onlyChanged &amp;&amp; data.noSCM) {</span>
+    <span class="s3">new </span><span class="s2">(_console().CustomConsole)(outputStream</span><span class="s1">, </span><span class="s2">outputStream).log(</span>
+      <span class="s0">'Jest can only find uncommitted changed files in a git or hg ' </span><span class="s2">+</span>
+        <span class="s0">'repository. If you make your project a git or hg ' </span><span class="s2">+</span>
+        <span class="s0">'repository (`git init` or `hg init`), Jest will be able ' </span><span class="s2">+</span>
+        <span class="s0">'to only run tests related to files changed since the last ' </span><span class="s2">+</span>
+        <span class="s0">'commit.'</span>
+    <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">const </span><span class="s2">shouldTestArray = </span><span class="s3">await </span><span class="s2">Promise.all(</span>
+    <span class="s2">data.tests.map(test =&gt;</span>
+      <span class="s2">jestHooks.shouldRunTestSuite({</span>
+        <span class="s2">config: test.context.config</span><span class="s1">,</span>
+        <span class="s2">duration: test.duration</span><span class="s1">,</span>
+        <span class="s2">testPath: test.path</span>
+      <span class="s2">})</span>
+    <span class="s2">)</span>
+  <span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">filteredTests = data.tests.filter((_test</span><span class="s1">, </span><span class="s2">i) =&gt; shouldTestArray[i])</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">{...data</span><span class="s1">, </span><span class="s2">allTests: filteredTests.length</span><span class="s1">, </span><span class="s2">tests: filteredTests}</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">processResults = async (runResults</span><span class="s1">, </span><span class="s2">options) =&gt; {</span>
+  <span class="s3">const </span><span class="s2">{</span>
+    <span class="s2">outputFile</span><span class="s1">,</span>
+    <span class="s2">json: isJSON</span><span class="s1">,</span>
+    <span class="s2">onComplete</span><span class="s1">,</span>
+    <span class="s2">outputStream</span><span class="s1">,</span>
+    <span class="s2">testResultsProcessor</span><span class="s1">,</span>
+    <span class="s2">collectHandles</span>
+  <span class="s2">} = options</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(collectHandles) {</span>
+    <span class="s2">runResults.openHandles = </span><span class="s3">await </span><span class="s2">collectHandles()</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s2">runResults.openHandles = []</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(testResultsProcessor) {</span>
+    <span class="s3">const </span><span class="s2">processor = </span><span class="s3">await </span><span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_jestUtil().requireOrImportModule)(</span>
+      <span class="s2">testResultsProcessor</span>
+    <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">runResults = processor(runResults)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(isJSON) {</span>
+    <span class="s3">if </span><span class="s2">(outputFile) {</span>
+      <span class="s3">const </span><span class="s2">cwd = (</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_jestUtil().tryRealpath)(process.cwd())</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">filePath = path().resolve(cwd</span><span class="s1">, </span><span class="s2">outputFile)</span><span class="s1">;</span>
+      <span class="s2">fs().writeFileSync(</span>
+        <span class="s2">filePath</span><span class="s1">,</span>
+        <span class="s2">JSON.stringify((</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_testResult().formatTestResults)(runResults))</span>
+      <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">outputStream.write(</span>
+        <span class="s0">`Test results written to: </span><span class="s2">${path().relative(cwd</span><span class="s1">, </span><span class="s2">filePath)}</span><span class="s1">\n</span><span class="s0">`</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">process.stdout.write(</span>
+        <span class="s2">JSON.stringify((</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_testResult().formatTestResults)(runResults))</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">onComplete === </span><span class="s3">null </span><span class="s2">|| onComplete === </span><span class="s3">void </span><span class="s5">0</span>
+    <span class="s2">? </span><span class="s3">void </span><span class="s5">0</span>
+    <span class="s2">: onComplete(runResults)</span><span class="s1">;</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">testSchedulerContext = {</span>
+  <span class="s2">firstRun: </span><span class="s3">true</span><span class="s1">,</span>
+  <span class="s2">previousSuccess: </span><span class="s3">true</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">async </span><span class="s3">function </span><span class="s2">runJest({</span>
+  <span class="s2">contexts</span><span class="s1">,</span>
+  <span class="s2">globalConfig</span><span class="s1">,</span>
+  <span class="s2">outputStream</span><span class="s1">,</span>
+  <span class="s2">testWatcher</span><span class="s1">,</span>
+  <span class="s2">jestHooks = </span><span class="s3">new </span><span class="s2">(_jestWatcher().JestHook)().getEmitter()</span><span class="s1">,</span>
+  <span class="s2">startRun</span><span class="s1">,</span>
+  <span class="s2">changedFilesPromise</span><span class="s1">,</span>
+  <span class="s2">onComplete</span><span class="s1">,</span>
+  <span class="s2">failedTestsCache</span><span class="s1">,</span>
+  <span class="s2">filter</span>
+<span class="s2">}) {</span>
+  <span class="s6">// Clear cache for required modules - there might be different resolutions</span>
+  <span class="s6">// from Jest's config loading to running the tests</span>
+  <span class="s2">_jestResolve().default.clearDefaultResolverCache()</span><span class="s1">;</span>
+
+  <span class="s3">const </span><span class="s2">Sequencer = </span><span class="s3">await </span><span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_jestUtil().requireOrImportModule)(</span>
+    <span class="s2">globalConfig.testSequencer</span>
+  <span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">sequencer = </span><span class="s3">new </span><span class="s2">Sequencer()</span><span class="s1">;</span>
+  <span class="s3">let </span><span class="s2">allTests = []</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(changedFilesPromise &amp;&amp; globalConfig.watch) {</span>
+    <span class="s3">const </span><span class="s2">{repos} = </span><span class="s3">await </span><span class="s2">changedFilesPromise</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">noSCM = Object.keys(repos).every(scm =&gt; repos[scm].size === </span><span class="s5">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(noSCM) {</span>
+      <span class="s2">process.stderr.write(</span>
+        <span class="s0">'</span><span class="s1">\n</span><span class="s0">' </span><span class="s2">+</span>
+          <span class="s2">_chalk().default.bold(</span><span class="s0">'--watch'</span><span class="s2">) +</span>
+          <span class="s0">' is not supported without git/hg, please use --watchAll ' </span><span class="s2">+</span>
+          <span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span>
+      <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_exit().default)(</span><span class="s5">1</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s3">const </span><span class="s2">searchSources = contexts.map(</span>
+    <span class="s2">context =&gt; </span><span class="s3">new </span><span class="s2">_SearchSource.default(context)</span>
+  <span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">testRunData = </span><span class="s3">await </span><span class="s2">Promise.all(</span>
+    <span class="s2">contexts.map(async (context</span><span class="s1">, </span><span class="s2">index) =&gt; {</span>
+      <span class="s3">const </span><span class="s2">searchSource = searchSources[index]</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">matches = </span><span class="s3">await </span><span class="s2">getTestPaths(</span>
+        <span class="s2">globalConfig</span><span class="s1">,</span>
+        <span class="s2">searchSource</span><span class="s1">,</span>
+        <span class="s2">outputStream</span><span class="s1">,</span>
+        <span class="s2">changedFilesPromise &amp;&amp; (</span><span class="s3">await </span><span class="s2">changedFilesPromise)</span><span class="s1">,</span>
+        <span class="s2">jestHooks</span><span class="s1">,</span>
+        <span class="s2">filter</span>
+      <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">allTests = allTests.concat(matches.tests)</span><span class="s1">;</span>
+      <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">context</span><span class="s1">,</span>
+        <span class="s2">matches</span>
+      <span class="s2">}</span><span class="s1">;</span>
+    <span class="s2">})</span>
+  <span class="s2">)</span><span class="s1">;</span>
+  <span class="s2">allTests = </span><span class="s3">await </span><span class="s2">sequencer.sort(allTests)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(globalConfig.listTests) {</span>
+    <span class="s3">const </span><span class="s2">testsPaths = Array.from(</span><span class="s3">new </span><span class="s2">Set(allTests.map(test =&gt; test.path)))</span><span class="s1">;</span>
+    <span class="s7">/* eslint-disable no-console */</span>
+
+    <span class="s3">if </span><span class="s2">(globalConfig.json) {</span>
+      <span class="s2">console.log(JSON.stringify(testsPaths))</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">console.log(testsPaths.join(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">))</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s7">/* eslint-enable */</span>
+
+    <span class="s2">onComplete &amp;&amp;</span>
+      <span class="s2">onComplete((</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_testResult().makeEmptyAggregatedTestResult)())</span><span class="s1">;</span>
+    <span class="s3">return</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(globalConfig.onlyFailures) {</span>
+    <span class="s3">if </span><span class="s2">(failedTestsCache) {</span>
+      <span class="s2">allTests = failedTestsCache.filterTests(allTests)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">allTests = </span><span class="s3">await </span><span class="s2">sequencer.allFailedTests(allTests)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s3">const </span><span class="s2">hasTests = allTests.length &gt; </span><span class="s5">0</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(!hasTests) {</span>
+    <span class="s3">const </span><span class="s2">noTestsFoundMessage = (</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_getNoTestsFoundMessage.default)(</span>
+      <span class="s2">testRunData</span><span class="s1">,</span>
+      <span class="s2">globalConfig</span>
+    <span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span>
+      <span class="s2">globalConfig.passWithNoTests ||</span>
+      <span class="s2">globalConfig.findRelatedTests ||</span>
+      <span class="s2">globalConfig.lastCommit ||</span>
+      <span class="s2">globalConfig.onlyChanged</span>
+    <span class="s2">) {</span>
+      <span class="s3">new </span><span class="s2">(_console().CustomConsole)(outputStream</span><span class="s1">, </span><span class="s2">outputStream).log(</span>
+        <span class="s2">noTestsFoundMessage</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s3">new </span><span class="s2">(_console().CustomConsole)(outputStream</span><span class="s1">, </span><span class="s2">outputStream).error(</span>
+        <span class="s2">noTestsFoundMessage</span>
+      <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_exit().default)(</span><span class="s5">1</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">} </span><span class="s3">else if </span><span class="s2">(</span>
+    <span class="s2">allTests.length === </span><span class="s5">1 </span><span class="s2">&amp;&amp;</span>
+    <span class="s2">globalConfig.silent !== </span><span class="s3">true </span><span class="s2">&amp;&amp;</span>
+    <span class="s2">globalConfig.verbose !== </span><span class="s3">false</span>
+  <span class="s2">) {</span>
+    <span class="s3">const </span><span class="s2">newConfig = {...globalConfig</span><span class="s1">, </span><span class="s2">verbose: </span><span class="s3">true</span><span class="s2">}</span><span class="s1">;</span>
+    <span class="s2">globalConfig = Object.freeze(newConfig)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">let </span><span class="s2">collectHandles</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(globalConfig.detectOpenHandles) {</span>
+    <span class="s2">collectHandles = (</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_collectHandles.default)()</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(hasTests) {</span>
+    <span class="s3">await </span><span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_runGlobalHook.default)({</span>
+      <span class="s2">allTests</span><span class="s1">,</span>
+      <span class="s2">globalConfig</span><span class="s1">,</span>
+      <span class="s2">moduleName: </span><span class="s0">'globalSetup'</span>
+    <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">if </span><span class="s2">(changedFilesPromise) {</span>
+    <span class="s3">const </span><span class="s2">changedFilesInfo = </span><span class="s3">await </span><span class="s2">changedFilesPromise</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(changedFilesInfo.changedFiles) {</span>
+      <span class="s2">testSchedulerContext.changedFiles = changedFilesInfo.changedFiles</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">sourcesRelatedToTestsInChangedFilesArray = (</span>
+        <span class="s3">await </span><span class="s2">Promise.all(</span>
+          <span class="s2">contexts.map(async (_</span><span class="s1">, </span><span class="s2">index) =&gt; {</span>
+            <span class="s3">const </span><span class="s2">searchSource = searchSources[index]</span><span class="s1">;</span>
+            <span class="s3">return </span><span class="s2">searchSource.findRelatedSourcesFromTestsInChangedFiles(</span>
+              <span class="s2">changedFilesInfo</span>
+            <span class="s2">)</span><span class="s1">;</span>
+          <span class="s2">})</span>
+        <span class="s2">)</span>
+      <span class="s2">).reduce((total</span><span class="s1">, </span><span class="s2">paths) =&gt; total.concat(paths)</span><span class="s1">, </span><span class="s2">[])</span><span class="s1">;</span>
+      <span class="s2">testSchedulerContext.sourcesRelatedToTestsInChangedFiles = </span><span class="s3">new </span><span class="s2">Set(</span>
+        <span class="s2">sourcesRelatedToTestsInChangedFilesArray</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s3">const </span><span class="s2">scheduler = </span><span class="s3">await </span><span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_TestScheduler.createTestScheduler)(</span>
+    <span class="s2">globalConfig</span><span class="s1">,</span>
+    <span class="s2">{</span>
+      <span class="s2">startRun</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">testSchedulerContext</span>
+  <span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">const </span><span class="s2">results = </span><span class="s3">await </span><span class="s2">scheduler.scheduleTests(allTests</span><span class="s1">, </span><span class="s2">testWatcher)</span><span class="s1">;</span>
+  <span class="s3">await </span><span class="s2">sequencer.cacheResults(allTests</span><span class="s1">, </span><span class="s2">results)</span><span class="s1">;</span>
+
+  <span class="s3">if </span><span class="s2">(hasTests) {</span>
+    <span class="s3">await </span><span class="s2">(</span><span class="s5">0</span><span class="s1">, </span><span class="s2">_runGlobalHook.default)({</span>
+      <span class="s2">allTests</span><span class="s1">,</span>
+      <span class="s2">globalConfig</span><span class="s1">,</span>
+      <span class="s2">moduleName: </span><span class="s0">'globalTeardown'</span>
+    <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s3">await </span><span class="s2">processResults(results</span><span class="s1">, </span><span class="s2">{</span>
+    <span class="s2">collectHandles</span><span class="s1">,</span>
+    <span class="s2">json: globalConfig.json</span><span class="s1">,</span>
+    <span class="s2">onComplete</span><span class="s1">,</span>
+    <span class="s2">outputFile: globalConfig.outputFile</span><span class="s1">,</span>
+    <span class="s2">outputStream</span><span class="s1">,</span>
+    <span class="s2">testResultsProcessor: globalConfig.testResultsProcessor</span>
+  <span class="s2">})</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

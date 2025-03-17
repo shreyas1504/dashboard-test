@@ -1,0 +1,63 @@
+<html>
+<head>
+<title>Status.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a; font-style: italic;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Status.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">/**</span>
+ <span class="s0">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s0">*</span>
+ <span class="s0">* This source code is licensed under the MIT license found in the</span>
+ <span class="s0">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s0">*/</span>
+<span class="s2">import </span><span class="s1">type { AggregatedResult</span><span class="s3">, </span><span class="s1">TestCaseResult</span><span class="s3">, </span><span class="s1">TestResult } from </span><span class="s4">'@jest/test-result'</span><span class="s3">;</span>
+<span class="s2">import </span><span class="s1">type { Config } from </span><span class="s4">'@jest/types'</span><span class="s3">;</span>
+<span class="s2">import </span><span class="s1">type { ReporterOnStartOptions</span><span class="s3">, </span><span class="s1">Test } from </span><span class="s4">'./types'</span><span class="s3">;</span>
+<span class="s1">declare type Cache = {</span>
+    <span class="s1">content: string</span><span class="s3">;</span>
+    <span class="s1">clear: string</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+<span class="s0">/**</span>
+ <span class="s0">* A class that generates the CLI status of currently running tests</span>
+ <span class="s0">* and also provides an ANSI escape sequence to remove status lines</span>
+ <span class="s0">* from the terminal.</span>
+ <span class="s0">*/</span>
+<span class="s2">export default class </span><span class="s1">Status {</span>
+    <span class="s2">private </span><span class="s1">_cache</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_callback?</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_currentTests</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_currentTestCases</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_done</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_emitScheduled</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_estimatedTime</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_interval?</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_aggregatedResults?</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_showStatus</span><span class="s3">;</span>
+    <span class="s1">constructor()</span><span class="s3">;</span>
+    <span class="s1">onChange(callback: () =&gt; </span><span class="s2">void</span><span class="s1">): </span><span class="s2">void</span><span class="s3">;</span>
+    <span class="s1">runStarted(aggregatedResults: AggregatedResult</span><span class="s3">, </span><span class="s1">options: ReporterOnStartOptions): </span><span class="s2">void</span><span class="s3">;</span>
+    <span class="s1">runFinished(): </span><span class="s2">void</span><span class="s3">;</span>
+    <span class="s1">addTestCaseResult(test: Test</span><span class="s3">, </span><span class="s1">testCaseResult: TestCaseResult): </span><span class="s2">void</span><span class="s3">;</span>
+    <span class="s1">testStarted(testPath: Config.Path</span><span class="s3">, </span><span class="s1">config: Config.ProjectConfig): </span><span class="s2">void</span><span class="s3">;</span>
+    <span class="s1">testFinished(_config: Config.ProjectConfig</span><span class="s3">, </span><span class="s1">testResult: TestResult</span><span class="s3">, </span><span class="s1">aggregatedResults: AggregatedResult): </span><span class="s2">void</span><span class="s3">;</span>
+    <span class="s1">get(): Cache</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_emit</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_debouncedEmit</span><span class="s3">;</span>
+    <span class="s2">private </span><span class="s1">_tick</span><span class="s3">;</span>
+<span class="s1">}</span>
+<span class="s2">export </span><span class="s1">{}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

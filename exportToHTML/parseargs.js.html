@@ -1,0 +1,191 @@
+<html>
+<head>
+<title>parseargs.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #8ea765;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+parseargs.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * Jake JavaScript build tool 
+ * Copyright 2112 Matthew Eernisse (mde@fleegix.org) 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *         http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+*/</span>
+
+<span class="s2">const </span><span class="s1">PROJECT_DIR = process.env.PROJECT_DIR</span><span class="s3">;</span>
+
+<span class="s2">let </span><span class="s1">parseargs = require(</span><span class="s4">`</span><span class="s1">${PROJECT_DIR}</span><span class="s4">/lib/parseargs`</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">assert = require(</span><span class="s4">'assert'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">optsReg = [</span>
+  <span class="s1">{ full: </span><span class="s4">'directory'</span><span class="s3">,</span>
+    <span class="s1">abbr: </span><span class="s4">'C'</span><span class="s3">,</span>
+    <span class="s1">preempts: </span><span class="s2">false</span><span class="s3">,</span>
+    <span class="s1">expectValue: </span><span class="s2">true</span>
+  <span class="s1">}</span><span class="s3">,</span>
+  <span class="s1">{ full: </span><span class="s4">'jakefile'</span><span class="s3">,</span>
+    <span class="s1">abbr: </span><span class="s4">'f'</span><span class="s3">,</span>
+    <span class="s1">preempts: </span><span class="s2">false</span><span class="s3">,</span>
+    <span class="s1">expectValue: </span><span class="s2">true</span>
+  <span class="s1">}</span><span class="s3">,</span>
+  <span class="s1">{ full: </span><span class="s4">'tasks'</span><span class="s3">,</span>
+    <span class="s1">abbr: </span><span class="s4">'T'</span><span class="s3">,</span>
+    <span class="s1">preempts: </span><span class="s2">true</span>
+  <span class="s1">}</span><span class="s3">,</span>
+  <span class="s1">{ full: </span><span class="s4">'tasks'</span><span class="s3">,</span>
+    <span class="s1">abbr: </span><span class="s4">'ls'</span><span class="s3">,</span>
+    <span class="s1">preempts: </span><span class="s2">true</span>
+  <span class="s1">}</span><span class="s3">,</span>
+  <span class="s1">{ full: </span><span class="s4">'trace'</span><span class="s3">,</span>
+    <span class="s1">abbr: </span><span class="s4">'t'</span><span class="s3">,</span>
+    <span class="s1">preempts: </span><span class="s2">false</span><span class="s3">,</span>
+    <span class="s1">expectValue: </span><span class="s2">false</span>
+  <span class="s1">}</span><span class="s3">,</span>
+  <span class="s1">{ full: </span><span class="s4">'help'</span><span class="s3">,</span>
+    <span class="s1">abbr: </span><span class="s4">'h'</span><span class="s3">,</span>
+    <span class="s1">preempts: </span><span class="s2">true</span>
+  <span class="s1">}</span><span class="s3">,</span>
+  <span class="s1">{ full: </span><span class="s4">'version'</span><span class="s3">,</span>
+    <span class="s1">abbr: </span><span class="s4">'V'</span><span class="s3">,</span>
+    <span class="s1">preempts: </span><span class="s2">true</span>
+  <span class="s1">}</span>
+<span class="s1">]</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">p = </span><span class="s2">new </span><span class="s1">parseargs.Parser(optsReg)</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">z = </span><span class="s2">function </span><span class="s1">(s) { </span><span class="s2">return </span><span class="s1">s.split(</span><span class="s4">' '</span><span class="s1">)</span><span class="s3">; </span><span class="s1">}</span><span class="s3">;</span>
+<span class="s2">let </span><span class="s1">res</span><span class="s3">;</span>
+
+<span class="s1">suite(</span><span class="s4">'parseargs'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+
+  <span class="s1">test(</span><span class="s4">'long preemptive opt and val with equal-sign, ignore further opts'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">res = p.parse(z(</span><span class="s4">'--tasks=foo --jakefile=asdf'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'foo'</span><span class="s3">, </span><span class="s1">res.opts.tasks)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(undefined</span><span class="s3">, </span><span class="s1">res.opts.jakefile)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'long preemptive opt and val without equal-sign, ignore further opts'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">res = p.parse(z(</span><span class="s4">'--tasks foo --jakefile=asdf'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'foo'</span><span class="s3">, </span><span class="s1">res.opts.tasks)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(undefined</span><span class="s3">, </span><span class="s1">res.opts.jakefile)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'long preemptive opt and no val, ignore further opts'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">res = p.parse(z(</span><span class="s4">'--tasks --jakefile=asdf'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">true</span><span class="s3">, </span><span class="s1">res.opts.tasks)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(undefined</span><span class="s3">, </span><span class="s1">res.opts.jakefile)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'preemptive opt with no val, should be true'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">res = p.parse(z(</span><span class="s4">'-T'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">true</span><span class="s3">, </span><span class="s1">res.opts.tasks)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'preemptive opt with no val, should be true and ignore further opts'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">res = p.parse(z(</span><span class="s4">'-T -f'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">true</span><span class="s3">, </span><span class="s1">res.opts.tasks)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(undefined</span><span class="s3">, </span><span class="s1">res.opts.jakefile)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'preemptive opt with val, should be val'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">res = p.parse(z(</span><span class="s4">'-T zoobie -f foo/bar/baz'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'zoobie'</span><span class="s3">, </span><span class="s1">res.opts.tasks)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(undefined</span><span class="s3">, </span><span class="s1">res.opts.jakefile)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'-f expects a value, -t does not (howdy is task-name)'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">res = p.parse(z(</span><span class="s4">'-f zoobie -t howdy'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'zoobie'</span><span class="s3">, </span><span class="s1">res.opts.jakefile)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">true</span><span class="s3">, </span><span class="s1">res.opts.trace)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'howdy'</span><span class="s3">, </span><span class="s1">res.taskNames[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'different order, -f expects a value, -t does not (howdy is task-name)'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">res = p.parse(z(</span><span class="s4">'-f zoobie howdy -t'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'zoobie'</span><span class="s3">, </span><span class="s1">res.opts.jakefile)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">true</span><span class="s3">, </span><span class="s1">res.opts.trace)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'howdy'</span><span class="s3">, </span><span class="s1">res.taskNames[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'-f expects a value, -t does not (foo=bar is env var)'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">res = p.parse(z(</span><span class="s4">'-f zoobie -t foo=bar'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'zoobie'</span><span class="s3">, </span><span class="s1">res.opts.jakefile)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">true</span><span class="s3">, </span><span class="s1">res.opts.trace)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'bar'</span><span class="s3">, </span><span class="s1">res.envVars.foo)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(undefined</span><span class="s3">, </span><span class="s1">res.taskNames[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'-f expects a value, -t does not (foo=bar is env-var, task-name follows)'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">res = p.parse(z(</span><span class="s4">'-f zoobie -t howdy foo=bar'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'zoobie'</span><span class="s3">, </span><span class="s1">res.opts.jakefile)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">true</span><span class="s3">, </span><span class="s1">res.opts.trace)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'bar'</span><span class="s3">, </span><span class="s1">res.envVars.foo)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'howdy'</span><span class="s3">, </span><span class="s1">res.taskNames[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'-t does not expect a value, -f does (howdy is task-name)'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">res = p.parse(z(</span><span class="s4">'-t howdy -f zoobie'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">true</span><span class="s3">, </span><span class="s1">res.opts.trace)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'zoobie'</span><span class="s3">, </span><span class="s1">res.opts.jakefile)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'howdy'</span><span class="s3">, </span><span class="s1">res.taskNames[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'--trace does not expect a value, -f does (howdy is task-name)'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">res = p.parse(z(</span><span class="s4">'--trace howdy --jakefile zoobie'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">true</span><span class="s3">, </span><span class="s1">res.opts.trace)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'zoobie'</span><span class="s3">, </span><span class="s1">res.opts.jakefile)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'howdy'</span><span class="s3">, </span><span class="s1">res.taskNames[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s4">'--trace does not expect a value (equal), -f does (throw howdy away)'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">res = p.parse(z(</span><span class="s4">'--trace=howdy --jakefile=zoobie'</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s2">true</span><span class="s3">, </span><span class="s1">res.opts.trace)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(</span><span class="s4">'zoobie'</span><span class="s3">, </span><span class="s1">res.opts.jakefile)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(undefined</span><span class="s3">, </span><span class="s1">res.taskNames[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+  <span class="s0">/* 
+, test('task-name with positional args', function () { 
+    res = p.parse(z('foo:bar[asdf,qwer]')); 
+    assert.equal('asdf', p.taskArgs[0]); 
+    assert.equal('qwer', p.taskArgs[1]); 
+  } 
+ 
+, test('opts, env vars, task-name with positional args', function () { 
+    res = p.parse(z('-f ./tests/Jakefile -t default[asdf,qwer] foo=bar')); 
+    assert.equal('./tests/Jakefile', res.opts.jakefile); 
+    assert.equal(true, res.opts.trace); 
+    assert.equal('bar', res.envVars.foo); 
+    assert.equal('default', res.taskName); 
+    assert.equal('asdf', p.taskArgs[0]); 
+    assert.equal('qwer', p.taskArgs[1]); 
+  } 
+*/</span>
+
+
+<span class="s1">})</span><span class="s3">;</span>
+
+
+</pre>
+</body>
+</html>

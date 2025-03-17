@@ -1,0 +1,55 @@
+<html>
+<head>
+<title>mkdirp</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+mkdirp</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+
+<span class="s2">var </span><span class="s1">mkdirp = require(</span><span class="s3">'../'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">var </span><span class="s1">minimist = require(</span><span class="s3">'minimist'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">var </span><span class="s1">fs = require(</span><span class="s3">'fs'</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s2">var </span><span class="s1">argv = minimist(process.argv.slice(</span><span class="s5">2</span><span class="s1">)</span><span class="s4">, </span><span class="s1">{</span>
+    <span class="s1">alias: { m: </span><span class="s3">'mode'</span><span class="s4">, </span><span class="s1">h: </span><span class="s3">'help' </span><span class="s1">}</span><span class="s4">,</span>
+    <span class="s1">string: [ </span><span class="s3">'mode' </span><span class="s1">]</span>
+<span class="s1">})</span><span class="s4">;</span>
+<span class="s2">if </span><span class="s1">(argv.help) {</span>
+    <span class="s1">fs.createReadStream(__dirname + </span><span class="s3">'/usage.txt'</span><span class="s1">).pipe(process.stdout)</span><span class="s4">;</span>
+    <span class="s2">return</span><span class="s4">;</span>
+<span class="s1">}</span>
+
+<span class="s2">var </span><span class="s1">paths = argv._.slice()</span><span class="s4">;</span>
+<span class="s2">var </span><span class="s1">mode = argv.mode ? parseInt(argv.mode</span><span class="s4">, </span><span class="s5">8</span><span class="s1">) : undefined</span><span class="s4">;</span>
+
+<span class="s1">(</span><span class="s2">function </span><span class="s1">next () {</span>
+    <span class="s2">if </span><span class="s1">(paths.length === </span><span class="s5">0</span><span class="s1">) </span><span class="s2">return</span><span class="s4">;</span>
+    <span class="s2">var </span><span class="s1">p = paths.shift()</span><span class="s4">;</span>
+    
+    <span class="s2">if </span><span class="s1">(mode === undefined) mkdirp(p</span><span class="s4">, </span><span class="s1">cb)</span>
+    <span class="s2">else </span><span class="s1">mkdirp(p</span><span class="s4">, </span><span class="s1">mode</span><span class="s4">, </span><span class="s1">cb)</span>
+    
+    <span class="s2">function </span><span class="s1">cb (err) {</span>
+        <span class="s2">if </span><span class="s1">(err) {</span>
+            <span class="s1">console.error(err.message)</span><span class="s4">;</span>
+            <span class="s1">process.exit(</span><span class="s5">1</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s2">else </span><span class="s1">next()</span><span class="s4">;</span>
+    <span class="s1">}</span>
+<span class="s1">})()</span><span class="s4">;</span>
+</pre>
+</body>
+</html>

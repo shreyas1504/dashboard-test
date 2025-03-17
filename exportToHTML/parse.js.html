@@ -1,0 +1,56 @@
+<html>
+<head>
+<title>parse.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+parse.js</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">validate from </span><span class="s2">'./validate.js'</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">parse(uuid) {</span>
+  <span class="s0">if </span><span class="s1">(!validate(uuid)) {</span>
+    <span class="s0">throw </span><span class="s1">TypeError(</span><span class="s2">'Invalid UUID'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">var </span><span class="s1">v</span><span class="s3">;</span>
+  <span class="s0">var </span><span class="s1">arr = </span><span class="s0">new </span><span class="s1">Uint8Array(</span><span class="s4">16</span><span class="s1">)</span><span class="s3">; </span><span class="s5">// Parse ########-....-....-....-............</span>
+
+  <span class="s1">arr[</span><span class="s4">0</span><span class="s1">] = (v = parseInt(uuid.slice(</span><span class="s4">0</span><span class="s3">, </span><span class="s4">8</span><span class="s1">)</span><span class="s3">, </span><span class="s4">16</span><span class="s1">)) &gt;&gt;&gt; </span><span class="s4">24</span><span class="s3">;</span>
+  <span class="s1">arr[</span><span class="s4">1</span><span class="s1">] = v &gt;&gt;&gt; </span><span class="s4">16 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">;</span>
+  <span class="s1">arr[</span><span class="s4">2</span><span class="s1">] = v &gt;&gt;&gt; </span><span class="s4">8 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">;</span>
+  <span class="s1">arr[</span><span class="s4">3</span><span class="s1">] = v &amp; </span><span class="s4">0xff</span><span class="s3">; </span><span class="s5">// Parse ........-####-....-....-............</span>
+
+  <span class="s1">arr[</span><span class="s4">4</span><span class="s1">] = (v = parseInt(uuid.slice(</span><span class="s4">9</span><span class="s3">, </span><span class="s4">13</span><span class="s1">)</span><span class="s3">, </span><span class="s4">16</span><span class="s1">)) &gt;&gt;&gt; </span><span class="s4">8</span><span class="s3">;</span>
+  <span class="s1">arr[</span><span class="s4">5</span><span class="s1">] = v &amp; </span><span class="s4">0xff</span><span class="s3">; </span><span class="s5">// Parse ........-....-####-....-............</span>
+
+  <span class="s1">arr[</span><span class="s4">6</span><span class="s1">] = (v = parseInt(uuid.slice(</span><span class="s4">14</span><span class="s3">, </span><span class="s4">18</span><span class="s1">)</span><span class="s3">, </span><span class="s4">16</span><span class="s1">)) &gt;&gt;&gt; </span><span class="s4">8</span><span class="s3">;</span>
+  <span class="s1">arr[</span><span class="s4">7</span><span class="s1">] = v &amp; </span><span class="s4">0xff</span><span class="s3">; </span><span class="s5">// Parse ........-....-....-####-............</span>
+
+  <span class="s1">arr[</span><span class="s4">8</span><span class="s1">] = (v = parseInt(uuid.slice(</span><span class="s4">19</span><span class="s3">, </span><span class="s4">23</span><span class="s1">)</span><span class="s3">, </span><span class="s4">16</span><span class="s1">)) &gt;&gt;&gt; </span><span class="s4">8</span><span class="s3">;</span>
+  <span class="s1">arr[</span><span class="s4">9</span><span class="s1">] = v &amp; </span><span class="s4">0xff</span><span class="s3">; </span><span class="s5">// Parse ........-....-....-....-############</span>
+  <span class="s5">// (Use &quot;/&quot; to avoid 32-bit truncation when bit-shifting high-order bytes)</span>
+
+  <span class="s1">arr[</span><span class="s4">10</span><span class="s1">] = (v = parseInt(uuid.slice(</span><span class="s4">24</span><span class="s3">, </span><span class="s4">36</span><span class="s1">)</span><span class="s3">, </span><span class="s4">16</span><span class="s1">)) / </span><span class="s4">0x10000000000 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">;</span>
+  <span class="s1">arr[</span><span class="s4">11</span><span class="s1">] = v / </span><span class="s4">0x100000000 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">;</span>
+  <span class="s1">arr[</span><span class="s4">12</span><span class="s1">] = v &gt;&gt;&gt; </span><span class="s4">24 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">;</span>
+  <span class="s1">arr[</span><span class="s4">13</span><span class="s1">] = v &gt;&gt;&gt; </span><span class="s4">16 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">;</span>
+  <span class="s1">arr[</span><span class="s4">14</span><span class="s1">] = v &gt;&gt;&gt; </span><span class="s4">8 </span><span class="s1">&amp; </span><span class="s4">0xff</span><span class="s3">;</span>
+  <span class="s1">arr[</span><span class="s4">15</span><span class="s1">] = v &amp; </span><span class="s4">0xff</span><span class="s3">;</span>
+  <span class="s0">return </span><span class="s1">arr</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">export default </span><span class="s1">parse</span><span class="s3">;</span></pre>
+</body>
+</html>

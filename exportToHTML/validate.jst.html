@@ -1,0 +1,293 @@
+<html>
+<head>
+<title>validate.jst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+validate.jst</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+<span class="s0">{{# def.errors }}</span>
+<span class="s0">{{# def.defaults }}</span>
+<span class="s0">{{# def.coerce }}</span>
+
+<span class="s0">{{ /**</span>
+    <span class="s0">* schema compilation (render) time:</span>
+    <span class="s0">* it = { schema, RULES, _validate, opts }</span>
+    <span class="s0">* it.validate - this template function,</span>
+    <span class="s0">*   it is used recursively to generate code for subschemas</span>
+    <span class="s0">*</span>
+    <span class="s0">* runtime:</span>
+    <span class="s0">* &quot;validate&quot; is a variable name to which this function will be assigned</span>
+    <span class="s0">* validateRef etc. are defined in the parent scope in index.js</span>
+    <span class="s0">*/ }}</span>
+
+<span class="s0">{{</span>
+  <span class="s0">var $async = it.schema.$async === true</span>
+    <span class="s0">, $refKeywords = it.util.schemaHasRulesExcept(it.schema, it.RULES.all, '$ref')</span>
+    <span class="s0">, $id = it.self._getId(it.schema);</span>
+<span class="s0">}}</span>
+
+<span class="s0">{{</span>
+  <span class="s0">if (it.opts.strictKeywords) {</span>
+    <span class="s0">var $unknownKwd = it.util.schemaUnknownRules(it.schema, it.RULES.keywords);</span>
+    <span class="s0">if ($unknownKwd) {</span>
+      <span class="s0">var $keywordsMsg = 'unknown keyword: ' + $unknownKwd;</span>
+      <span class="s0">if (it.opts.strictKeywords === 'log') it.logger.warn($keywordsMsg);</span>
+      <span class="s0">else throw new Error($keywordsMsg);</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span>
+<span class="s0">}}</span>
+
+<span class="s0">{{? it.isTop }}</span>
+  <span class="s0">var validate = {{?$async}}{{it.async = true;}}async {{?}}function(data, dataPath, parentData, parentDataProperty, rootData) {</span>
+    <span class="s0">'use strict';</span>
+    <span class="s0">{{? $id &amp;&amp; (it.opts.sourceCode || it.opts.processCode) }}</span>
+      <span class="s0">{{= '/\*# sourceURL=' + $id + ' */' }}</span>
+    <span class="s0">{{?}}</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{? typeof it.schema == 'boolean' || !($refKeywords || it.schema.$ref) }}</span>
+  <span class="s0">{{ var $keyword = 'false schema'; }}</span>
+  <span class="s0">{{# def.setupKeyword }}</span>
+  <span class="s0">{{? it.schema === false}}</span>
+    <span class="s0">{{? it.isTop}}</span>
+      <span class="s0">{{ $breakOnError = true; }}</span>
+    <span class="s0">{{??}}</span>
+      <span class="s0">var {{=$valid}} = false;</span>
+    <span class="s0">{{?}}</span>
+    <span class="s0">{{# def.error:'false schema' }}</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">{{? it.isTop}}</span>
+      <span class="s0">{{? $async }}</span>
+        <span class="s0">return data;</span>
+      <span class="s0">{{??}}</span>
+        <span class="s0">validate.errors = null;</span>
+        <span class="s0">return true;</span>
+      <span class="s0">{{?}}</span>
+    <span class="s0">{{??}}</span>
+      <span class="s0">var {{=$valid}} = true;</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{?}}</span>
+
+  <span class="s0">{{? it.isTop}}</span>
+    <span class="s0">};</span>
+    <span class="s0">return validate;</span>
+  <span class="s0">{{?}}</span>
+
+  <span class="s0">{{ return out; }}</span>
+<span class="s0">{{?}}</span>
+
+
+<span class="s0">{{? it.isTop }}</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $top = it.isTop</span>
+      <span class="s0">, $lvl = it.level = 0</span>
+      <span class="s0">, $dataLvl = it.dataLevel = 0</span>
+      <span class="s0">, $data = 'data';</span>
+    <span class="s0">it.rootId = it.resolve.fullPath(it.self._getId(it.root.schema));</span>
+    <span class="s0">it.baseId = it.baseId || it.rootId;</span>
+    <span class="s0">delete it.isTop;</span>
+
+    <span class="s0">it.dataPathArr = [&quot;&quot;];</span>
+
+    <span class="s0">if (it.schema.default !== undefined &amp;&amp; it.opts.useDefaults &amp;&amp; it.opts.strictDefaults) {</span>
+      <span class="s0">var $defaultMsg = 'default is ignored in the schema root';</span>
+      <span class="s0">if (it.opts.strictDefaults === 'log') it.logger.warn($defaultMsg);</span>
+      <span class="s0">else throw new Error($defaultMsg);</span>
+    <span class="s0">}</span>
+  <span class="s0">}}</span>
+
+  <span class="s0">var vErrors = null; {{ /* don't edit, used in replace */ }}</span>
+  <span class="s0">var errors = 0;     {{ /* don't edit, used in replace */ }}</span>
+  <span class="s0">if (rootData === undefined) rootData = data; {{ /* don't edit, used in replace */ }}</span>
+<span class="s0">{{??}}</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $lvl = it.level</span>
+      <span class="s0">, $dataLvl = it.dataLevel</span>
+      <span class="s0">, $data = 'data' + ($dataLvl || '');</span>
+
+    <span class="s0">if ($id) it.baseId = it.resolve.url(it.baseId, $id);</span>
+
+    <span class="s0">if ($async &amp;&amp; !it.async) throw new Error('async schema in sync schema');</span>
+  <span class="s0">}}</span>
+
+  <span class="s0">var errs_{{=$lvl}} = errors;</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{</span>
+  <span class="s0">var $valid = 'valid' + $lvl</span>
+    <span class="s0">, $breakOnError = !it.opts.allErrors</span>
+    <span class="s0">, $closingBraces1 = ''</span>
+    <span class="s0">, $closingBraces2 = '';</span>
+
+  <span class="s0">var $errorKeyword;</span>
+  <span class="s0">var $typeSchema = it.schema.type</span>
+    <span class="s0">, $typeIsArray = Array.isArray($typeSchema);</span>
+
+  <span class="s0">if ($typeSchema &amp;&amp; it.opts.nullable &amp;&amp; it.schema.nullable === true) {</span>
+    <span class="s0">if ($typeIsArray) {</span>
+      <span class="s0">if ($typeSchema.indexOf('null') == -1)</span>
+        <span class="s0">$typeSchema = $typeSchema.concat('null');</span>
+    <span class="s0">} else if ($typeSchema != 'null') {</span>
+      <span class="s0">$typeSchema = [$typeSchema, 'null'];</span>
+      <span class="s0">$typeIsArray = true;</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span>
+
+  <span class="s0">if ($typeIsArray &amp;&amp; $typeSchema.length == 1) {</span>
+    <span class="s0">$typeSchema = $typeSchema[0];</span>
+    <span class="s0">$typeIsArray = false;</span>
+  <span class="s0">}</span>
+<span class="s0">}}</span>
+
+<span class="s0">{{## def.checkType:</span>
+  <span class="s0">{{</span>
+    <span class="s0">var $schemaPath = it.schemaPath + '.type'</span>
+      <span class="s0">, $errSchemaPath = it.errSchemaPath + '/type'</span>
+      <span class="s0">, $method = $typeIsArray ? 'checkDataTypes' : 'checkDataType';</span>
+  <span class="s0">}}</span>
+
+  <span class="s0">if ({{= it.util[$method]($typeSchema, $data, it.opts.strictNumbers, true) }}) {</span>
+<span class="s0">#}}</span>
+
+<span class="s0">{{? it.schema.$ref &amp;&amp; $refKeywords }}</span>
+  <span class="s0">{{? it.opts.extendRefs == 'fail' }}</span>
+    <span class="s0">{{ throw new Error('$ref: validation keywords used in schema at path &quot;' + it.errSchemaPath + '&quot; (see option extendRefs)'); }}</span>
+  <span class="s0">{{?? it.opts.extendRefs !== true }}</span>
+    <span class="s0">{{</span>
+      <span class="s0">$refKeywords = false;</span>
+      <span class="s0">it.logger.warn('$ref: keywords ignored in schema at path &quot;' + it.errSchemaPath + '&quot;');</span>
+    <span class="s0">}}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{? it.schema.$comment &amp;&amp; it.opts.$comment }}</span>
+  <span class="s0">{{= it.RULES.all.$comment.code(it, '$comment') }}</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{? $typeSchema }}</span>
+  <span class="s0">{{? it.opts.coerceTypes }}</span>
+    <span class="s0">{{ var $coerceToTypes = it.util.coerceToTypes(it.opts.coerceTypes, $typeSchema); }}</span>
+  <span class="s0">{{?}}</span>
+
+  <span class="s0">{{ var $rulesGroup = it.RULES.types[$typeSchema]; }}</span>
+  <span class="s0">{{? $coerceToTypes || $typeIsArray || $rulesGroup === true ||</span>
+    <span class="s0">($rulesGroup &amp;&amp; !$shouldUseGroup($rulesGroup)) }}</span>
+    <span class="s0">{{</span>
+      <span class="s0">var $schemaPath = it.schemaPath + '.type'</span>
+        <span class="s0">, $errSchemaPath = it.errSchemaPath + '/type';</span>
+    <span class="s0">}}</span>
+    <span class="s0">{{# def.checkType }}</span>
+      <span class="s0">{{? $coerceToTypes }}</span>
+        <span class="s0">{{# def.coerceType }}</span>
+      <span class="s0">{{??}}</span>
+        <span class="s0">{{# def.error:'type' }}</span>
+      <span class="s0">{{?}}</span>
+    <span class="s0">}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{?}}</span>
+
+
+<span class="s0">{{? it.schema.$ref &amp;&amp; !$refKeywords }}</span>
+  <span class="s0">{{= it.RULES.all.$ref.code(it, '$ref') }}</span>
+  <span class="s0">{{? $breakOnError }}</span>
+    <span class="s0">}</span>
+    <span class="s0">if (errors === {{?$top}}0{{??}}errs_{{=$lvl}}{{?}}) {</span>
+    <span class="s0">{{ $closingBraces2 += '}'; }}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">{{??}}</span>
+  <span class="s0">{{~ it.RULES:$rulesGroup }}</span>
+    <span class="s0">{{? $shouldUseGroup($rulesGroup) }}</span>
+      <span class="s0">{{? $rulesGroup.type }}</span>
+        <span class="s0">if ({{= it.util.checkDataType($rulesGroup.type, $data, it.opts.strictNumbers) }}) {</span>
+      <span class="s0">{{?}}</span>
+        <span class="s0">{{? it.opts.useDefaults }}</span>
+          <span class="s0">{{? $rulesGroup.type == 'object' &amp;&amp; it.schema.properties }}</span>
+            <span class="s0">{{# def.defaultProperties }}</span>
+          <span class="s0">{{?? $rulesGroup.type == 'array' &amp;&amp; Array.isArray(it.schema.items) }}</span>
+            <span class="s0">{{# def.defaultItems }}</span>
+          <span class="s0">{{?}}</span>
+        <span class="s0">{{?}}</span>
+        <span class="s0">{{~ $rulesGroup.rules:$rule }}</span>
+          <span class="s0">{{? $shouldUseRule($rule) }}</span>
+            <span class="s0">{{ var $code = $rule.code(it, $rule.keyword, $rulesGroup.type); }}</span>
+            <span class="s0">{{? $code }}</span>
+              <span class="s0">{{= $code }}</span>
+              <span class="s0">{{? $breakOnError }}</span>
+                <span class="s0">{{ $closingBraces1 += '}'; }}</span>
+              <span class="s0">{{?}}</span>
+            <span class="s0">{{?}}</span>
+          <span class="s0">{{?}}</span>
+        <span class="s0">{{~}}</span>
+        <span class="s0">{{? $breakOnError }}</span>
+          <span class="s0">{{= $closingBraces1 }}</span>
+          <span class="s0">{{ $closingBraces1 = ''; }}</span>
+        <span class="s0">{{?}}</span>
+      <span class="s0">{{? $rulesGroup.type }}</span>
+        <span class="s0">}</span>
+        <span class="s0">{{? $typeSchema &amp;&amp; $typeSchema === $rulesGroup.type &amp;&amp; !$coerceToTypes }}</span>
+          <span class="s0">else {</span>
+            <span class="s0">{{</span>
+              <span class="s0">var $schemaPath = it.schemaPath + '.type'</span>
+                <span class="s0">, $errSchemaPath = it.errSchemaPath + '/type';</span>
+            <span class="s0">}}</span>
+            <span class="s0">{{# def.error:'type' }}</span>
+          <span class="s0">}</span>
+        <span class="s0">{{?}}</span>
+      <span class="s0">{{?}}</span>
+
+      <span class="s0">{{? $breakOnError }}</span>
+        <span class="s0">if (errors === {{?$top}}0{{??}}errs_{{=$lvl}}{{?}}) {</span>
+        <span class="s0">{{ $closingBraces2 += '}'; }}</span>
+      <span class="s0">{{?}}</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{~}}</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{? $breakOnError }} {{= $closingBraces2 }} {{?}}</span>
+
+<span class="s0">{{? $top }}</span>
+    <span class="s0">{{? $async }}</span>
+      <span class="s0">if (errors === 0) return data;           {{ /* don't edit, used in replace */ }}</span>
+      <span class="s0">else throw new ValidationError(vErrors); {{ /* don't edit, used in replace */ }}</span>
+    <span class="s0">{{??}}</span>
+      <span class="s0">validate.errors = vErrors; {{ /* don't edit, used in replace */ }}</span>
+      <span class="s0">return errors === 0;       {{ /* don't edit, used in replace */ }}</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">};</span>
+
+  <span class="s0">return validate;</span>
+<span class="s0">{{??}}</span>
+  <span class="s0">var {{=$valid}} = errors === errs_{{=$lvl}};</span>
+<span class="s0">{{?}}</span>
+
+<span class="s0">{{</span>
+  <span class="s0">function $shouldUseGroup($rulesGroup) {</span>
+    <span class="s0">var rules = $rulesGroup.rules;</span>
+    <span class="s0">for (var i=0; i &lt; rules.length; i++)</span>
+      <span class="s0">if ($shouldUseRule(rules[i]))</span>
+        <span class="s0">return true;</span>
+  <span class="s0">}</span>
+
+  <span class="s0">function $shouldUseRule($rule) {</span>
+    <span class="s0">return it.schema[$rule.keyword] !== undefined ||</span>
+           <span class="s0">($rule.implements &amp;&amp; $ruleImplementsSomeKeyword($rule));</span>
+  <span class="s0">}</span>
+
+  <span class="s0">function $ruleImplementsSomeKeyword($rule) {</span>
+    <span class="s0">var impl = $rule.implements;</span>
+    <span class="s0">for (var i=0; i &lt; impl.length; i++)</span>
+      <span class="s0">if (it.schema[impl[i]] !== undefined)</span>
+        <span class="s0">return true;</span>
+  <span class="s0">}</span>
+<span class="s0">}}</span>
+</pre>
+</body>
+</html>

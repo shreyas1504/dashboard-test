@@ -1,0 +1,87 @@
+<html>
+<head>
+<title>enum.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+enum.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+<span class="s2">module.exports = </span><span class="s3">function </span><span class="s2">generate_enum(it</span><span class="s1">, </span><span class="s2">$keyword</span><span class="s1">, </span><span class="s2">$ruleType) {</span>
+  <span class="s3">var </span><span class="s2">out = </span><span class="s0">' '</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$lvl = it.level</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$dataLvl = it.dataLevel</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$schema = it.schema[$keyword]</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$schemaPath = it.schemaPath + it.util.getProperty($keyword)</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$errSchemaPath = it.errSchemaPath + </span><span class="s0">'/' </span><span class="s2">+ $keyword</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$breakOnError = !it.opts.allErrors</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$data = </span><span class="s0">'data' </span><span class="s2">+ ($dataLvl || </span><span class="s0">''</span><span class="s2">)</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$valid = </span><span class="s0">'valid' </span><span class="s2">+ $lvl</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$isData = it.opts.$data &amp;&amp; $schema &amp;&amp; $schema.$data</span><span class="s1">,</span>
+    <span class="s2">$schemaValue</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">($isData) {</span>
+    <span class="s2">out += </span><span class="s0">' var schema' </span><span class="s2">+ ($lvl) + </span><span class="s0">' = ' </span><span class="s2">+ (it.util.getData($schema.$data</span><span class="s1">, </span><span class="s2">$dataLvl</span><span class="s1">, </span><span class="s2">it.dataPathArr)) + </span><span class="s0">'; '</span><span class="s1">;</span>
+    <span class="s2">$schemaValue = </span><span class="s0">'schema' </span><span class="s2">+ $lvl</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s2">$schemaValue = $schema</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">$i = </span><span class="s0">'i' </span><span class="s2">+ $lvl</span><span class="s1">,</span>
+    <span class="s2">$vSchema = </span><span class="s0">'schema' </span><span class="s2">+ $lvl</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(!$isData) {</span>
+    <span class="s2">out += </span><span class="s0">' var ' </span><span class="s2">+ ($vSchema) + </span><span class="s0">' = validate.schema' </span><span class="s2">+ ($schemaPath) + </span><span class="s0">';'</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s2">out += </span><span class="s0">'var ' </span><span class="s2">+ ($valid) + </span><span class="s0">';'</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">($isData) {</span>
+    <span class="s2">out += </span><span class="s0">' if (schema' </span><span class="s2">+ ($lvl) + </span><span class="s0">' === undefined) ' </span><span class="s2">+ ($valid) + </span><span class="s0">' = true; else if (!Array.isArray(schema' </span><span class="s2">+ ($lvl) + </span><span class="s0">')) ' </span><span class="s2">+ ($valid) + </span><span class="s0">' = false; else {'</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s2">out += </span><span class="s0">'' </span><span class="s2">+ ($valid) + </span><span class="s0">' = false;for (var ' </span><span class="s2">+ ($i) + </span><span class="s0">'=0; ' </span><span class="s2">+ ($i) + </span><span class="s0">'&lt;' </span><span class="s2">+ ($vSchema) + </span><span class="s0">'.length; ' </span><span class="s2">+ ($i) + </span><span class="s0">'++) if (equal(' </span><span class="s2">+ ($data) + </span><span class="s0">', ' </span><span class="s2">+ ($vSchema) + </span><span class="s0">'[' </span><span class="s2">+ ($i) + </span><span class="s0">'])) { ' </span><span class="s2">+ ($valid) + </span><span class="s0">' = true; break; }'</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">($isData) {</span>
+    <span class="s2">out += </span><span class="s0">'  }  '</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s2">out += </span><span class="s0">' if (!' </span><span class="s2">+ ($valid) + </span><span class="s0">') {   '</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">$$outStack = $$outStack || []</span><span class="s1">;</span>
+  <span class="s2">$$outStack.push(out)</span><span class="s1">;</span>
+  <span class="s2">out = </span><span class="s0">''</span><span class="s1">; </span><span class="s4">/* istanbul ignore else */</span>
+  <span class="s3">if </span><span class="s2">(it.createErrors !== </span><span class="s3">false</span><span class="s2">) {</span>
+    <span class="s2">out += </span><span class="s0">' { keyword: </span><span class="s1">\'</span><span class="s0">' </span><span class="s2">+ (</span><span class="s0">'enum'</span><span class="s2">) + </span><span class="s0">'</span><span class="s1">\' </span><span class="s0">, dataPath: (dataPath || </span><span class="s1">\'\'</span><span class="s0">) + ' </span><span class="s2">+ (it.errorPath) + </span><span class="s0">' , schemaPath: ' </span><span class="s2">+ (it.util.toQuotedString($errSchemaPath)) + </span><span class="s0">' , params: { allowedValues: schema' </span><span class="s2">+ ($lvl) + </span><span class="s0">' } '</span><span class="s1">;</span>
+    <span class="s3">if </span><span class="s2">(it.opts.messages !== </span><span class="s3">false</span><span class="s2">) {</span>
+      <span class="s2">out += </span><span class="s0">' , message: </span><span class="s1">\'</span><span class="s0">should be equal to one of the allowed values</span><span class="s1">\' </span><span class="s0">'</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s3">if </span><span class="s2">(it.opts.verbose) {</span>
+      <span class="s2">out += </span><span class="s0">' , schema: validate.schema' </span><span class="s2">+ ($schemaPath) + </span><span class="s0">' , parentSchema: validate.schema' </span><span class="s2">+ (it.schemaPath) + </span><span class="s0">' , data: ' </span><span class="s2">+ ($data) + </span><span class="s0">' '</span><span class="s1">;</span>
+    <span class="s2">}</span>
+    <span class="s2">out += </span><span class="s0">' } '</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s2">out += </span><span class="s0">' {} '</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">__err = out</span><span class="s1">;</span>
+  <span class="s2">out = $$outStack.pop()</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(!it.compositeRule &amp;&amp; $breakOnError) {</span>
+    <span class="s4">/* istanbul ignore if */</span>
+    <span class="s3">if </span><span class="s2">(it.async) {</span>
+      <span class="s2">out += </span><span class="s0">' throw new ValidationError([' </span><span class="s2">+ (__err) + </span><span class="s0">']); '</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">out += </span><span class="s0">' validate.errors = [' </span><span class="s2">+ (__err) + </span><span class="s0">']; return false; '</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s2">out += </span><span class="s0">' var err = ' </span><span class="s2">+ (__err) + </span><span class="s0">';  if (vErrors === null) vErrors = [err]; else vErrors.push(err); errors++; '</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s2">out += </span><span class="s0">' }'</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">($breakOnError) {</span>
+    <span class="s2">out += </span><span class="s0">' else { '</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">out</span><span class="s1">;</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>

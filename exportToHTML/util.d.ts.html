@@ -1,0 +1,107 @@
+<html>
+<head>
+<title>util.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #8a8a8a; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+util.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">{ Document } from </span><span class="s2">'./index'</span>
+<span class="s0">import </span><span class="s1">{ CST } from </span><span class="s2">'./parse-cst'</span>
+<span class="s0">import </span><span class="s1">{ AST</span><span class="s3">, </span><span class="s1">Pair</span><span class="s3">, </span><span class="s1">Scalar</span><span class="s3">, </span><span class="s1">Schema } from </span><span class="s2">'./types'</span>
+
+<span class="s0">export function </span><span class="s1">findPair(items: any[]</span><span class="s3">, </span><span class="s1">key: Scalar | any): Pair | undefined</span>
+
+<span class="s0">export function </span><span class="s1">parseMap(doc: Document</span><span class="s3">, </span><span class="s1">cst: CST.Map): AST.BlockMap</span>
+<span class="s0">export function </span><span class="s1">parseMap(doc: Document</span><span class="s3">, </span><span class="s1">cst: CST.FlowMap): AST.FlowMap</span>
+<span class="s0">export function </span><span class="s1">parseSeq(doc: Document</span><span class="s3">, </span><span class="s1">cst: CST.Seq): AST.BlockSeq</span>
+<span class="s0">export function </span><span class="s1">parseSeq(doc: Document</span><span class="s3">, </span><span class="s1">cst: CST.FlowSeq): AST.FlowSeq</span>
+
+<span class="s0">export function </span><span class="s1">stringifyNumber(item: Scalar): string</span>
+<span class="s0">export function </span><span class="s1">stringifyString(</span>
+  <span class="s1">item: Scalar</span><span class="s3">,</span>
+  <span class="s1">ctx: Schema.StringifyContext</span><span class="s3">,</span>
+  <span class="s1">onComment?: () =&gt; </span><span class="s0">void</span><span class="s3">,</span>
+  <span class="s1">onChompKeep?: () =&gt; </span><span class="s0">void</span>
+<span class="s1">): string</span>
+
+<span class="s0">export function </span><span class="s1">toJSON(</span>
+  <span class="s1">value: any</span><span class="s3">,</span>
+  <span class="s1">arg?: any</span><span class="s3">,</span>
+  <span class="s1">ctx?: Schema.CreateNodeContext</span>
+<span class="s1">): any</span>
+
+<span class="s0">export enum </span><span class="s1">Type {</span>
+  <span class="s1">ALIAS = </span><span class="s2">'ALIAS'</span><span class="s3">,</span>
+  <span class="s1">BLANK_LINE = </span><span class="s2">'BLANK_LINE'</span><span class="s3">,</span>
+  <span class="s1">BLOCK_FOLDED = </span><span class="s2">'BLOCK_FOLDED'</span><span class="s3">,</span>
+  <span class="s1">BLOCK_LITERAL = </span><span class="s2">'BLOCK_LITERAL'</span><span class="s3">,</span>
+  <span class="s1">COMMENT = </span><span class="s2">'COMMENT'</span><span class="s3">,</span>
+  <span class="s1">DIRECTIVE = </span><span class="s2">'DIRECTIVE'</span><span class="s3">,</span>
+  <span class="s1">DOCUMENT = </span><span class="s2">'DOCUMENT'</span><span class="s3">,</span>
+  <span class="s1">FLOW_MAP = </span><span class="s2">'FLOW_MAP'</span><span class="s3">,</span>
+  <span class="s1">FLOW_SEQ = </span><span class="s2">'FLOW_SEQ'</span><span class="s3">,</span>
+  <span class="s1">MAP = </span><span class="s2">'MAP'</span><span class="s3">,</span>
+  <span class="s1">MAP_KEY = </span><span class="s2">'MAP_KEY'</span><span class="s3">,</span>
+  <span class="s1">MAP_VALUE = </span><span class="s2">'MAP_VALUE'</span><span class="s3">,</span>
+  <span class="s1">PLAIN = </span><span class="s2">'PLAIN'</span><span class="s3">,</span>
+  <span class="s1">QUOTE_DOUBLE = </span><span class="s2">'QUOTE_DOUBLE'</span><span class="s3">,</span>
+  <span class="s1">QUOTE_SINGLE = </span><span class="s2">'QUOTE_SINGLE'</span><span class="s3">,</span>
+  <span class="s1">SEQ = </span><span class="s2">'SEQ'</span><span class="s3">,</span>
+  <span class="s1">SEQ_ITEM = </span><span class="s2">'SEQ_ITEM'</span>
+<span class="s1">}</span>
+
+<span class="s0">interface </span><span class="s1">LinePos {</span>
+  <span class="s1">line: number</span>
+  <span class="s1">col: number</span>
+<span class="s1">}</span>
+
+<span class="s0">export class </span><span class="s1">YAMLError </span><span class="s0">extends </span><span class="s1">Error {</span>
+  <span class="s1">name:</span>
+    <span class="s1">| </span><span class="s2">'YAMLReferenceError'</span>
+    <span class="s1">| </span><span class="s2">'YAMLSemanticError'</span>
+    <span class="s1">| </span><span class="s2">'YAMLSyntaxError'</span>
+    <span class="s1">| </span><span class="s2">'YAMLWarning'</span>
+  <span class="s1">message: string</span>
+  <span class="s1">source?: CST.Node</span>
+
+  <span class="s1">nodeType?: Type</span>
+  <span class="s1">range?: CST.Range</span>
+  <span class="s1">linePos?: { start: LinePos</span><span class="s3">; </span><span class="s1">end: LinePos }</span>
+
+  <span class="s4">/**</span>
+   <span class="s4">* Drops `source` and adds `nodeType`, `range` and `linePos`, as well as</span>
+   <span class="s4">* adding details to `message`. Run automatically for document errors if</span>
+   <span class="s4">* the `prettyErrors` option is set.</span>
+   <span class="s4">*/</span>
+  <span class="s1">makePretty(): </span><span class="s0">void</span>
+<span class="s1">}</span>
+
+<span class="s0">export class </span><span class="s1">YAMLReferenceError </span><span class="s0">extends </span><span class="s1">YAMLError {</span>
+  <span class="s1">name: </span><span class="s2">'YAMLReferenceError'</span>
+<span class="s1">}</span>
+
+<span class="s0">export class </span><span class="s1">YAMLSemanticError </span><span class="s0">extends </span><span class="s1">YAMLError {</span>
+  <span class="s1">name: </span><span class="s2">'YAMLSemanticError'</span>
+<span class="s1">}</span>
+
+<span class="s0">export class </span><span class="s1">YAMLSyntaxError </span><span class="s0">extends </span><span class="s1">YAMLError {</span>
+  <span class="s1">name: </span><span class="s2">'YAMLSyntaxError'</span>
+<span class="s1">}</span>
+
+<span class="s0">export class </span><span class="s1">YAMLWarning </span><span class="s0">extends </span><span class="s1">YAMLError {</span>
+  <span class="s1">name: </span><span class="s2">'YAMLWarning'</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

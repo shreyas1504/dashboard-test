@@ -1,0 +1,67 @@
+<html>
+<head>
+<title>SearchSource.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a; font-style: italic;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+SearchSource.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">/**</span>
+ <span class="s0">* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.</span>
+ <span class="s0">*</span>
+ <span class="s0">* This source code is licensed under the MIT license found in the</span>
+ <span class="s0">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s0">*/</span>
+<span class="s2">import </span><span class="s1">type { Test } from </span><span class="s3">'@jest/test-result'</span><span class="s4">;</span>
+<span class="s2">import </span><span class="s1">type { Config } from </span><span class="s3">'@jest/types'</span><span class="s4">;</span>
+<span class="s2">import </span><span class="s1">type { ChangedFiles } from </span><span class="s3">'jest-changed-files'</span><span class="s4">;</span>
+<span class="s2">import </span><span class="s1">type { Context } from </span><span class="s3">'jest-runtime'</span><span class="s4">;</span>
+<span class="s2">import </span><span class="s1">type { Filter</span><span class="s4">, </span><span class="s1">Stats } from </span><span class="s3">'./types'</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type SearchResult = {</span>
+    <span class="s1">noSCM?: boolean</span><span class="s4">;</span>
+    <span class="s1">stats?: Stats</span><span class="s4">;</span>
+    <span class="s1">collectCoverageFrom?: Set&lt;string&gt;</span><span class="s4">;</span>
+    <span class="s1">tests: Array&lt;Test&gt;</span><span class="s4">;</span>
+    <span class="s1">total?: number</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+<span class="s2">export </span><span class="s1">declare type TestSelectionConfig = {</span>
+    <span class="s1">input?: string</span><span class="s4">;</span>
+    <span class="s1">findRelatedTests?: boolean</span><span class="s4">;</span>
+    <span class="s1">onlyChanged?: boolean</span><span class="s4">;</span>
+    <span class="s1">paths?: Array&lt;Config.Path&gt;</span><span class="s4">;</span>
+    <span class="s1">shouldTreatInputAsPattern?: boolean</span><span class="s4">;</span>
+    <span class="s1">testPathPattern?: string</span><span class="s4">;</span>
+    <span class="s1">watch?: boolean</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+<span class="s2">export default class </span><span class="s1">SearchSource {</span>
+    <span class="s2">private </span><span class="s1">_context</span><span class="s4">;</span>
+    <span class="s2">private </span><span class="s1">_dependencyResolver</span><span class="s4">;</span>
+    <span class="s2">private </span><span class="s1">_testPathCases</span><span class="s4">;</span>
+    <span class="s1">constructor(context: Context)</span><span class="s4">;</span>
+    <span class="s2">private </span><span class="s1">_getOrBuildDependencyResolver</span><span class="s4">;</span>
+    <span class="s2">private </span><span class="s1">_filterTestPathsWithStats</span><span class="s4">;</span>
+    <span class="s2">private </span><span class="s1">_getAllTestPaths</span><span class="s4">;</span>
+    <span class="s1">isTestFilePath(path: Config.Path): boolean</span><span class="s4">;</span>
+    <span class="s1">findMatchingTests(testPathPattern?: string): SearchResult</span><span class="s4">;</span>
+    <span class="s1">findRelatedTests(allPaths: Set&lt;Config.Path&gt;</span><span class="s4">, </span><span class="s1">collectCoverage: boolean): Promise&lt;SearchResult&gt;</span><span class="s4">;</span>
+    <span class="s1">findTestsByPaths(paths: Array&lt;Config.Path&gt;): SearchResult</span><span class="s4">;</span>
+    <span class="s1">findRelatedTestsFromPattern(paths: Array&lt;Config.Path&gt;</span><span class="s4">, </span><span class="s1">collectCoverage: boolean): Promise&lt;SearchResult&gt;</span><span class="s4">;</span>
+    <span class="s1">findTestRelatedToChangedFiles(changedFilesInfo: ChangedFiles</span><span class="s4">, </span><span class="s1">collectCoverage: boolean): Promise&lt;SearchResult&gt;</span><span class="s4">;</span>
+    <span class="s2">private </span><span class="s1">_getTestPaths</span><span class="s4">;</span>
+    <span class="s1">filterPathsWin32(paths: Array&lt;string&gt;): Array&lt;string&gt;</span><span class="s4">;</span>
+    <span class="s1">getTestPaths(globalConfig: Config.GlobalConfig</span><span class="s4">, </span><span class="s1">changedFiles: ChangedFiles | undefined</span><span class="s4">, </span><span class="s1">filter?: Filter): Promise&lt;SearchResult&gt;</span><span class="s4">;</span>
+    <span class="s1">findRelatedSourcesFromTestsInChangedFiles(changedFilesInfo: ChangedFiles): Promise&lt;Array&lt;string&gt;&gt;</span><span class="s4">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

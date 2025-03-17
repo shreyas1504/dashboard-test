@@ -1,0 +1,690 @@
+<html>
+<head>
+<title>CoverageReporter.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+CoverageReporter.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">Object.defineProperty(exports</span><span class="s1">, </span><span class="s0">'__esModule'</span><span class="s1">, </span><span class="s2">{</span>
+  <span class="s2">value: </span><span class="s3">true</span>
+<span class="s2">})</span><span class="s1">;</span>
+<span class="s2">exports.default = </span><span class="s3">void </span><span class="s4">0</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">path() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireWildcard(require(</span><span class="s0">'path'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">path = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_v8Coverage() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'@bcoe/v8-coverage'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_v8Coverage = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_chalk() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'chalk'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_chalk = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_glob() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'glob'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_glob = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">fs() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireWildcard(require(</span><span class="s0">'graceful-fs'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">fs = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_istanbulLibCoverage() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'istanbul-lib-coverage'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_istanbulLibCoverage = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_istanbulLibReport() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'istanbul-lib-report'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_istanbulLibReport = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_istanbulLibSourceMaps() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'istanbul-lib-source-maps'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_istanbulLibSourceMaps = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_istanbulReports() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'istanbul-reports'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_istanbulReports = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_v8ToIstanbul() {</span>
+  <span class="s3">const </span><span class="s2">data = _interopRequireDefault(require(</span><span class="s0">'v8-to-istanbul'</span><span class="s2">))</span><span class="s1">;</span>
+
+  <span class="s2">_v8ToIstanbul = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestUtil() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-util'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestUtil = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_jestWorker() {</span>
+  <span class="s3">const </span><span class="s2">data = require(</span><span class="s0">'jest-worker'</span><span class="s2">)</span><span class="s1">;</span>
+
+  <span class="s2">_jestWorker = </span><span class="s3">function </span><span class="s2">() {</span>
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+  <span class="s2">}</span><span class="s1">;</span>
+
+  <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">var </span><span class="s2">_BaseReporter = _interopRequireDefault(require(</span><span class="s0">'./BaseReporter'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">_getWatermarks = _interopRequireDefault(require(</span><span class="s0">'./getWatermarks'</span><span class="s2">))</span><span class="s1">;</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireDefault(obj) {</span>
+  <span class="s3">return </span><span class="s2">obj &amp;&amp; obj.__esModule ? obj : {</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_getRequireWildcardCache(nodeInterop) {</span>
+  <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">WeakMap !== </span><span class="s0">'function'</span><span class="s2">) </span><span class="s3">return null</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">cacheBabelInterop = </span><span class="s3">new </span><span class="s2">WeakMap()</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">cacheNodeInterop = </span><span class="s3">new </span><span class="s2">WeakMap()</span><span class="s1">;</span>
+  <span class="s3">return </span><span class="s2">(_getRequireWildcardCache = </span><span class="s3">function </span><span class="s2">(nodeInterop) {</span>
+    <span class="s3">return </span><span class="s2">nodeInterop ? cacheNodeInterop : cacheBabelInterop</span><span class="s1">;</span>
+  <span class="s2">})(nodeInterop)</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_interopRequireWildcard(obj</span><span class="s1">, </span><span class="s2">nodeInterop) {</span>
+  <span class="s3">if </span><span class="s2">(!nodeInterop &amp;&amp; obj &amp;&amp; obj.__esModule) {</span>
+    <span class="s3">return </span><span class="s2">obj</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">if </span><span class="s2">(obj === </span><span class="s3">null </span><span class="s2">|| (</span><span class="s3">typeof </span><span class="s2">obj !== </span><span class="s0">'object' </span><span class="s2">&amp;&amp; </span><span class="s3">typeof </span><span class="s2">obj !== </span><span class="s0">'function'</span><span class="s2">)) {</span>
+    <span class="s3">return </span><span class="s2">{</span><span class="s3">default</span><span class="s2">: obj}</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">cache = _getRequireWildcardCache(nodeInterop)</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(cache &amp;&amp; cache.has(obj)) {</span>
+    <span class="s3">return </span><span class="s2">cache.get(obj)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">var </span><span class="s2">newObj = {}</span><span class="s1">;</span>
+  <span class="s3">var </span><span class="s2">hasPropertyDescriptor =</span>
+    <span class="s2">Object.defineProperty &amp;&amp; Object.getOwnPropertyDescriptor</span><span class="s1">;</span>
+  <span class="s3">for </span><span class="s2">(</span><span class="s3">var </span><span class="s2">key </span><span class="s3">in </span><span class="s2">obj) {</span>
+    <span class="s3">if </span><span class="s2">(key !== </span><span class="s0">'default' </span><span class="s2">&amp;&amp; Object.prototype.hasOwnProperty.call(obj</span><span class="s1">, </span><span class="s2">key)) {</span>
+      <span class="s3">var </span><span class="s2">desc = hasPropertyDescriptor</span>
+        <span class="s2">? Object.getOwnPropertyDescriptor(obj</span><span class="s1">, </span><span class="s2">key)</span>
+        <span class="s2">: </span><span class="s3">null</span><span class="s1">;</span>
+      <span class="s3">if </span><span class="s2">(desc &amp;&amp; (desc.get || desc.set)) {</span>
+        <span class="s2">Object.defineProperty(newObj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">desc)</span><span class="s1">;</span>
+      <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+        <span class="s2">newObj[key] = obj[key]</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+  <span class="s2">newObj.default = obj</span><span class="s1">;</span>
+  <span class="s3">if </span><span class="s2">(cache) {</span>
+    <span class="s2">cache.set(obj</span><span class="s1">, </span><span class="s2">newObj)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">newObj</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">function </span><span class="s2">_defineProperty(obj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">value) {</span>
+  <span class="s3">if </span><span class="s2">(key </span><span class="s3">in </span><span class="s2">obj) {</span>
+    <span class="s2">Object.defineProperty(obj</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s2">{</span>
+      <span class="s2">value: value</span><span class="s1">,</span>
+      <span class="s2">enumerable: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">configurable: </span><span class="s3">true</span><span class="s1">,</span>
+      <span class="s2">writable: </span><span class="s3">true</span>
+    <span class="s2">})</span><span class="s1">;</span>
+  <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+    <span class="s2">obj[key] = value</span><span class="s1">;</span>
+  <span class="s2">}</span>
+  <span class="s3">return </span><span class="s2">obj</span><span class="s1">;</span>
+<span class="s2">}</span>
+
+<span class="s3">const </span><span class="s2">FAIL_COLOR = _chalk().default.bold.red</span><span class="s1">;</span>
+
+<span class="s3">const </span><span class="s2">RUNNING_TEST_COLOR = _chalk().default.bold.dim</span><span class="s1">;</span>
+
+<span class="s3">class </span><span class="s2">CoverageReporter </span><span class="s3">extends </span><span class="s2">_BaseReporter.default {</span>
+  <span class="s2">constructor(globalConfig</span><span class="s1">, </span><span class="s2">options) {</span>
+    <span class="s3">super</span><span class="s2">()</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_coverageMap'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_globalConfig'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_sourceMapStore'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_options'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s2">_defineProperty(</span><span class="s3">this</span><span class="s1">, </span><span class="s0">'_v8CoverageResults'</span><span class="s1">, </span><span class="s3">void </span><span class="s4">0</span><span class="s2">)</span><span class="s1">;</span>
+
+    <span class="s3">this</span><span class="s2">._coverageMap = _istanbulLibCoverage().default.createCoverageMap({})</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._globalConfig = globalConfig</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._sourceMapStore =</span>
+      <span class="s2">_istanbulLibSourceMaps().default.createSourceMapStore()</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._v8CoverageResults = []</span><span class="s1">;</span>
+    <span class="s3">this</span><span class="s2">._options = options || {}</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">onTestResult(_test</span><span class="s1">, </span><span class="s2">testResult) {</span>
+    <span class="s3">if </span><span class="s2">(testResult.v8Coverage) {</span>
+      <span class="s3">this</span><span class="s2">._v8CoverageResults.push(testResult.v8Coverage)</span><span class="s1">;</span>
+
+      <span class="s3">return</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(testResult.coverage) {</span>
+      <span class="s3">this</span><span class="s2">._coverageMap.merge(testResult.coverage)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">async onRunComplete(contexts</span><span class="s1">, </span><span class="s2">aggregatedResults) {</span>
+    <span class="s3">await this</span><span class="s2">._addUntestedFiles(contexts)</span><span class="s1">;</span>
+    <span class="s3">const </span><span class="s2">{map</span><span class="s1">, </span><span class="s2">reportContext} = </span><span class="s3">await this</span><span class="s2">._getCoverageResult()</span><span class="s1">;</span>
+
+    <span class="s3">try </span><span class="s2">{</span>
+      <span class="s3">const </span><span class="s2">coverageReporters = </span><span class="s3">this</span><span class="s2">._globalConfig.coverageReporters || []</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(!</span><span class="s3">this</span><span class="s2">._globalConfig.useStderr &amp;&amp; coverageReporters.length &lt; </span><span class="s4">1</span><span class="s2">) {</span>
+        <span class="s2">coverageReporters.push(</span><span class="s0">'text-summary'</span><span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s2">coverageReporters.forEach(reporter =&gt; {</span>
+        <span class="s3">let </span><span class="s2">additionalOptions = {}</span><span class="s1">;</span>
+
+        <span class="s3">if </span><span class="s2">(Array.isArray(reporter)) {</span>
+          <span class="s2">[reporter</span><span class="s1">, </span><span class="s2">additionalOptions] = reporter</span><span class="s1">;</span>
+        <span class="s2">}</span>
+
+        <span class="s2">_istanbulReports()</span>
+          <span class="s2">.default.create(reporter</span><span class="s1">, </span><span class="s2">{</span>
+            <span class="s2">maxCols: process.stdout.columns || Infinity</span><span class="s1">,</span>
+            <span class="s2">...additionalOptions</span>
+          <span class="s2">})</span>
+          <span class="s2">.execute(reportContext)</span><span class="s1">;</span>
+      <span class="s2">})</span><span class="s1">;</span>
+      <span class="s2">aggregatedResults.coverageMap = map</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">catch </span><span class="s2">(e) {</span>
+      <span class="s2">console.error(</span>
+        <span class="s2">_chalk().default.red(</span><span class="s0">`</span>
+        <span class="s0">Failed to write coverage reports: 
+        ERROR: </span><span class="s2">${e.toString()}</span>
+        <span class="s0">STACK: </span><span class="s2">${e.stack}</span>
+      <span class="s0">`</span><span class="s2">)</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">this</span><span class="s2">._checkThreshold(map)</span><span class="s1">;</span>
+  <span class="s2">}</span>
+
+  <span class="s2">async _addUntestedFiles(contexts) {</span>
+    <span class="s3">const </span><span class="s2">files = []</span><span class="s1">;</span>
+    <span class="s2">contexts.forEach(context =&gt; {</span>
+      <span class="s3">const </span><span class="s2">config = context.config</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(</span>
+        <span class="s3">this</span><span class="s2">._globalConfig.collectCoverageFrom &amp;&amp;</span>
+        <span class="s3">this</span><span class="s2">._globalConfig.collectCoverageFrom.length</span>
+      <span class="s2">) {</span>
+        <span class="s2">context.hasteFS</span>
+          <span class="s2">.matchFilesWithGlob(</span>
+            <span class="s3">this</span><span class="s2">._globalConfig.collectCoverageFrom</span><span class="s1">,</span>
+            <span class="s2">config.rootDir</span>
+          <span class="s2">)</span>
+          <span class="s2">.forEach(filePath =&gt;</span>
+            <span class="s2">files.push({</span>
+              <span class="s2">config</span><span class="s1">,</span>
+              <span class="s2">path: filePath</span>
+            <span class="s2">})</span>
+          <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(!files.length) {</span>
+      <span class="s3">return</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(_jestUtil().isInteractive) {</span>
+      <span class="s2">process.stderr.write(</span>
+        <span class="s2">RUNNING_TEST_COLOR(</span><span class="s0">'Running coverage on untested files...'</span><span class="s2">)</span>
+      <span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">let </span><span class="s2">worker</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._globalConfig.maxWorkers &lt;= </span><span class="s4">1</span><span class="s2">) {</span>
+      <span class="s2">worker = require(</span><span class="s0">'./CoverageWorker'</span><span class="s2">)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+      <span class="s2">worker = </span><span class="s3">new </span><span class="s2">(_jestWorker().Worker)(require.resolve(</span><span class="s0">'./CoverageWorker'</span><span class="s2">)</span><span class="s1">, </span><span class="s2">{</span>
+        <span class="s2">exposedMethods: [</span><span class="s0">'worker'</span><span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">maxRetries: </span><span class="s4">2</span><span class="s1">,</span>
+        <span class="s2">numWorkers: </span><span class="s3">this</span><span class="s2">._globalConfig.maxWorkers</span>
+      <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">const </span><span class="s2">instrumentation = files.map(async fileObj =&gt; {</span>
+      <span class="s3">const </span><span class="s2">filename = fileObj.path</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">config = fileObj.config</span><span class="s1">;</span>
+
+      <span class="s3">const </span><span class="s2">hasCoverageData = </span><span class="s3">this</span><span class="s2">._v8CoverageResults.some(v8Res =&gt;</span>
+        <span class="s2">v8Res.some(innerRes =&gt; innerRes.result.url === filename)</span>
+      <span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(</span>
+        <span class="s2">!hasCoverageData &amp;&amp;</span>
+        <span class="s2">!</span><span class="s3">this</span><span class="s2">._coverageMap.data[filename] &amp;&amp;</span>
+        <span class="s0">'worker' </span><span class="s3">in </span><span class="s2">worker</span>
+      <span class="s2">) {</span>
+        <span class="s3">try </span><span class="s2">{</span>
+          <span class="s3">const </span><span class="s2">result = </span><span class="s3">await </span><span class="s2">worker.worker({</span>
+            <span class="s2">config</span><span class="s1">,</span>
+            <span class="s2">globalConfig: </span><span class="s3">this</span><span class="s2">._globalConfig</span><span class="s1">,</span>
+            <span class="s2">options: {</span>
+              <span class="s2">...</span><span class="s3">this</span><span class="s2">._options</span><span class="s1">,</span>
+              <span class="s2">changedFiles:</span>
+                <span class="s3">this</span><span class="s2">._options.changedFiles &amp;&amp;</span>
+                <span class="s2">Array.from(</span><span class="s3">this</span><span class="s2">._options.changedFiles)</span><span class="s1">,</span>
+              <span class="s2">sourcesRelatedToTestsInChangedFiles:</span>
+                <span class="s3">this</span><span class="s2">._options.sourcesRelatedToTestsInChangedFiles &amp;&amp;</span>
+                <span class="s2">Array.from(</span><span class="s3">this</span><span class="s2">._options.sourcesRelatedToTestsInChangedFiles)</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">path: filename</span>
+          <span class="s2">})</span><span class="s1">;</span>
+
+          <span class="s3">if </span><span class="s2">(result) {</span>
+            <span class="s3">if </span><span class="s2">(result.kind === </span><span class="s0">'V8Coverage'</span><span class="s2">) {</span>
+              <span class="s3">this</span><span class="s2">._v8CoverageResults.push([</span>
+                <span class="s2">{</span>
+                  <span class="s2">codeTransformResult: undefined</span><span class="s1">,</span>
+                  <span class="s2">result: result.result</span>
+                <span class="s2">}</span>
+              <span class="s2">])</span><span class="s1">;</span>
+            <span class="s2">} </span><span class="s3">else </span><span class="s2">{</span>
+              <span class="s3">this</span><span class="s2">._coverageMap.addFileCoverage(result.coverage)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+          <span class="s2">}</span>
+        <span class="s2">} </span><span class="s3">catch </span><span class="s2">(error) {</span>
+          <span class="s2">console.error(</span>
+            <span class="s2">_chalk().default.red(</span>
+              <span class="s2">[</span>
+                <span class="s0">`Failed to collect coverage from </span><span class="s2">${filename}</span><span class="s0">`</span><span class="s1">,</span>
+                <span class="s0">`ERROR: </span><span class="s2">${error.message}</span><span class="s0">`</span><span class="s1">,</span>
+                <span class="s0">`STACK: </span><span class="s2">${error.stack}</span><span class="s0">`</span>
+              <span class="s2">].join(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">)</span>
+            <span class="s2">)</span>
+          <span class="s2">)</span><span class="s1">;</span>
+        <span class="s2">}</span>
+      <span class="s2">}</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s3">try </span><span class="s2">{</span>
+      <span class="s3">await </span><span class="s2">Promise.all(instrumentation)</span><span class="s1">;</span>
+    <span class="s2">} </span><span class="s3">catch </span><span class="s2">{</span>
+      <span class="s5">// Do nothing; errors were reported earlier to the console.</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(_jestUtil().isInteractive) {</span>
+      <span class="s2">(</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_jestUtil().clearLine)(process.stderr)</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">if </span><span class="s2">(worker &amp;&amp; </span><span class="s0">'end' </span><span class="s3">in </span><span class="s2">worker &amp;&amp; </span><span class="s3">typeof </span><span class="s2">worker.end === </span><span class="s0">'function'</span><span class="s2">) {</span>
+      <span class="s3">await </span><span class="s2">worker.end()</span><span class="s1">;</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">_checkThreshold(map) {</span>
+    <span class="s3">const </span><span class="s2">{coverageThreshold} = </span><span class="s3">this</span><span class="s2">._globalConfig</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(coverageThreshold) {</span>
+      <span class="s3">function </span><span class="s2">check(name</span><span class="s1">, </span><span class="s2">thresholds</span><span class="s1">, </span><span class="s2">actuals) {</span>
+        <span class="s3">return </span><span class="s2">[</span><span class="s0">'statements'</span><span class="s1">, </span><span class="s0">'branches'</span><span class="s1">, </span><span class="s0">'lines'</span><span class="s1">, </span><span class="s0">'functions'</span><span class="s2">].reduce(</span>
+          <span class="s2">(errors</span><span class="s1">, </span><span class="s2">key) =&gt; {</span>
+            <span class="s3">const </span><span class="s2">actual = actuals[key].pct</span><span class="s1">;</span>
+            <span class="s3">const </span><span class="s2">actualUncovered = actuals[key].total - actuals[key].covered</span><span class="s1">;</span>
+            <span class="s3">const </span><span class="s2">threshold = thresholds[key]</span><span class="s1">;</span>
+
+            <span class="s3">if </span><span class="s2">(threshold !== undefined) {</span>
+              <span class="s3">if </span><span class="s2">(threshold &lt; </span><span class="s4">0</span><span class="s2">) {</span>
+                <span class="s3">if </span><span class="s2">(threshold * -</span><span class="s4">1 </span><span class="s2">&lt; actualUncovered) {</span>
+                  <span class="s2">errors.push(</span>
+                    <span class="s0">`Jest: Uncovered count for </span><span class="s2">${key} </span><span class="s0">(</span><span class="s2">${actualUncovered}</span><span class="s0">) ` </span><span class="s2">+</span>
+                      <span class="s0">`exceeds </span><span class="s2">${name} </span><span class="s0">threshold (</span><span class="s2">${-</span><span class="s4">1 </span><span class="s2">* threshold}</span><span class="s0">)`</span>
+                  <span class="s2">)</span><span class="s1">;</span>
+                <span class="s2">}</span>
+              <span class="s2">} </span><span class="s3">else if </span><span class="s2">(actual &lt; threshold) {</span>
+                <span class="s2">errors.push(</span>
+                  <span class="s0">`Jest: &quot;</span><span class="s2">${name}</span><span class="s0">&quot; coverage threshold for </span><span class="s2">${key} </span><span class="s0">(</span><span class="s2">${threshold}</span><span class="s0">%) not met: </span><span class="s2">${actual}</span><span class="s0">%`</span>
+                <span class="s2">)</span><span class="s1">;</span>
+              <span class="s2">}</span>
+            <span class="s2">}</span>
+
+            <span class="s3">return </span><span class="s2">errors</span><span class="s1">;</span>
+          <span class="s2">}</span><span class="s1">,</span>
+          <span class="s2">[]</span>
+        <span class="s2">)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">const </span><span class="s2">THRESHOLD_GROUP_TYPES = {</span>
+        <span class="s2">GLOB: </span><span class="s0">'glob'</span><span class="s1">,</span>
+        <span class="s2">GLOBAL: </span><span class="s0">'global'</span><span class="s1">,</span>
+        <span class="s2">PATH: </span><span class="s0">'path'</span>
+      <span class="s2">}</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">coveredFiles = map.files()</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">thresholdGroups = Object.keys(coverageThreshold)</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">groupTypeByThresholdGroup = {}</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">filesByGlob = {}</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">coveredFilesSortedIntoThresholdGroup = coveredFiles.reduce(</span>
+        <span class="s2">(files</span><span class="s1">, </span><span class="s2">file) =&gt; {</span>
+          <span class="s3">const </span><span class="s2">pathOrGlobMatches = thresholdGroups.reduce(</span>
+            <span class="s2">(agg</span><span class="s1">, </span><span class="s2">thresholdGroup) =&gt; {</span>
+              <span class="s3">const </span><span class="s2">absoluteThresholdGroup = path().resolve(thresholdGroup)</span><span class="s1">; </span><span class="s5">// The threshold group might be a path:</span>
+
+              <span class="s3">if </span><span class="s2">(file.indexOf(absoluteThresholdGroup) === </span><span class="s4">0</span><span class="s2">) {</span>
+                <span class="s2">groupTypeByThresholdGroup[thresholdGroup] =</span>
+                  <span class="s2">THRESHOLD_GROUP_TYPES.PATH</span><span class="s1">;</span>
+                <span class="s3">return </span><span class="s2">agg.concat([[file</span><span class="s1">, </span><span class="s2">thresholdGroup]])</span><span class="s1">;</span>
+              <span class="s2">} </span><span class="s5">// If the threshold group is not a path it might be a glob:</span>
+              <span class="s5">// Note: glob.sync is slow. By memoizing the files matching each glob</span>
+              <span class="s5">// (rather than recalculating it for each covered file) we save a tonne</span>
+              <span class="s5">// of execution time.</span>
+
+              <span class="s3">if </span><span class="s2">(filesByGlob[absoluteThresholdGroup] === undefined) {</span>
+                <span class="s2">filesByGlob[absoluteThresholdGroup] = _glob()</span>
+                  <span class="s2">.default.sync(absoluteThresholdGroup)</span>
+                  <span class="s2">.map(filePath =&gt; path().resolve(filePath))</span><span class="s1">;</span>
+              <span class="s2">}</span>
+
+              <span class="s3">if </span><span class="s2">(filesByGlob[absoluteThresholdGroup].indexOf(file) &gt; -</span><span class="s4">1</span><span class="s2">) {</span>
+                <span class="s2">groupTypeByThresholdGroup[thresholdGroup] =</span>
+                  <span class="s2">THRESHOLD_GROUP_TYPES.GLOB</span><span class="s1">;</span>
+                <span class="s3">return </span><span class="s2">agg.concat([[file</span><span class="s1">, </span><span class="s2">thresholdGroup]])</span><span class="s1">;</span>
+              <span class="s2">}</span>
+
+              <span class="s3">return </span><span class="s2">agg</span><span class="s1">;</span>
+            <span class="s2">}</span><span class="s1">,</span>
+            <span class="s2">[]</span>
+          <span class="s2">)</span><span class="s1">;</span>
+
+          <span class="s3">if </span><span class="s2">(pathOrGlobMatches.length &gt; </span><span class="s4">0</span><span class="s2">) {</span>
+            <span class="s3">return </span><span class="s2">files.concat(pathOrGlobMatches)</span><span class="s1">;</span>
+          <span class="s2">} </span><span class="s5">// Neither a glob or a path? Toss it in global if there's a global threshold:</span>
+
+          <span class="s3">if </span><span class="s2">(thresholdGroups.indexOf(THRESHOLD_GROUP_TYPES.GLOBAL) &gt; -</span><span class="s4">1</span><span class="s2">) {</span>
+            <span class="s2">groupTypeByThresholdGroup[THRESHOLD_GROUP_TYPES.GLOBAL] =</span>
+              <span class="s2">THRESHOLD_GROUP_TYPES.GLOBAL</span><span class="s1">;</span>
+            <span class="s3">return </span><span class="s2">files.concat([[file</span><span class="s1">, </span><span class="s2">THRESHOLD_GROUP_TYPES.GLOBAL]])</span><span class="s1">;</span>
+          <span class="s2">} </span><span class="s5">// A covered file that doesn't have a threshold:</span>
+
+          <span class="s3">return </span><span class="s2">files.concat([[file</span><span class="s1">, </span><span class="s2">undefined]])</span><span class="s1">;</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">[]</span>
+      <span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">const </span><span class="s2">getFilesInThresholdGroup = thresholdGroup =&gt;</span>
+        <span class="s2">coveredFilesSortedIntoThresholdGroup</span>
+          <span class="s2">.filter(fileAndGroup =&gt; fileAndGroup[</span><span class="s4">1</span><span class="s2">] === thresholdGroup)</span>
+          <span class="s2">.map(fileAndGroup =&gt; fileAndGroup[</span><span class="s4">0</span><span class="s2">])</span><span class="s1">;</span>
+
+      <span class="s3">function </span><span class="s2">combineCoverage(filePaths) {</span>
+        <span class="s3">return </span><span class="s2">filePaths</span>
+          <span class="s2">.map(filePath =&gt; map.fileCoverageFor(filePath))</span>
+          <span class="s2">.reduce((combinedCoverage</span><span class="s1">, </span><span class="s2">nextFileCoverage) =&gt; {</span>
+            <span class="s3">if </span><span class="s2">(combinedCoverage === undefined || combinedCoverage === </span><span class="s3">null</span><span class="s2">) {</span>
+              <span class="s3">return </span><span class="s2">nextFileCoverage.toSummary()</span><span class="s1">;</span>
+            <span class="s2">}</span>
+
+            <span class="s3">return </span><span class="s2">combinedCoverage.merge(nextFileCoverage.toSummary())</span><span class="s1">;</span>
+          <span class="s2">}</span><span class="s1">, </span><span class="s2">undefined)</span><span class="s1">;</span>
+      <span class="s2">}</span>
+
+      <span class="s3">let </span><span class="s2">errors = []</span><span class="s1">;</span>
+      <span class="s2">thresholdGroups.forEach(thresholdGroup =&gt; {</span>
+        <span class="s3">switch </span><span class="s2">(groupTypeByThresholdGroup[thresholdGroup]) {</span>
+          <span class="s3">case </span><span class="s2">THRESHOLD_GROUP_TYPES.GLOBAL: {</span>
+            <span class="s3">const </span><span class="s2">coverage = combineCoverage(</span>
+              <span class="s2">getFilesInThresholdGroup(THRESHOLD_GROUP_TYPES.GLOBAL)</span>
+            <span class="s2">)</span><span class="s1">;</span>
+
+            <span class="s3">if </span><span class="s2">(coverage) {</span>
+              <span class="s2">errors = errors.concat(</span>
+                <span class="s2">check(</span>
+                  <span class="s2">thresholdGroup</span><span class="s1">,</span>
+                  <span class="s2">coverageThreshold[thresholdGroup]</span><span class="s1">,</span>
+                  <span class="s2">coverage</span>
+                <span class="s2">)</span>
+              <span class="s2">)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+
+            <span class="s3">break</span><span class="s1">;</span>
+          <span class="s2">}</span>
+
+          <span class="s3">case </span><span class="s2">THRESHOLD_GROUP_TYPES.PATH: {</span>
+            <span class="s3">const </span><span class="s2">coverage = combineCoverage(</span>
+              <span class="s2">getFilesInThresholdGroup(thresholdGroup)</span>
+            <span class="s2">)</span><span class="s1">;</span>
+
+            <span class="s3">if </span><span class="s2">(coverage) {</span>
+              <span class="s2">errors = errors.concat(</span>
+                <span class="s2">check(</span>
+                  <span class="s2">thresholdGroup</span><span class="s1">,</span>
+                  <span class="s2">coverageThreshold[thresholdGroup]</span><span class="s1">,</span>
+                  <span class="s2">coverage</span>
+                <span class="s2">)</span>
+              <span class="s2">)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+
+            <span class="s3">break</span><span class="s1">;</span>
+          <span class="s2">}</span>
+
+          <span class="s3">case </span><span class="s2">THRESHOLD_GROUP_TYPES.GLOB:</span>
+            <span class="s2">getFilesInThresholdGroup(thresholdGroup).forEach(</span>
+              <span class="s2">fileMatchingGlob =&gt; {</span>
+                <span class="s2">errors = errors.concat(</span>
+                  <span class="s2">check(</span>
+                    <span class="s2">fileMatchingGlob</span><span class="s1">,</span>
+                    <span class="s2">coverageThreshold[thresholdGroup]</span><span class="s1">,</span>
+                    <span class="s2">map.fileCoverageFor(fileMatchingGlob).toSummary()</span>
+                  <span class="s2">)</span>
+                <span class="s2">)</span><span class="s1">;</span>
+              <span class="s2">}</span>
+            <span class="s2">)</span><span class="s1">;</span>
+            <span class="s3">break</span><span class="s1">;</span>
+
+          <span class="s3">default</span><span class="s2">:</span>
+            <span class="s5">// If the file specified by path is not found, error is returned.</span>
+            <span class="s3">if </span><span class="s2">(thresholdGroup !== THRESHOLD_GROUP_TYPES.GLOBAL) {</span>
+              <span class="s2">errors = errors.concat(</span>
+                <span class="s0">`Jest: Coverage data for </span><span class="s2">${thresholdGroup} </span><span class="s0">was not found.`</span>
+              <span class="s2">)</span><span class="s1">;</span>
+            <span class="s2">}</span>
+
+          <span class="s5">// Sometimes all files in the coverage data are matched by</span>
+          <span class="s5">// PATH and GLOB threshold groups in which case, don't error when</span>
+          <span class="s5">// the global threshold group doesn't match any files.</span>
+        <span class="s2">}</span>
+      <span class="s2">})</span><span class="s1">;</span>
+      <span class="s2">errors = errors.filter(</span>
+        <span class="s2">err =&gt; err !== undefined &amp;&amp; err !== </span><span class="s3">null </span><span class="s2">&amp;&amp; err.length &gt; </span><span class="s4">0</span>
+      <span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">if </span><span class="s2">(errors.length &gt; </span><span class="s4">0</span><span class="s2">) {</span>
+        <span class="s3">this</span><span class="s2">.log(</span><span class="s0">`</span><span class="s2">${FAIL_COLOR(errors.join(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">))}</span><span class="s0">`</span><span class="s2">)</span><span class="s1">;</span>
+
+        <span class="s3">this</span><span class="s2">._setError(</span><span class="s3">new </span><span class="s2">Error(errors.join(</span><span class="s0">'</span><span class="s1">\n</span><span class="s0">'</span><span class="s2">)))</span><span class="s1">;</span>
+      <span class="s2">}</span>
+    <span class="s2">}</span>
+  <span class="s2">}</span>
+
+  <span class="s2">async _getCoverageResult() {</span>
+    <span class="s3">if </span><span class="s2">(</span><span class="s3">this</span><span class="s2">._globalConfig.coverageProvider === </span><span class="s0">'v8'</span><span class="s2">) {</span>
+      <span class="s3">const </span><span class="s2">mergedCoverages = (</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_v8Coverage().mergeProcessCovs)(</span>
+        <span class="s3">this</span><span class="s2">._v8CoverageResults.map(cov =&gt; ({</span>
+          <span class="s2">result: cov.map(r =&gt; r.result)</span>
+        <span class="s2">}))</span>
+      <span class="s2">)</span><span class="s1">;</span>
+      <span class="s3">const </span><span class="s2">fileTransforms = </span><span class="s3">new </span><span class="s2">Map()</span><span class="s1">;</span>
+
+      <span class="s3">this</span><span class="s2">._v8CoverageResults.forEach(res =&gt;</span>
+        <span class="s2">res.forEach(r =&gt; {</span>
+          <span class="s3">if </span><span class="s2">(r.codeTransformResult &amp;&amp; !fileTransforms.has(r.result.url)) {</span>
+            <span class="s2">fileTransforms.set(r.result.url</span><span class="s1">, </span><span class="s2">r.codeTransformResult)</span><span class="s1">;</span>
+          <span class="s2">}</span>
+        <span class="s2">})</span>
+      <span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">const </span><span class="s2">transformedCoverage = </span><span class="s3">await </span><span class="s2">Promise.all(</span>
+        <span class="s2">mergedCoverages.result.map(async res =&gt; {</span>
+          <span class="s3">var </span><span class="s2">_fileTransform$wrappe</span><span class="s1">;</span>
+
+          <span class="s3">const </span><span class="s2">fileTransform = fileTransforms.get(res.url)</span><span class="s1">;</span>
+          <span class="s3">let </span><span class="s2">sourcemapContent = undefined</span><span class="s1">;</span>
+
+          <span class="s3">if </span><span class="s2">(</span>
+            <span class="s2">fileTransform !== </span><span class="s3">null </span><span class="s2">&amp;&amp;</span>
+            <span class="s2">fileTransform !== </span><span class="s3">void </span><span class="s4">0 </span><span class="s2">&amp;&amp;</span>
+            <span class="s2">fileTransform.sourceMapPath &amp;&amp;</span>
+            <span class="s2">fs().existsSync(fileTransform.sourceMapPath)</span>
+          <span class="s2">) {</span>
+            <span class="s2">sourcemapContent = JSON.parse(</span>
+              <span class="s2">fs().readFileSync(fileTransform.sourceMapPath</span><span class="s1">, </span><span class="s0">'utf8'</span><span class="s2">)</span>
+            <span class="s2">)</span><span class="s1">;</span>
+          <span class="s2">}</span>
+
+          <span class="s3">const </span><span class="s2">converter = (</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_v8ToIstanbul().default)(</span>
+            <span class="s2">res.url</span><span class="s1">,</span>
+            <span class="s2">(_fileTransform$wrappe =</span>
+              <span class="s2">fileTransform === </span><span class="s3">null </span><span class="s2">|| fileTransform === </span><span class="s3">void </span><span class="s4">0</span>
+                <span class="s2">? </span><span class="s3">void </span><span class="s4">0</span>
+                <span class="s2">: fileTransform.wrapperLength) !== </span><span class="s3">null </span><span class="s2">&amp;&amp;</span>
+              <span class="s2">_fileTransform$wrappe !== </span><span class="s3">void </span><span class="s4">0</span>
+              <span class="s2">? _fileTransform$wrappe</span>
+              <span class="s2">: </span><span class="s4">0</span><span class="s1">,</span>
+            <span class="s2">fileTransform &amp;&amp; sourcemapContent</span>
+              <span class="s2">? {</span>
+                  <span class="s2">originalSource: fileTransform.originalCode</span><span class="s1">,</span>
+                  <span class="s2">source: fileTransform.code</span><span class="s1">,</span>
+                  <span class="s2">sourceMap: {</span>
+                    <span class="s2">sourcemap: {</span>
+                      <span class="s2">file: res.url</span><span class="s1">,</span>
+                      <span class="s2">...sourcemapContent</span>
+                    <span class="s2">}</span>
+                  <span class="s2">}</span>
+                <span class="s2">}</span>
+              <span class="s2">: {</span>
+                  <span class="s2">source: fs().readFileSync(res.url</span><span class="s1">, </span><span class="s0">'utf8'</span><span class="s2">)</span>
+                <span class="s2">}</span>
+          <span class="s2">)</span><span class="s1">;</span>
+          <span class="s3">await </span><span class="s2">converter.load()</span><span class="s1">;</span>
+          <span class="s2">converter.applyCoverage(res.functions)</span><span class="s1">;</span>
+          <span class="s3">const </span><span class="s2">istanbulData = converter.toIstanbul()</span><span class="s1">;</span>
+          <span class="s2">converter.destroy()</span><span class="s1">;</span>
+          <span class="s3">return </span><span class="s2">istanbulData</span><span class="s1">;</span>
+        <span class="s2">})</span>
+      <span class="s2">)</span><span class="s1">;</span>
+
+      <span class="s3">const </span><span class="s2">map = _istanbulLibCoverage().default.createCoverageMap({})</span><span class="s1">;</span>
+
+      <span class="s2">transformedCoverage.forEach(res =&gt; map.merge(res))</span><span class="s1">;</span>
+
+      <span class="s3">const </span><span class="s2">reportContext = _istanbulLibReport().default.createContext({</span>
+        <span class="s2">coverageMap: map</span><span class="s1">,</span>
+        <span class="s2">dir: </span><span class="s3">this</span><span class="s2">._globalConfig.coverageDirectory</span><span class="s1">,</span>
+        <span class="s2">watermarks: (</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_getWatermarks.default)(</span><span class="s3">this</span><span class="s2">._globalConfig)</span>
+      <span class="s2">})</span><span class="s1">;</span>
+
+      <span class="s3">return </span><span class="s2">{</span>
+        <span class="s2">map</span><span class="s1">,</span>
+        <span class="s2">reportContext</span>
+      <span class="s2">}</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">const </span><span class="s2">map = </span><span class="s3">await this</span><span class="s2">._sourceMapStore.transformCoverage(</span><span class="s3">this</span><span class="s2">._coverageMap)</span><span class="s1">;</span>
+
+    <span class="s3">const </span><span class="s2">reportContext = _istanbulLibReport().default.createContext({</span>
+      <span class="s2">coverageMap: map</span><span class="s1">,</span>
+      <span class="s2">dir: </span><span class="s3">this</span><span class="s2">._globalConfig.coverageDirectory</span><span class="s1">,</span>
+      <span class="s2">sourceFinder: </span><span class="s3">this</span><span class="s2">._sourceMapStore.sourceFinder</span><span class="s1">,</span>
+      <span class="s2">watermarks: (</span><span class="s4">0</span><span class="s1">, </span><span class="s2">_getWatermarks.default)(</span><span class="s3">this</span><span class="s2">._globalConfig)</span>
+    <span class="s2">})</span><span class="s1">;</span>
+
+    <span class="s3">return </span><span class="s2">{</span>
+      <span class="s2">map</span><span class="s1">,</span>
+      <span class="s2">reportContext</span>
+    <span class="s2">}</span><span class="s1">;</span>
+  <span class="s2">}</span>
+<span class="s2">}</span>
+
+<span class="s2">exports.default = CoverageReporter</span><span class="s1">;</span>
+
+<span class="s2">_defineProperty(CoverageReporter</span><span class="s1">, </span><span class="s0">'filename'</span><span class="s1">, </span><span class="s2">__filename)</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

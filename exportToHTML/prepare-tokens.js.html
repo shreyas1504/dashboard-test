@@ -1,0 +1,95 @@
+<html>
+<head>
+<title>prepare-tokens.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+prepare-tokens.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">tokenize = require(</span><span class="s2">'../tokenizer'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">TokenStream = require(</span><span class="s2">'../common/TokenStream'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">tokenStream = </span><span class="s0">new </span><span class="s1">TokenStream()</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">astToTokens = {</span>
+    <span class="s1">decorator: </span><span class="s0">function</span><span class="s1">(handlers) {</span>
+        <span class="s0">var </span><span class="s1">curNode = </span><span class="s0">null</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">prev = { len: </span><span class="s4">0</span><span class="s3">, </span><span class="s1">node: </span><span class="s0">null </span><span class="s1">}</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">nodes = [prev]</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">buffer = </span><span class="s2">''</span><span class="s3">;</span>
+
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">children: handlers.children</span><span class="s3">,</span>
+            <span class="s1">node: </span><span class="s0">function</span><span class="s1">(node) {</span>
+                <span class="s0">var </span><span class="s1">tmp = curNode</span><span class="s3">;</span>
+                <span class="s1">curNode = node</span><span class="s3">;</span>
+                <span class="s1">handlers.node.call(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">node)</span><span class="s3">;</span>
+                <span class="s1">curNode = tmp</span><span class="s3">;</span>
+            <span class="s1">}</span><span class="s3">,</span>
+            <span class="s1">chunk: </span><span class="s0">function</span><span class="s1">(chunk) {</span>
+                <span class="s1">buffer += chunk</span><span class="s3">;</span>
+                <span class="s0">if </span><span class="s1">(prev.node !== curNode) {</span>
+                    <span class="s1">nodes.push({</span>
+                        <span class="s1">len: chunk.length</span><span class="s3">,</span>
+                        <span class="s1">node: curNode</span>
+                    <span class="s1">})</span><span class="s3">;</span>
+                <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                    <span class="s1">prev.len += chunk.length</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span><span class="s3">,</span>
+            <span class="s1">result: </span><span class="s0">function</span><span class="s1">() {</span>
+                <span class="s0">return </span><span class="s1">prepareTokens(buffer</span><span class="s3">, </span><span class="s1">nodes)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">prepareTokens(str</span><span class="s3">, </span><span class="s1">nodes) {</span>
+    <span class="s0">var </span><span class="s1">tokens = []</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">nodesOffset = </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">nodesIndex = </span><span class="s4">0</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">currentNode = nodes ? nodes[nodesIndex].node : </span><span class="s0">null</span><span class="s3">;</span>
+
+    <span class="s1">tokenize(str</span><span class="s3">, </span><span class="s1">tokenStream)</span><span class="s3">;</span>
+
+    <span class="s0">while </span><span class="s1">(!tokenStream.eof) {</span>
+        <span class="s0">if </span><span class="s1">(nodes) {</span>
+            <span class="s0">while </span><span class="s1">(nodesIndex &lt; nodes.length &amp;&amp; nodesOffset + nodes[nodesIndex].len &lt;= tokenStream.tokenStart) {</span>
+                <span class="s1">nodesOffset += nodes[nodesIndex++].len</span><span class="s3">;</span>
+                <span class="s1">currentNode = nodes[nodesIndex].node</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s1">tokens.push({</span>
+            <span class="s1">type: tokenStream.tokenType</span><span class="s3">,</span>
+            <span class="s1">value: tokenStream.getTokenValue()</span><span class="s3">,</span>
+            <span class="s1">index: tokenStream.tokenIndex</span><span class="s3">, </span><span class="s5">// TODO: remove it, temporary solution</span>
+            <span class="s1">balance: tokenStream.balance[tokenStream.tokenIndex]</span><span class="s3">, </span><span class="s5">// TODO: remove it, temporary solution</span>
+            <span class="s1">node: currentNode</span>
+        <span class="s1">})</span><span class="s3">;</span>
+        <span class="s1">tokenStream.next()</span><span class="s3">;</span>
+        <span class="s5">// console.log({ ...tokens[tokens.length - 1], node: undefined });</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">tokens</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = </span><span class="s0">function</span><span class="s1">(value</span><span class="s3">, </span><span class="s1">syntax) {</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">value === </span><span class="s2">'string'</span><span class="s1">) {</span>
+        <span class="s0">return </span><span class="s1">prepareTokens(value</span><span class="s3">, </span><span class="s0">null</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">syntax.generate(value</span><span class="s3">, </span><span class="s1">astToTokens)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

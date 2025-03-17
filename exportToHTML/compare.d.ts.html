@@ -1,0 +1,42 @@
+<html>
+<head>
+<title>compare.d.ts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #8a8a8a; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+compare.d.ts</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">{ FunctionCov</span><span class="s2">, </span><span class="s1">RangeCov</span><span class="s2">, </span><span class="s1">ScriptCov } from </span><span class="s3">&quot;./types&quot;</span><span class="s2">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* Compares two script coverages.</span>
+ <span class="s4">*</span>
+ <span class="s4">* The result corresponds to the comparison of their `url` value (alphabetical sort).</span>
+ <span class="s4">*/</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">compareScriptCovs(a: Readonly&lt;ScriptCov&gt;</span><span class="s2">, </span><span class="s1">b: Readonly&lt;ScriptCov&gt;): number</span><span class="s2">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* Compares two function coverages.</span>
+ <span class="s4">*</span>
+ <span class="s4">* The result corresponds to the comparison of the root ranges.</span>
+ <span class="s4">*/</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">compareFunctionCovs(a: Readonly&lt;FunctionCov&gt;</span><span class="s2">, </span><span class="s1">b: Readonly&lt;FunctionCov&gt;): number</span><span class="s2">;</span>
+<span class="s4">/**</span>
+ <span class="s4">* Compares two range coverages.</span>
+ <span class="s4">*</span>
+ <span class="s4">* The ranges are first ordered by ascending `startOffset` and then by</span>
+ <span class="s4">* descending `endOffset`.</span>
+ <span class="s4">* This corresponds to a pre-order tree traversal.</span>
+ <span class="s4">*/</span>
+<span class="s0">export </span><span class="s1">declare </span><span class="s0">function </span><span class="s1">compareRangeCovs(a: Readonly&lt;RangeCov&gt;</span><span class="s2">, </span><span class="s1">b: Readonly&lt;RangeCov&gt;): number</span><span class="s2">;</span>
+</pre>
+</body>
+</html>

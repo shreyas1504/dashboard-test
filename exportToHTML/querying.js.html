@@ -1,0 +1,116 @@
+<html>
+<head>
+<title>querying.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+querying.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">isTag = require(</span><span class="s2">&quot;domelementtype&quot;</span><span class="s1">).isTag</span><span class="s3">;</span>
+
+<span class="s1">module.exports = {</span>
+	<span class="s1">filter: filter</span><span class="s3">,</span>
+	<span class="s1">find: find</span><span class="s3">,</span>
+	<span class="s1">findOneChild: findOneChild</span><span class="s3">,</span>
+	<span class="s1">findOne: findOne</span><span class="s3">,</span>
+	<span class="s1">existsOne: existsOne</span><span class="s3">,</span>
+	<span class="s1">findAll: findAll</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">filter(test</span><span class="s3">, </span><span class="s1">element</span><span class="s3">, </span><span class="s1">recurse</span><span class="s3">, </span><span class="s1">limit){</span>
+	<span class="s0">if</span><span class="s1">(!Array.isArray(element)) element = [element]</span><span class="s3">;</span>
+
+	<span class="s0">if</span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">limit !== </span><span class="s2">&quot;number&quot; </span><span class="s1">|| !isFinite(limit)){</span>
+		<span class="s1">limit = Infinity</span><span class="s3">;</span>
+	<span class="s1">}</span>
+	<span class="s0">return </span><span class="s1">find(test</span><span class="s3">, </span><span class="s1">element</span><span class="s3">, </span><span class="s1">recurse !== </span><span class="s0">false</span><span class="s3">, </span><span class="s1">limit)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">find(test</span><span class="s3">, </span><span class="s1">elems</span><span class="s3">, </span><span class="s1">recurse</span><span class="s3">, </span><span class="s1">limit){</span>
+	<span class="s0">var </span><span class="s1">result = []</span><span class="s3">, </span><span class="s1">childs</span><span class="s3">;</span>
+
+	<span class="s0">for</span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">, </span><span class="s1">j = elems.length</span><span class="s3">; </span><span class="s1">i &lt; j</span><span class="s3">; </span><span class="s1">i++){</span>
+		<span class="s0">if</span><span class="s1">(test(elems[i])){</span>
+			<span class="s1">result.push(elems[i])</span><span class="s3">;</span>
+			<span class="s0">if</span><span class="s1">(--limit &lt;= </span><span class="s4">0</span><span class="s1">) </span><span class="s0">break</span><span class="s3">;</span>
+		<span class="s1">}</span>
+
+		<span class="s1">childs = elems[i].children</span><span class="s3">;</span>
+		<span class="s0">if</span><span class="s1">(recurse &amp;&amp; childs &amp;&amp; childs.length &gt; </span><span class="s4">0</span><span class="s1">){</span>
+			<span class="s1">childs = find(test</span><span class="s3">, </span><span class="s1">childs</span><span class="s3">, </span><span class="s1">recurse</span><span class="s3">, </span><span class="s1">limit)</span><span class="s3">;</span>
+			<span class="s1">result = result.concat(childs)</span><span class="s3">;</span>
+			<span class="s1">limit -= childs.length</span><span class="s3">;</span>
+			<span class="s0">if</span><span class="s1">(limit &lt;= </span><span class="s4">0</span><span class="s1">) </span><span class="s0">break</span><span class="s3">;</span>
+		<span class="s1">}</span>
+	<span class="s1">}</span>
+
+	<span class="s0">return </span><span class="s1">result</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">findOneChild(test</span><span class="s3">, </span><span class="s1">elems){</span>
+	<span class="s0">for</span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">, </span><span class="s1">l = elems.length</span><span class="s3">; </span><span class="s1">i &lt; l</span><span class="s3">; </span><span class="s1">i++){</span>
+		<span class="s0">if</span><span class="s1">(test(elems[i])) </span><span class="s0">return </span><span class="s1">elems[i]</span><span class="s3">;</span>
+	<span class="s1">}</span>
+
+	<span class="s0">return null</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">findOne(test</span><span class="s3">, </span><span class="s1">elems){</span>
+	<span class="s0">var </span><span class="s1">elem = </span><span class="s0">null</span><span class="s3">;</span>
+
+	<span class="s0">for</span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">, </span><span class="s1">l = elems.length</span><span class="s3">; </span><span class="s1">i &lt; l &amp;&amp; !elem</span><span class="s3">; </span><span class="s1">i++){</span>
+		<span class="s0">if</span><span class="s1">(!isTag(elems[i])){</span>
+			<span class="s0">continue</span><span class="s3">;</span>
+		<span class="s1">} </span><span class="s0">else if</span><span class="s1">(test(elems[i])){</span>
+			<span class="s1">elem = elems[i]</span><span class="s3">;</span>
+		<span class="s1">} </span><span class="s0">else if</span><span class="s1">(elems[i].children.length &gt; </span><span class="s4">0</span><span class="s1">){</span>
+			<span class="s1">elem = findOne(test</span><span class="s3">, </span><span class="s1">elems[i].children)</span><span class="s3">;</span>
+		<span class="s1">}</span>
+	<span class="s1">}</span>
+
+	<span class="s0">return </span><span class="s1">elem</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">existsOne(test</span><span class="s3">, </span><span class="s1">elems){</span>
+	<span class="s0">for</span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">, </span><span class="s1">l = elems.length</span><span class="s3">; </span><span class="s1">i &lt; l</span><span class="s3">; </span><span class="s1">i++){</span>
+		<span class="s0">if</span><span class="s1">(</span>
+			<span class="s1">isTag(elems[i]) &amp;&amp; (</span>
+				<span class="s1">test(elems[i]) || (</span>
+					<span class="s1">elems[i].children.length &gt; </span><span class="s4">0 </span><span class="s1">&amp;&amp;</span>
+					<span class="s1">existsOne(test</span><span class="s3">, </span><span class="s1">elems[i].children)</span>
+				<span class="s1">)</span>
+			<span class="s1">)</span>
+		<span class="s1">){</span>
+			<span class="s0">return true</span><span class="s3">;</span>
+		<span class="s1">}</span>
+	<span class="s1">}</span>
+
+	<span class="s0">return false</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">findAll(test</span><span class="s3">, </span><span class="s1">rootElems){</span>
+	<span class="s0">var </span><span class="s1">result = []</span><span class="s3">;</span>
+	<span class="s0">var </span><span class="s1">stack = rootElems.slice()</span><span class="s3">;</span>
+	<span class="s0">while</span><span class="s1">(stack.length){</span>
+		<span class="s0">var </span><span class="s1">elem = stack.shift()</span><span class="s3">;</span>
+		<span class="s0">if</span><span class="s1">(!isTag(elem)) </span><span class="s0">continue</span><span class="s3">;</span>
+		<span class="s0">if </span><span class="s1">(elem.children &amp;&amp; elem.children.length &gt; </span><span class="s4">0</span><span class="s1">) {</span>
+			<span class="s1">stack.unshift.apply(stack</span><span class="s3">, </span><span class="s1">elem.children)</span><span class="s3">;</span>
+		<span class="s1">}</span>
+		<span class="s0">if</span><span class="s1">(test(elem)) result.push(elem)</span><span class="s3">;</span>
+	<span class="s1">}</span>
+	<span class="s0">return </span><span class="s1">result</span><span class="s3">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

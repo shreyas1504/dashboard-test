@@ -1,0 +1,48 @@
+<html>
+<head>
+<title>publish_task.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+publish_task.js</font>
+</center></td></tr></table>
+<pre><span class="s0">let </span><span class="s1">assert = require(</span><span class="s2">'assert'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">let </span><span class="s1">exec = require(</span><span class="s2">'child_process'</span><span class="s1">).execSync</span><span class="s3">;</span>
+
+<span class="s0">const </span><span class="s1">PROJECT_DIR = process.env.PROJECT_DIR</span><span class="s3">;</span>
+<span class="s0">const </span><span class="s1">JAKE_CMD = </span><span class="s2">`</span><span class="s1">${PROJECT_DIR}</span><span class="s2">/bin/cli.js`</span><span class="s3">;</span>
+
+<span class="s1">suite(</span><span class="s2">'publishTask'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+
+  <span class="s0">this</span><span class="s1">.timeout(</span><span class="s4">7000</span><span class="s1">)</span><span class="s3">;</span>
+
+  <span class="s1">test(</span><span class="s2">'default task'</span><span class="s3">, </span><span class="s0">function </span><span class="s1">() {</span>
+    <span class="s0">let </span><span class="s1">out = exec(</span><span class="s2">`</span><span class="s1">${JAKE_CMD} </span><span class="s2">-q publish`</span><span class="s1">).toString().trim()</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">expected = [</span>
+      <span class="s2">'Fetched remote tags.'</span>
+      <span class="s3">, </span><span class="s2">'On branch v0.0'</span>
+      <span class="s3">, </span><span class="s2">'Bumped version number to v0.0.2.'</span>
+      <span class="s3">, </span><span class="s2">'Created package for zerb v0.0.2'</span>
+      <span class="s3">, </span><span class="s2">'Publishing zerb v0.0.2'</span>
+      <span class="s3">, </span><span class="s2">'./pkg/zerb-v0.0.2.tar.gz'</span>
+      <span class="s3">, </span><span class="s2">'BOOM! Published.'</span>
+      <span class="s3">, </span><span class="s2">'Cleaned up package'</span>
+    <span class="s1">].join(</span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">assert.equal(expected</span><span class="s3">, </span><span class="s1">out)</span><span class="s3">;</span>
+  <span class="s1">})</span><span class="s3">;</span>
+
+<span class="s1">})</span><span class="s3">;</span>
+
+</pre>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<html>
+<head>
+<title>Combinator.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Combinator.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">TYPE = require(</span><span class="s2">'../../tokenizer'</span><span class="s1">).TYPE</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">IDENT = TYPE.Ident</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">PLUSSIGN = </span><span class="s4">0x002B</span><span class="s3">;        </span><span class="s5">// U+002B PLUS SIGN (+)</span>
+<span class="s0">var </span><span class="s1">SOLIDUS = </span><span class="s4">0x002F</span><span class="s3">;         </span><span class="s5">// U+002F SOLIDUS (/)</span>
+<span class="s0">var </span><span class="s1">GREATERTHANSIGN = </span><span class="s4">0x003E</span><span class="s3">; </span><span class="s5">// U+003E GREATER-THAN SIGN (&gt;)</span>
+<span class="s0">var </span><span class="s1">TILDE = </span><span class="s4">0x007E</span><span class="s3">;           </span><span class="s5">// U+007E TILDE (~)</span>
+
+<span class="s5">// + | &gt; | ~ | /deep/</span>
+<span class="s1">module.exports = {</span>
+    <span class="s1">name: </span><span class="s2">'Combinator'</span><span class="s3">,</span>
+    <span class="s1">structure: {</span>
+        <span class="s1">name: String</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">parse: </span><span class="s0">function</span><span class="s1">() {</span>
+        <span class="s0">var </span><span class="s1">start = </span><span class="s0">this</span><span class="s1">.scanner.tokenStart</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">code = </span><span class="s0">this</span><span class="s1">.scanner.source.charCodeAt(</span><span class="s0">this</span><span class="s1">.scanner.tokenStart)</span><span class="s3">;</span>
+
+        <span class="s0">switch </span><span class="s1">(code) {</span>
+            <span class="s0">case </span><span class="s1">GREATERTHANSIGN:</span>
+            <span class="s0">case </span><span class="s1">PLUSSIGN:</span>
+            <span class="s0">case </span><span class="s1">TILDE:</span>
+                <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+                <span class="s0">break</span><span class="s3">;</span>
+
+            <span class="s0">case </span><span class="s1">SOLIDUS:</span>
+                <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+
+                <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.scanner.tokenType !== IDENT || </span><span class="s0">this</span><span class="s1">.scanner.lookupValue(</span><span class="s4">0</span><span class="s3">, </span><span class="s2">'deep'</span><span class="s1">) === </span><span class="s0">false</span><span class="s1">) {</span>
+                    <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Identifier `deep` is expected'</span><span class="s1">)</span><span class="s3">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+
+                <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.scanner.isDelim(SOLIDUS)) {</span>
+                    <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Solidus is expected'</span><span class="s1">)</span><span class="s3">;</span>
+                <span class="s1">}</span>
+
+                <span class="s0">this</span><span class="s1">.scanner.next()</span><span class="s3">;</span>
+                <span class="s0">break</span><span class="s3">;</span>
+
+            <span class="s0">default</span><span class="s1">:</span>
+                <span class="s0">this</span><span class="s1">.error(</span><span class="s2">'Combinator is expected'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">{</span>
+            <span class="s1">type: </span><span class="s2">'Combinator'</span><span class="s3">,</span>
+            <span class="s1">loc: </span><span class="s0">this</span><span class="s1">.getLocation(start</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.scanner.tokenStart)</span><span class="s3">,</span>
+            <span class="s1">name: </span><span class="s0">this</span><span class="s1">.scanner.substrToCursor(start)</span>
+        <span class="s1">}</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">generate: </span><span class="s0">function</span><span class="s1">(node) {</span>
+        <span class="s0">this</span><span class="s1">.chunk(node.name)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

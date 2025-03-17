@@ -1,0 +1,269 @@
+<html>
+<head>
+<title>handle.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+handle.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span>
+
+<span class="s2">var </span><span class="s1">assert = require(</span><span class="s0">'assert'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">thing = require(</span><span class="s0">'handle-thing'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">httpDeceiver = require(</span><span class="s0">'http-deceiver'</span><span class="s1">)</span>
+<span class="s2">var </span><span class="s1">util = require(</span><span class="s0">'util'</span><span class="s1">)</span>
+
+<span class="s2">function </span><span class="s1">Handle (options</span><span class="s3">, </span><span class="s1">stream</span><span class="s3">, </span><span class="s1">socket) {</span>
+  <span class="s2">var </span><span class="s1">state = {}</span>
+  <span class="s2">this</span><span class="s1">._spdyState = state</span>
+
+  <span class="s1">state.options = options || {}</span>
+
+  <span class="s1">state.stream = stream</span>
+  <span class="s1">state.socket = </span><span class="s2">null</span>
+  <span class="s1">state.rawSocket = socket || stream.connection.socket</span>
+  <span class="s1">state.deceiver = </span><span class="s2">null</span>
+  <span class="s1">state.ending = </span><span class="s2">false</span>
+
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+  <span class="s1">thing.call(</span><span class="s2">this</span><span class="s3">, </span><span class="s1">stream</span><span class="s3">, </span><span class="s1">{</span>
+    <span class="s1">getPeerName: </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s2">return </span><span class="s1">self._getPeerName()</span>
+    <span class="s1">}</span><span class="s3">,</span>
+    <span class="s1">close: </span><span class="s2">function </span><span class="s1">(callback) {</span>
+      <span class="s2">return </span><span class="s1">self._closeCallback(callback)</span>
+    <span class="s1">}</span>
+  <span class="s1">})</span>
+
+  <span class="s2">if </span><span class="s1">(!state.stream) {</span>
+    <span class="s2">this</span><span class="s1">.on(</span><span class="s0">'stream'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">(stream) {</span>
+      <span class="s1">state.stream = stream</span>
+    <span class="s1">})</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+<span class="s1">util.inherits(Handle</span><span class="s3">, </span><span class="s1">thing)</span>
+<span class="s1">module.exports = Handle</span>
+
+<span class="s1">Handle.create = </span><span class="s2">function </span><span class="s1">create (options</span><span class="s3">, </span><span class="s1">stream</span><span class="s3">, </span><span class="s1">socket) {</span>
+  <span class="s2">return new </span><span class="s1">Handle(options</span><span class="s3">, </span><span class="s1">stream</span><span class="s3">, </span><span class="s1">socket)</span>
+<span class="s1">}</span>
+
+<span class="s1">Handle.prototype._getPeerName = </span><span class="s2">function </span><span class="s1">_getPeerName () {</span>
+  <span class="s2">var </span><span class="s1">state = </span><span class="s2">this</span><span class="s1">._spdyState</span>
+
+  <span class="s2">if </span><span class="s1">(state.rawSocket._getpeername) {</span>
+    <span class="s2">return </span><span class="s1">state.rawSocket._getpeername()</span>
+  <span class="s1">}</span>
+
+  <span class="s2">return null</span>
+<span class="s1">}</span>
+
+<span class="s1">Handle.prototype._closeCallback = </span><span class="s2">function </span><span class="s1">_closeCallback (callback) {</span>
+  <span class="s2">var </span><span class="s1">state = </span><span class="s2">this</span><span class="s1">._spdyState</span>
+  <span class="s2">var </span><span class="s1">stream = state.stream</span>
+
+  <span class="s2">if </span><span class="s1">(state.ending) {</span>
+    <span class="s4">// The .end() method of the stream may be called by us or by the</span>
+    <span class="s4">// .shutdown() method in our super-class. If the latter has already been</span>
+    <span class="s4">// called, then calling the .end() method below will have no effect, with</span>
+    <span class="s4">// the result that the callback will never get executed, leading to an ever</span>
+    <span class="s4">// so subtle memory leak.</span>
+    <span class="s2">if </span><span class="s1">(stream._writableState.finished) {</span>
+      <span class="s4">// NOTE: it is important to call `setImmediate` instead of `nextTick`,</span>
+      <span class="s4">// since this is how regular `handle.close()` works in node.js core.</span>
+      <span class="s4">//</span>
+      <span class="s4">// Using `nextTick` will lead to `net.Socket` emitting `close` before</span>
+      <span class="s4">// `end` on UV_EOF. This results in aborted request without `end` event.</span>
+      <span class="s1">setImmediate(callback)</span>
+    <span class="s1">} </span><span class="s2">else if </span><span class="s1">(stream._writableState.ending) {</span>
+      <span class="s1">stream.once(</span><span class="s0">'finish'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+        <span class="s1">callback(</span><span class="s2">null</span><span class="s1">)</span>
+      <span class="s1">})</span>
+    <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+      <span class="s1">stream.end(callback)</span>
+    <span class="s1">}</span>
+  <span class="s1">} </span><span class="s2">else </span><span class="s1">{</span>
+    <span class="s1">stream.abort(callback)</span>
+  <span class="s1">}</span>
+
+  <span class="s4">// Only a single end is allowed</span>
+  <span class="s1">state.ending = </span><span class="s2">false</span>
+<span class="s1">}</span>
+
+<span class="s1">Handle.prototype.getStream = </span><span class="s2">function </span><span class="s1">getStream (callback) {</span>
+  <span class="s2">var </span><span class="s1">state = </span><span class="s2">this</span><span class="s1">._spdyState</span>
+
+  <span class="s2">if </span><span class="s1">(!callback) {</span>
+    <span class="s1">assert(state.stream)</span>
+    <span class="s2">return </span><span class="s1">state.stream</span>
+  <span class="s1">}</span>
+
+  <span class="s2">if </span><span class="s1">(state.stream) {</span>
+    <span class="s1">process.nextTick(</span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s1">callback(state.stream)</span>
+    <span class="s1">})</span>
+    <span class="s2">return</span>
+  <span class="s1">}</span>
+
+  <span class="s2">this</span><span class="s1">.on(</span><span class="s0">'stream'</span><span class="s3">, </span><span class="s1">callback)</span>
+<span class="s1">}</span>
+
+<span class="s1">Handle.prototype.assignSocket = </span><span class="s2">function </span><span class="s1">assignSocket (socket</span><span class="s3">, </span><span class="s1">options) {</span>
+  <span class="s2">var </span><span class="s1">state = </span><span class="s2">this</span><span class="s1">._spdyState</span>
+
+  <span class="s1">state.socket = socket</span>
+  <span class="s1">state.deceiver = httpDeceiver.create(socket</span><span class="s3">, </span><span class="s1">options)</span>
+
+  <span class="s2">function </span><span class="s1">onStreamError (err) {</span>
+    <span class="s1">state.socket.emit(</span><span class="s0">'error'</span><span class="s3">, </span><span class="s1">err)</span>
+  <span class="s1">}</span>
+
+  <span class="s2">this</span><span class="s1">.getStream(</span><span class="s2">function </span><span class="s1">(stream) {</span>
+    <span class="s1">stream.on(</span><span class="s0">'error'</span><span class="s3">, </span><span class="s1">onStreamError)</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s1">Handle.prototype.assignClientRequest = </span><span class="s2">function </span><span class="s1">assignClientRequest (req) {</span>
+  <span class="s2">var </span><span class="s1">state = </span><span class="s2">this</span><span class="s1">._spdyState</span>
+  <span class="s2">var </span><span class="s1">oldEnd = req.end</span>
+  <span class="s2">var </span><span class="s1">oldSend = req._send</span>
+
+  <span class="s4">// Catch the headers before request will be sent</span>
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+
+  <span class="s4">// For old nodes</span>
+  <span class="s2">if </span><span class="s1">(thing.mode !== </span><span class="s0">'modern'</span><span class="s1">) {</span>
+    <span class="s1">req.end = </span><span class="s2">function </span><span class="s1">end () {</span>
+      <span class="s2">this</span><span class="s1">.end = oldEnd</span>
+
+      <span class="s2">this</span><span class="s1">._send(</span><span class="s0">''</span><span class="s1">)</span>
+
+      <span class="s2">return this</span><span class="s1">.end.apply(</span><span class="s2">this</span><span class="s3">, </span><span class="s1">arguments)</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s1">req._send = </span><span class="s2">function </span><span class="s1">send (data) {</span>
+    <span class="s2">this</span><span class="s1">._headerSent = </span><span class="s2">true</span>
+
+    <span class="s4">// for v0.10 and below, otherwise it will set `hot = false` and include</span>
+    <span class="s4">// headers in first write</span>
+    <span class="s2">this</span><span class="s1">._header = </span><span class="s0">'ignore me'</span>
+
+    <span class="s4">// To prevent exception</span>
+    <span class="s2">this</span><span class="s1">.connection = state.socket</span>
+
+    <span class="s4">// It is very important to leave this here, otherwise it will be executed</span>
+    <span class="s4">// on a next tick, after `_send` will perform write</span>
+    <span class="s1">self.getStream(</span><span class="s2">function </span><span class="s1">(stream) {</span>
+      <span class="s2">if </span><span class="s1">(!stream.connection._isGoaway(stream.id)) {</span>
+        <span class="s1">stream.send()</span>
+      <span class="s1">}</span>
+    <span class="s1">})</span>
+
+    <span class="s4">// We are ready to create stream</span>
+    <span class="s1">self.emit(</span><span class="s0">'needStream'</span><span class="s1">)</span>
+
+    <span class="s4">// Ensure that the connection is still ok to use</span>
+    <span class="s2">if </span><span class="s1">(state.stream &amp;&amp; state.stream.connection._isGoaway(state.stream.id)) {</span>
+      <span class="s2">return</span>
+    <span class="s1">}</span>
+
+    <span class="s1">req._send = oldSend</span>
+
+    <span class="s4">// Ignore empty writes</span>
+    <span class="s2">if </span><span class="s1">(req.method === </span><span class="s0">'GET' </span><span class="s1">&amp;&amp; data.length === </span><span class="s5">0</span><span class="s1">) {</span>
+      <span class="s2">return</span>
+    <span class="s1">}</span>
+
+    <span class="s2">return </span><span class="s1">req._send.apply(</span><span class="s2">this</span><span class="s3">, </span><span class="s1">arguments)</span>
+  <span class="s1">}</span>
+
+  <span class="s4">// No chunked encoding</span>
+  <span class="s1">req.useChunkedEncodingByDefault = </span><span class="s2">false</span>
+
+  <span class="s1">req.on(</span><span class="s0">'finish'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s1">req.socket.end()</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s1">Handle.prototype.assignRequest = </span><span class="s2">function </span><span class="s1">assignRequest (req) {</span>
+  <span class="s4">// Emit trailing headers</span>
+  <span class="s2">this</span><span class="s1">.getStream(</span><span class="s2">function </span><span class="s1">(stream) {</span>
+    <span class="s1">stream.on(</span><span class="s0">'headers'</span><span class="s3">, </span><span class="s2">function </span><span class="s1">(headers) {</span>
+      <span class="s1">req.emit(</span><span class="s0">'trailers'</span><span class="s3">, </span><span class="s1">headers)</span>
+    <span class="s1">})</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s1">Handle.prototype.assignResponse = </span><span class="s2">function </span><span class="s1">assignResponse (res) {</span>
+  <span class="s2">var </span><span class="s1">self = </span><span class="s2">this</span>
+
+  <span class="s1">res.addTrailers = </span><span class="s2">function </span><span class="s1">addTrailers (headers) {</span>
+    <span class="s1">self.getStream(</span><span class="s2">function </span><span class="s1">(stream) {</span>
+      <span class="s1">stream.sendHeaders(headers)</span>
+    <span class="s1">})</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">Handle.prototype._transformHeaders = </span><span class="s2">function </span><span class="s1">_transformHeaders (kind</span><span class="s3">, </span><span class="s1">headers) {</span>
+  <span class="s2">var </span><span class="s1">state = </span><span class="s2">this</span><span class="s1">._spdyState</span>
+
+  <span class="s2">var </span><span class="s1">res = {}</span>
+  <span class="s2">var </span><span class="s1">keys = Object.keys(headers)</span>
+
+  <span class="s2">if </span><span class="s1">(kind === </span><span class="s0">'request' </span><span class="s1">&amp;&amp; state.options[</span><span class="s0">'x-forwarded-for'</span><span class="s1">]) {</span>
+    <span class="s2">var </span><span class="s1">xforwarded = state.stream.connection.getXForwardedFor()</span>
+    <span class="s2">if </span><span class="s1">(xforwarded !== </span><span class="s2">null</span><span class="s1">) {</span>
+      <span class="s1">res[</span><span class="s0">'x-forwarded-for'</span><span class="s1">] = xforwarded</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s2">for </span><span class="s1">(</span><span class="s2">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; keys.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+    <span class="s2">var </span><span class="s1">key = keys[i]</span>
+    <span class="s2">var </span><span class="s1">value = headers[key]</span>
+
+    <span class="s2">if </span><span class="s1">(key === </span><span class="s0">':authority'</span><span class="s1">) {</span>
+      <span class="s1">res.host = value</span>
+    <span class="s1">}</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s5">/^:/</span><span class="s1">.test(key)) {</span>
+      <span class="s2">continue</span>
+    <span class="s1">}</span>
+
+    <span class="s1">res[key] = value</span>
+  <span class="s1">}</span>
+  <span class="s2">return </span><span class="s1">res</span>
+<span class="s1">}</span>
+
+<span class="s1">Handle.prototype.emitRequest = </span><span class="s2">function </span><span class="s1">emitRequest () {</span>
+  <span class="s2">var </span><span class="s1">state = </span><span class="s2">this</span><span class="s1">._spdyState</span>
+  <span class="s2">var </span><span class="s1">stream = state.stream</span>
+
+  <span class="s1">state.deceiver.emitRequest({</span>
+    <span class="s1">method: stream.method</span><span class="s3">,</span>
+    <span class="s1">path: stream.path</span><span class="s3">,</span>
+    <span class="s1">headers: </span><span class="s2">this</span><span class="s1">._transformHeaders(</span><span class="s0">'request'</span><span class="s3">, </span><span class="s1">stream.headers)</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+
+<span class="s1">Handle.prototype.emitResponse = </span><span class="s2">function </span><span class="s1">emitResponse (status</span><span class="s3">, </span><span class="s1">headers) {</span>
+  <span class="s2">var </span><span class="s1">state = </span><span class="s2">this</span><span class="s1">._spdyState</span>
+
+  <span class="s1">state.deceiver.emitResponse({</span>
+    <span class="s1">status: status</span><span class="s3">,</span>
+    <span class="s1">headers: </span><span class="s2">this</span><span class="s1">._transformHeaders(</span><span class="s0">'response'</span><span class="s3">, </span><span class="s1">headers)</span>
+  <span class="s1">})</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<html>
+<head>
+<title>errors.def</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+errors.def</font>
+</center></td></tr></table>
+<pre><span class="s0">{{# def.definitions }}</span>
+
+<span class="s0">{{## def._error:_rule:</span>
+  <span class="s0">{{ 'istanbul ignore else'; }}</span>
+  <span class="s0">{{? it.createErrors !== false }}</span>
+    <span class="s0">{</span>
+      <span class="s0">keyword: '{{= $errorKeyword || _rule }}'</span>
+      <span class="s0">, dataPath: (dataPath || '') + {{= it.errorPath }}</span>
+      <span class="s0">, schemaPath: {{=it.util.toQuotedString($errSchemaPath)}}</span>
+      <span class="s0">, params: {{# def._errorParams[_rule] }}</span>
+      <span class="s0">{{? it.opts.messages !== false }}</span>
+        <span class="s0">, message: {{# def._errorMessages[_rule] }}</span>
+      <span class="s0">{{?}}</span>
+      <span class="s0">{{? it.opts.verbose }}</span>
+        <span class="s0">, schema: {{# def._errorSchemas[_rule] }}</span>
+        <span class="s0">, parentSchema: validate.schema{{=it.schemaPath}}</span>
+        <span class="s0">, data: {{=$data}}</span>
+      <span class="s0">{{?}}</span>
+    <span class="s0">}</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">{}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def._addError:_rule:</span>
+  <span class="s0">if (vErrors === null) vErrors = [err];</span>
+  <span class="s0">else vErrors.push(err);</span>
+  <span class="s0">errors++;</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.addError:_rule:</span>
+  <span class="s0">var err = {{# def._error:_rule }};</span>
+  <span class="s0">{{# def._addError:_rule }}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.error:_rule:</span>
+  <span class="s0">{{# def.beginDefOut}}</span>
+    <span class="s0">{{# def._error:_rule }}</span>
+  <span class="s0">{{# def.storeDefOut:__err }}</span>
+
+  <span class="s0">{{? !it.compositeRule &amp;&amp; $breakOnError }}</span>
+    <span class="s0">{{ 'istanbul ignore if'; }}</span>
+    <span class="s0">{{? it.async }}</span>
+      <span class="s0">throw new ValidationError([{{=__err}}]);</span>
+    <span class="s0">{{??}}</span>
+      <span class="s0">validate.errors = [{{=__err}}];</span>
+      <span class="s0">return false;</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{??}}</span>
+    <span class="s0">var err = {{=__err}};</span>
+    <span class="s0">{{# def._addError:_rule }}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.extraError:_rule:</span>
+  <span class="s0">{{# def.addError:_rule}}</span>
+  <span class="s0">{{? !it.compositeRule &amp;&amp; $breakOnError }}</span>
+    <span class="s0">{{ 'istanbul ignore if'; }}</span>
+    <span class="s0">{{? it.async }}</span>
+      <span class="s0">throw new ValidationError(vErrors);</span>
+    <span class="s0">{{??}}</span>
+      <span class="s0">validate.errors = vErrors;</span>
+      <span class="s0">return false;</span>
+    <span class="s0">{{?}}</span>
+  <span class="s0">{{?}}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.checkError:_rule:</span>
+  <span class="s0">if (!{{=$valid}}) {</span>
+    <span class="s0">{{# def.error:_rule }}</span>
+  <span class="s0">}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.resetErrors:</span>
+  <span class="s0">errors = {{=$errs}};</span>
+  <span class="s0">if (vErrors !== null) {</span>
+    <span class="s0">if ({{=$errs}}) vErrors.length = {{=$errs}};</span>
+    <span class="s0">else vErrors = null;</span>
+  <span class="s0">}</span>
+<span class="s0">#}}</span>
+
+
+<span class="s0">{{## def.concatSchema:{{?$isData}}' + {{=$schemaValue}} + '{{??}}{{=$schema}}{{?}}#}}</span>
+<span class="s0">{{## def.appendSchema:{{?$isData}}' + {{=$schemaValue}}{{??}}{{=$schemaValue}}'{{?}}#}}</span>
+<span class="s0">{{## def.concatSchemaEQ:{{?$isData}}' + {{=$schemaValue}} + '{{??}}{{=it.util.escapeQuotes($schema)}}{{?}}#}}</span>
+
+<span class="s0">{{## def._errorMessages = {</span>
+  <span class="s0">'false schema':  &quot;'boolean schema is false'&quot;,</span>
+  <span class="s0">$ref:            &quot;'can\\\'t resolve reference {{=it.util.escapeQuotes($schema)}}'&quot;,</span>
+  <span class="s0">additionalItems: &quot;'should NOT have more than {{=$schema.length}} items'&quot;,</span>
+  <span class="s0">additionalProperties: &quot;'{{? it.opts._errorDataPathProperty }}is an invalid additional property{{??}}should NOT have additional properties{{?}}'&quot;,</span>
+  <span class="s0">anyOf:           &quot;'should match some schema in anyOf'&quot;,</span>
+  <span class="s0">const:           &quot;'should be equal to constant'&quot;,</span>
+  <span class="s0">contains:        &quot;'should contain a valid item'&quot;,</span>
+  <span class="s0">dependencies:    &quot;'should have {{? $deps.length == 1 }}property {{= it.util.escapeQuotes($deps[0]) }}{{??}}properties {{= it.util.escapeQuotes($deps.join(\&quot;, \&quot;)) }}{{?}} when property {{= it.util.escapeQuotes($property) }} is present'&quot;,</span>
+  <span class="s0">'enum':          &quot;'should be equal to one of the allowed values'&quot;,</span>
+  <span class="s0">format:          &quot;'should match format \&quot;{{#def.concatSchemaEQ}}\&quot;'&quot;,</span>
+  <span class="s0">'if':            &quot;'should match \&quot;' + {{=$ifClause}} + '\&quot; schema'&quot;,</span>
+  <span class="s0">_limit:          &quot;'should be {{=$opStr}} {{#def.appendSchema}}&quot;,</span>
+  <span class="s0">_exclusiveLimit: &quot;'{{=$exclusiveKeyword}} should be boolean'&quot;,</span>
+  <span class="s0">_limitItems:     &quot;'should NOT have {{?$keyword=='maxItems'}}more{{??}}fewer{{?}} than {{#def.concatSchema}} items'&quot;,</span>
+  <span class="s0">_limitLength:    &quot;'should NOT be {{?$keyword=='maxLength'}}longer{{??}}shorter{{?}} than {{#def.concatSchema}} characters'&quot;,</span>
+  <span class="s0">_limitProperties:&quot;'should NOT have {{?$keyword=='maxProperties'}}more{{??}}fewer{{?}} than {{#def.concatSchema}} properties'&quot;,</span>
+  <span class="s0">multipleOf:      &quot;'should be multiple of {{#def.appendSchema}}&quot;,</span>
+  <span class="s0">not:             &quot;'should NOT be valid'&quot;,</span>
+  <span class="s0">oneOf:           &quot;'should match exactly one schema in oneOf'&quot;,</span>
+  <span class="s0">pattern:         &quot;'should match pattern \&quot;{{#def.concatSchemaEQ}}\&quot;'&quot;,</span>
+  <span class="s0">propertyNames:   &quot;'property name \\'{{=$invalidName}}\\' is invalid'&quot;,</span>
+  <span class="s0">required:        &quot;'{{? it.opts._errorDataPathProperty }}is a required property{{??}}should have required property \\'{{=$missingProperty}}\\'{{?}}'&quot;,</span>
+  <span class="s0">type:            &quot;'should be {{? $typeIsArray }}{{= $typeSchema.join(\&quot;,\&quot;) }}{{??}}{{=$typeSchema}}{{?}}'&quot;,</span>
+  <span class="s0">uniqueItems:     &quot;'should NOT have duplicate items (items ## ' + j + ' and ' + i + ' are identical)'&quot;,</span>
+  <span class="s0">custom:          &quot;'should pass \&quot;{{=$rule.keyword}}\&quot; keyword validation'&quot;,</span>
+  <span class="s0">patternRequired: &quot;'should have property matching pattern \\'{{=$missingPattern}}\\''&quot;,</span>
+  <span class="s0">switch:          &quot;'should pass \&quot;switch\&quot; keyword validation'&quot;,</span>
+  <span class="s0">_formatLimit:    &quot;'should be {{=$opStr}} \&quot;{{#def.concatSchemaEQ}}\&quot;'&quot;,</span>
+  <span class="s0">_formatExclusiveLimit: &quot;'{{=$exclusiveKeyword}} should be boolean'&quot;</span>
+<span class="s0">} #}}</span>
+
+
+<span class="s0">{{## def.schemaRefOrVal: {{?$isData}}validate.schema{{=$schemaPath}}{{??}}{{=$schema}}{{?}} #}}</span>
+<span class="s0">{{## def.schemaRefOrQS: {{?$isData}}validate.schema{{=$schemaPath}}{{??}}{{=it.util.toQuotedString($schema)}}{{?}} #}}</span>
+
+<span class="s0">{{## def._errorSchemas = {</span>
+  <span class="s0">'false schema':  &quot;false&quot;,</span>
+  <span class="s0">$ref:            &quot;{{=it.util.toQuotedString($schema)}}&quot;,</span>
+  <span class="s0">additionalItems: &quot;false&quot;,</span>
+  <span class="s0">additionalProperties: &quot;false&quot;,</span>
+  <span class="s0">anyOf:           &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">const:           &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">contains:        &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">dependencies:    &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">'enum':          &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">format:          &quot;{{#def.schemaRefOrQS}}&quot;,</span>
+  <span class="s0">'if':            &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">_limit:          &quot;{{#def.schemaRefOrVal}}&quot;,</span>
+  <span class="s0">_exclusiveLimit: &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">_limitItems:     &quot;{{#def.schemaRefOrVal}}&quot;,</span>
+  <span class="s0">_limitLength:    &quot;{{#def.schemaRefOrVal}}&quot;,</span>
+  <span class="s0">_limitProperties:&quot;{{#def.schemaRefOrVal}}&quot;,</span>
+  <span class="s0">multipleOf:      &quot;{{#def.schemaRefOrVal}}&quot;,</span>
+  <span class="s0">not:             &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">oneOf:           &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">pattern:         &quot;{{#def.schemaRefOrQS}}&quot;,</span>
+  <span class="s0">propertyNames:   &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">required:        &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">type:            &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">uniqueItems:     &quot;{{#def.schemaRefOrVal}}&quot;,</span>
+  <span class="s0">custom:          &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">patternRequired: &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">switch:          &quot;validate.schema{{=$schemaPath}}&quot;,</span>
+  <span class="s0">_formatLimit:    &quot;{{#def.schemaRefOrQS}}&quot;,</span>
+  <span class="s0">_formatExclusiveLimit: &quot;validate.schema{{=$schemaPath}}&quot;</span>
+<span class="s0">} #}}</span>
+
+
+<span class="s0">{{## def.schemaValueQS: {{?$isData}}{{=$schemaValue}}{{??}}{{=it.util.toQuotedString($schema)}}{{?}} #}}</span>
+
+<span class="s0">{{## def._errorParams = {</span>
+  <span class="s0">'false schema':  &quot;{}&quot;,</span>
+  <span class="s0">$ref:            &quot;{ ref: '{{=it.util.escapeQuotes($schema)}}' }&quot;,</span>
+  <span class="s0">additionalItems: &quot;{ limit: {{=$schema.length}} }&quot;,</span>
+  <span class="s0">additionalProperties: &quot;{ additionalProperty: '{{=$additionalProperty}}' }&quot;,</span>
+  <span class="s0">anyOf:           &quot;{}&quot;,</span>
+  <span class="s0">const:           &quot;{ allowedValue: schema{{=$lvl}} }&quot;,</span>
+  <span class="s0">contains:        &quot;{}&quot;,</span>
+  <span class="s0">dependencies:    &quot;{ property: '{{= it.util.escapeQuotes($property) }}', missingProperty: '{{=$missingProperty}}', depsCount: {{=$deps.length}}, deps: '{{= it.util.escapeQuotes($deps.length==1 ? $deps[0] : $deps.join(\&quot;, \&quot;)) }}' }&quot;,</span>
+  <span class="s0">'enum':          &quot;{ allowedValues: schema{{=$lvl}} }&quot;,</span>
+  <span class="s0">format:          &quot;{ format: {{#def.schemaValueQS}} }&quot;,</span>
+  <span class="s0">'if':            &quot;{ failingKeyword: {{=$ifClause}} }&quot;,</span>
+  <span class="s0">_limit:          &quot;{ comparison: {{=$opExpr}}, limit: {{=$schemaValue}}, exclusive: {{=$exclusive}} }&quot;,</span>
+  <span class="s0">_exclusiveLimit: &quot;{}&quot;,</span>
+  <span class="s0">_limitItems:     &quot;{ limit: {{=$schemaValue}} }&quot;,</span>
+  <span class="s0">_limitLength:    &quot;{ limit: {{=$schemaValue}} }&quot;,</span>
+  <span class="s0">_limitProperties:&quot;{ limit: {{=$schemaValue}} }&quot;,</span>
+  <span class="s0">multipleOf:      &quot;{ multipleOf: {{=$schemaValue}} }&quot;,</span>
+  <span class="s0">not:             &quot;{}&quot;,</span>
+  <span class="s0">oneOf:           &quot;{ passingSchemas: {{=$passingSchemas}} }&quot;,</span>
+  <span class="s0">pattern:         &quot;{ pattern: {{#def.schemaValueQS}} }&quot;,</span>
+  <span class="s0">propertyNames:   &quot;{ propertyName: '{{=$invalidName}}' }&quot;,</span>
+  <span class="s0">required:        &quot;{ missingProperty: '{{=$missingProperty}}' }&quot;,</span>
+  <span class="s0">type:            &quot;{ type: '{{? $typeIsArray }}{{= $typeSchema.join(\&quot;,\&quot;) }}{{??}}{{=$typeSchema}}{{?}}' }&quot;,</span>
+  <span class="s0">uniqueItems:     &quot;{ i: i, j: j }&quot;,</span>
+  <span class="s0">custom:          &quot;{ keyword: '{{=$rule.keyword}}' }&quot;,</span>
+  <span class="s0">patternRequired: &quot;{ missingPattern: '{{=$missingPattern}}' }&quot;,</span>
+  <span class="s0">switch:          &quot;{ caseIndex: {{=$caseIndex}} }&quot;,</span>
+  <span class="s0">_formatLimit:    &quot;{ comparison: {{=$opExpr}}, limit: {{#def.schemaValueQS}}, exclusive: {{=$exclusive}} }&quot;,</span>
+  <span class="s0">_formatExclusiveLimit: &quot;{}&quot;</span>
+<span class="s0">} #}}</span>
+</pre>
+</body>
+</html>

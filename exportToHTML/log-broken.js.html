@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>log-broken.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #6897bb;}
+.s3 { color: #cc7832;}
+.s4 { color: #8ea765;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+log-broken.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">errorCode = process.argv[</span><span class="s2">2</span><span class="s1">]</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">max = process.argv[</span><span class="s2">3</span><span class="s1">]</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">modes = process.argv.slice(</span><span class="s2">4</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">stdout(message) {</span>
+  <span class="s0">if </span><span class="s1">(modes.indexOf(</span><span class="s4">'stdout'</span><span class="s1">) === -</span><span class="s2">1</span><span class="s1">) { </span><span class="s0">return</span><span class="s3">; </span><span class="s1">}</span>
+  <span class="s1">process.stdout.write(</span><span class="s4">'stdout ' </span><span class="s1">+ message + </span><span class="s4">'</span><span class="s3">\n</span><span class="s4">'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">stderr(message) {</span>
+  <span class="s0">if </span><span class="s1">(modes.indexOf(</span><span class="s4">'stderr'</span><span class="s1">) === -</span><span class="s2">1</span><span class="s1">) { </span><span class="s0">return</span><span class="s3">; </span><span class="s1">}</span>
+  <span class="s1">process.stderr.write(</span><span class="s4">'stderr ' </span><span class="s1">+ message + </span><span class="s4">'</span><span class="s3">\n</span><span class="s4">'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s2">0</span><span class="s3">; </span><span class="s1">i &lt; max</span><span class="s3">; </span><span class="s1">i++) {</span>
+  <span class="s1">stdout(i)</span><span class="s3">;</span>
+  <span class="s1">stderr(i)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">process.exit(errorCode)</span><span class="s3">;</span>
+
+<span class="s1">stdout(</span><span class="s4">'fail'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">stderr(</span><span class="s4">'fail'</span><span class="s1">)</span><span class="s3">;</span>
+</pre>
+</body>
+</html>

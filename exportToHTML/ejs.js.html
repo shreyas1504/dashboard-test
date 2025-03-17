@@ -1,0 +1,977 @@
+<html>
+<head>
+<title>ejs.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #cc7832; font-weight: bold;}
+.s7 { color: #808080;}
+.s8 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ejs.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * EJS Embedded JavaScript templates 
+ * Copyright 2112 Matthew Eernisse (mde@fleegix.org) 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *         http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+*/</span>
+
+<span class="s2">'use strict'</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* </span><span class="s5">@file </span><span class="s4">Embedded JavaScript templating engine. {</span><span class="s5">@link </span><span class="s4">http://ejs.co}</span>
+ <span class="s4">* </span><span class="s5">@author </span><span class="s4">Matthew Eernisse &lt;mde@fleegix.org&gt;</span>
+ <span class="s4">* </span><span class="s5">@author </span><span class="s4">Tiancheng &quot;Timothy&quot; Gu &lt;timothygu99@gmail.com&gt;</span>
+ <span class="s4">* </span><span class="s5">@project </span><span class="s4">EJS</span>
+ <span class="s4">* </span><span class="s5">@license </span><span class="s4">{</span><span class="s5">@link </span><span class="s4">http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0}</span>
+ <span class="s4">*/</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* EJS internal functions.</span>
+ <span class="s4">*</span>
+ <span class="s4">* Technically this &quot;module&quot; lies in the same file as {</span><span class="s5">@link </span><span class="s4">module:ejs}, for</span>
+ <span class="s4">* the sake of organization all the private functions re grouped into this</span>
+ <span class="s4">* module.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@module </span><span class="s4">ejs-internal</span>
+ <span class="s4">* </span><span class="s5">@private</span>
+ <span class="s4">*/</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Embedded JavaScript templating engine.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@module </span><span class="s4">ejs</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+
+
+<span class="s6">var </span><span class="s1">fs = require(</span><span class="s2">'fs'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s6">var </span><span class="s1">path = require(</span><span class="s2">'path'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s6">var </span><span class="s1">utils = require(</span><span class="s2">'./utils'</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s6">var </span><span class="s1">scopeOptionWarned = </span><span class="s6">false</span><span class="s3">;</span>
+<span class="s4">/** </span><span class="s5">@type </span><span class="s4">{string} */</span>
+<span class="s6">var </span><span class="s1">_VERSION_STRING = require(</span><span class="s2">'../package.json'</span><span class="s1">).version</span><span class="s3">;</span>
+<span class="s6">var </span><span class="s1">_DEFAULT_OPEN_DELIMITER = </span><span class="s2">'&lt;'</span><span class="s3">;</span>
+<span class="s6">var </span><span class="s1">_DEFAULT_CLOSE_DELIMITER = </span><span class="s2">'&gt;'</span><span class="s3">;</span>
+<span class="s6">var </span><span class="s1">_DEFAULT_DELIMITER = </span><span class="s2">'%'</span><span class="s3">;</span>
+<span class="s6">var </span><span class="s1">_DEFAULT_LOCALS_NAME = </span><span class="s2">'locals'</span><span class="s3">;</span>
+<span class="s6">var </span><span class="s1">_NAME = </span><span class="s2">'ejs'</span><span class="s3">;</span>
+<span class="s6">var </span><span class="s1">_REGEX_STRING = </span><span class="s2">'(&lt;%%|%%&gt;|&lt;%=|&lt;%-|&lt;%_|&lt;%#|&lt;%|%&gt;|-%&gt;|_%&gt;)'</span><span class="s3">;</span>
+<span class="s6">var </span><span class="s1">_OPTS_PASSABLE_WITH_DATA = [</span><span class="s2">'delimiter'</span><span class="s3">, </span><span class="s2">'scope'</span><span class="s3">, </span><span class="s2">'context'</span><span class="s3">, </span><span class="s2">'debug'</span><span class="s3">, </span><span class="s2">'compileDebug'</span><span class="s3">,</span>
+  <span class="s2">'client'</span><span class="s3">, </span><span class="s2">'_with'</span><span class="s3">, </span><span class="s2">'rmWhitespace'</span><span class="s3">, </span><span class="s2">'strict'</span><span class="s3">, </span><span class="s2">'filename'</span><span class="s3">, </span><span class="s2">'async'</span><span class="s1">]</span><span class="s3">;</span>
+<span class="s7">// We don't allow 'cache' option to be passed in the data obj for</span>
+<span class="s7">// the normal `render` call, but this is where Express 2 &amp; 3 put it</span>
+<span class="s7">// so we make an exception for `renderFile`</span>
+<span class="s6">var </span><span class="s1">_OPTS_PASSABLE_WITH_DATA_EXPRESS = _OPTS_PASSABLE_WITH_DATA.concat(</span><span class="s2">'cache'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s6">var </span><span class="s1">_BOM = </span><span class="s8">/^\uFEFF/</span><span class="s3">;</span>
+<span class="s6">var </span><span class="s1">_JS_IDENTIFIER = </span><span class="s8">/^[a-zA-Z_$][0-9a-zA-Z_$]*$/</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* EJS template function cache. This can be a LRU object from lru-cache NPM</span>
+ <span class="s4">* module. By default, it is {</span><span class="s5">@link </span><span class="s4">module:utils.cache}, a simple in-process</span>
+ <span class="s4">* cache that grows continuously.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@type </span><span class="s4">{Cache}</span>
+ <span class="s4">*/</span>
+
+<span class="s1">exports.cache = utils.cache</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Custom file loader. Useful for template preprocessing or restricting access</span>
+ <span class="s4">* to a certain part of the filesystem.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@type </span><span class="s4">{fileLoader}</span>
+ <span class="s4">*/</span>
+
+<span class="s1">exports.fileLoader = fs.readFileSync</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Name of the object containing the locals.</span>
+ <span class="s4">*</span>
+ <span class="s4">* This variable is overridden by {</span><span class="s5">@link </span><span class="s4">Options}`.localsName` if it is not</span>
+ <span class="s4">* `undefined`.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@type </span><span class="s4">{String}</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+
+<span class="s1">exports.localsName = _DEFAULT_LOCALS_NAME</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Promise implementation -- defaults to the native implementation if available</span>
+ <span class="s4">* This is mostly just for testability</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@type </span><span class="s4">{PromiseConstructorLike}</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+
+<span class="s1">exports.promiseImpl = (</span><span class="s6">new </span><span class="s1">Function(</span><span class="s2">'return this;'</span><span class="s1">))().Promise</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Get the path to the included file from the parent file path and the</span>
+ <span class="s4">* specified path.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String}  name     specified path</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String}  filename parent file path</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Boolean} [isDir=false] whether the parent file path is a directory</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{String}</span>
+ <span class="s4">*/</span>
+<span class="s1">exports.resolveInclude = </span><span class="s6">function</span><span class="s1">(name</span><span class="s3">, </span><span class="s1">filename</span><span class="s3">, </span><span class="s1">isDir) {</span>
+  <span class="s6">var </span><span class="s1">dirname = path.dirname</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">extname = path.extname</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">resolve = path.resolve</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">includePath = resolve(isDir ? filename : dirname(filename)</span><span class="s3">, </span><span class="s1">name)</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">ext = extname(name)</span><span class="s3">;</span>
+  <span class="s6">if </span><span class="s1">(!ext) {</span>
+    <span class="s1">includePath += </span><span class="s2">'.ejs'</span><span class="s3">;</span>
+  <span class="s1">}</span>
+  <span class="s6">return </span><span class="s1">includePath</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Try to resolve file path on multiple directories</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{String}        name  specified path</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{Array&lt;String&gt;} paths list of possible parent directory paths</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{String}</span>
+ <span class="s4">*/</span>
+<span class="s6">function </span><span class="s1">resolvePaths(name</span><span class="s3">, </span><span class="s1">paths) {</span>
+  <span class="s6">var </span><span class="s1">filePath</span><span class="s3">;</span>
+  <span class="s6">if </span><span class="s1">(paths.some(</span><span class="s6">function </span><span class="s1">(v) {</span>
+    <span class="s1">filePath = exports.resolveInclude(name</span><span class="s3">, </span><span class="s1">v</span><span class="s3">, </span><span class="s6">true</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s6">return </span><span class="s1">fs.existsSync(filePath)</span><span class="s3">;</span>
+  <span class="s1">})) {</span>
+    <span class="s6">return </span><span class="s1">filePath</span><span class="s3">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Get the path to the included file by Options</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{String}  path    specified path</span>
+ <span class="s4">* </span><span class="s5">@param  </span><span class="s4">{Options} options compilation options</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{String}</span>
+ <span class="s4">*/</span>
+<span class="s6">function </span><span class="s1">getIncludePath(path</span><span class="s3">, </span><span class="s1">options) {</span>
+  <span class="s6">var </span><span class="s1">includePath</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">filePath</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">views = options.views</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">match = </span><span class="s8">/^[A-Za-z]+:\\|^\//</span><span class="s1">.exec(path)</span><span class="s3">;</span>
+
+  <span class="s7">// Abs path</span>
+  <span class="s6">if </span><span class="s1">(match &amp;&amp; match.length) {</span>
+    <span class="s1">path = path.replace(</span><span class="s8">/^\/*/</span><span class="s3">, </span><span class="s2">''</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s6">if </span><span class="s1">(Array.isArray(options.root)) {</span>
+      <span class="s1">includePath = resolvePaths(path</span><span class="s3">, </span><span class="s1">options.root)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s6">else </span><span class="s1">{</span>
+      <span class="s1">includePath = exports.resolveInclude(path</span><span class="s3">, </span><span class="s1">options.root || </span><span class="s2">'/'</span><span class="s3">, </span><span class="s6">true</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s7">// Relative paths</span>
+  <span class="s6">else </span><span class="s1">{</span>
+    <span class="s7">// Look relative to a passed filename first</span>
+    <span class="s6">if </span><span class="s1">(options.filename) {</span>
+      <span class="s1">filePath = exports.resolveInclude(path</span><span class="s3">, </span><span class="s1">options.filename)</span><span class="s3">;</span>
+      <span class="s6">if </span><span class="s1">(fs.existsSync(filePath)) {</span>
+        <span class="s1">includePath = filePath</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s7">// Then look in any views directories</span>
+    <span class="s6">if </span><span class="s1">(!includePath &amp;&amp; Array.isArray(views)) {</span>
+      <span class="s1">includePath = resolvePaths(path</span><span class="s3">, </span><span class="s1">views)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s6">if </span><span class="s1">(!includePath &amp;&amp; </span><span class="s6">typeof </span><span class="s1">options.includer !== </span><span class="s2">'function'</span><span class="s1">) {</span>
+      <span class="s6">throw new </span><span class="s1">Error(</span><span class="s2">'Could not find the include file &quot;' </span><span class="s1">+</span>
+          <span class="s1">options.escapeFunction(path) + </span><span class="s2">'&quot;'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s6">return </span><span class="s1">includePath</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Get the template from a string or a file, either compiled on-the-fly or</span>
+ <span class="s4">* read from cache (if enabled), and cache the template if needed.</span>
+ <span class="s4">*</span>
+ <span class="s4">* If `template` is not set, the file specified in `options.filename` will be</span>
+ <span class="s4">* read.</span>
+ <span class="s4">*</span>
+ <span class="s4">* If `options.cache` is true, this function reads the file from</span>
+ <span class="s4">* `options.filename` so it must be set prior to calling this function.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@memberof </span><span class="s4">module:ejs-internal</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Options} options   compilation options</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String} [template] template source</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{(TemplateFunction|ClientFunction)}</span>
+ <span class="s4">* Depending on the value of `options.client`, either type might be returned.</span>
+ <span class="s4">* </span><span class="s5">@static</span>
+ <span class="s4">*/</span>
+
+<span class="s6">function </span><span class="s1">handleCache(options</span><span class="s3">, </span><span class="s1">template) {</span>
+  <span class="s6">var </span><span class="s1">func</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">filename = options.filename</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">hasTemplate = arguments.length &gt; </span><span class="s8">1</span><span class="s3">;</span>
+
+  <span class="s6">if </span><span class="s1">(options.cache) {</span>
+    <span class="s6">if </span><span class="s1">(!filename) {</span>
+      <span class="s6">throw new </span><span class="s1">Error(</span><span class="s2">'cache option requires a filename'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s1">func = exports.cache.get(filename)</span><span class="s3">;</span>
+    <span class="s6">if </span><span class="s1">(func) {</span>
+      <span class="s6">return </span><span class="s1">func</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s6">if </span><span class="s1">(!hasTemplate) {</span>
+      <span class="s1">template = fileLoader(filename).toString().replace(_BOM</span><span class="s3">, </span><span class="s2">''</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s6">else if </span><span class="s1">(!hasTemplate) {</span>
+    <span class="s7">// istanbul ignore if: should not happen at all</span>
+    <span class="s6">if </span><span class="s1">(!filename) {</span>
+      <span class="s6">throw new </span><span class="s1">Error(</span><span class="s2">'Internal EJS error: no file name or template '</span>
+                    <span class="s1">+ </span><span class="s2">'provided'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s1">template = fileLoader(filename).toString().replace(_BOM</span><span class="s3">, </span><span class="s2">''</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+  <span class="s1">func = exports.compile(template</span><span class="s3">, </span><span class="s1">options)</span><span class="s3">;</span>
+  <span class="s6">if </span><span class="s1">(options.cache) {</span>
+    <span class="s1">exports.cache.set(filename</span><span class="s3">, </span><span class="s1">func)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+  <span class="s6">return </span><span class="s1">func</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Try calling handleCache with the given options and data and call the</span>
+ <span class="s4">* callback with the result. If an error occurs, call the callback with</span>
+ <span class="s4">* the error. Used by renderFile().</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@memberof </span><span class="s4">module:ejs-internal</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Options} options    compilation options</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object} data        template data</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{RenderFileCallback} cb callback</span>
+ <span class="s4">* </span><span class="s5">@static</span>
+ <span class="s4">*/</span>
+
+<span class="s6">function </span><span class="s1">tryHandleCache(options</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">cb) {</span>
+  <span class="s6">var </span><span class="s1">result</span><span class="s3">;</span>
+  <span class="s6">if </span><span class="s1">(!cb) {</span>
+    <span class="s6">if </span><span class="s1">(</span><span class="s6">typeof </span><span class="s1">exports.promiseImpl == </span><span class="s2">'function'</span><span class="s1">) {</span>
+      <span class="s6">return new </span><span class="s1">exports.promiseImpl(</span><span class="s6">function </span><span class="s1">(resolve</span><span class="s3">, </span><span class="s1">reject) {</span>
+        <span class="s6">try </span><span class="s1">{</span>
+          <span class="s1">result = handleCache(options)(data)</span><span class="s3">;</span>
+          <span class="s1">resolve(result)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s6">catch </span><span class="s1">(err) {</span>
+          <span class="s1">reject(err)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+      <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s6">else </span><span class="s1">{</span>
+      <span class="s6">throw new </span><span class="s1">Error(</span><span class="s2">'Please provide a callback function'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s6">else </span><span class="s1">{</span>
+    <span class="s6">try </span><span class="s1">{</span>
+      <span class="s1">result = handleCache(options)(data)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s6">catch </span><span class="s1">(err) {</span>
+      <span class="s6">return </span><span class="s1">cb(err)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">cb(</span><span class="s6">null</span><span class="s3">, </span><span class="s1">result)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* fileLoader is independent</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String} filePath ejs file path.</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{String} The contents of the specified file.</span>
+ <span class="s4">* </span><span class="s5">@static</span>
+ <span class="s4">*/</span>
+
+<span class="s6">function </span><span class="s1">fileLoader(filePath){</span>
+  <span class="s6">return </span><span class="s1">exports.fileLoader(filePath)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Get the template function.</span>
+ <span class="s4">*</span>
+ <span class="s4">* If `options.cache` is `true`, then the template is cached.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@memberof </span><span class="s4">module:ejs-internal</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String}  path    path for the specified file</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Options} options compilation options</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{(TemplateFunction|ClientFunction)}</span>
+ <span class="s4">* Depending on the value of `options.client`, either type might be returned</span>
+ <span class="s4">* </span><span class="s5">@static</span>
+ <span class="s4">*/</span>
+
+<span class="s6">function </span><span class="s1">includeFile(path</span><span class="s3">, </span><span class="s1">options) {</span>
+  <span class="s6">var </span><span class="s1">opts = utils.shallowCopy(utils.createNullProtoObjWherePossible()</span><span class="s3">, </span><span class="s1">options)</span><span class="s3">;</span>
+  <span class="s1">opts.filename = getIncludePath(path</span><span class="s3">, </span><span class="s1">opts)</span><span class="s3">;</span>
+  <span class="s6">if </span><span class="s1">(</span><span class="s6">typeof </span><span class="s1">options.includer === </span><span class="s2">'function'</span><span class="s1">) {</span>
+    <span class="s6">var </span><span class="s1">includerResult = options.includer(path</span><span class="s3">, </span><span class="s1">opts.filename)</span><span class="s3">;</span>
+    <span class="s6">if </span><span class="s1">(includerResult) {</span>
+      <span class="s6">if </span><span class="s1">(includerResult.filename) {</span>
+        <span class="s1">opts.filename = includerResult.filename</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s6">if </span><span class="s1">(includerResult.template) {</span>
+        <span class="s6">return </span><span class="s1">handleCache(opts</span><span class="s3">, </span><span class="s1">includerResult.template)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+  <span class="s6">return </span><span class="s1">handleCache(opts)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Re-throw the given `err` in context to the `str` of ejs, `filename`, and</span>
+ <span class="s4">* `lineno`.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@implements </span><span class="s4">{RethrowCallback}</span>
+ <span class="s4">* </span><span class="s5">@memberof </span><span class="s4">module:ejs-internal</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Error}  err      Error object</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String} str      EJS source</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String} flnm     file name of the EJS file</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Number} lineno   line number of the error</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{EscapeCallback} esc</span>
+ <span class="s4">* </span><span class="s5">@static</span>
+ <span class="s4">*/</span>
+
+<span class="s6">function </span><span class="s1">rethrow(err</span><span class="s3">, </span><span class="s1">str</span><span class="s3">, </span><span class="s1">flnm</span><span class="s3">, </span><span class="s1">lineno</span><span class="s3">, </span><span class="s1">esc) {</span>
+  <span class="s6">var </span><span class="s1">lines = str.split(</span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">start = Math.max(lineno - </span><span class="s8">3</span><span class="s3">, </span><span class="s8">0</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">end = Math.min(lines.length</span><span class="s3">, </span><span class="s1">lineno + </span><span class="s8">3</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">filename = esc(flnm)</span><span class="s3">;</span>
+  <span class="s7">// Error context</span>
+  <span class="s6">var </span><span class="s1">context = lines.slice(start</span><span class="s3">, </span><span class="s1">end).map(</span><span class="s6">function </span><span class="s1">(line</span><span class="s3">, </span><span class="s1">i){</span>
+    <span class="s6">var </span><span class="s1">curr = i + start + </span><span class="s8">1</span><span class="s3">;</span>
+    <span class="s6">return </span><span class="s1">(curr == lineno ? </span><span class="s2">' &gt;&gt; ' </span><span class="s1">: </span><span class="s2">'    '</span><span class="s1">)</span>
+      <span class="s1">+ curr</span>
+      <span class="s1">+ </span><span class="s2">'| '</span>
+      <span class="s1">+ line</span><span class="s3">;</span>
+  <span class="s1">}).join(</span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">)</span><span class="s3">;</span>
+
+  <span class="s7">// Alter exception message</span>
+  <span class="s1">err.path = filename</span><span class="s3">;</span>
+  <span class="s1">err.message = (filename || </span><span class="s2">'ejs'</span><span class="s1">) + </span><span class="s2">':'</span>
+    <span class="s1">+ lineno + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span>
+    <span class="s1">+ context + </span><span class="s2">'</span><span class="s3">\n\n</span><span class="s2">'</span>
+    <span class="s1">+ err.message</span><span class="s3">;</span>
+
+  <span class="s6">throw </span><span class="s1">err</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s6">function </span><span class="s1">stripSemi(str){</span>
+  <span class="s6">return </span><span class="s1">str.replace(</span><span class="s8">/;(\s*$)/</span><span class="s3">, </span><span class="s2">'$1'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Compile the given `str` of ejs into a template function.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String}  template EJS template</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Options} [opts] compilation options</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{(TemplateFunction|ClientFunction)}</span>
+ <span class="s4">* Depending on the value of `opts.client`, either type might be returned.</span>
+ <span class="s4">* Note that the return type of the function also depends on the value of `opts.async`.</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+
+<span class="s1">exports.compile = </span><span class="s6">function </span><span class="s1">compile(template</span><span class="s3">, </span><span class="s1">opts) {</span>
+  <span class="s6">var </span><span class="s1">templ</span><span class="s3">;</span>
+
+  <span class="s7">// v1 compat</span>
+  <span class="s7">// 'scope' is 'context'</span>
+  <span class="s7">// FIXME: Remove this in a future version</span>
+  <span class="s6">if </span><span class="s1">(opts &amp;&amp; opts.scope) {</span>
+    <span class="s6">if </span><span class="s1">(!scopeOptionWarned){</span>
+      <span class="s1">console.warn(</span><span class="s2">'`scope` option is deprecated and will be removed in EJS 3'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">scopeOptionWarned = </span><span class="s6">true</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s6">if </span><span class="s1">(!opts.context) {</span>
+      <span class="s1">opts.context = opts.scope</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s6">delete </span><span class="s1">opts.scope</span><span class="s3">;</span>
+  <span class="s1">}</span>
+  <span class="s1">templ = </span><span class="s6">new </span><span class="s1">Template(template</span><span class="s3">, </span><span class="s1">opts)</span><span class="s3">;</span>
+  <span class="s6">return </span><span class="s1">templ.compile()</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Render the given `template` of ejs.</span>
+ <span class="s4">*</span>
+ <span class="s4">* If you would like to include options but not data, you need to explicitly</span>
+ <span class="s4">* call this function with `data` being an empty object or `null`.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String}   template EJS template</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object}  [data={}] template data</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Options} [opts={}] compilation and rendering options</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{(String|Promise&lt;String&gt;)}</span>
+ <span class="s4">* Return value type depends on `opts.async`.</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+
+<span class="s1">exports.render = </span><span class="s6">function </span><span class="s1">(template</span><span class="s3">, </span><span class="s1">d</span><span class="s3">, </span><span class="s1">o) {</span>
+  <span class="s6">var </span><span class="s1">data = d || utils.createNullProtoObjWherePossible()</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">opts = o || utils.createNullProtoObjWherePossible()</span><span class="s3">;</span>
+
+  <span class="s7">// No options object -- if there are optiony names</span>
+  <span class="s7">// in the data, copy them to options</span>
+  <span class="s6">if </span><span class="s1">(arguments.length == </span><span class="s8">2</span><span class="s1">) {</span>
+    <span class="s1">utils.shallowCopyFromList(opts</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">_OPTS_PASSABLE_WITH_DATA)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s6">return </span><span class="s1">handleCache(opts</span><span class="s3">, </span><span class="s1">template)(data)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Render an EJS file at the given `path` and callback `cb(err, str)`.</span>
+ <span class="s4">*</span>
+ <span class="s4">* If you would like to include options but not data, you need to explicitly</span>
+ <span class="s4">* call this function with `data` being an empty object or `null`.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String}             path     path to the EJS file</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Object}            [data={}] template data</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{Options}           [opts={}] compilation and rendering options</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{RenderFileCallback} cb callback</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+
+<span class="s1">exports.renderFile = </span><span class="s6">function </span><span class="s1">() {</span>
+  <span class="s6">var </span><span class="s1">args = Array.prototype.slice.call(arguments)</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">filename = args.shift()</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">cb</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">opts = {filename: filename}</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">data</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">viewOpts</span><span class="s3">;</span>
+
+  <span class="s7">// Do we have a callback?</span>
+  <span class="s6">if </span><span class="s1">(</span><span class="s6">typeof </span><span class="s1">arguments[arguments.length - </span><span class="s8">1</span><span class="s1">] == </span><span class="s2">'function'</span><span class="s1">) {</span>
+    <span class="s1">cb = args.pop()</span><span class="s3">;</span>
+  <span class="s1">}</span>
+  <span class="s7">// Do we have data/opts?</span>
+  <span class="s6">if </span><span class="s1">(args.length) {</span>
+    <span class="s7">// Should always have data obj</span>
+    <span class="s1">data = args.shift()</span><span class="s3">;</span>
+    <span class="s7">// Normal passed opts (data obj + opts obj)</span>
+    <span class="s6">if </span><span class="s1">(args.length) {</span>
+      <span class="s7">// Use shallowCopy so we don't pollute passed in opts obj with new vals</span>
+      <span class="s1">utils.shallowCopy(opts</span><span class="s3">, </span><span class="s1">args.pop())</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s7">// Special casing for Express (settings + opts-in-data)</span>
+    <span class="s6">else </span><span class="s1">{</span>
+      <span class="s7">// Express 3 and 4</span>
+      <span class="s6">if </span><span class="s1">(data.settings) {</span>
+        <span class="s7">// Pull a few things from known locations</span>
+        <span class="s6">if </span><span class="s1">(data.settings.views) {</span>
+          <span class="s1">opts.views = data.settings.views</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s6">if </span><span class="s1">(data.settings[</span><span class="s2">'view cache'</span><span class="s1">]) {</span>
+          <span class="s1">opts.cache = </span><span class="s6">true</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s7">// Undocumented after Express 2, but still usable, esp. for</span>
+        <span class="s7">// items that are unsafe to be passed along with data, like `root`</span>
+        <span class="s1">viewOpts = data.settings[</span><span class="s2">'view options'</span><span class="s1">]</span><span class="s3">;</span>
+        <span class="s6">if </span><span class="s1">(viewOpts) {</span>
+          <span class="s1">utils.shallowCopy(opts</span><span class="s3">, </span><span class="s1">viewOpts)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+      <span class="s7">// Express 2 and lower, values set in app.locals, or people who just</span>
+      <span class="s7">// want to pass options in their data. NOTE: These values will override</span>
+      <span class="s7">// anything previously set in settings  or settings['view options']</span>
+      <span class="s1">utils.shallowCopyFromList(opts</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">_OPTS_PASSABLE_WITH_DATA_EXPRESS)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s1">opts.filename = filename</span><span class="s3">;</span>
+  <span class="s1">}</span>
+  <span class="s6">else </span><span class="s1">{</span>
+    <span class="s1">data = utils.createNullProtoObjWherePossible()</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s6">return </span><span class="s1">tryHandleCache(opts</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">cb)</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Clear intermediate JavaScript cache. Calls {</span><span class="s5">@link </span><span class="s4">Cache#reset}.</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* EJS template class</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+<span class="s1">exports.Template = Template</span><span class="s3">;</span>
+
+<span class="s1">exports.clearCache = </span><span class="s6">function </span><span class="s1">() {</span>
+  <span class="s1">exports.cache.reset()</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s6">function </span><span class="s1">Template(text</span><span class="s3">, </span><span class="s1">optsParam) {</span>
+  <span class="s6">var </span><span class="s1">opts = utils.hasOwnOnlyObject(optsParam)</span><span class="s3">;</span>
+  <span class="s6">var </span><span class="s1">options = utils.createNullProtoObjWherePossible()</span><span class="s3">;</span>
+  <span class="s6">this</span><span class="s1">.templateText = text</span><span class="s3">;</span>
+  <span class="s4">/** </span><span class="s5">@type </span><span class="s4">{string | null} */</span>
+  <span class="s6">this</span><span class="s1">.mode = </span><span class="s6">null</span><span class="s3">;</span>
+  <span class="s6">this</span><span class="s1">.truncate = </span><span class="s6">false</span><span class="s3">;</span>
+  <span class="s6">this</span><span class="s1">.currentLine = </span><span class="s8">1</span><span class="s3">;</span>
+  <span class="s6">this</span><span class="s1">.source = </span><span class="s2">''</span><span class="s3">;</span>
+  <span class="s1">options.client = opts.client || </span><span class="s6">false</span><span class="s3">;</span>
+  <span class="s1">options.escapeFunction = opts.escape || opts.escapeFunction || utils.escapeXML</span><span class="s3">;</span>
+  <span class="s1">options.compileDebug = opts.compileDebug !== </span><span class="s6">false</span><span class="s3">;</span>
+  <span class="s1">options.debug = !!opts.debug</span><span class="s3">;</span>
+  <span class="s1">options.filename = opts.filename</span><span class="s3">;</span>
+  <span class="s1">options.openDelimiter = opts.openDelimiter || exports.openDelimiter || _DEFAULT_OPEN_DELIMITER</span><span class="s3">;</span>
+  <span class="s1">options.closeDelimiter = opts.closeDelimiter || exports.closeDelimiter || _DEFAULT_CLOSE_DELIMITER</span><span class="s3">;</span>
+  <span class="s1">options.delimiter = opts.delimiter || exports.delimiter || _DEFAULT_DELIMITER</span><span class="s3">;</span>
+  <span class="s1">options.strict = opts.strict || </span><span class="s6">false</span><span class="s3">;</span>
+  <span class="s1">options.context = opts.context</span><span class="s3">;</span>
+  <span class="s1">options.cache = opts.cache || </span><span class="s6">false</span><span class="s3">;</span>
+  <span class="s1">options.rmWhitespace = opts.rmWhitespace</span><span class="s3">;</span>
+  <span class="s1">options.root = opts.root</span><span class="s3">;</span>
+  <span class="s1">options.includer = opts.includer</span><span class="s3">;</span>
+  <span class="s1">options.outputFunctionName = opts.outputFunctionName</span><span class="s3">;</span>
+  <span class="s1">options.localsName = opts.localsName || exports.localsName || _DEFAULT_LOCALS_NAME</span><span class="s3">;</span>
+  <span class="s1">options.views = opts.views</span><span class="s3">;</span>
+  <span class="s1">options.async = opts.async</span><span class="s3">;</span>
+  <span class="s1">options.destructuredLocals = opts.destructuredLocals</span><span class="s3">;</span>
+  <span class="s1">options.legacyInclude = </span><span class="s6">typeof </span><span class="s1">opts.legacyInclude != </span><span class="s2">'undefined' </span><span class="s1">? !!opts.legacyInclude : </span><span class="s6">true</span><span class="s3">;</span>
+
+  <span class="s6">if </span><span class="s1">(options.strict) {</span>
+    <span class="s1">options._with = </span><span class="s6">false</span><span class="s3">;</span>
+  <span class="s1">}</span>
+  <span class="s6">else </span><span class="s1">{</span>
+    <span class="s1">options._with = </span><span class="s6">typeof </span><span class="s1">opts._with != </span><span class="s2">'undefined' </span><span class="s1">? opts._with : </span><span class="s6">true</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s6">this</span><span class="s1">.opts = options</span><span class="s3">;</span>
+
+  <span class="s6">this</span><span class="s1">.regex = </span><span class="s6">this</span><span class="s1">.createRegex()</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s1">Template.modes = {</span>
+  <span class="s1">EVAL: </span><span class="s2">'eval'</span><span class="s3">,</span>
+  <span class="s1">ESCAPED: </span><span class="s2">'escaped'</span><span class="s3">,</span>
+  <span class="s1">RAW: </span><span class="s2">'raw'</span><span class="s3">,</span>
+  <span class="s1">COMMENT: </span><span class="s2">'comment'</span><span class="s3">,</span>
+  <span class="s1">LITERAL: </span><span class="s2">'literal'</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">Template.prototype = {</span>
+  <span class="s1">createRegex: </span><span class="s6">function </span><span class="s1">() {</span>
+    <span class="s6">var </span><span class="s1">str = _REGEX_STRING</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">delim = utils.escapeRegExpChars(</span><span class="s6">this</span><span class="s1">.opts.delimiter)</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">open = utils.escapeRegExpChars(</span><span class="s6">this</span><span class="s1">.opts.openDelimiter)</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">close = utils.escapeRegExpChars(</span><span class="s6">this</span><span class="s1">.opts.closeDelimiter)</span><span class="s3">;</span>
+    <span class="s1">str = str.replace(</span><span class="s8">/%/g</span><span class="s3">, </span><span class="s1">delim)</span>
+      <span class="s1">.replace(</span><span class="s8">/&lt;/g</span><span class="s3">, </span><span class="s1">open)</span>
+      <span class="s1">.replace(</span><span class="s8">/&gt;/g</span><span class="s3">, </span><span class="s1">close)</span><span class="s3">;</span>
+    <span class="s6">return new </span><span class="s1">RegExp(str)</span><span class="s3">;</span>
+  <span class="s1">}</span><span class="s3">,</span>
+
+  <span class="s1">compile: </span><span class="s6">function </span><span class="s1">() {</span>
+    <span class="s4">/** </span><span class="s5">@type </span><span class="s4">{string} */</span>
+    <span class="s6">var </span><span class="s1">src</span><span class="s3">;</span>
+    <span class="s4">/** </span><span class="s5">@type </span><span class="s4">{ClientFunction} */</span>
+    <span class="s6">var </span><span class="s1">fn</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">opts = </span><span class="s6">this</span><span class="s1">.opts</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">prepended = </span><span class="s2">''</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">appended = </span><span class="s2">''</span><span class="s3">;</span>
+    <span class="s4">/** </span><span class="s5">@type </span><span class="s4">{EscapeCallback} */</span>
+    <span class="s6">var </span><span class="s1">escapeFn = opts.escapeFunction</span><span class="s3">;</span>
+    <span class="s4">/** </span><span class="s5">@type </span><span class="s4">{FunctionConstructor} */</span>
+    <span class="s6">var </span><span class="s1">ctor</span><span class="s3">;</span>
+    <span class="s4">/** </span><span class="s5">@type </span><span class="s4">{string} */</span>
+    <span class="s6">var </span><span class="s1">sanitizedFilename = opts.filename ? JSON.stringify(opts.filename) : </span><span class="s2">'undefined'</span><span class="s3">;</span>
+
+    <span class="s6">if </span><span class="s1">(!</span><span class="s6">this</span><span class="s1">.source) {</span>
+      <span class="s6">this</span><span class="s1">.generateSource()</span><span class="s3">;</span>
+      <span class="s1">prepended +=</span>
+        <span class="s2">'  var __output = &quot;&quot;;</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">+</span>
+        <span class="s2">'  function __append(s) { if (s !== undefined &amp;&amp; s !== null) __output += s }</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+      <span class="s6">if </span><span class="s1">(opts.outputFunctionName) {</span>
+        <span class="s6">if </span><span class="s1">(!_JS_IDENTIFIER.test(opts.outputFunctionName)) {</span>
+          <span class="s6">throw new </span><span class="s1">Error(</span><span class="s2">'outputFunctionName is not a valid JS identifier.'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s1">prepended += </span><span class="s2">'  var ' </span><span class="s1">+ opts.outputFunctionName + </span><span class="s2">' = __append;' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s6">if </span><span class="s1">(opts.localsName &amp;&amp; !_JS_IDENTIFIER.test(opts.localsName)) {</span>
+        <span class="s6">throw new </span><span class="s1">Error(</span><span class="s2">'localsName is not a valid JS identifier.'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s6">if </span><span class="s1">(opts.destructuredLocals &amp;&amp; opts.destructuredLocals.length) {</span>
+        <span class="s6">var </span><span class="s1">destructuring = </span><span class="s2">'  var __locals = (' </span><span class="s1">+ opts.localsName + </span><span class="s2">' || {}),</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+        <span class="s6">for </span><span class="s1">(</span><span class="s6">var </span><span class="s1">i = </span><span class="s8">0</span><span class="s3">; </span><span class="s1">i &lt; opts.destructuredLocals.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+          <span class="s6">var </span><span class="s1">name = opts.destructuredLocals[i]</span><span class="s3">;</span>
+          <span class="s6">if </span><span class="s1">(!_JS_IDENTIFIER.test(name)) {</span>
+            <span class="s6">throw new </span><span class="s1">Error(</span><span class="s2">'destructuredLocals[' </span><span class="s1">+ i + </span><span class="s2">'] is not a valid JS identifier.'</span><span class="s1">)</span><span class="s3">;</span>
+          <span class="s1">}</span>
+          <span class="s6">if </span><span class="s1">(i &gt; </span><span class="s8">0</span><span class="s1">) {</span>
+            <span class="s1">destructuring += </span><span class="s2">',</span><span class="s3">\n  </span><span class="s2">'</span><span class="s3">;</span>
+          <span class="s1">}</span>
+          <span class="s1">destructuring += name + </span><span class="s2">' = __locals.' </span><span class="s1">+ name</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s1">prepended += destructuring + </span><span class="s2">';</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s6">if </span><span class="s1">(opts._with !== </span><span class="s6">false</span><span class="s1">) {</span>
+        <span class="s1">prepended +=  </span><span class="s2">'  with (' </span><span class="s1">+ opts.localsName + </span><span class="s2">' || {}) {' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+        <span class="s1">appended += </span><span class="s2">'  }' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s1">appended += </span><span class="s2">'  return __output;' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+      <span class="s6">this</span><span class="s1">.source = prepended + </span><span class="s6">this</span><span class="s1">.source + appended</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s6">if </span><span class="s1">(opts.compileDebug) {</span>
+      <span class="s1">src = </span><span class="s2">'var __line = 1' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span>
+        <span class="s1">+ </span><span class="s2">'  , __lines = ' </span><span class="s1">+ JSON.stringify(</span><span class="s6">this</span><span class="s1">.templateText) + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span>
+        <span class="s1">+ </span><span class="s2">'  , __filename = ' </span><span class="s1">+ sanitizedFilename + </span><span class="s2">';' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span>
+        <span class="s1">+ </span><span class="s2">'try {' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span>
+        <span class="s1">+ </span><span class="s6">this</span><span class="s1">.source</span>
+        <span class="s1">+ </span><span class="s2">'} catch (e) {' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span>
+        <span class="s1">+ </span><span class="s2">'  rethrow(e, __lines, __filename, __line, escapeFn);' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span>
+        <span class="s1">+ </span><span class="s2">'}' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s6">else </span><span class="s1">{</span>
+      <span class="s1">src = </span><span class="s6">this</span><span class="s1">.source</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s6">if </span><span class="s1">(opts.client) {</span>
+      <span class="s1">src = </span><span class="s2">'escapeFn = escapeFn || ' </span><span class="s1">+ escapeFn.toString() + </span><span class="s2">';' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">+ src</span><span class="s3">;</span>
+      <span class="s6">if </span><span class="s1">(opts.compileDebug) {</span>
+        <span class="s1">src = </span><span class="s2">'rethrow = rethrow || ' </span><span class="s1">+ rethrow.toString() + </span><span class="s2">';' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">+ src</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s6">if </span><span class="s1">(opts.strict) {</span>
+      <span class="s1">src = </span><span class="s2">'&quot;use strict&quot;;</span><span class="s3">\n</span><span class="s2">' </span><span class="s1">+ src</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s6">if </span><span class="s1">(opts.debug) {</span>
+      <span class="s1">console.log(src)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s6">if </span><span class="s1">(opts.compileDebug &amp;&amp; opts.filename) {</span>
+      <span class="s1">src = src + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span>
+        <span class="s1">+ </span><span class="s2">'//# sourceURL=' </span><span class="s1">+ sanitizedFilename + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s6">try </span><span class="s1">{</span>
+      <span class="s6">if </span><span class="s1">(opts.async) {</span>
+        <span class="s7">// Have to use generated function for this, since in envs without support,</span>
+        <span class="s7">// it breaks in parsing</span>
+        <span class="s6">try </span><span class="s1">{</span>
+          <span class="s1">ctor = (</span><span class="s6">new </span><span class="s1">Function(</span><span class="s2">'return (async function(){}).constructor;'</span><span class="s1">))()</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s6">catch</span><span class="s1">(e) {</span>
+          <span class="s6">if </span><span class="s1">(e </span><span class="s6">instanceof </span><span class="s1">SyntaxError) {</span>
+            <span class="s6">throw new </span><span class="s1">Error(</span><span class="s2">'This environment does not support async/await'</span><span class="s1">)</span><span class="s3">;</span>
+          <span class="s1">}</span>
+          <span class="s6">else </span><span class="s1">{</span>
+            <span class="s6">throw </span><span class="s1">e</span><span class="s3">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+      <span class="s6">else </span><span class="s1">{</span>
+        <span class="s1">ctor = Function</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s1">fn = </span><span class="s6">new </span><span class="s1">ctor(opts.localsName + </span><span class="s2">', escapeFn, include, rethrow'</span><span class="s3">, </span><span class="s1">src)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s6">catch</span><span class="s1">(e) {</span>
+      <span class="s7">// istanbul ignore else</span>
+      <span class="s6">if </span><span class="s1">(e </span><span class="s6">instanceof </span><span class="s1">SyntaxError) {</span>
+        <span class="s6">if </span><span class="s1">(opts.filename) {</span>
+          <span class="s1">e.message += </span><span class="s2">' in ' </span><span class="s1">+ opts.filename</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s1">e.message += </span><span class="s2">' while compiling ejs</span><span class="s3">\n\n</span><span class="s2">'</span><span class="s3">;</span>
+        <span class="s1">e.message += </span><span class="s2">'If the above error is not helpful, you may want to try EJS-Lint:</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+        <span class="s1">e.message += </span><span class="s2">'https://github.com/RyanZim/EJS-Lint'</span><span class="s3">;</span>
+        <span class="s6">if </span><span class="s1">(!opts.async) {</span>
+          <span class="s1">e.message += </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+          <span class="s1">e.message += </span><span class="s2">'Or, if you meant to create an async function, pass `async: true` as an option.'</span><span class="s3">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+      <span class="s6">throw </span><span class="s1">e</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s7">// Return a callable function which will execute the function</span>
+    <span class="s7">// created by the source-code, with the passed data as locals</span>
+    <span class="s7">// Adds a local `include` function which allows full recursive include</span>
+    <span class="s6">var </span><span class="s1">returnedFn = opts.client ? fn : </span><span class="s6">function </span><span class="s1">anonymous(data) {</span>
+      <span class="s6">var </span><span class="s1">include = </span><span class="s6">function </span><span class="s1">(path</span><span class="s3">, </span><span class="s1">includeData) {</span>
+        <span class="s6">var </span><span class="s1">d = utils.shallowCopy(utils.createNullProtoObjWherePossible()</span><span class="s3">, </span><span class="s1">data)</span><span class="s3">;</span>
+        <span class="s6">if </span><span class="s1">(includeData) {</span>
+          <span class="s1">d = utils.shallowCopy(d</span><span class="s3">, </span><span class="s1">includeData)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s6">return </span><span class="s1">includeFile(path</span><span class="s3">, </span><span class="s1">opts)(d)</span><span class="s3">;</span>
+      <span class="s1">}</span><span class="s3">;</span>
+      <span class="s6">return </span><span class="s1">fn.apply(opts.context</span><span class="s3">,</span>
+        <span class="s1">[data || utils.createNullProtoObjWherePossible()</span><span class="s3">, </span><span class="s1">escapeFn</span><span class="s3">, </span><span class="s1">include</span><span class="s3">, </span><span class="s1">rethrow])</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">;</span>
+    <span class="s6">if </span><span class="s1">(opts.filename &amp;&amp; </span><span class="s6">typeof </span><span class="s1">Object.defineProperty === </span><span class="s2">'function'</span><span class="s1">) {</span>
+      <span class="s6">var </span><span class="s1">filename = opts.filename</span><span class="s3">;</span>
+      <span class="s6">var </span><span class="s1">basename = path.basename(filename</span><span class="s3">, </span><span class="s1">path.extname(filename))</span><span class="s3">;</span>
+      <span class="s6">try </span><span class="s1">{</span>
+        <span class="s1">Object.defineProperty(returnedFn</span><span class="s3">, </span><span class="s2">'name'</span><span class="s3">, </span><span class="s1">{</span>
+          <span class="s1">value: basename</span><span class="s3">,</span>
+          <span class="s1">writable: </span><span class="s6">false</span><span class="s3">,</span>
+          <span class="s1">enumerable: </span><span class="s6">false</span><span class="s3">,</span>
+          <span class="s1">configurable: </span><span class="s6">true</span>
+        <span class="s1">})</span><span class="s3">;</span>
+      <span class="s1">} </span><span class="s6">catch </span><span class="s1">(e) {</span><span class="s0">/* ignore */</span><span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s6">return </span><span class="s1">returnedFn</span><span class="s3">;</span>
+  <span class="s1">}</span><span class="s3">,</span>
+
+  <span class="s1">generateSource: </span><span class="s6">function </span><span class="s1">() {</span>
+    <span class="s6">var </span><span class="s1">opts = </span><span class="s6">this</span><span class="s1">.opts</span><span class="s3">;</span>
+
+    <span class="s6">if </span><span class="s1">(opts.rmWhitespace) {</span>
+      <span class="s7">// Have to use two separate replace here as `^` and `$` operators don't</span>
+      <span class="s7">// work well with `\r` and empty lines don't work well with the `m` flag.</span>
+      <span class="s6">this</span><span class="s1">.templateText =</span>
+        <span class="s6">this</span><span class="s1">.templateText.replace(</span><span class="s8">/[\r\n]+/g</span><span class="s3">, </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">).replace(</span><span class="s8">/^\s+|\s+$/gm</span><span class="s3">, </span><span class="s2">''</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s7">// Slurp spaces and tabs before &lt;%_ and after _%&gt;</span>
+    <span class="s6">this</span><span class="s1">.templateText =</span>
+      <span class="s6">this</span><span class="s1">.templateText.replace(</span><span class="s8">/[ \t]*&lt;%_/gm</span><span class="s3">, </span><span class="s2">'&lt;%_'</span><span class="s1">).replace(</span><span class="s8">/_%&gt;[ \t]*/gm</span><span class="s3">, </span><span class="s2">'_%&gt;'</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s6">var </span><span class="s1">self = </span><span class="s6">this</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">matches = </span><span class="s6">this</span><span class="s1">.parseTemplateText()</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">d = </span><span class="s6">this</span><span class="s1">.opts.delimiter</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">o = </span><span class="s6">this</span><span class="s1">.opts.openDelimiter</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">c = </span><span class="s6">this</span><span class="s1">.opts.closeDelimiter</span><span class="s3">;</span>
+
+    <span class="s6">if </span><span class="s1">(matches &amp;&amp; matches.length) {</span>
+      <span class="s1">matches.forEach(</span><span class="s6">function </span><span class="s1">(line</span><span class="s3">, </span><span class="s1">index) {</span>
+        <span class="s6">var </span><span class="s1">closing</span><span class="s3">;</span>
+        <span class="s7">// If this is an opening tag, check for closing tags</span>
+        <span class="s7">// FIXME: May end up with some false positives here</span>
+        <span class="s7">// Better to store modes as k/v with openDelimiter + delimiter as key</span>
+        <span class="s7">// Then this can simply check against the map</span>
+        <span class="s6">if </span><span class="s1">( line.indexOf(o + d) === </span><span class="s8">0        </span><span class="s7">// If it is a tag</span>
+          <span class="s1">&amp;&amp; line.indexOf(o + d + d) !== </span><span class="s8">0</span><span class="s1">) { </span><span class="s7">// and is not escaped</span>
+          <span class="s1">closing = matches[index + </span><span class="s8">2</span><span class="s1">]</span><span class="s3">;</span>
+          <span class="s6">if </span><span class="s1">(!(closing == d + c || closing == </span><span class="s2">'-' </span><span class="s1">+ d + c || closing == </span><span class="s2">'_' </span><span class="s1">+ d + c)) {</span>
+            <span class="s6">throw new </span><span class="s1">Error(</span><span class="s2">'Could not find matching close tag for &quot;' </span><span class="s1">+ line + </span><span class="s2">'&quot;.'</span><span class="s1">)</span><span class="s3">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s1">self.scanLine(line)</span><span class="s3">;</span>
+      <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+  <span class="s1">}</span><span class="s3">,</span>
+
+  <span class="s1">parseTemplateText: </span><span class="s6">function </span><span class="s1">() {</span>
+    <span class="s6">var </span><span class="s1">str = </span><span class="s6">this</span><span class="s1">.templateText</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">pat = </span><span class="s6">this</span><span class="s1">.regex</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">result = pat.exec(str)</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">arr = []</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">firstPos</span><span class="s3">;</span>
+
+    <span class="s6">while </span><span class="s1">(result) {</span>
+      <span class="s1">firstPos = result.index</span><span class="s3">;</span>
+
+      <span class="s6">if </span><span class="s1">(firstPos !== </span><span class="s8">0</span><span class="s1">) {</span>
+        <span class="s1">arr.push(str.substring(</span><span class="s8">0</span><span class="s3">, </span><span class="s1">firstPos))</span><span class="s3">;</span>
+        <span class="s1">str = str.slice(firstPos)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s1">arr.push(result[</span><span class="s8">0</span><span class="s1">])</span><span class="s3">;</span>
+      <span class="s1">str = str.slice(result[</span><span class="s8">0</span><span class="s1">].length)</span><span class="s3">;</span>
+      <span class="s1">result = pat.exec(str)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s6">if </span><span class="s1">(str) {</span>
+      <span class="s1">arr.push(str)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s6">return </span><span class="s1">arr</span><span class="s3">;</span>
+  <span class="s1">}</span><span class="s3">,</span>
+
+  <span class="s1">_addOutput: </span><span class="s6">function </span><span class="s1">(line) {</span>
+    <span class="s6">if </span><span class="s1">(</span><span class="s6">this</span><span class="s1">.truncate) {</span>
+      <span class="s7">// Only replace single leading linebreak in the line after</span>
+      <span class="s7">// -%&gt; tag -- this is the single, trailing linebreak</span>
+      <span class="s7">// after the tag that the truncation mode replaces</span>
+      <span class="s7">// Handle Win / Unix / old Mac linebreaks -- do the \r\n</span>
+      <span class="s7">// combo first in the regex-or</span>
+      <span class="s1">line = line.replace(</span><span class="s8">/^(?:\r\n|\r|\n)/</span><span class="s3">, </span><span class="s2">''</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s6">this</span><span class="s1">.truncate = </span><span class="s6">false</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s6">if </span><span class="s1">(!line) {</span>
+      <span class="s6">return </span><span class="s1">line</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s7">// Preserve literal slashes</span>
+    <span class="s1">line = line.replace(</span><span class="s8">/\\/g</span><span class="s3">, </span><span class="s2">'</span><span class="s3">\\\\</span><span class="s2">'</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s7">// Convert linebreaks</span>
+    <span class="s1">line = line.replace(</span><span class="s8">/\n/g</span><span class="s3">, </span><span class="s2">'</span><span class="s3">\\</span><span class="s2">n'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">line = line.replace(</span><span class="s8">/\r/g</span><span class="s3">, </span><span class="s2">'</span><span class="s3">\\</span><span class="s2">r'</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s7">// Escape double-quotes</span>
+    <span class="s7">// - this will be the delimiter during execution</span>
+    <span class="s1">line = line.replace(</span><span class="s8">/&quot;/g</span><span class="s3">, </span><span class="s2">'</span><span class="s3">\\</span><span class="s2">&quot;'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s6">this</span><span class="s1">.source += </span><span class="s2">'    ; __append(&quot;' </span><span class="s1">+ line + </span><span class="s2">'&quot;)' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+  <span class="s1">}</span><span class="s3">,</span>
+
+  <span class="s1">scanLine: </span><span class="s6">function </span><span class="s1">(line) {</span>
+    <span class="s6">var </span><span class="s1">self = </span><span class="s6">this</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">d = </span><span class="s6">this</span><span class="s1">.opts.delimiter</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">o = </span><span class="s6">this</span><span class="s1">.opts.openDelimiter</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">c = </span><span class="s6">this</span><span class="s1">.opts.closeDelimiter</span><span class="s3">;</span>
+    <span class="s6">var </span><span class="s1">newLineCount = </span><span class="s8">0</span><span class="s3">;</span>
+
+    <span class="s1">newLineCount = (line.split(</span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">).length - </span><span class="s8">1</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s6">switch </span><span class="s1">(line) {</span>
+    <span class="s6">case </span><span class="s1">o + d:</span>
+    <span class="s6">case </span><span class="s1">o + d + </span><span class="s2">'_'</span><span class="s1">:</span>
+      <span class="s6">this</span><span class="s1">.mode = Template.modes.EVAL</span><span class="s3">;</span>
+      <span class="s6">break</span><span class="s3">;</span>
+    <span class="s6">case </span><span class="s1">o + d + </span><span class="s2">'='</span><span class="s1">:</span>
+      <span class="s6">this</span><span class="s1">.mode = Template.modes.ESCAPED</span><span class="s3">;</span>
+      <span class="s6">break</span><span class="s3">;</span>
+    <span class="s6">case </span><span class="s1">o + d + </span><span class="s2">'-'</span><span class="s1">:</span>
+      <span class="s6">this</span><span class="s1">.mode = Template.modes.RAW</span><span class="s3">;</span>
+      <span class="s6">break</span><span class="s3">;</span>
+    <span class="s6">case </span><span class="s1">o + d + </span><span class="s2">'#'</span><span class="s1">:</span>
+      <span class="s6">this</span><span class="s1">.mode = Template.modes.COMMENT</span><span class="s3">;</span>
+      <span class="s6">break</span><span class="s3">;</span>
+    <span class="s6">case </span><span class="s1">o + d + d:</span>
+      <span class="s6">this</span><span class="s1">.mode = Template.modes.LITERAL</span><span class="s3">;</span>
+      <span class="s6">this</span><span class="s1">.source += </span><span class="s2">'    ; __append(&quot;' </span><span class="s1">+ line.replace(o + d + d</span><span class="s3">, </span><span class="s1">o + d) + </span><span class="s2">'&quot;)' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+      <span class="s6">break</span><span class="s3">;</span>
+    <span class="s6">case </span><span class="s1">d + d + c:</span>
+      <span class="s6">this</span><span class="s1">.mode = Template.modes.LITERAL</span><span class="s3">;</span>
+      <span class="s6">this</span><span class="s1">.source += </span><span class="s2">'    ; __append(&quot;' </span><span class="s1">+ line.replace(d + d + c</span><span class="s3">, </span><span class="s1">d + c) + </span><span class="s2">'&quot;)' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+      <span class="s6">break</span><span class="s3">;</span>
+    <span class="s6">case </span><span class="s1">d + c:</span>
+    <span class="s6">case </span><span class="s2">'-' </span><span class="s1">+ d + c:</span>
+    <span class="s6">case </span><span class="s2">'_' </span><span class="s1">+ d + c:</span>
+      <span class="s6">if </span><span class="s1">(</span><span class="s6">this</span><span class="s1">.mode == Template.modes.LITERAL) {</span>
+        <span class="s6">this</span><span class="s1">._addOutput(line)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s6">this</span><span class="s1">.mode = </span><span class="s6">null</span><span class="s3">;</span>
+      <span class="s6">this</span><span class="s1">.truncate = line.indexOf(</span><span class="s2">'-'</span><span class="s1">) === </span><span class="s8">0 </span><span class="s1">|| line.indexOf(</span><span class="s2">'_'</span><span class="s1">) === </span><span class="s8">0</span><span class="s3">;</span>
+      <span class="s6">break</span><span class="s3">;</span>
+    <span class="s6">default</span><span class="s1">:</span>
+      <span class="s7">// In script mode, depends on type of tag</span>
+      <span class="s6">if </span><span class="s1">(</span><span class="s6">this</span><span class="s1">.mode) {</span>
+        <span class="s7">// If '//' is found without a line break, add a line break.</span>
+        <span class="s6">switch </span><span class="s1">(</span><span class="s6">this</span><span class="s1">.mode) {</span>
+        <span class="s6">case </span><span class="s1">Template.modes.EVAL:</span>
+        <span class="s6">case </span><span class="s1">Template.modes.ESCAPED:</span>
+        <span class="s6">case </span><span class="s1">Template.modes.RAW:</span>
+          <span class="s6">if </span><span class="s1">(line.lastIndexOf(</span><span class="s2">'//'</span><span class="s1">) &gt; line.lastIndexOf(</span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s1">)) {</span>
+            <span class="s1">line += </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s6">switch </span><span class="s1">(</span><span class="s6">this</span><span class="s1">.mode) {</span>
+        <span class="s7">// Just executing code</span>
+        <span class="s6">case </span><span class="s1">Template.modes.EVAL:</span>
+          <span class="s6">this</span><span class="s1">.source += </span><span class="s2">'    ; ' </span><span class="s1">+ line + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+          <span class="s6">break</span><span class="s3">;</span>
+          <span class="s7">// Exec, esc, and output</span>
+        <span class="s6">case </span><span class="s1">Template.modes.ESCAPED:</span>
+          <span class="s6">this</span><span class="s1">.source += </span><span class="s2">'    ; __append(escapeFn(' </span><span class="s1">+ stripSemi(line) + </span><span class="s2">'))' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+          <span class="s6">break</span><span class="s3">;</span>
+          <span class="s7">// Exec and output</span>
+        <span class="s6">case </span><span class="s1">Template.modes.RAW:</span>
+          <span class="s6">this</span><span class="s1">.source += </span><span class="s2">'    ; __append(' </span><span class="s1">+ stripSemi(line) + </span><span class="s2">')' </span><span class="s1">+ </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+          <span class="s6">break</span><span class="s3">;</span>
+        <span class="s6">case </span><span class="s1">Template.modes.COMMENT:</span>
+          <span class="s7">// Do nothing</span>
+          <span class="s6">break</span><span class="s3">;</span>
+          <span class="s7">// Literal &lt;%% mode, append as raw output</span>
+        <span class="s6">case </span><span class="s1">Template.modes.LITERAL:</span>
+          <span class="s6">this</span><span class="s1">._addOutput(line)</span><span class="s3">;</span>
+          <span class="s6">break</span><span class="s3">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+      <span class="s7">// In string mode, just add the output</span>
+      <span class="s6">else </span><span class="s1">{</span>
+        <span class="s6">this</span><span class="s1">._addOutput(line)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s6">if </span><span class="s1">(self.opts.compileDebug &amp;&amp; newLineCount) {</span>
+      <span class="s6">this</span><span class="s1">.currentLine += newLineCount</span><span class="s3">;</span>
+      <span class="s6">this</span><span class="s1">.source += </span><span class="s2">'    ; __line = ' </span><span class="s1">+ </span><span class="s6">this</span><span class="s1">.currentLine + </span><span class="s2">'</span><span class="s3">\n</span><span class="s2">'</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Escape characters reserved in XML.</span>
+ <span class="s4">*</span>
+ <span class="s4">* This is simply an export of {</span><span class="s5">@link </span><span class="s4">module:utils.escapeXML}.</span>
+ <span class="s4">*</span>
+ <span class="s4">* If `markup` is `undefined` or `null`, the empty string is returned.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@param </span><span class="s4">{String} markup Input string</span>
+ <span class="s4">* </span><span class="s5">@return </span><span class="s4">{String} Escaped string</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">* </span><span class="s5">@func</span>
+ <span class="s4">* */</span>
+<span class="s1">exports.escapeXML = utils.escapeXML</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Express.js support.</span>
+ <span class="s4">*</span>
+ <span class="s4">* This is an alias for {</span><span class="s5">@link </span><span class="s4">module:ejs.renderFile}, in order to support</span>
+ <span class="s4">* Express.js out-of-the-box.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@func</span>
+ <span class="s4">*/</span>
+
+<span class="s1">exports.__express = exports.renderFile</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Version of EJS.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@readonly</span>
+ <span class="s4">* </span><span class="s5">@type </span><span class="s4">{String}</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+
+<span class="s1">exports.VERSION = _VERSION_STRING</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Name for detection of EJS.</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@readonly</span>
+ <span class="s4">* </span><span class="s5">@type </span><span class="s4">{String}</span>
+ <span class="s4">* </span><span class="s5">@public</span>
+ <span class="s4">*/</span>
+
+<span class="s1">exports.name = _NAME</span><span class="s3">;</span>
+
+<span class="s0">/* istanbul ignore if */</span>
+<span class="s6">if </span><span class="s1">(</span><span class="s6">typeof </span><span class="s1">window != </span><span class="s2">'undefined'</span><span class="s1">) {</span>
+  <span class="s1">window.ejs = exports</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+</pre>
+</body>
+</html>

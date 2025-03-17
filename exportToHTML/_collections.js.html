@@ -1,0 +1,2580 @@
+<html>
+<head>
+<title>_collections.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #808080;}
+.s4 { color: #6897bb;}
+.s5 { color: #cc7832; font-weight: bold;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_collections.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s3">// http://www.w3.org/TR/SVG11/intro.html#Definitions</span>
+<span class="s2">exports.elemsGroups = {</span>
+    <span class="s2">animation: [</span><span class="s0">'animate'</span><span class="s1">, </span><span class="s0">'animateColor'</span><span class="s1">, </span><span class="s0">'animateMotion'</span><span class="s1">, </span><span class="s0">'animateTransform'</span><span class="s1">, </span><span class="s0">'set'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">descriptive: [</span><span class="s0">'desc'</span><span class="s1">, </span><span class="s0">'metadata'</span><span class="s1">, </span><span class="s0">'title'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">shape: [</span><span class="s0">'circle'</span><span class="s1">, </span><span class="s0">'ellipse'</span><span class="s1">, </span><span class="s0">'line'</span><span class="s1">, </span><span class="s0">'path'</span><span class="s1">, </span><span class="s0">'polygon'</span><span class="s1">, </span><span class="s0">'polyline'</span><span class="s1">, </span><span class="s0">'rect'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">structural: [</span><span class="s0">'defs'</span><span class="s1">, </span><span class="s0">'g'</span><span class="s1">, </span><span class="s0">'svg'</span><span class="s1">, </span><span class="s0">'symbol'</span><span class="s1">, </span><span class="s0">'use'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">paintServer: [</span><span class="s0">'solidColor'</span><span class="s1">, </span><span class="s0">'linearGradient'</span><span class="s1">, </span><span class="s0">'radialGradient'</span><span class="s1">, </span><span class="s0">'meshGradient'</span><span class="s1">, </span><span class="s0">'pattern'</span><span class="s1">, </span><span class="s0">'hatch'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">nonRendering: [</span><span class="s0">'linearGradient'</span><span class="s1">, </span><span class="s0">'radialGradient'</span><span class="s1">, </span><span class="s0">'pattern'</span><span class="s1">, </span><span class="s0">'clipPath'</span><span class="s1">, </span><span class="s0">'mask'</span><span class="s1">, </span><span class="s0">'marker'</span><span class="s1">, </span><span class="s0">'symbol'</span><span class="s1">, </span><span class="s0">'filter'</span><span class="s1">, </span><span class="s0">'solidColor'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">container: [</span><span class="s0">'a'</span><span class="s1">, </span><span class="s0">'defs'</span><span class="s1">, </span><span class="s0">'g'</span><span class="s1">, </span><span class="s0">'marker'</span><span class="s1">, </span><span class="s0">'mask'</span><span class="s1">, </span><span class="s0">'missing-glyph'</span><span class="s1">, </span><span class="s0">'pattern'</span><span class="s1">, </span><span class="s0">'svg'</span><span class="s1">, </span><span class="s0">'switch'</span><span class="s1">, </span><span class="s0">'symbol'</span><span class="s1">, </span><span class="s0">'foreignObject'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">textContent: [</span><span class="s0">'altGlyph'</span><span class="s1">, </span><span class="s0">'altGlyphDef'</span><span class="s1">, </span><span class="s0">'altGlyphItem'</span><span class="s1">, </span><span class="s0">'glyph'</span><span class="s1">, </span><span class="s0">'glyphRef'</span><span class="s1">, </span><span class="s0">'textPath'</span><span class="s1">, </span><span class="s0">'text'</span><span class="s1">, </span><span class="s0">'tref'</span><span class="s1">, </span><span class="s0">'tspan'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">textContentChild: [</span><span class="s0">'altGlyph'</span><span class="s1">, </span><span class="s0">'textPath'</span><span class="s1">, </span><span class="s0">'tref'</span><span class="s1">, </span><span class="s0">'tspan'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">lightSource: [</span><span class="s0">'feDiffuseLighting'</span><span class="s1">, </span><span class="s0">'feSpecularLighting'</span><span class="s1">, </span><span class="s0">'feDistantLight'</span><span class="s1">, </span><span class="s0">'fePointLight'</span><span class="s1">, </span><span class="s0">'feSpotLight'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">filterPrimitive: [</span><span class="s0">'feBlend'</span><span class="s1">, </span><span class="s0">'feColorMatrix'</span><span class="s1">, </span><span class="s0">'feComponentTransfer'</span><span class="s1">, </span><span class="s0">'feComposite'</span><span class="s1">, </span><span class="s0">'feConvolveMatrix'</span><span class="s1">, </span><span class="s0">'feDiffuseLighting'</span><span class="s1">, </span><span class="s0">'feDisplacementMap'</span><span class="s1">, </span><span class="s0">'feFlood'</span><span class="s1">, </span><span class="s0">'feGaussianBlur'</span><span class="s1">, </span><span class="s0">'feImage'</span><span class="s1">, </span><span class="s0">'feMerge'</span><span class="s1">, </span><span class="s0">'feMorphology'</span><span class="s1">, </span><span class="s0">'feOffset'</span><span class="s1">, </span><span class="s0">'feSpecularLighting'</span><span class="s1">, </span><span class="s0">'feTile'</span><span class="s1">, </span><span class="s0">'feTurbulence'</span><span class="s2">]</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">exports.pathElems = [</span><span class="s0">'path'</span><span class="s1">, </span><span class="s0">'glyph'</span><span class="s1">, </span><span class="s0">'missing-glyph'</span><span class="s2">]</span><span class="s1">;</span>
+
+<span class="s3">// http://www.w3.org/TR/SVG11/intro.html#Definitions</span>
+<span class="s2">exports.attrsGroups = {</span>
+    <span class="s2">animationAddition: [</span><span class="s0">'additive'</span><span class="s1">, </span><span class="s0">'accumulate'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">animationAttributeTarget: [</span><span class="s0">'attributeType'</span><span class="s1">, </span><span class="s0">'attributeName'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">animationEvent: [</span><span class="s0">'onbegin'</span><span class="s1">, </span><span class="s0">'onend'</span><span class="s1">, </span><span class="s0">'onrepeat'</span><span class="s1">, </span><span class="s0">'onload'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">animationTiming: [</span><span class="s0">'begin'</span><span class="s1">, </span><span class="s0">'dur'</span><span class="s1">, </span><span class="s0">'end'</span><span class="s1">, </span><span class="s0">'min'</span><span class="s1">, </span><span class="s0">'max'</span><span class="s1">, </span><span class="s0">'restart'</span><span class="s1">, </span><span class="s0">'repeatCount'</span><span class="s1">, </span><span class="s0">'repeatDur'</span><span class="s1">, </span><span class="s0">'fill'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">animationValue: [</span><span class="s0">'calcMode'</span><span class="s1">, </span><span class="s0">'values'</span><span class="s1">, </span><span class="s0">'keyTimes'</span><span class="s1">, </span><span class="s0">'keySplines'</span><span class="s1">, </span><span class="s0">'from'</span><span class="s1">, </span><span class="s0">'to'</span><span class="s1">, </span><span class="s0">'by'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">conditionalProcessing: [</span><span class="s0">'requiredFeatures'</span><span class="s1">, </span><span class="s0">'requiredExtensions'</span><span class="s1">, </span><span class="s0">'systemLanguage'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">core: [</span><span class="s0">'id'</span><span class="s1">, </span><span class="s0">'tabindex'</span><span class="s1">, </span><span class="s0">'xml:base'</span><span class="s1">, </span><span class="s0">'xml:lang'</span><span class="s1">, </span><span class="s0">'xml:space'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">graphicalEvent: [</span><span class="s0">'onfocusin'</span><span class="s1">, </span><span class="s0">'onfocusout'</span><span class="s1">, </span><span class="s0">'onactivate'</span><span class="s1">, </span><span class="s0">'onclick'</span><span class="s1">, </span><span class="s0">'onmousedown'</span><span class="s1">, </span><span class="s0">'onmouseup'</span><span class="s1">, </span><span class="s0">'onmouseover'</span><span class="s1">, </span><span class="s0">'onmousemove'</span><span class="s1">, </span><span class="s0">'onmouseout'</span><span class="s1">, </span><span class="s0">'onload'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">presentation: [</span>
+        <span class="s0">'alignment-baseline'</span><span class="s1">,</span>
+        <span class="s0">'baseline-shift'</span><span class="s1">,</span>
+        <span class="s0">'clip'</span><span class="s1">,</span>
+        <span class="s0">'clip-path'</span><span class="s1">,</span>
+        <span class="s0">'clip-rule'</span><span class="s1">,</span>
+        <span class="s0">'color'</span><span class="s1">,</span>
+        <span class="s0">'color-interpolation'</span><span class="s1">,</span>
+        <span class="s0">'color-interpolation-filters'</span><span class="s1">,</span>
+        <span class="s0">'color-profile'</span><span class="s1">,</span>
+        <span class="s0">'color-rendering'</span><span class="s1">,</span>
+        <span class="s0">'cursor'</span><span class="s1">,</span>
+        <span class="s0">'direction'</span><span class="s1">,</span>
+        <span class="s0">'display'</span><span class="s1">,</span>
+        <span class="s0">'dominant-baseline'</span><span class="s1">,</span>
+        <span class="s0">'enable-background'</span><span class="s1">,</span>
+        <span class="s0">'fill'</span><span class="s1">,</span>
+        <span class="s0">'fill-opacity'</span><span class="s1">,</span>
+        <span class="s0">'fill-rule'</span><span class="s1">,</span>
+        <span class="s0">'filter'</span><span class="s1">,</span>
+        <span class="s0">'flood-color'</span><span class="s1">,</span>
+        <span class="s0">'flood-opacity'</span><span class="s1">,</span>
+        <span class="s0">'font-family'</span><span class="s1">,</span>
+        <span class="s0">'font-size'</span><span class="s1">,</span>
+        <span class="s0">'font-size-adjust'</span><span class="s1">,</span>
+        <span class="s0">'font-stretch'</span><span class="s1">,</span>
+        <span class="s0">'font-style'</span><span class="s1">,</span>
+        <span class="s0">'font-variant'</span><span class="s1">,</span>
+        <span class="s0">'font-weight'</span><span class="s1">,</span>
+        <span class="s0">'glyph-orientation-horizontal'</span><span class="s1">,</span>
+        <span class="s0">'glyph-orientation-vertical'</span><span class="s1">,</span>
+        <span class="s0">'image-rendering'</span><span class="s1">,</span>
+        <span class="s0">'letter-spacing'</span><span class="s1">,</span>
+        <span class="s0">'lighting-color'</span><span class="s1">,</span>
+        <span class="s0">'marker-end'</span><span class="s1">,</span>
+        <span class="s0">'marker-mid'</span><span class="s1">,</span>
+        <span class="s0">'marker-start'</span><span class="s1">,</span>
+        <span class="s0">'mask'</span><span class="s1">,</span>
+        <span class="s0">'opacity'</span><span class="s1">,</span>
+        <span class="s0">'overflow'</span><span class="s1">,</span>
+        <span class="s0">'paint-order'</span><span class="s1">,</span>
+        <span class="s0">'pointer-events'</span><span class="s1">,</span>
+        <span class="s0">'shape-rendering'</span><span class="s1">,</span>
+        <span class="s0">'stop-color'</span><span class="s1">,</span>
+        <span class="s0">'stop-opacity'</span><span class="s1">,</span>
+        <span class="s0">'stroke'</span><span class="s1">,</span>
+        <span class="s0">'stroke-dasharray'</span><span class="s1">,</span>
+        <span class="s0">'stroke-dashoffset'</span><span class="s1">,</span>
+        <span class="s0">'stroke-linecap'</span><span class="s1">,</span>
+        <span class="s0">'stroke-linejoin'</span><span class="s1">,</span>
+        <span class="s0">'stroke-miterlimit'</span><span class="s1">,</span>
+        <span class="s0">'stroke-opacity'</span><span class="s1">,</span>
+        <span class="s0">'stroke-width'</span><span class="s1">,</span>
+        <span class="s0">'text-anchor'</span><span class="s1">,</span>
+        <span class="s0">'text-decoration'</span><span class="s1">,</span>
+        <span class="s0">'text-overflow'</span><span class="s1">,</span>
+        <span class="s0">'text-rendering'</span><span class="s1">,</span>
+        <span class="s0">'transform'</span><span class="s1">,</span>
+        <span class="s0">'unicode-bidi'</span><span class="s1">,</span>
+        <span class="s0">'vector-effect'</span><span class="s1">,</span>
+        <span class="s0">'visibility'</span><span class="s1">,</span>
+        <span class="s0">'word-spacing'</span><span class="s1">,</span>
+        <span class="s0">'writing-mode'</span>
+    <span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">xlink: [</span><span class="s0">'xlink:href'</span><span class="s1">, </span><span class="s0">'xlink:show'</span><span class="s1">, </span><span class="s0">'xlink:actuate'</span><span class="s1">, </span><span class="s0">'xlink:type'</span><span class="s1">, </span><span class="s0">'xlink:role'</span><span class="s1">, </span><span class="s0">'xlink:arcrole'</span><span class="s1">, </span><span class="s0">'xlink:title'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">documentEvent: [</span><span class="s0">'onunload'</span><span class="s1">, </span><span class="s0">'onabort'</span><span class="s1">, </span><span class="s0">'onerror'</span><span class="s1">, </span><span class="s0">'onresize'</span><span class="s1">, </span><span class="s0">'onscroll'</span><span class="s1">, </span><span class="s0">'onzoom'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">filterPrimitive: [</span><span class="s0">'x'</span><span class="s1">, </span><span class="s0">'y'</span><span class="s1">, </span><span class="s0">'width'</span><span class="s1">, </span><span class="s0">'height'</span><span class="s1">, </span><span class="s0">'result'</span><span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">transferFunction: [</span><span class="s0">'type'</span><span class="s1">, </span><span class="s0">'tableValues'</span><span class="s1">, </span><span class="s0">'slope'</span><span class="s1">, </span><span class="s0">'intercept'</span><span class="s1">, </span><span class="s0">'amplitude'</span><span class="s1">, </span><span class="s0">'exponent'</span><span class="s1">, </span><span class="s0">'offset'</span><span class="s2">]</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">exports.attrsGroupsDefaults = {</span>
+    <span class="s2">core: {</span><span class="s0">'xml:space'</span><span class="s2">: </span><span class="s0">'preserve'</span><span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">filterPrimitive: {x: </span><span class="s0">'0'</span><span class="s1">, </span><span class="s2">y: </span><span class="s0">'0'</span><span class="s1">, </span><span class="s2">width: </span><span class="s0">'100%'</span><span class="s1">, </span><span class="s2">height: </span><span class="s0">'100%'</span><span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">presentation: {</span>
+        <span class="s2">clip: </span><span class="s0">'auto'</span><span class="s1">,</span>
+        <span class="s0">'clip-path'</span><span class="s2">: </span><span class="s0">'none'</span><span class="s1">,</span>
+        <span class="s0">'clip-rule'</span><span class="s2">: </span><span class="s0">'nonzero'</span><span class="s1">,</span>
+        <span class="s2">mask: </span><span class="s0">'none'</span><span class="s1">,</span>
+        <span class="s2">opacity: </span><span class="s0">'1'</span><span class="s1">,</span>
+        <span class="s0">'stop-color'</span><span class="s2">: </span><span class="s0">'#000'</span><span class="s1">,</span>
+        <span class="s0">'stop-opacity'</span><span class="s2">: </span><span class="s0">'1'</span><span class="s1">,</span>
+        <span class="s0">'fill-opacity'</span><span class="s2">: </span><span class="s0">'1'</span><span class="s1">,</span>
+        <span class="s0">'fill-rule'</span><span class="s2">: </span><span class="s0">'nonzero'</span><span class="s1">,</span>
+        <span class="s2">fill: </span><span class="s0">'#000'</span><span class="s1">,</span>
+        <span class="s2">stroke: </span><span class="s0">'none'</span><span class="s1">,</span>
+        <span class="s0">'stroke-width'</span><span class="s2">: </span><span class="s0">'1'</span><span class="s1">,</span>
+        <span class="s0">'stroke-linecap'</span><span class="s2">: </span><span class="s0">'butt'</span><span class="s1">,</span>
+        <span class="s0">'stroke-linejoin'</span><span class="s2">: </span><span class="s0">'miter'</span><span class="s1">,</span>
+        <span class="s0">'stroke-miterlimit'</span><span class="s2">: </span><span class="s0">'4'</span><span class="s1">,</span>
+        <span class="s0">'stroke-dasharray'</span><span class="s2">: </span><span class="s0">'none'</span><span class="s1">,</span>
+        <span class="s0">'stroke-dashoffset'</span><span class="s2">: </span><span class="s0">'0'</span><span class="s1">,</span>
+        <span class="s0">'stroke-opacity'</span><span class="s2">: </span><span class="s0">'1'</span><span class="s1">,</span>
+        <span class="s0">'paint-order'</span><span class="s2">: </span><span class="s0">'normal'</span><span class="s1">,</span>
+        <span class="s0">'vector-effect'</span><span class="s2">: </span><span class="s0">'none'</span><span class="s1">,</span>
+        <span class="s2">display: </span><span class="s0">'inline'</span><span class="s1">,</span>
+        <span class="s2">visibility: </span><span class="s0">'visible'</span><span class="s1">,</span>
+        <span class="s0">'marker-start'</span><span class="s2">: </span><span class="s0">'none'</span><span class="s1">,</span>
+        <span class="s0">'marker-mid'</span><span class="s2">: </span><span class="s0">'none'</span><span class="s1">,</span>
+        <span class="s0">'marker-end'</span><span class="s2">: </span><span class="s0">'none'</span><span class="s1">,</span>
+        <span class="s0">'color-interpolation'</span><span class="s2">: </span><span class="s0">'sRGB'</span><span class="s1">,</span>
+        <span class="s0">'color-interpolation-filters'</span><span class="s2">: </span><span class="s0">'linearRGB'</span><span class="s1">,</span>
+        <span class="s0">'color-rendering'</span><span class="s2">: </span><span class="s0">'auto'</span><span class="s1">,</span>
+        <span class="s0">'shape-rendering'</span><span class="s2">: </span><span class="s0">'auto'</span><span class="s1">,</span>
+        <span class="s0">'text-rendering'</span><span class="s2">: </span><span class="s0">'auto'</span><span class="s1">,</span>
+        <span class="s0">'image-rendering'</span><span class="s2">: </span><span class="s0">'auto'</span><span class="s1">,</span>
+        <span class="s0">'font-style'</span><span class="s2">: </span><span class="s0">'normal'</span><span class="s1">,</span>
+        <span class="s0">'font-variant'</span><span class="s2">: </span><span class="s0">'normal'</span><span class="s1">,</span>
+        <span class="s0">'font-weight'</span><span class="s2">: </span><span class="s0">'normal'</span><span class="s1">,</span>
+        <span class="s0">'font-stretch'</span><span class="s2">: </span><span class="s0">'normal'</span><span class="s1">,</span>
+        <span class="s0">'font-size'</span><span class="s2">: </span><span class="s0">'medium'</span><span class="s1">,</span>
+        <span class="s0">'font-size-adjust'</span><span class="s2">: </span><span class="s0">'none'</span><span class="s1">,</span>
+        <span class="s2">kerning: </span><span class="s0">'auto'</span><span class="s1">,</span>
+        <span class="s0">'letter-spacing'</span><span class="s2">: </span><span class="s0">'normal'</span><span class="s1">,</span>
+        <span class="s0">'word-spacing'</span><span class="s2">: </span><span class="s0">'normal'</span><span class="s1">,</span>
+        <span class="s0">'text-decoration'</span><span class="s2">: </span><span class="s0">'none'</span><span class="s1">,</span>
+        <span class="s0">'text-anchor'</span><span class="s2">: </span><span class="s0">'start'</span><span class="s1">,</span>
+        <span class="s0">'text-overflow'</span><span class="s2">: </span><span class="s0">'clip'</span><span class="s1">,</span>
+        <span class="s0">'writing-mode'</span><span class="s2">: </span><span class="s0">'lr-tb'</span><span class="s1">,</span>
+        <span class="s0">'glyph-orientation-vertical'</span><span class="s2">: </span><span class="s0">'auto'</span><span class="s1">,</span>
+        <span class="s0">'glyph-orientation-horizontal'</span><span class="s2">: </span><span class="s0">'0deg'</span><span class="s1">,</span>
+        <span class="s2">direction: </span><span class="s0">'ltr'</span><span class="s1">,</span>
+        <span class="s0">'unicode-bidi'</span><span class="s2">: </span><span class="s0">'normal'</span><span class="s1">,</span>
+        <span class="s0">'dominant-baseline'</span><span class="s2">: </span><span class="s0">'auto'</span><span class="s1">,</span>
+        <span class="s0">'alignment-baseline'</span><span class="s2">: </span><span class="s0">'baseline'</span><span class="s1">,</span>
+        <span class="s0">'baseline-shift'</span><span class="s2">: </span><span class="s0">'baseline'</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">transferFunction: {slope: </span><span class="s0">'1'</span><span class="s1">, </span><span class="s2">intercept: </span><span class="s0">'0'</span><span class="s1">, </span><span class="s2">amplitude: </span><span class="s0">'1'</span><span class="s1">, </span><span class="s2">exponent: </span><span class="s0">'1'</span><span class="s1">, </span><span class="s2">offset: </span><span class="s0">'0'</span><span class="s2">}</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">// http://www.w3.org/TR/SVG11/eltindex.html</span>
+<span class="s2">exports.elems = {</span>
+    <span class="s2">a: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span><span class="s1">,</span>
+            <span class="s0">'target'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">target: </span><span class="s0">'_self'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'shape'</span><span class="s1">,</span>
+            <span class="s0">'structural'</span><span class="s1">,</span>
+            <span class="s0">'paintServer'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span><span class="s1">,</span>
+            <span class="s0">'altGlyphDef'</span><span class="s1">,</span>
+            <span class="s0">'clipPath'</span><span class="s1">,</span>
+            <span class="s0">'color-profile'</span><span class="s1">,</span>
+            <span class="s0">'cursor'</span><span class="s1">,</span>
+            <span class="s0">'filter'</span><span class="s1">,</span>
+            <span class="s0">'font'</span><span class="s1">,</span>
+            <span class="s0">'font-face'</span><span class="s1">,</span>
+            <span class="s0">'foreignObject'</span><span class="s1">,</span>
+            <span class="s0">'image'</span><span class="s1">,</span>
+            <span class="s0">'marker'</span><span class="s1">,</span>
+            <span class="s0">'mask'</span><span class="s1">,</span>
+            <span class="s0">'pattern'</span><span class="s1">,</span>
+            <span class="s0">'script'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'switch'</span><span class="s1">,</span>
+            <span class="s0">'text'</span><span class="s1">,</span>
+            <span class="s0">'view'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">altGlyph: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'dx'</span><span class="s1">,</span>
+            <span class="s0">'dy'</span><span class="s1">,</span>
+            <span class="s0">'glyphRef'</span><span class="s1">,</span>
+            <span class="s0">'format'</span><span class="s1">,</span>
+            <span class="s0">'rotate'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">altGlyphDef: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'glyphRef'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">altGlyphItem: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'glyphRef'</span><span class="s1">,</span>
+            <span class="s0">'altGlyphItem'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">animate: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'animationAddition'</span><span class="s1">,</span>
+            <span class="s0">'animationAttributeTarget'</span><span class="s1">,</span>
+            <span class="s0">'animationEvent'</span><span class="s1">,</span>
+            <span class="s0">'animationTiming'</span><span class="s1">,</span>
+            <span class="s0">'animationValue'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'externalResourcesRequired'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">animateColor: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'animationEvent'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span><span class="s1">,</span>
+            <span class="s0">'animationAttributeTarget'</span><span class="s1">,</span>
+            <span class="s0">'animationTiming'</span><span class="s1">,</span>
+            <span class="s0">'animationValue'</span><span class="s1">,</span>
+            <span class="s0">'animationAddition'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'externalResourcesRequired'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">animateMotion: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'animationEvent'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span><span class="s1">,</span>
+            <span class="s0">'animationTiming'</span><span class="s1">,</span>
+            <span class="s0">'animationValue'</span><span class="s1">,</span>
+            <span class="s0">'animationAddition'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'path'</span><span class="s1">,</span>
+            <span class="s0">'keyPoints'</span><span class="s1">,</span>
+            <span class="s0">'rotate'</span><span class="s1">,</span>
+            <span class="s0">'origin'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s0">'rotate'</span><span class="s2">: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'mpath'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">animateTransform: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'animationEvent'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span><span class="s1">,</span>
+            <span class="s0">'animationAttributeTarget'</span><span class="s1">,</span>
+            <span class="s0">'animationTiming'</span><span class="s1">,</span>
+            <span class="s0">'animationValue'</span><span class="s1">,</span>
+            <span class="s0">'animationAddition'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'type'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">circle: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span><span class="s1">,</span>
+            <span class="s0">'cx'</span><span class="s1">,</span>
+            <span class="s0">'cy'</span><span class="s1">,</span>
+            <span class="s0">'r'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">cx: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">cy: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">clipPath: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span><span class="s1">,</span>
+            <span class="s0">'clipPathUnits'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">clipPathUnits: </span><span class="s0">'userSpaceOnUse'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'shape'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'text'</span><span class="s1">,</span>
+            <span class="s0">'use'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s0">'color-profile'</span><span class="s2">: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'local'</span><span class="s1">,</span>
+            <span class="s0">'name'</span><span class="s1">,</span>
+            <span class="s0">'rendering-intent'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">name: </span><span class="s0">'sRGB'</span><span class="s1">,</span>
+            <span class="s0">'rendering-intent'</span><span class="s2">: </span><span class="s0">'auto'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">cursor: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">x: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">y: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">defs: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'shape'</span><span class="s1">,</span>
+            <span class="s0">'structural'</span><span class="s1">,</span>
+            <span class="s0">'paintServer'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span><span class="s1">,</span>
+            <span class="s0">'altGlyphDef'</span><span class="s1">,</span>
+            <span class="s0">'clipPath'</span><span class="s1">,</span>
+            <span class="s0">'color-profile'</span><span class="s1">,</span>
+            <span class="s0">'cursor'</span><span class="s1">,</span>
+            <span class="s0">'filter'</span><span class="s1">,</span>
+            <span class="s0">'font'</span><span class="s1">,</span>
+            <span class="s0">'font-face'</span><span class="s1">,</span>
+            <span class="s0">'foreignObject'</span><span class="s1">,</span>
+            <span class="s0">'image'</span><span class="s1">,</span>
+            <span class="s0">'marker'</span><span class="s1">,</span>
+            <span class="s0">'mask'</span><span class="s1">,</span>
+            <span class="s0">'pattern'</span><span class="s1">,</span>
+            <span class="s0">'script'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'switch'</span><span class="s1">,</span>
+            <span class="s0">'text'</span><span class="s1">,</span>
+            <span class="s0">'view'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">desc: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">ellipse: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span><span class="s1">,</span>
+            <span class="s0">'cx'</span><span class="s1">,</span>
+            <span class="s0">'cy'</span><span class="s1">,</span>
+            <span class="s0">'rx'</span><span class="s1">,</span>
+            <span class="s0">'ry'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">cx: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">cy: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feBlend: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s3">// TODO: in - 'If no value is provided and this is the first filter primitive,</span>
+            <span class="s3">// then this filter primitive will use SourceGraphic as its input'</span>
+            <span class="s0">'in'</span><span class="s1">,</span>
+            <span class="s0">'in2'</span><span class="s1">,</span>
+            <span class="s0">'mode'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">mode: </span><span class="s0">'normal'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feColorMatrix: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'in'</span><span class="s1">,</span>
+            <span class="s0">'type'</span><span class="s1">,</span>
+            <span class="s0">'values'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">type: </span><span class="s0">'matrix'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feComponentTransfer: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'in'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'feFuncA'</span><span class="s1">,</span>
+            <span class="s0">'feFuncB'</span><span class="s1">,</span>
+            <span class="s0">'feFuncG'</span><span class="s1">,</span>
+            <span class="s0">'feFuncR'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feComposite: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'in'</span><span class="s1">,</span>
+            <span class="s0">'in2'</span><span class="s1">,</span>
+            <span class="s0">'operator'</span><span class="s1">,</span>
+            <span class="s0">'k1'</span><span class="s1">,</span>
+            <span class="s0">'k2'</span><span class="s1">,</span>
+            <span class="s0">'k3'</span><span class="s1">,</span>
+            <span class="s0">'k4'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">operator: </span><span class="s0">'over'</span><span class="s1">,</span>
+            <span class="s2">k1: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">k2: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">k3: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">k4: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feConvolveMatrix: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'in'</span><span class="s1">,</span>
+            <span class="s0">'order'</span><span class="s1">,</span>
+            <span class="s0">'kernelMatrix'</span><span class="s1">,</span>
+            <span class="s3">// TODO: divisor - 'The default value is the sum of all values in kernelMatrix,</span>
+            <span class="s3">// with the exception that if the sum is zero, then the divisor is set to 1'</span>
+            <span class="s0">'divisor'</span><span class="s1">,</span>
+            <span class="s0">'bias'</span><span class="s1">,</span>
+            <span class="s3">// TODO: targetX - 'By default, the convolution matrix is centered in X over each</span>
+            <span class="s3">// pixel of the input image (i.e., targetX = floor ( orderX / 2 ))'</span>
+            <span class="s0">'targetX'</span><span class="s1">,</span>
+            <span class="s0">'targetY'</span><span class="s1">,</span>
+            <span class="s0">'edgeMode'</span><span class="s1">,</span>
+            <span class="s3">// TODO: kernelUnitLength - 'The first number is the &lt;dx&gt; value. The second number</span>
+            <span class="s3">// is the &lt;dy&gt; value. If the &lt;dy&gt; value is not specified, it defaults to the same value as &lt;dx&gt;'</span>
+            <span class="s0">'kernelUnitLength'</span><span class="s1">,</span>
+            <span class="s0">'preserveAlpha'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">order: </span><span class="s0">'3'</span><span class="s1">,</span>
+            <span class="s2">bias: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">edgeMode: </span><span class="s0">'duplicate'</span><span class="s1">,</span>
+            <span class="s2">preserveAlpha: </span><span class="s0">'false'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feDiffuseLighting: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'in'</span><span class="s1">,</span>
+            <span class="s0">'surfaceScale'</span><span class="s1">,</span>
+            <span class="s0">'diffuseConstant'</span><span class="s1">,</span>
+            <span class="s0">'kernelUnitLength'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">surfaceScale: </span><span class="s0">'1'</span><span class="s1">,</span>
+            <span class="s2">diffuseConstant: </span><span class="s0">'1'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s3">// TODO: 'exactly one light source element, in any order'</span>
+            <span class="s0">'feDistantLight'</span><span class="s1">,</span>
+            <span class="s0">'fePointLight'</span><span class="s1">,</span>
+            <span class="s0">'feSpotLight'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feDisplacementMap: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'in'</span><span class="s1">,</span>
+            <span class="s0">'in2'</span><span class="s1">,</span>
+            <span class="s0">'scale'</span><span class="s1">,</span>
+            <span class="s0">'xChannelSelector'</span><span class="s1">,</span>
+            <span class="s0">'yChannelSelector'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">scale: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">xChannelSelector: </span><span class="s0">'A'</span><span class="s1">,</span>
+            <span class="s2">yChannelSelector: </span><span class="s0">'A'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feDistantLight: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'azimuth'</span><span class="s1">,</span>
+            <span class="s0">'elevation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">azimuth: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">elevation: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feFlood: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'animateColor'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feFuncA: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'transferFunction'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'set'</span><span class="s1">,</span>
+            <span class="s0">'animate'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feFuncB: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'transferFunction'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'set'</span><span class="s1">,</span>
+            <span class="s0">'animate'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feFuncG: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'transferFunction'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'set'</span><span class="s1">,</span>
+            <span class="s0">'animate'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feFuncR: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'transferFunction'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'set'</span><span class="s1">,</span>
+            <span class="s0">'animate'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feGaussianBlur: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'in'</span><span class="s1">,</span>
+            <span class="s0">'stdDeviation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">stdDeviation: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'set'</span><span class="s1">,</span>
+            <span class="s0">'animate'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feImage: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'preserveAspectRatio'</span><span class="s1">,</span>
+            <span class="s0">'href'</span><span class="s1">,</span>
+            <span class="s0">'xlink:href'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">preserveAspectRatio: </span><span class="s0">'xMidYMid meet'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'animateTransform'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feMerge: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'feMergeNode'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feMergeNode: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'in'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feMorphology: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'in'</span><span class="s1">,</span>
+            <span class="s0">'operator'</span><span class="s1">,</span>
+            <span class="s0">'radius'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">operator: </span><span class="s0">'erode'</span><span class="s1">,</span>
+            <span class="s2">radius: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feOffset: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'in'</span><span class="s1">,</span>
+            <span class="s0">'dx'</span><span class="s1">,</span>
+            <span class="s0">'dy'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">dx: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">dy: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">fePointLight: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'z'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">x: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">y: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">z: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feSpecularLighting: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'in'</span><span class="s1">,</span>
+            <span class="s0">'surfaceScale'</span><span class="s1">,</span>
+            <span class="s0">'specularConstant'</span><span class="s1">,</span>
+            <span class="s0">'specularExponent'</span><span class="s1">,</span>
+            <span class="s0">'kernelUnitLength'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">surfaceScale: </span><span class="s0">'1'</span><span class="s1">,</span>
+            <span class="s2">specularConstant: </span><span class="s0">'1'</span><span class="s1">,</span>
+            <span class="s2">specularExponent: </span><span class="s0">'1'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s3">// TODO: exactly one 'light source element'</span>
+            <span class="s0">'lightSource'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feSpotLight: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'z'</span><span class="s1">,</span>
+            <span class="s0">'pointsAtX'</span><span class="s1">,</span>
+            <span class="s0">'pointsAtY'</span><span class="s1">,</span>
+            <span class="s0">'pointsAtZ'</span><span class="s1">,</span>
+            <span class="s0">'specularExponent'</span><span class="s1">,</span>
+            <span class="s0">'limitingConeAngle'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">x: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">y: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">z: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">pointsAtX: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">pointsAtY: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">pointsAtZ: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">specularExponent: </span><span class="s0">'1'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feTile: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'in'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">feTurbulence: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'baseFrequency'</span><span class="s1">,</span>
+            <span class="s0">'numOctaves'</span><span class="s1">,</span>
+            <span class="s0">'seed'</span><span class="s1">,</span>
+            <span class="s0">'stitchTiles'</span><span class="s1">,</span>
+            <span class="s0">'type'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">baseFrequency: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">numOctaves: </span><span class="s0">'1'</span><span class="s1">,</span>
+            <span class="s2">seed: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">stitchTiles: </span><span class="s0">'noStitch'</span><span class="s1">,</span>
+            <span class="s2">type: </span><span class="s0">'turbulence'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">filter: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'width'</span><span class="s1">,</span>
+            <span class="s0">'height'</span><span class="s1">,</span>
+            <span class="s0">'filterRes'</span><span class="s1">,</span>
+            <span class="s0">'filterUnits'</span><span class="s1">,</span>
+            <span class="s0">'primitiveUnits'</span><span class="s1">,</span>
+            <span class="s0">'href'</span><span class="s1">,</span>
+            <span class="s0">'xlink:href'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">primitiveUnits: </span><span class="s0">'userSpaceOnUse'</span><span class="s1">,</span>
+            <span class="s2">x: </span><span class="s0">'-10%'</span><span class="s1">,</span>
+            <span class="s2">y: </span><span class="s0">'-10%'</span><span class="s1">,</span>
+            <span class="s2">width: </span><span class="s0">'120%'</span><span class="s1">,</span>
+            <span class="s2">height: </span><span class="s0">'120%'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'filterPrimitive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">font: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'horiz-origin-x'</span><span class="s1">,</span>
+            <span class="s0">'horiz-origin-y'</span><span class="s1">,</span>
+            <span class="s0">'horiz-adv-x'</span><span class="s1">,</span>
+            <span class="s0">'vert-origin-x'</span><span class="s1">,</span>
+            <span class="s0">'vert-origin-y'</span><span class="s1">,</span>
+            <span class="s0">'vert-adv-y'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s0">'horiz-origin-x'</span><span class="s2">: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s0">'horiz-origin-y'</span><span class="s2">: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'font-face'</span><span class="s1">,</span>
+            <span class="s0">'glyph'</span><span class="s1">,</span>
+            <span class="s0">'hkern'</span><span class="s1">,</span>
+            <span class="s0">'missing-glyph'</span><span class="s1">,</span>
+            <span class="s0">'vkern'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s0">'font-face'</span><span class="s2">: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'font-family'</span><span class="s1">,</span>
+            <span class="s0">'font-style'</span><span class="s1">,</span>
+            <span class="s0">'font-variant'</span><span class="s1">,</span>
+            <span class="s0">'font-weight'</span><span class="s1">,</span>
+            <span class="s0">'font-stretch'</span><span class="s1">,</span>
+            <span class="s0">'font-size'</span><span class="s1">,</span>
+            <span class="s0">'unicode-range'</span><span class="s1">,</span>
+            <span class="s0">'units-per-em'</span><span class="s1">,</span>
+            <span class="s0">'panose-1'</span><span class="s1">,</span>
+            <span class="s0">'stemv'</span><span class="s1">,</span>
+            <span class="s0">'stemh'</span><span class="s1">,</span>
+            <span class="s0">'slope'</span><span class="s1">,</span>
+            <span class="s0">'cap-height'</span><span class="s1">,</span>
+            <span class="s0">'x-height'</span><span class="s1">,</span>
+            <span class="s0">'accent-height'</span><span class="s1">,</span>
+            <span class="s0">'ascent'</span><span class="s1">,</span>
+            <span class="s0">'descent'</span><span class="s1">,</span>
+            <span class="s0">'widths'</span><span class="s1">,</span>
+            <span class="s0">'bbox'</span><span class="s1">,</span>
+            <span class="s0">'ideographic'</span><span class="s1">,</span>
+            <span class="s0">'alphabetic'</span><span class="s1">,</span>
+            <span class="s0">'mathematical'</span><span class="s1">,</span>
+            <span class="s0">'hanging'</span><span class="s1">,</span>
+            <span class="s0">'v-ideographic'</span><span class="s1">,</span>
+            <span class="s0">'v-alphabetic'</span><span class="s1">,</span>
+            <span class="s0">'v-mathematical'</span><span class="s1">,</span>
+            <span class="s0">'v-hanging'</span><span class="s1">,</span>
+            <span class="s0">'underline-position'</span><span class="s1">,</span>
+            <span class="s0">'underline-thickness'</span><span class="s1">,</span>
+            <span class="s0">'strikethrough-position'</span><span class="s1">,</span>
+            <span class="s0">'strikethrough-thickness'</span><span class="s1">,</span>
+            <span class="s0">'overline-position'</span><span class="s1">,</span>
+            <span class="s0">'overline-thickness'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s0">'font-style'</span><span class="s2">: </span><span class="s0">'all'</span><span class="s1">,</span>
+            <span class="s0">'font-variant'</span><span class="s2">: </span><span class="s0">'normal'</span><span class="s1">,</span>
+            <span class="s0">'font-weight'</span><span class="s2">: </span><span class="s0">'all'</span><span class="s1">,</span>
+            <span class="s0">'font-stretch'</span><span class="s2">: </span><span class="s0">'normal'</span><span class="s1">,</span>
+            <span class="s0">'unicode-range'</span><span class="s2">: </span><span class="s0">'U+0-10FFFF'</span><span class="s1">,</span>
+            <span class="s0">'units-per-em'</span><span class="s2">: </span><span class="s0">'1000'</span><span class="s1">,</span>
+            <span class="s0">'panose-1'</span><span class="s2">: </span><span class="s0">'0 0 0 0 0 0 0 0 0 0'</span><span class="s1">,</span>
+            <span class="s0">'slope'</span><span class="s2">: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s3">// TODO: &quot;at most one 'font-face-src' element&quot;</span>
+            <span class="s0">'font-face-src'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s3">// TODO: empty content</span>
+    <span class="s0">'font-face-format'</span><span class="s2">: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'string'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s0">'font-face-name'</span><span class="s2">: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'name'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s0">'font-face-src'</span><span class="s2">: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'font-face-name'</span><span class="s1">,</span>
+            <span class="s0">'font-face-uri'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s0">'font-face-uri'</span><span class="s2">: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'href'</span><span class="s1">,</span>
+            <span class="s0">'xlink:href'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'font-face-format'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">foreignObject: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span><span class="s1">,</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'width'</span><span class="s1">,</span>
+            <span class="s0">'height'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">x: </span><span class="s4">0</span><span class="s1">,</span>
+            <span class="s2">y: </span><span class="s4">0</span>
+        <span class="s2">}</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">g: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'shape'</span><span class="s1">,</span>
+            <span class="s0">'structural'</span><span class="s1">,</span>
+            <span class="s0">'paintServer'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span><span class="s1">,</span>
+            <span class="s0">'altGlyphDef'</span><span class="s1">,</span>
+            <span class="s0">'clipPath'</span><span class="s1">,</span>
+            <span class="s0">'color-profile'</span><span class="s1">,</span>
+            <span class="s0">'cursor'</span><span class="s1">,</span>
+            <span class="s0">'filter'</span><span class="s1">,</span>
+            <span class="s0">'font'</span><span class="s1">,</span>
+            <span class="s0">'font-face'</span><span class="s1">,</span>
+            <span class="s0">'foreignObject'</span><span class="s1">,</span>
+            <span class="s0">'image'</span><span class="s1">,</span>
+            <span class="s0">'marker'</span><span class="s1">,</span>
+            <span class="s0">'mask'</span><span class="s1">,</span>
+            <span class="s0">'pattern'</span><span class="s1">,</span>
+            <span class="s0">'script'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'switch'</span><span class="s1">,</span>
+            <span class="s0">'text'</span><span class="s1">,</span>
+            <span class="s0">'view'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">glyph: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'d'</span><span class="s1">,</span>
+            <span class="s0">'horiz-adv-x'</span><span class="s1">,</span>
+            <span class="s0">'vert-origin-x'</span><span class="s1">,</span>
+            <span class="s0">'vert-origin-y'</span><span class="s1">,</span>
+            <span class="s0">'vert-adv-y'</span><span class="s1">,</span>
+            <span class="s0">'unicode'</span><span class="s1">,</span>
+            <span class="s0">'glyph-name'</span><span class="s1">,</span>
+            <span class="s0">'orientation'</span><span class="s1">,</span>
+            <span class="s0">'arabic-form'</span><span class="s1">,</span>
+            <span class="s0">'lang'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s0">'arabic-form'</span><span class="s2">: </span><span class="s0">'initial'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'shape'</span><span class="s1">,</span>
+            <span class="s0">'structural'</span><span class="s1">,</span>
+            <span class="s0">'paintServer'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span><span class="s1">,</span>
+            <span class="s0">'altGlyphDef'</span><span class="s1">,</span>
+            <span class="s0">'clipPath'</span><span class="s1">,</span>
+            <span class="s0">'color-profile'</span><span class="s1">,</span>
+            <span class="s0">'cursor'</span><span class="s1">,</span>
+            <span class="s0">'filter'</span><span class="s1">,</span>
+            <span class="s0">'font'</span><span class="s1">,</span>
+            <span class="s0">'font-face'</span><span class="s1">,</span>
+            <span class="s0">'foreignObject'</span><span class="s1">,</span>
+            <span class="s0">'image'</span><span class="s1">,</span>
+            <span class="s0">'marker'</span><span class="s1">,</span>
+            <span class="s0">'mask'</span><span class="s1">,</span>
+            <span class="s0">'pattern'</span><span class="s1">,</span>
+            <span class="s0">'script'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'switch'</span><span class="s1">,</span>
+            <span class="s0">'text'</span><span class="s1">,</span>
+            <span class="s0">'view'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">glyphRef: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'d'</span><span class="s1">,</span>
+            <span class="s0">'horiz-adv-x'</span><span class="s1">,</span>
+            <span class="s0">'vert-origin-x'</span><span class="s1">,</span>
+            <span class="s0">'vert-origin-y'</span><span class="s1">,</span>
+            <span class="s0">'vert-adv-y'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'shape'</span><span class="s1">,</span>
+            <span class="s0">'structural'</span><span class="s1">,</span>
+            <span class="s0">'paintServer'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span><span class="s1">,</span>
+            <span class="s0">'altGlyphDef'</span><span class="s1">,</span>
+            <span class="s0">'clipPath'</span><span class="s1">,</span>
+            <span class="s0">'color-profile'</span><span class="s1">,</span>
+            <span class="s0">'cursor'</span><span class="s1">,</span>
+            <span class="s0">'filter'</span><span class="s1">,</span>
+            <span class="s0">'font'</span><span class="s1">,</span>
+            <span class="s0">'font-face'</span><span class="s1">,</span>
+            <span class="s0">'foreignObject'</span><span class="s1">,</span>
+            <span class="s0">'image'</span><span class="s1">,</span>
+            <span class="s0">'marker'</span><span class="s1">,</span>
+            <span class="s0">'mask'</span><span class="s1">,</span>
+            <span class="s0">'pattern'</span><span class="s1">,</span>
+            <span class="s0">'script'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'switch'</span><span class="s1">,</span>
+            <span class="s0">'text'</span><span class="s1">,</span>
+            <span class="s0">'view'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">hatch: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'pitch'</span><span class="s1">,</span>
+            <span class="s0">'rotate'</span><span class="s1">,</span>
+            <span class="s0">'hatchUnits'</span><span class="s1">,</span>
+            <span class="s0">'hatchContentUnits'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">hatchUnits: </span><span class="s0">'objectBoundingBox'</span><span class="s1">,</span>
+            <span class="s2">hatchContentUnits: </span><span class="s0">'userSpaceOnUse'</span><span class="s1">,</span>
+            <span class="s2">x: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">y: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">pitch: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">rotate: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'hatchPath'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">hatchPath: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'d'</span><span class="s1">,</span>
+            <span class="s0">'offset'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">offset: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">hkern: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'u1'</span><span class="s1">,</span>
+            <span class="s0">'g1'</span><span class="s1">,</span>
+            <span class="s0">'u2'</span><span class="s1">,</span>
+            <span class="s0">'g2'</span><span class="s1">,</span>
+            <span class="s0">'k'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">image: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'preserveAspectRatio'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span><span class="s1">,</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'width'</span><span class="s1">,</span>
+            <span class="s0">'height'</span><span class="s1">,</span>
+            <span class="s0">'href'</span><span class="s1">,</span>
+            <span class="s0">'xlink:href'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">x: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">y: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">preserveAspectRatio: </span><span class="s0">'xMidYMid meet'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">line: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span><span class="s1">,</span>
+            <span class="s0">'x1'</span><span class="s1">,</span>
+            <span class="s0">'y1'</span><span class="s1">,</span>
+            <span class="s0">'x2'</span><span class="s1">,</span>
+            <span class="s0">'y2'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">x1: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">y1: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">x2: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">y2: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">linearGradient: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'x1'</span><span class="s1">,</span>
+            <span class="s0">'y1'</span><span class="s1">,</span>
+            <span class="s0">'x2'</span><span class="s1">,</span>
+            <span class="s0">'y2'</span><span class="s1">,</span>
+            <span class="s0">'gradientUnits'</span><span class="s1">,</span>
+            <span class="s0">'gradientTransform'</span><span class="s1">,</span>
+            <span class="s0">'spreadMethod'</span><span class="s1">,</span>
+            <span class="s0">'href'</span><span class="s1">,</span>
+            <span class="s0">'xlink:href'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">x1: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">y1: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">x2: </span><span class="s0">'100%'</span><span class="s1">,</span>
+            <span class="s2">y2: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">spreadMethod: </span><span class="s0">'pad'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'animateTransform'</span><span class="s1">,</span>
+            <span class="s0">'set'</span><span class="s1">,</span>
+            <span class="s0">'stop'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">marker: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'viewBox'</span><span class="s1">,</span>
+            <span class="s0">'preserveAspectRatio'</span><span class="s1">,</span>
+            <span class="s0">'refX'</span><span class="s1">,</span>
+            <span class="s0">'refY'</span><span class="s1">,</span>
+            <span class="s0">'markerUnits'</span><span class="s1">,</span>
+            <span class="s0">'markerWidth'</span><span class="s1">,</span>
+            <span class="s0">'markerHeight'</span><span class="s1">,</span>
+            <span class="s0">'orient'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">markerUnits: </span><span class="s0">'strokeWidth'</span><span class="s1">,</span>
+            <span class="s2">refX: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">refY: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">markerWidth: </span><span class="s0">'3'</span><span class="s1">,</span>
+            <span class="s2">markerHeight: </span><span class="s0">'3'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'shape'</span><span class="s1">,</span>
+            <span class="s0">'structural'</span><span class="s1">,</span>
+            <span class="s0">'paintServer'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span><span class="s1">,</span>
+            <span class="s0">'altGlyphDef'</span><span class="s1">,</span>
+            <span class="s0">'clipPath'</span><span class="s1">,</span>
+            <span class="s0">'color-profile'</span><span class="s1">,</span>
+            <span class="s0">'cursor'</span><span class="s1">,</span>
+            <span class="s0">'filter'</span><span class="s1">,</span>
+            <span class="s0">'font'</span><span class="s1">,</span>
+            <span class="s0">'font-face'</span><span class="s1">,</span>
+            <span class="s0">'foreignObject'</span><span class="s1">,</span>
+            <span class="s0">'image'</span><span class="s1">,</span>
+            <span class="s0">'marker'</span><span class="s1">,</span>
+            <span class="s0">'mask'</span><span class="s1">,</span>
+            <span class="s0">'pattern'</span><span class="s1">,</span>
+            <span class="s0">'script'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'switch'</span><span class="s1">,</span>
+            <span class="s0">'text'</span><span class="s1">,</span>
+            <span class="s0">'view'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">mask: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'width'</span><span class="s1">,</span>
+            <span class="s0">'height'</span><span class="s1">,</span>
+            <span class="s0">'maskUnits'</span><span class="s1">,</span>
+            <span class="s0">'maskContentUnits'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">maskUnits: </span><span class="s0">'objectBoundingBox'</span><span class="s1">,</span>
+            <span class="s2">maskContentUnits: </span><span class="s0">'userSpaceOnUse'</span><span class="s1">,</span>
+            <span class="s2">x: </span><span class="s0">'-10%'</span><span class="s1">,</span>
+            <span class="s2">y: </span><span class="s0">'-10%'</span><span class="s1">,</span>
+            <span class="s2">width: </span><span class="s0">'120%'</span><span class="s1">,</span>
+            <span class="s2">height: </span><span class="s0">'120%'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'shape'</span><span class="s1">,</span>
+            <span class="s0">'structural'</span><span class="s1">,</span>
+            <span class="s0">'paintServer'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span><span class="s1">,</span>
+            <span class="s0">'altGlyphDef'</span><span class="s1">,</span>
+            <span class="s0">'clipPath'</span><span class="s1">,</span>
+            <span class="s0">'color-profile'</span><span class="s1">,</span>
+            <span class="s0">'cursor'</span><span class="s1">,</span>
+            <span class="s0">'filter'</span><span class="s1">,</span>
+            <span class="s0">'font'</span><span class="s1">,</span>
+            <span class="s0">'font-face'</span><span class="s1">,</span>
+            <span class="s0">'foreignObject'</span><span class="s1">,</span>
+            <span class="s0">'image'</span><span class="s1">,</span>
+            <span class="s0">'marker'</span><span class="s1">,</span>
+            <span class="s0">'mask'</span><span class="s1">,</span>
+            <span class="s0">'pattern'</span><span class="s1">,</span>
+            <span class="s0">'script'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'switch'</span><span class="s1">,</span>
+            <span class="s0">'text'</span><span class="s1">,</span>
+            <span class="s0">'view'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">metadata: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s0">'missing-glyph'</span><span class="s2">: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'d'</span><span class="s1">,</span>
+            <span class="s0">'horiz-adv-x'</span><span class="s1">,</span>
+            <span class="s0">'vert-origin-x'</span><span class="s1">,</span>
+            <span class="s0">'vert-origin-y'</span><span class="s1">,</span>
+            <span class="s0">'vert-adv-y'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'shape'</span><span class="s1">,</span>
+            <span class="s0">'structural'</span><span class="s1">,</span>
+            <span class="s0">'paintServer'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span><span class="s1">,</span>
+            <span class="s0">'altGlyphDef'</span><span class="s1">,</span>
+            <span class="s0">'clipPath'</span><span class="s1">,</span>
+            <span class="s0">'color-profile'</span><span class="s1">,</span>
+            <span class="s0">'cursor'</span><span class="s1">,</span>
+            <span class="s0">'filter'</span><span class="s1">,</span>
+            <span class="s0">'font'</span><span class="s1">,</span>
+            <span class="s0">'font-face'</span><span class="s1">,</span>
+            <span class="s0">'foreignObject'</span><span class="s1">,</span>
+            <span class="s0">'image'</span><span class="s1">,</span>
+            <span class="s0">'marker'</span><span class="s1">,</span>
+            <span class="s0">'mask'</span><span class="s1">,</span>
+            <span class="s0">'pattern'</span><span class="s1">,</span>
+            <span class="s0">'script'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'switch'</span><span class="s1">,</span>
+            <span class="s0">'text'</span><span class="s1">,</span>
+            <span class="s0">'view'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">mpath: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'href'</span><span class="s1">,</span>
+            <span class="s0">'xlink:href'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">path: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span><span class="s1">,</span>
+            <span class="s0">'d'</span><span class="s1">,</span>
+            <span class="s0">'pathLength'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">pattern: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'viewBox'</span><span class="s1">,</span>
+            <span class="s0">'preserveAspectRatio'</span><span class="s1">,</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'width'</span><span class="s1">,</span>
+            <span class="s0">'height'</span><span class="s1">,</span>
+            <span class="s0">'patternUnits'</span><span class="s1">,</span>
+            <span class="s0">'patternContentUnits'</span><span class="s1">,</span>
+            <span class="s0">'patternTransform'</span><span class="s1">,</span>
+            <span class="s0">'href'</span><span class="s1">,</span>
+            <span class="s0">'xlink:href'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">patternUnits: </span><span class="s0">'objectBoundingBox'</span><span class="s1">,</span>
+            <span class="s2">patternContentUnits: </span><span class="s0">'userSpaceOnUse'</span><span class="s1">,</span>
+            <span class="s2">x: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">y: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">width: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">height: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">preserveAspectRatio: </span><span class="s0">'xMidYMid meet'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'paintServer'</span><span class="s1">,</span>
+            <span class="s0">'shape'</span><span class="s1">,</span>
+            <span class="s0">'structural'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span><span class="s1">,</span>
+            <span class="s0">'altGlyphDef'</span><span class="s1">,</span>
+            <span class="s0">'clipPath'</span><span class="s1">,</span>
+            <span class="s0">'color-profile'</span><span class="s1">,</span>
+            <span class="s0">'cursor'</span><span class="s1">,</span>
+            <span class="s0">'filter'</span><span class="s1">,</span>
+            <span class="s0">'font'</span><span class="s1">,</span>
+            <span class="s0">'font-face'</span><span class="s1">,</span>
+            <span class="s0">'foreignObject'</span><span class="s1">,</span>
+            <span class="s0">'image'</span><span class="s1">,</span>
+            <span class="s0">'marker'</span><span class="s1">,</span>
+            <span class="s0">'mask'</span><span class="s1">,</span>
+            <span class="s0">'pattern'</span><span class="s1">,</span>
+            <span class="s0">'script'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'switch'</span><span class="s1">,</span>
+            <span class="s0">'text'</span><span class="s1">,</span>
+            <span class="s0">'view'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">polygon: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span><span class="s1">,</span>
+            <span class="s0">'points'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">polyline: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span><span class="s1">,</span>
+            <span class="s0">'points'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">radialGradient: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'cx'</span><span class="s1">,</span>
+            <span class="s0">'cy'</span><span class="s1">,</span>
+            <span class="s0">'r'</span><span class="s1">,</span>
+            <span class="s0">'fx'</span><span class="s1">,</span>
+            <span class="s0">'fy'</span><span class="s1">,</span>
+            <span class="s0">'fr'</span><span class="s1">,</span>
+            <span class="s0">'gradientUnits'</span><span class="s1">,</span>
+            <span class="s0">'gradientTransform'</span><span class="s1">,</span>
+            <span class="s0">'spreadMethod'</span><span class="s1">,</span>
+            <span class="s0">'href'</span><span class="s1">,</span>
+            <span class="s0">'xlink:href'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">gradientUnits: </span><span class="s0">'objectBoundingBox'</span><span class="s1">,</span>
+            <span class="s2">cx: </span><span class="s0">'50%'</span><span class="s1">,</span>
+            <span class="s2">cy: </span><span class="s0">'50%'</span><span class="s1">,</span>
+            <span class="s2">r: </span><span class="s0">'50%'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'animateTransform'</span><span class="s1">,</span>
+            <span class="s0">'set'</span><span class="s1">,</span>
+            <span class="s0">'stop'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">meshGradient: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'gradientUnits'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'paintServer'</span><span class="s1">,</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'meshRow'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">meshRow: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'meshPatch'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">meshPatch: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'stop'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">rect: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span><span class="s1">,</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'width'</span><span class="s1">,</span>
+            <span class="s0">'height'</span><span class="s1">,</span>
+            <span class="s0">'rx'</span><span class="s1">,</span>
+            <span class="s0">'ry'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">x: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">y: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">script: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'type'</span><span class="s1">,</span>
+            <span class="s0">'href'</span><span class="s1">,</span>
+            <span class="s0">'xlink:href'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">set: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span><span class="s1">,</span>
+            <span class="s0">'animationAttributeTarget'</span><span class="s1">,</span>
+            <span class="s0">'animationTiming'</span><span class="s1">,</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'to'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">solidColor: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'paintServer'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">stop: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'offset'</span><span class="s1">,</span>
+            <span class="s0">'path'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'animateColor'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">style: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'type'</span><span class="s1">,</span>
+            <span class="s0">'media'</span><span class="s1">,</span>
+            <span class="s0">'title'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">type: </span><span class="s0">'text/css'</span>
+        <span class="s2">}</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">svg: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'documentEvent'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'width'</span><span class="s1">,</span>
+            <span class="s0">'height'</span><span class="s1">,</span>
+            <span class="s0">'viewBox'</span><span class="s1">,</span>
+            <span class="s0">'preserveAspectRatio'</span><span class="s1">,</span>
+            <span class="s0">'zoomAndPan'</span><span class="s1">,</span>
+            <span class="s0">'version'</span><span class="s1">,</span>
+            <span class="s0">'baseProfile'</span><span class="s1">,</span>
+            <span class="s0">'contentScriptType'</span><span class="s1">,</span>
+            <span class="s0">'contentStyleType'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">x: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">y: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">width: </span><span class="s0">'100%'</span><span class="s1">,</span>
+            <span class="s2">height: </span><span class="s0">'100%'</span><span class="s1">,</span>
+            <span class="s2">preserveAspectRatio: </span><span class="s0">'xMidYMid meet'</span><span class="s1">,</span>
+            <span class="s2">zoomAndPan: </span><span class="s0">'magnify'</span><span class="s1">,</span>
+            <span class="s2">version: </span><span class="s0">'1.1'</span><span class="s1">,</span>
+            <span class="s2">baseProfile: </span><span class="s0">'none'</span><span class="s1">,</span>
+            <span class="s2">contentScriptType: </span><span class="s0">'application/ecmascript'</span><span class="s1">,</span>
+            <span class="s2">contentStyleType: </span><span class="s0">'text/css'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'shape'</span><span class="s1">,</span>
+            <span class="s0">'structural'</span><span class="s1">,</span>
+            <span class="s0">'paintServer'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span><span class="s1">,</span>
+            <span class="s0">'altGlyphDef'</span><span class="s1">,</span>
+            <span class="s0">'clipPath'</span><span class="s1">,</span>
+            <span class="s0">'color-profile'</span><span class="s1">,</span>
+            <span class="s0">'cursor'</span><span class="s1">,</span>
+            <span class="s0">'filter'</span><span class="s1">,</span>
+            <span class="s0">'font'</span><span class="s1">,</span>
+            <span class="s0">'font-face'</span><span class="s1">,</span>
+            <span class="s0">'foreignObject'</span><span class="s1">,</span>
+            <span class="s0">'image'</span><span class="s1">,</span>
+            <span class="s0">'marker'</span><span class="s1">,</span>
+            <span class="s0">'mask'</span><span class="s1">,</span>
+            <span class="s0">'pattern'</span><span class="s1">,</span>
+            <span class="s0">'script'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'switch'</span><span class="s1">,</span>
+            <span class="s0">'text'</span><span class="s1">,</span>
+            <span class="s0">'view'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s5">switch</span><span class="s2">: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'shape'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span><span class="s1">,</span>
+            <span class="s0">'foreignObject'</span><span class="s1">,</span>
+            <span class="s0">'g'</span><span class="s1">,</span>
+            <span class="s0">'image'</span><span class="s1">,</span>
+            <span class="s0">'svg'</span><span class="s1">,</span>
+            <span class="s0">'switch'</span><span class="s1">,</span>
+            <span class="s0">'text'</span><span class="s1">,</span>
+            <span class="s0">'use'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">symbol: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'preserveAspectRatio'</span><span class="s1">,</span>
+            <span class="s0">'viewBox'</span><span class="s1">,</span>
+            <span class="s0">'refX'</span><span class="s1">,</span>
+            <span class="s0">'refY'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">refX: </span><span class="s4">0</span><span class="s1">,</span>
+            <span class="s2">refY: </span><span class="s4">0</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'shape'</span><span class="s1">,</span>
+            <span class="s0">'structural'</span><span class="s1">,</span>
+            <span class="s0">'paintServer'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span><span class="s1">,</span>
+            <span class="s0">'altGlyphDef'</span><span class="s1">,</span>
+            <span class="s0">'clipPath'</span><span class="s1">,</span>
+            <span class="s0">'color-profile'</span><span class="s1">,</span>
+            <span class="s0">'cursor'</span><span class="s1">,</span>
+            <span class="s0">'filter'</span><span class="s1">,</span>
+            <span class="s0">'font'</span><span class="s1">,</span>
+            <span class="s0">'font-face'</span><span class="s1">,</span>
+            <span class="s0">'foreignObject'</span><span class="s1">,</span>
+            <span class="s0">'image'</span><span class="s1">,</span>
+            <span class="s0">'marker'</span><span class="s1">,</span>
+            <span class="s0">'mask'</span><span class="s1">,</span>
+            <span class="s0">'pattern'</span><span class="s1">,</span>
+            <span class="s0">'script'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'switch'</span><span class="s1">,</span>
+            <span class="s0">'text'</span><span class="s1">,</span>
+            <span class="s0">'view'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">text: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span><span class="s1">,</span>
+            <span class="s0">'lengthAdjust'</span><span class="s1">,</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'dx'</span><span class="s1">,</span>
+            <span class="s0">'dy'</span><span class="s1">,</span>
+            <span class="s0">'rotate'</span><span class="s1">,</span>
+            <span class="s0">'textLength'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">x: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">y: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">lengthAdjust: </span><span class="s0">'spacing'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span><span class="s1">,</span>
+            <span class="s0">'textContentChild'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">textPath: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'href'</span><span class="s1">,</span>
+            <span class="s0">'xlink:href'</span><span class="s1">,</span>
+            <span class="s0">'startOffset'</span><span class="s1">,</span>
+            <span class="s0">'method'</span><span class="s1">,</span>
+            <span class="s0">'spacing'</span><span class="s1">,</span>
+            <span class="s0">'d'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">startOffset: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">method: </span><span class="s0">'align'</span><span class="s1">,</span>
+            <span class="s2">spacing: </span><span class="s0">'exact'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span><span class="s1">,</span>
+            <span class="s0">'altGlyph'</span><span class="s1">,</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'animateColor'</span><span class="s1">,</span>
+            <span class="s0">'set'</span><span class="s1">,</span>
+            <span class="s0">'tref'</span><span class="s1">,</span>
+            <span class="s0">'tspan'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">title: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">tref: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'href'</span><span class="s1">,</span>
+            <span class="s0">'xlink:href'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'animateColor'</span><span class="s1">,</span>
+            <span class="s0">'set'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">tspan: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'dx'</span><span class="s1">,</span>
+            <span class="s0">'dy'</span><span class="s1">,</span>
+            <span class="s0">'rotate'</span><span class="s1">,</span>
+            <span class="s0">'textLength'</span><span class="s1">,</span>
+            <span class="s0">'lengthAdjust'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">content: [</span>
+            <span class="s0">'a'</span><span class="s1">,</span>
+            <span class="s0">'altGlyph'</span><span class="s1">,</span>
+            <span class="s0">'animate'</span><span class="s1">,</span>
+            <span class="s0">'animateColor'</span><span class="s1">,</span>
+            <span class="s0">'set'</span><span class="s1">,</span>
+            <span class="s0">'tref'</span><span class="s1">,</span>
+            <span class="s0">'tspan'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">use: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span><span class="s1">,</span>
+            <span class="s0">'conditionalProcessing'</span><span class="s1">,</span>
+            <span class="s0">'graphicalEvent'</span><span class="s1">,</span>
+            <span class="s0">'presentation'</span><span class="s1">,</span>
+            <span class="s0">'xlink'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'class'</span><span class="s1">,</span>
+            <span class="s0">'style'</span><span class="s1">,</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'transform'</span><span class="s1">,</span>
+            <span class="s0">'x'</span><span class="s1">,</span>
+            <span class="s0">'y'</span><span class="s1">,</span>
+            <span class="s0">'width'</span><span class="s1">,</span>
+            <span class="s0">'height'</span><span class="s1">,</span>
+            <span class="s0">'href'</span><span class="s1">,</span>
+            <span class="s0">'xlink:href'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">defaults: {</span>
+            <span class="s2">x: </span><span class="s0">'0'</span><span class="s1">,</span>
+            <span class="s2">y: </span><span class="s0">'0'</span>
+        <span class="s2">}</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'animation'</span><span class="s1">,</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">view: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'externalResourcesRequired'</span><span class="s1">,</span>
+            <span class="s0">'viewBox'</span><span class="s1">,</span>
+            <span class="s0">'preserveAspectRatio'</span><span class="s1">,</span>
+            <span class="s0">'zoomAndPan'</span><span class="s1">,</span>
+            <span class="s0">'viewTarget'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">contentGroups: [</span>
+            <span class="s0">'descriptive'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span><span class="s1">,</span>
+    <span class="s2">vkern: {</span>
+        <span class="s2">attrsGroups: [</span>
+            <span class="s0">'core'</span>
+        <span class="s2">]</span><span class="s1">,</span>
+        <span class="s2">attrs: [</span>
+            <span class="s0">'u1'</span><span class="s1">,</span>
+            <span class="s0">'g1'</span><span class="s1">,</span>
+            <span class="s0">'u2'</span><span class="s1">,</span>
+            <span class="s0">'g2'</span><span class="s1">,</span>
+            <span class="s0">'k'</span>
+        <span class="s2">]</span>
+    <span class="s2">}</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">// http://wiki.inkscape.org/wiki/index.php/Inkscape-specific_XML_attributes</span>
+<span class="s2">exports.editorNamespaces = [</span>
+    <span class="s0">'http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd'</span><span class="s1">,</span>
+    <span class="s0">'http://inkscape.sourceforge.net/DTD/sodipodi-0.dtd'</span><span class="s1">,</span>
+    <span class="s0">'http://www.inkscape.org/namespaces/inkscape'</span><span class="s1">,</span>
+    <span class="s0">'http://www.bohemiancoding.com/sketch/ns'</span><span class="s1">,</span>
+    <span class="s0">'http://ns.adobe.com/AdobeIllustrator/10.0/'</span><span class="s1">,</span>
+    <span class="s0">'http://ns.adobe.com/Graphs/1.0/'</span><span class="s1">,</span>
+    <span class="s0">'http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/'</span><span class="s1">,</span>
+    <span class="s0">'http://ns.adobe.com/Variables/1.0/'</span><span class="s1">,</span>
+    <span class="s0">'http://ns.adobe.com/SaveForWeb/1.0/'</span><span class="s1">,</span>
+    <span class="s0">'http://ns.adobe.com/Extensibility/1.0/'</span><span class="s1">,</span>
+    <span class="s0">'http://ns.adobe.com/Flows/1.0/'</span><span class="s1">,</span>
+    <span class="s0">'http://ns.adobe.com/ImageReplacement/1.0/'</span><span class="s1">,</span>
+    <span class="s0">'http://ns.adobe.com/GenericCustomNamespace/1.0/'</span><span class="s1">,</span>
+    <span class="s0">'http://ns.adobe.com/XPath/1.0/'</span><span class="s1">,</span>
+    <span class="s0">'http://schemas.microsoft.com/visio/2003/SVGExtensions/'</span><span class="s1">,</span>
+    <span class="s0">'http://taptrix.com/vectorillustrator/svg_extensions'</span><span class="s1">,</span>
+    <span class="s0">'http://www.figma.com/figma/ns'</span><span class="s1">,</span>
+    <span class="s0">'http://purl.org/dc/elements/1.1/'</span><span class="s1">,</span>
+    <span class="s0">'http://creativecommons.org/ns#'</span><span class="s1">,</span>
+    <span class="s0">'http://www.w3.org/1999/02/22-rdf-syntax-ns#'</span><span class="s1">,</span>
+    <span class="s0">'http://www.serif.com/'</span><span class="s1">,</span>
+    <span class="s0">'http://www.vector.evaxdesign.sk'</span>
+<span class="s2">]</span><span class="s1">;</span>
+
+<span class="s3">// http://www.w3.org/TR/SVG11/linking.html#processingIRI</span>
+<span class="s2">exports.referencesProps = [</span>
+    <span class="s0">'clip-path'</span><span class="s1">,</span>
+    <span class="s0">'color-profile'</span><span class="s1">,</span>
+    <span class="s0">'fill'</span><span class="s1">,</span>
+    <span class="s0">'filter'</span><span class="s1">,</span>
+    <span class="s0">'marker-start'</span><span class="s1">,</span>
+    <span class="s0">'marker-mid'</span><span class="s1">,</span>
+    <span class="s0">'marker-end'</span><span class="s1">,</span>
+    <span class="s0">'mask'</span><span class="s1">,</span>
+    <span class="s0">'stroke'</span><span class="s1">,</span>
+    <span class="s0">'style'</span>
+<span class="s2">]</span><span class="s1">;</span>
+
+<span class="s3">// http://www.w3.org/TR/SVG11/propidx.html</span>
+<span class="s2">exports.inheritableAttrs = [</span>
+    <span class="s0">'clip-rule'</span><span class="s1">,</span>
+    <span class="s0">'color'</span><span class="s1">,</span>
+    <span class="s0">'color-interpolation'</span><span class="s1">,</span>
+    <span class="s0">'color-interpolation-filters'</span><span class="s1">,</span>
+    <span class="s0">'color-profile'</span><span class="s1">,</span>
+    <span class="s0">'color-rendering'</span><span class="s1">,</span>
+    <span class="s0">'cursor'</span><span class="s1">,</span>
+    <span class="s0">'direction'</span><span class="s1">,</span>
+    <span class="s0">'dominant-baseline'</span><span class="s1">,</span>
+    <span class="s0">'fill'</span><span class="s1">,</span>
+    <span class="s0">'fill-opacity'</span><span class="s1">,</span>
+    <span class="s0">'fill-rule'</span><span class="s1">,</span>
+    <span class="s0">'font'</span><span class="s1">,</span>
+    <span class="s0">'font-family'</span><span class="s1">,</span>
+    <span class="s0">'font-size'</span><span class="s1">,</span>
+    <span class="s0">'font-size-adjust'</span><span class="s1">,</span>
+    <span class="s0">'font-stretch'</span><span class="s1">,</span>
+    <span class="s0">'font-style'</span><span class="s1">,</span>
+    <span class="s0">'font-variant'</span><span class="s1">,</span>
+    <span class="s0">'font-weight'</span><span class="s1">,</span>
+    <span class="s0">'glyph-orientation-horizontal'</span><span class="s1">,</span>
+    <span class="s0">'glyph-orientation-vertical'</span><span class="s1">,</span>
+    <span class="s0">'image-rendering'</span><span class="s1">,</span>
+    <span class="s0">'letter-spacing'</span><span class="s1">,</span>
+    <span class="s0">'marker'</span><span class="s1">,</span>
+    <span class="s0">'marker-end'</span><span class="s1">,</span>
+    <span class="s0">'marker-mid'</span><span class="s1">,</span>
+    <span class="s0">'marker-start'</span><span class="s1">,</span>
+    <span class="s0">'paint-order'</span><span class="s1">,</span>
+    <span class="s0">'pointer-events'</span><span class="s1">,</span>
+    <span class="s0">'shape-rendering'</span><span class="s1">,</span>
+    <span class="s0">'stroke'</span><span class="s1">,</span>
+    <span class="s0">'stroke-dasharray'</span><span class="s1">,</span>
+    <span class="s0">'stroke-dashoffset'</span><span class="s1">,</span>
+    <span class="s0">'stroke-linecap'</span><span class="s1">,</span>
+    <span class="s0">'stroke-linejoin'</span><span class="s1">,</span>
+    <span class="s0">'stroke-miterlimit'</span><span class="s1">,</span>
+    <span class="s0">'stroke-opacity'</span><span class="s1">,</span>
+    <span class="s0">'stroke-width'</span><span class="s1">,</span>
+    <span class="s0">'text-anchor'</span><span class="s1">,</span>
+    <span class="s0">'text-rendering'</span><span class="s1">,</span>
+    <span class="s0">'transform'</span><span class="s1">,</span>
+    <span class="s0">'visibility'</span><span class="s1">,</span>
+    <span class="s0">'word-spacing'</span><span class="s1">,</span>
+    <span class="s0">'writing-mode'</span>
+<span class="s2">]</span><span class="s1">;</span>
+
+<span class="s2">exports.presentationNonInheritableGroupAttrs = [</span>
+    <span class="s0">'display'</span><span class="s1">,</span>
+    <span class="s0">'clip-path'</span><span class="s1">,</span>
+    <span class="s0">'filter'</span><span class="s1">,</span>
+    <span class="s0">'mask'</span><span class="s1">,</span>
+    <span class="s0">'opacity'</span><span class="s1">,</span>
+    <span class="s0">'text-decoration'</span><span class="s1">,</span>
+    <span class="s0">'transform'</span><span class="s1">,</span>
+    <span class="s0">'unicode-bidi'</span><span class="s1">,</span>
+    <span class="s0">'visibility'</span>
+<span class="s2">]</span><span class="s1">;</span>
+
+<span class="s3">// http://www.w3.org/TR/SVG11/single-page.html#types-ColorKeywords</span>
+<span class="s2">exports.colorsNames = {</span>
+    <span class="s0">'aliceblue'</span><span class="s2">: </span><span class="s0">'#f0f8ff'</span><span class="s1">,</span>
+    <span class="s0">'antiquewhite'</span><span class="s2">: </span><span class="s0">'#faebd7'</span><span class="s1">,</span>
+    <span class="s0">'aqua'</span><span class="s2">: </span><span class="s0">'#0ff'</span><span class="s1">,</span>
+    <span class="s0">'aquamarine'</span><span class="s2">: </span><span class="s0">'#7fffd4'</span><span class="s1">,</span>
+    <span class="s0">'azure'</span><span class="s2">: </span><span class="s0">'#f0ffff'</span><span class="s1">,</span>
+    <span class="s0">'beige'</span><span class="s2">: </span><span class="s0">'#f5f5dc'</span><span class="s1">,</span>
+    <span class="s0">'bisque'</span><span class="s2">: </span><span class="s0">'#ffe4c4'</span><span class="s1">,</span>
+    <span class="s0">'black'</span><span class="s2">: </span><span class="s0">'#000'</span><span class="s1">,</span>
+    <span class="s0">'blanchedalmond'</span><span class="s2">: </span><span class="s0">'#ffebcd'</span><span class="s1">,</span>
+    <span class="s0">'blue'</span><span class="s2">: </span><span class="s0">'#00f'</span><span class="s1">,</span>
+    <span class="s0">'blueviolet'</span><span class="s2">: </span><span class="s0">'#8a2be2'</span><span class="s1">,</span>
+    <span class="s0">'brown'</span><span class="s2">: </span><span class="s0">'#a52a2a'</span><span class="s1">,</span>
+    <span class="s0">'burlywood'</span><span class="s2">: </span><span class="s0">'#deb887'</span><span class="s1">,</span>
+    <span class="s0">'cadetblue'</span><span class="s2">: </span><span class="s0">'#5f9ea0'</span><span class="s1">,</span>
+    <span class="s0">'chartreuse'</span><span class="s2">: </span><span class="s0">'#7fff00'</span><span class="s1">,</span>
+    <span class="s0">'chocolate'</span><span class="s2">: </span><span class="s0">'#d2691e'</span><span class="s1">,</span>
+    <span class="s0">'coral'</span><span class="s2">: </span><span class="s0">'#ff7f50'</span><span class="s1">,</span>
+    <span class="s0">'cornflowerblue'</span><span class="s2">: </span><span class="s0">'#6495ed'</span><span class="s1">,</span>
+    <span class="s0">'cornsilk'</span><span class="s2">: </span><span class="s0">'#fff8dc'</span><span class="s1">,</span>
+    <span class="s0">'crimson'</span><span class="s2">: </span><span class="s0">'#dc143c'</span><span class="s1">,</span>
+    <span class="s0">'cyan'</span><span class="s2">: </span><span class="s0">'#0ff'</span><span class="s1">,</span>
+    <span class="s0">'darkblue'</span><span class="s2">: </span><span class="s0">'#00008b'</span><span class="s1">,</span>
+    <span class="s0">'darkcyan'</span><span class="s2">: </span><span class="s0">'#008b8b'</span><span class="s1">,</span>
+    <span class="s0">'darkgoldenrod'</span><span class="s2">: </span><span class="s0">'#b8860b'</span><span class="s1">,</span>
+    <span class="s0">'darkgray'</span><span class="s2">: </span><span class="s0">'#a9a9a9'</span><span class="s1">,</span>
+    <span class="s0">'darkgreen'</span><span class="s2">: </span><span class="s0">'#006400'</span><span class="s1">,</span>
+    <span class="s0">'darkgrey'</span><span class="s2">: </span><span class="s0">'#a9a9a9'</span><span class="s1">,</span>
+    <span class="s0">'darkkhaki'</span><span class="s2">: </span><span class="s0">'#bdb76b'</span><span class="s1">,</span>
+    <span class="s0">'darkmagenta'</span><span class="s2">: </span><span class="s0">'#8b008b'</span><span class="s1">,</span>
+    <span class="s0">'darkolivegreen'</span><span class="s2">: </span><span class="s0">'#556b2f'</span><span class="s1">,</span>
+    <span class="s0">'darkorange'</span><span class="s2">: </span><span class="s0">'#ff8c00'</span><span class="s1">,</span>
+    <span class="s0">'darkorchid'</span><span class="s2">: </span><span class="s0">'#9932cc'</span><span class="s1">,</span>
+    <span class="s0">'darkred'</span><span class="s2">: </span><span class="s0">'#8b0000'</span><span class="s1">,</span>
+    <span class="s0">'darksalmon'</span><span class="s2">: </span><span class="s0">'#e9967a'</span><span class="s1">,</span>
+    <span class="s0">'darkseagreen'</span><span class="s2">: </span><span class="s0">'#8fbc8f'</span><span class="s1">,</span>
+    <span class="s0">'darkslateblue'</span><span class="s2">: </span><span class="s0">'#483d8b'</span><span class="s1">,</span>
+    <span class="s0">'darkslategray'</span><span class="s2">: </span><span class="s0">'#2f4f4f'</span><span class="s1">,</span>
+    <span class="s0">'darkslategrey'</span><span class="s2">: </span><span class="s0">'#2f4f4f'</span><span class="s1">,</span>
+    <span class="s0">'darkturquoise'</span><span class="s2">: </span><span class="s0">'#00ced1'</span><span class="s1">,</span>
+    <span class="s0">'darkviolet'</span><span class="s2">: </span><span class="s0">'#9400d3'</span><span class="s1">,</span>
+    <span class="s0">'deeppink'</span><span class="s2">: </span><span class="s0">'#ff1493'</span><span class="s1">,</span>
+    <span class="s0">'deepskyblue'</span><span class="s2">: </span><span class="s0">'#00bfff'</span><span class="s1">,</span>
+    <span class="s0">'dimgray'</span><span class="s2">: </span><span class="s0">'#696969'</span><span class="s1">,</span>
+    <span class="s0">'dimgrey'</span><span class="s2">: </span><span class="s0">'#696969'</span><span class="s1">,</span>
+    <span class="s0">'dodgerblue'</span><span class="s2">: </span><span class="s0">'#1e90ff'</span><span class="s1">,</span>
+    <span class="s0">'firebrick'</span><span class="s2">: </span><span class="s0">'#b22222'</span><span class="s1">,</span>
+    <span class="s0">'floralwhite'</span><span class="s2">: </span><span class="s0">'#fffaf0'</span><span class="s1">,</span>
+    <span class="s0">'forestgreen'</span><span class="s2">: </span><span class="s0">'#228b22'</span><span class="s1">,</span>
+    <span class="s0">'fuchsia'</span><span class="s2">: </span><span class="s0">'#f0f'</span><span class="s1">,</span>
+    <span class="s0">'gainsboro'</span><span class="s2">: </span><span class="s0">'#dcdcdc'</span><span class="s1">,</span>
+    <span class="s0">'ghostwhite'</span><span class="s2">: </span><span class="s0">'#f8f8ff'</span><span class="s1">,</span>
+    <span class="s0">'gold'</span><span class="s2">: </span><span class="s0">'#ffd700'</span><span class="s1">,</span>
+    <span class="s0">'goldenrod'</span><span class="s2">: </span><span class="s0">'#daa520'</span><span class="s1">,</span>
+    <span class="s0">'gray'</span><span class="s2">: </span><span class="s0">'#808080'</span><span class="s1">,</span>
+    <span class="s0">'green'</span><span class="s2">: </span><span class="s0">'#008000'</span><span class="s1">,</span>
+    <span class="s0">'greenyellow'</span><span class="s2">: </span><span class="s0">'#adff2f'</span><span class="s1">,</span>
+    <span class="s0">'grey'</span><span class="s2">: </span><span class="s0">'#808080'</span><span class="s1">,</span>
+    <span class="s0">'honeydew'</span><span class="s2">: </span><span class="s0">'#f0fff0'</span><span class="s1">,</span>
+    <span class="s0">'hotpink'</span><span class="s2">: </span><span class="s0">'#ff69b4'</span><span class="s1">,</span>
+    <span class="s0">'indianred'</span><span class="s2">: </span><span class="s0">'#cd5c5c'</span><span class="s1">,</span>
+    <span class="s0">'indigo'</span><span class="s2">: </span><span class="s0">'#4b0082'</span><span class="s1">,</span>
+    <span class="s0">'ivory'</span><span class="s2">: </span><span class="s0">'#fffff0'</span><span class="s1">,</span>
+    <span class="s0">'khaki'</span><span class="s2">: </span><span class="s0">'#f0e68c'</span><span class="s1">,</span>
+    <span class="s0">'lavender'</span><span class="s2">: </span><span class="s0">'#e6e6fa'</span><span class="s1">,</span>
+    <span class="s0">'lavenderblush'</span><span class="s2">: </span><span class="s0">'#fff0f5'</span><span class="s1">,</span>
+    <span class="s0">'lawngreen'</span><span class="s2">: </span><span class="s0">'#7cfc00'</span><span class="s1">,</span>
+    <span class="s0">'lemonchiffon'</span><span class="s2">: </span><span class="s0">'#fffacd'</span><span class="s1">,</span>
+    <span class="s0">'lightblue'</span><span class="s2">: </span><span class="s0">'#add8e6'</span><span class="s1">,</span>
+    <span class="s0">'lightcoral'</span><span class="s2">: </span><span class="s0">'#f08080'</span><span class="s1">,</span>
+    <span class="s0">'lightcyan'</span><span class="s2">: </span><span class="s0">'#e0ffff'</span><span class="s1">,</span>
+    <span class="s0">'lightgoldenrodyellow'</span><span class="s2">: </span><span class="s0">'#fafad2'</span><span class="s1">,</span>
+    <span class="s0">'lightgray'</span><span class="s2">: </span><span class="s0">'#d3d3d3'</span><span class="s1">,</span>
+    <span class="s0">'lightgreen'</span><span class="s2">: </span><span class="s0">'#90ee90'</span><span class="s1">,</span>
+    <span class="s0">'lightgrey'</span><span class="s2">: </span><span class="s0">'#d3d3d3'</span><span class="s1">,</span>
+    <span class="s0">'lightpink'</span><span class="s2">: </span><span class="s0">'#ffb6c1'</span><span class="s1">,</span>
+    <span class="s0">'lightsalmon'</span><span class="s2">: </span><span class="s0">'#ffa07a'</span><span class="s1">,</span>
+    <span class="s0">'lightseagreen'</span><span class="s2">: </span><span class="s0">'#20b2aa'</span><span class="s1">,</span>
+    <span class="s0">'lightskyblue'</span><span class="s2">: </span><span class="s0">'#87cefa'</span><span class="s1">,</span>
+    <span class="s0">'lightslategray'</span><span class="s2">: </span><span class="s0">'#789'</span><span class="s1">,</span>
+    <span class="s0">'lightslategrey'</span><span class="s2">: </span><span class="s0">'#789'</span><span class="s1">,</span>
+    <span class="s0">'lightsteelblue'</span><span class="s2">: </span><span class="s0">'#b0c4de'</span><span class="s1">,</span>
+    <span class="s0">'lightyellow'</span><span class="s2">: </span><span class="s0">'#ffffe0'</span><span class="s1">,</span>
+    <span class="s0">'lime'</span><span class="s2">: </span><span class="s0">'#0f0'</span><span class="s1">,</span>
+    <span class="s0">'limegreen'</span><span class="s2">: </span><span class="s0">'#32cd32'</span><span class="s1">,</span>
+    <span class="s0">'linen'</span><span class="s2">: </span><span class="s0">'#faf0e6'</span><span class="s1">,</span>
+    <span class="s0">'magenta'</span><span class="s2">: </span><span class="s0">'#f0f'</span><span class="s1">,</span>
+    <span class="s0">'maroon'</span><span class="s2">: </span><span class="s0">'#800000'</span><span class="s1">,</span>
+    <span class="s0">'mediumaquamarine'</span><span class="s2">: </span><span class="s0">'#66cdaa'</span><span class="s1">,</span>
+    <span class="s0">'mediumblue'</span><span class="s2">: </span><span class="s0">'#0000cd'</span><span class="s1">,</span>
+    <span class="s0">'mediumorchid'</span><span class="s2">: </span><span class="s0">'#ba55d3'</span><span class="s1">,</span>
+    <span class="s0">'mediumpurple'</span><span class="s2">: </span><span class="s0">'#9370db'</span><span class="s1">,</span>
+    <span class="s0">'mediumseagreen'</span><span class="s2">: </span><span class="s0">'#3cb371'</span><span class="s1">,</span>
+    <span class="s0">'mediumslateblue'</span><span class="s2">: </span><span class="s0">'#7b68ee'</span><span class="s1">,</span>
+    <span class="s0">'mediumspringgreen'</span><span class="s2">: </span><span class="s0">'#00fa9a'</span><span class="s1">,</span>
+    <span class="s0">'mediumturquoise'</span><span class="s2">: </span><span class="s0">'#48d1cc'</span><span class="s1">,</span>
+    <span class="s0">'mediumvioletred'</span><span class="s2">: </span><span class="s0">'#c71585'</span><span class="s1">,</span>
+    <span class="s0">'midnightblue'</span><span class="s2">: </span><span class="s0">'#191970'</span><span class="s1">,</span>
+    <span class="s0">'mintcream'</span><span class="s2">: </span><span class="s0">'#f5fffa'</span><span class="s1">,</span>
+    <span class="s0">'mistyrose'</span><span class="s2">: </span><span class="s0">'#ffe4e1'</span><span class="s1">,</span>
+    <span class="s0">'moccasin'</span><span class="s2">: </span><span class="s0">'#ffe4b5'</span><span class="s1">,</span>
+    <span class="s0">'navajowhite'</span><span class="s2">: </span><span class="s0">'#ffdead'</span><span class="s1">,</span>
+    <span class="s0">'navy'</span><span class="s2">: </span><span class="s0">'#000080'</span><span class="s1">,</span>
+    <span class="s0">'oldlace'</span><span class="s2">: </span><span class="s0">'#fdf5e6'</span><span class="s1">,</span>
+    <span class="s0">'olive'</span><span class="s2">: </span><span class="s0">'#808000'</span><span class="s1">,</span>
+    <span class="s0">'olivedrab'</span><span class="s2">: </span><span class="s0">'#6b8e23'</span><span class="s1">,</span>
+    <span class="s0">'orange'</span><span class="s2">: </span><span class="s0">'#ffa500'</span><span class="s1">,</span>
+    <span class="s0">'orangered'</span><span class="s2">: </span><span class="s0">'#ff4500'</span><span class="s1">,</span>
+    <span class="s0">'orchid'</span><span class="s2">: </span><span class="s0">'#da70d6'</span><span class="s1">,</span>
+    <span class="s0">'palegoldenrod'</span><span class="s2">: </span><span class="s0">'#eee8aa'</span><span class="s1">,</span>
+    <span class="s0">'palegreen'</span><span class="s2">: </span><span class="s0">'#98fb98'</span><span class="s1">,</span>
+    <span class="s0">'paleturquoise'</span><span class="s2">: </span><span class="s0">'#afeeee'</span><span class="s1">,</span>
+    <span class="s0">'palevioletred'</span><span class="s2">: </span><span class="s0">'#db7093'</span><span class="s1">,</span>
+    <span class="s0">'papayawhip'</span><span class="s2">: </span><span class="s0">'#ffefd5'</span><span class="s1">,</span>
+    <span class="s0">'peachpuff'</span><span class="s2">: </span><span class="s0">'#ffdab9'</span><span class="s1">,</span>
+    <span class="s0">'peru'</span><span class="s2">: </span><span class="s0">'#cd853f'</span><span class="s1">,</span>
+    <span class="s0">'pink'</span><span class="s2">: </span><span class="s0">'#ffc0cb'</span><span class="s1">,</span>
+    <span class="s0">'plum'</span><span class="s2">: </span><span class="s0">'#dda0dd'</span><span class="s1">,</span>
+    <span class="s0">'powderblue'</span><span class="s2">: </span><span class="s0">'#b0e0e6'</span><span class="s1">,</span>
+    <span class="s0">'purple'</span><span class="s2">: </span><span class="s0">'#800080'</span><span class="s1">,</span>
+    <span class="s0">'rebeccapurple'</span><span class="s2">: </span><span class="s0">'#639'</span><span class="s1">,</span>
+    <span class="s0">'red'</span><span class="s2">: </span><span class="s0">'#f00'</span><span class="s1">,</span>
+    <span class="s0">'rosybrown'</span><span class="s2">: </span><span class="s0">'#bc8f8f'</span><span class="s1">,</span>
+    <span class="s0">'royalblue'</span><span class="s2">: </span><span class="s0">'#4169e1'</span><span class="s1">,</span>
+    <span class="s0">'saddlebrown'</span><span class="s2">: </span><span class="s0">'#8b4513'</span><span class="s1">,</span>
+    <span class="s0">'salmon'</span><span class="s2">: </span><span class="s0">'#fa8072'</span><span class="s1">,</span>
+    <span class="s0">'sandybrown'</span><span class="s2">: </span><span class="s0">'#f4a460'</span><span class="s1">,</span>
+    <span class="s0">'seagreen'</span><span class="s2">: </span><span class="s0">'#2e8b57'</span><span class="s1">,</span>
+    <span class="s0">'seashell'</span><span class="s2">: </span><span class="s0">'#fff5ee'</span><span class="s1">,</span>
+    <span class="s0">'sienna'</span><span class="s2">: </span><span class="s0">'#a0522d'</span><span class="s1">,</span>
+    <span class="s0">'silver'</span><span class="s2">: </span><span class="s0">'#c0c0c0'</span><span class="s1">,</span>
+    <span class="s0">'skyblue'</span><span class="s2">: </span><span class="s0">'#87ceeb'</span><span class="s1">,</span>
+    <span class="s0">'slateblue'</span><span class="s2">: </span><span class="s0">'#6a5acd'</span><span class="s1">,</span>
+    <span class="s0">'slategray'</span><span class="s2">: </span><span class="s0">'#708090'</span><span class="s1">,</span>
+    <span class="s0">'slategrey'</span><span class="s2">: </span><span class="s0">'#708090'</span><span class="s1">,</span>
+    <span class="s0">'snow'</span><span class="s2">: </span><span class="s0">'#fffafa'</span><span class="s1">,</span>
+    <span class="s0">'springgreen'</span><span class="s2">: </span><span class="s0">'#00ff7f'</span><span class="s1">,</span>
+    <span class="s0">'steelblue'</span><span class="s2">: </span><span class="s0">'#4682b4'</span><span class="s1">,</span>
+    <span class="s0">'tan'</span><span class="s2">: </span><span class="s0">'#d2b48c'</span><span class="s1">,</span>
+    <span class="s0">'teal'</span><span class="s2">: </span><span class="s0">'#008080'</span><span class="s1">,</span>
+    <span class="s0">'thistle'</span><span class="s2">: </span><span class="s0">'#d8bfd8'</span><span class="s1">,</span>
+    <span class="s0">'tomato'</span><span class="s2">: </span><span class="s0">'#ff6347'</span><span class="s1">,</span>
+    <span class="s0">'turquoise'</span><span class="s2">: </span><span class="s0">'#40e0d0'</span><span class="s1">,</span>
+    <span class="s0">'violet'</span><span class="s2">: </span><span class="s0">'#ee82ee'</span><span class="s1">,</span>
+    <span class="s0">'wheat'</span><span class="s2">: </span><span class="s0">'#f5deb3'</span><span class="s1">,</span>
+    <span class="s0">'white'</span><span class="s2">: </span><span class="s0">'#fff'</span><span class="s1">,</span>
+    <span class="s0">'whitesmoke'</span><span class="s2">: </span><span class="s0">'#f5f5f5'</span><span class="s1">,</span>
+    <span class="s0">'yellow'</span><span class="s2">: </span><span class="s0">'#ff0'</span><span class="s1">,</span>
+    <span class="s0">'yellowgreen'</span><span class="s2">: </span><span class="s0">'#9acd32'</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s2">exports.colorsShortNames = {</span>
+  <span class="s0">'#f0ffff'</span><span class="s2">: </span><span class="s0">'azure'</span><span class="s1">,</span>
+  <span class="s0">'#f5f5dc'</span><span class="s2">: </span><span class="s0">'beige'</span><span class="s1">,</span>
+  <span class="s0">'#ffe4c4'</span><span class="s2">: </span><span class="s0">'bisque'</span><span class="s1">,</span>
+  <span class="s0">'#a52a2a'</span><span class="s2">: </span><span class="s0">'brown'</span><span class="s1">,</span>
+  <span class="s0">'#ff7f50'</span><span class="s2">: </span><span class="s0">'coral'</span><span class="s1">,</span>
+  <span class="s0">'#ffd700'</span><span class="s2">: </span><span class="s0">'gold'</span><span class="s1">,</span>
+  <span class="s0">'#808080'</span><span class="s2">: </span><span class="s0">'gray'</span><span class="s1">,</span>
+  <span class="s0">'#008000'</span><span class="s2">: </span><span class="s0">'green'</span><span class="s1">,</span>
+  <span class="s0">'#4b0082'</span><span class="s2">: </span><span class="s0">'indigo'</span><span class="s1">,</span>
+  <span class="s0">'#fffff0'</span><span class="s2">: </span><span class="s0">'ivory'</span><span class="s1">,</span>
+  <span class="s0">'#f0e68c'</span><span class="s2">: </span><span class="s0">'khaki'</span><span class="s1">,</span>
+  <span class="s0">'#faf0e6'</span><span class="s2">: </span><span class="s0">'linen'</span><span class="s1">,</span>
+  <span class="s0">'#800000'</span><span class="s2">: </span><span class="s0">'maroon'</span><span class="s1">,</span>
+  <span class="s0">'#000080'</span><span class="s2">: </span><span class="s0">'navy'</span><span class="s1">,</span>
+  <span class="s0">'#808000'</span><span class="s2">: </span><span class="s0">'olive'</span><span class="s1">,</span>
+  <span class="s0">'#ffa500'</span><span class="s2">: </span><span class="s0">'orange'</span><span class="s1">,</span>
+  <span class="s0">'#da70d6'</span><span class="s2">: </span><span class="s0">'orchid'</span><span class="s1">,</span>
+  <span class="s0">'#cd853f'</span><span class="s2">: </span><span class="s0">'peru'</span><span class="s1">,</span>
+  <span class="s0">'#ffc0cb'</span><span class="s2">: </span><span class="s0">'pink'</span><span class="s1">,</span>
+  <span class="s0">'#dda0dd'</span><span class="s2">: </span><span class="s0">'plum'</span><span class="s1">,</span>
+  <span class="s0">'#800080'</span><span class="s2">: </span><span class="s0">'purple'</span><span class="s1">,</span>
+  <span class="s0">'#f00'</span><span class="s2">: </span><span class="s0">'red'</span><span class="s1">,</span>
+  <span class="s0">'#ff0000'</span><span class="s2">: </span><span class="s0">'red'</span><span class="s1">,</span>
+  <span class="s0">'#fa8072'</span><span class="s2">: </span><span class="s0">'salmon'</span><span class="s1">,</span>
+  <span class="s0">'#a0522d'</span><span class="s2">: </span><span class="s0">'sienna'</span><span class="s1">,</span>
+  <span class="s0">'#c0c0c0'</span><span class="s2">: </span><span class="s0">'silver'</span><span class="s1">,</span>
+  <span class="s0">'#fffafa'</span><span class="s2">: </span><span class="s0">'snow'</span><span class="s1">,</span>
+  <span class="s0">'#d2b48c'</span><span class="s2">: </span><span class="s0">'tan'</span><span class="s1">,</span>
+  <span class="s0">'#008080'</span><span class="s2">: </span><span class="s0">'teal'</span><span class="s1">,</span>
+  <span class="s0">'#ff6347'</span><span class="s2">: </span><span class="s0">'tomato'</span><span class="s1">,</span>
+  <span class="s0">'#ee82ee'</span><span class="s2">: </span><span class="s0">'violet'</span><span class="s1">,</span>
+  <span class="s0">'#f5deb3'</span><span class="s2">: </span><span class="s0">'wheat'</span>
+<span class="s2">}</span><span class="s1">;</span>
+
+<span class="s3">// http://www.w3.org/TR/SVG11/single-page.html#types-DataTypeColor</span>
+<span class="s2">exports.colorsProps = [</span>
+    <span class="s0">'color'</span><span class="s1">, </span><span class="s0">'fill'</span><span class="s1">, </span><span class="s0">'stroke'</span><span class="s1">, </span><span class="s0">'stop-color'</span><span class="s1">, </span><span class="s0">'flood-color'</span><span class="s1">, </span><span class="s0">'lighting-color'</span>
+<span class="s2">]</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

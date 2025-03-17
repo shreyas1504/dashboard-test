@@ -1,0 +1,95 @@
+<html>
+<head>
+<title>he.1</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+he.1</font>
+</center></td></tr></table>
+<pre><span class="s0">.Dd April 5, 2016</span>
+<span class="s0">.Dt he 1</span>
+<span class="s0">.Sh NAME</span>
+<span class="s0">.Nm he</span>
+<span class="s0">.Nd encode/decode HTML entities just like a browser would</span>
+<span class="s0">.Sh SYNOPSIS</span>
+<span class="s0">.Nm</span>
+<span class="s0">.Op Fl -escape Ar string</span>
+<span class="s0">.br</span>
+<span class="s0">.Op Fl -encode Ar string</span>
+<span class="s0">.br</span>
+<span class="s0">.Op Fl -encode Fl -use-named-refs Fl -everything Fl -allow-unsafe Ar string</span>
+<span class="s0">.br</span>
+<span class="s0">.Op Fl -decode Ar string</span>
+<span class="s0">.br</span>
+<span class="s0">.Op Fl -decode Fl -attribute Ar string</span>
+<span class="s0">.br</span>
+<span class="s0">.Op Fl -decode Fl -strict Ar string</span>
+<span class="s0">.br</span>
+<span class="s0">.Op Fl v | -version</span>
+<span class="s0">.br</span>
+<span class="s0">.Op Fl h | -help</span>
+<span class="s0">.Sh DESCRIPTION</span>
+<span class="s0">.Nm</span>
+<span class="s0">encodes/decodes HTML entities in strings just like a browser would.</span>
+<span class="s0">.Sh OPTIONS</span>
+<span class="s0">.Bl -ohang -offset</span>
+<span class="s0">.It Sy &quot;--escape&quot;</span>
+<span class="s0">Take a string of text and escape it for use in text contexts in XML or HTML documents. Only the following characters are escaped: `&amp;`, `&lt;`, `&gt;`, `&quot;`, and `'`.</span>
+<span class="s0">.It Sy &quot;--encode&quot;</span>
+<span class="s0">Take a string of text and encode any symbols that aren't printable ASCII symbols and that can be replaced with character references. For example, it would turn `©` into `&amp;#xA9;`, but it wouldn't turn `+` into `&amp;#x2B;` since there is no point in doing so. Additionally, it replaces any remaining non-ASCII symbols with a hexadecimal escape sequence (e.g. `&amp;#x1D306;`). The return value of this function is always valid HTML.</span>
+<span class="s0">.It Sy &quot;--encode --use-named-refs&quot;</span>
+<span class="s0">Enable the use of named character references (like `&amp;copy;`) in the output. If compatibility with older browsers is a concern, don't use this option.</span>
+<span class="s0">.It Sy &quot;--encode --everything&quot;</span>
+<span class="s0">Encode every symbol in the input string, even safe printable ASCII symbols.</span>
+<span class="s0">.It Sy &quot;--encode --allow-unsafe&quot;</span>
+<span class="s0">Encode non-ASCII characters only. This leaves unsafe HTML/XML symbols like `&amp;`, `&lt;`, `&gt;`, `&quot;`, and `'` intact.</span>
+<span class="s0">.It Sy &quot;--encode --decimal&quot;</span>
+<span class="s0">Use decimal digits rather than hexadecimal digits for encoded character references, e.g. output `&amp;#169;` instead of `&amp;#xA9;`.</span>
+<span class="s0">.It Sy &quot;--decode&quot;</span>
+<span class="s0">Takes a string of HTML and decode any named and numerical character references in it using the algorithm described in the HTML spec.</span>
+<span class="s0">.It Sy &quot;--decode --attribute&quot;</span>
+<span class="s0">Parse the input as if it was an HTML attribute value rather than a string in an HTML text content.</span>
+<span class="s0">.It Sy &quot;--decode --strict&quot;</span>
+<span class="s0">Throw an error if an invalid character reference is encountered.</span>
+<span class="s0">.It Sy &quot;-v, --version&quot;</span>
+<span class="s0">Print he's version.</span>
+<span class="s0">.It Sy &quot;-h, --help&quot;</span>
+<span class="s0">Show the help screen.</span>
+<span class="s0">.El</span>
+<span class="s0">.Sh EXIT STATUS</span>
+<span class="s0">The</span>
+<span class="s0">.Nm he</span>
+<span class="s0">utility exits with one of the following values:</span>
+<span class="s0">.Pp</span>
+<span class="s0">.Bl -tag -width flag -compact</span>
+<span class="s0">.It Li 0</span>
+<span class="s0">.Nm</span>
+<span class="s0">did what it was instructed to do successfully; either it encoded/decoded the input and printed the result, or it printed the version or usage message.</span>
+<span class="s0">.It Li 1</span>
+<span class="s0">.Nm</span>
+<span class="s0">encountered an error.</span>
+<span class="s0">.El</span>
+<span class="s0">.Sh EXAMPLES</span>
+<span class="s0">.Bl -ohang -offset</span>
+<span class="s0">.It Sy &quot;he --escape '&lt;script&gt;alert(1)&lt;/script&gt;'&quot;</span>
+<span class="s0">Print an escaped version of the given string that is safe for use in HTML text contexts, escaping only `&amp;`, `&lt;`, `&gt;`, `&quot;`, and `'`.</span>
+<span class="s0">.It Sy &quot;he --decode '&amp;copy;&amp;#x1D306;'&quot;</span>
+<span class="s0">Print the decoded version of the given HTML string.</span>
+<span class="s0">.It Sy &quot;echo\ '&amp;copy;&amp;#x1D306;'\ |\ he --decode&quot;</span>
+<span class="s0">Print the decoded version of the HTML string that gets piped in.</span>
+<span class="s0">.El</span>
+<span class="s0">.Sh BUGS</span>
+<span class="s0">he's bug tracker is located at &lt;https://github.com/mathiasbynens/he/issues&gt;.</span>
+<span class="s0">.Sh AUTHOR</span>
+<span class="s0">Mathias Bynens &lt;https://mathiasbynens.be/&gt;</span>
+<span class="s0">.Sh WWW</span>
+<span class="s0">&lt;https://mths.be/he&gt;</span>
+</pre>
+</body>
+</html>

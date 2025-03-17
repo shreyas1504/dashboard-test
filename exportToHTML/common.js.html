@@ -1,0 +1,260 @@
+<html>
+<head>
+<title>common.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cfd2d5;}
+.s1 { color: #cc7832; font-weight: bold;}
+.s2 { color: #cc7832;}
+.s3 { color: #8ea765;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+common.js</font>
+</center></td></tr></table>
+<pre><span class="s0">exports.setopts = setopts</span>
+<span class="s0">exports.ownProp = ownProp</span>
+<span class="s0">exports.makeAbs = makeAbs</span>
+<span class="s0">exports.finish = finish</span>
+<span class="s0">exports.mark = mark</span>
+<span class="s0">exports.isIgnored = isIgnored</span>
+<span class="s0">exports.childrenIgnored = childrenIgnored</span>
+
+<span class="s1">function </span><span class="s0">ownProp (obj</span><span class="s2">, </span><span class="s0">field) {</span>
+  <span class="s1">return </span><span class="s0">Object.prototype.hasOwnProperty.call(obj</span><span class="s2">, </span><span class="s0">field)</span>
+<span class="s0">}</span>
+
+<span class="s1">var </span><span class="s0">fs = require(</span><span class="s3">&quot;fs&quot;</span><span class="s0">)</span>
+<span class="s1">var </span><span class="s0">path = require(</span><span class="s3">&quot;path&quot;</span><span class="s0">)</span>
+<span class="s1">var </span><span class="s0">minimatch = require(</span><span class="s3">&quot;minimatch&quot;</span><span class="s0">)</span>
+<span class="s1">var </span><span class="s0">isAbsolute = require(</span><span class="s3">&quot;path-is-absolute&quot;</span><span class="s0">)</span>
+<span class="s1">var </span><span class="s0">Minimatch = minimatch.Minimatch</span>
+
+<span class="s1">function </span><span class="s0">alphasort (a</span><span class="s2">, </span><span class="s0">b) {</span>
+  <span class="s1">return </span><span class="s0">a.localeCompare(b</span><span class="s2">, </span><span class="s3">'en'</span><span class="s0">)</span>
+<span class="s0">}</span>
+
+<span class="s1">function </span><span class="s0">setupIgnores (self</span><span class="s2">, </span><span class="s0">options) {</span>
+  <span class="s0">self.ignore = options.ignore || []</span>
+
+  <span class="s1">if </span><span class="s0">(!Array.isArray(self.ignore))</span>
+    <span class="s0">self.ignore = [self.ignore]</span>
+
+  <span class="s1">if </span><span class="s0">(self.ignore.length) {</span>
+    <span class="s0">self.ignore = self.ignore.map(ignoreMap)</span>
+  <span class="s0">}</span>
+<span class="s0">}</span>
+
+<span class="s4">// ignore patterns are always in dot:true mode.</span>
+<span class="s1">function </span><span class="s0">ignoreMap (pattern) {</span>
+  <span class="s1">var </span><span class="s0">gmatcher = </span><span class="s1">null</span>
+  <span class="s1">if </span><span class="s0">(pattern.slice(-</span><span class="s5">3</span><span class="s0">) === </span><span class="s3">'/**'</span><span class="s0">) {</span>
+    <span class="s1">var </span><span class="s0">gpattern = pattern.replace(</span><span class="s5">/(\/\*\*)+$/</span><span class="s2">, </span><span class="s3">''</span><span class="s0">)</span>
+    <span class="s0">gmatcher = </span><span class="s1">new </span><span class="s0">Minimatch(gpattern</span><span class="s2">, </span><span class="s0">{ dot: </span><span class="s1">true </span><span class="s0">})</span>
+  <span class="s0">}</span>
+
+  <span class="s1">return </span><span class="s0">{</span>
+    <span class="s0">matcher: </span><span class="s1">new </span><span class="s0">Minimatch(pattern</span><span class="s2">, </span><span class="s0">{ dot: </span><span class="s1">true </span><span class="s0">})</span><span class="s2">,</span>
+    <span class="s0">gmatcher: gmatcher</span>
+  <span class="s0">}</span>
+<span class="s0">}</span>
+
+<span class="s1">function </span><span class="s0">setopts (self</span><span class="s2">, </span><span class="s0">pattern</span><span class="s2">, </span><span class="s0">options) {</span>
+  <span class="s1">if </span><span class="s0">(!options)</span>
+    <span class="s0">options = {}</span>
+
+  <span class="s4">// base-matching: just use globstar for that.</span>
+  <span class="s1">if </span><span class="s0">(options.matchBase &amp;&amp; -</span><span class="s5">1 </span><span class="s0">=== pattern.indexOf(</span><span class="s3">&quot;/&quot;</span><span class="s0">)) {</span>
+    <span class="s1">if </span><span class="s0">(options.noglobstar) {</span>
+      <span class="s1">throw new </span><span class="s0">Error(</span><span class="s3">&quot;base matching requires globstar&quot;</span><span class="s0">)</span>
+    <span class="s0">}</span>
+    <span class="s0">pattern = </span><span class="s3">&quot;**/&quot; </span><span class="s0">+ pattern</span>
+  <span class="s0">}</span>
+
+  <span class="s0">self.silent = !!options.silent</span>
+  <span class="s0">self.pattern = pattern</span>
+  <span class="s0">self.strict = options.strict !== </span><span class="s1">false</span>
+  <span class="s0">self.realpath = !!options.realpath</span>
+  <span class="s0">self.realpathCache = options.realpathCache || Object.create(</span><span class="s1">null</span><span class="s0">)</span>
+  <span class="s0">self.follow = !!options.follow</span>
+  <span class="s0">self.dot = !!options.dot</span>
+  <span class="s0">self.mark = !!options.mark</span>
+  <span class="s0">self.nodir = !!options.nodir</span>
+  <span class="s1">if </span><span class="s0">(self.nodir)</span>
+    <span class="s0">self.mark = </span><span class="s1">true</span>
+  <span class="s0">self.sync = !!options.sync</span>
+  <span class="s0">self.nounique = !!options.nounique</span>
+  <span class="s0">self.nonull = !!options.nonull</span>
+  <span class="s0">self.nosort = !!options.nosort</span>
+  <span class="s0">self.nocase = !!options.nocase</span>
+  <span class="s0">self.stat = !!options.stat</span>
+  <span class="s0">self.noprocess = !!options.noprocess</span>
+  <span class="s0">self.absolute = !!options.absolute</span>
+  <span class="s0">self.fs = options.fs || fs</span>
+
+  <span class="s0">self.maxLength = options.maxLength || Infinity</span>
+  <span class="s0">self.cache = options.cache || Object.create(</span><span class="s1">null</span><span class="s0">)</span>
+  <span class="s0">self.statCache = options.statCache || Object.create(</span><span class="s1">null</span><span class="s0">)</span>
+  <span class="s0">self.symlinks = options.symlinks || Object.create(</span><span class="s1">null</span><span class="s0">)</span>
+
+  <span class="s0">setupIgnores(self</span><span class="s2">, </span><span class="s0">options)</span>
+
+  <span class="s0">self.changedCwd = </span><span class="s1">false</span>
+  <span class="s1">var </span><span class="s0">cwd = process.cwd()</span>
+  <span class="s1">if </span><span class="s0">(!ownProp(options</span><span class="s2">, </span><span class="s3">&quot;cwd&quot;</span><span class="s0">))</span>
+    <span class="s0">self.cwd = cwd</span>
+  <span class="s1">else </span><span class="s0">{</span>
+    <span class="s0">self.cwd = path.resolve(options.cwd)</span>
+    <span class="s0">self.changedCwd = self.cwd !== cwd</span>
+  <span class="s0">}</span>
+
+  <span class="s0">self.root = options.root || path.resolve(self.cwd</span><span class="s2">, </span><span class="s3">&quot;/&quot;</span><span class="s0">)</span>
+  <span class="s0">self.root = path.resolve(self.root)</span>
+  <span class="s1">if </span><span class="s0">(process.platform === </span><span class="s3">&quot;win32&quot;</span><span class="s0">)</span>
+    <span class="s0">self.root = self.root.replace(</span><span class="s5">/\\/g</span><span class="s2">, </span><span class="s3">&quot;/&quot;</span><span class="s0">)</span>
+
+  <span class="s4">// TODO: is an absolute `cwd` supposed to be resolved against `root`?</span>
+  <span class="s4">// e.g. { cwd: '/test', root: __dirname } === path.join(__dirname, '/test')</span>
+  <span class="s0">self.cwdAbs = isAbsolute(self.cwd) ? self.cwd : makeAbs(self</span><span class="s2">, </span><span class="s0">self.cwd)</span>
+  <span class="s1">if </span><span class="s0">(process.platform === </span><span class="s3">&quot;win32&quot;</span><span class="s0">)</span>
+    <span class="s0">self.cwdAbs = self.cwdAbs.replace(</span><span class="s5">/\\/g</span><span class="s2">, </span><span class="s3">&quot;/&quot;</span><span class="s0">)</span>
+  <span class="s0">self.nomount = !!options.nomount</span>
+
+  <span class="s4">// disable comments and negation in Minimatch.</span>
+  <span class="s4">// Note that they are not supported in Glob itself anyway.</span>
+  <span class="s0">options.nonegate = </span><span class="s1">true</span>
+  <span class="s0">options.nocomment = </span><span class="s1">true</span>
+  <span class="s4">// always treat \ in patterns as escapes, not path separators</span>
+  <span class="s0">options.allowWindowsEscape = </span><span class="s1">false</span>
+
+  <span class="s0">self.minimatch = </span><span class="s1">new </span><span class="s0">Minimatch(pattern</span><span class="s2">, </span><span class="s0">options)</span>
+  <span class="s0">self.options = self.minimatch.options</span>
+<span class="s0">}</span>
+
+<span class="s1">function </span><span class="s0">finish (self) {</span>
+  <span class="s1">var </span><span class="s0">nou = self.nounique</span>
+  <span class="s1">var </span><span class="s0">all = nou ? [] : Object.create(</span><span class="s1">null</span><span class="s0">)</span>
+
+  <span class="s1">for </span><span class="s0">(</span><span class="s1">var </span><span class="s0">i = </span><span class="s5">0</span><span class="s2">, </span><span class="s0">l = self.matches.length</span><span class="s2">; </span><span class="s0">i &lt; l</span><span class="s2">; </span><span class="s0">i ++) {</span>
+    <span class="s1">var </span><span class="s0">matches = self.matches[i]</span>
+    <span class="s1">if </span><span class="s0">(!matches || Object.keys(matches).length === </span><span class="s5">0</span><span class="s0">) {</span>
+      <span class="s1">if </span><span class="s0">(self.nonull) {</span>
+        <span class="s4">// do like the shell, and spit out the literal glob</span>
+        <span class="s1">var </span><span class="s0">literal = self.minimatch.globSet[i]</span>
+        <span class="s1">if </span><span class="s0">(nou)</span>
+          <span class="s0">all.push(literal)</span>
+        <span class="s1">else</span>
+          <span class="s0">all[literal] = </span><span class="s1">true</span>
+      <span class="s0">}</span>
+    <span class="s0">} </span><span class="s1">else </span><span class="s0">{</span>
+      <span class="s4">// had matches</span>
+      <span class="s1">var </span><span class="s0">m = Object.keys(matches)</span>
+      <span class="s1">if </span><span class="s0">(nou)</span>
+        <span class="s0">all.push.apply(all</span><span class="s2">, </span><span class="s0">m)</span>
+      <span class="s1">else</span>
+        <span class="s0">m.forEach(</span><span class="s1">function </span><span class="s0">(m) {</span>
+          <span class="s0">all[m] = </span><span class="s1">true</span>
+        <span class="s0">})</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span>
+
+  <span class="s1">if </span><span class="s0">(!nou)</span>
+    <span class="s0">all = Object.keys(all)</span>
+
+  <span class="s1">if </span><span class="s0">(!self.nosort)</span>
+    <span class="s0">all = all.sort(alphasort)</span>
+
+  <span class="s4">// at *some* point we statted all of these</span>
+  <span class="s1">if </span><span class="s0">(self.mark) {</span>
+    <span class="s1">for </span><span class="s0">(</span><span class="s1">var </span><span class="s0">i = </span><span class="s5">0</span><span class="s2">; </span><span class="s0">i &lt; all.length</span><span class="s2">; </span><span class="s0">i++) {</span>
+      <span class="s0">all[i] = self._mark(all[i])</span>
+    <span class="s0">}</span>
+    <span class="s1">if </span><span class="s0">(self.nodir) {</span>
+      <span class="s0">all = all.filter(</span><span class="s1">function </span><span class="s0">(e) {</span>
+        <span class="s1">var </span><span class="s0">notDir = !(</span><span class="s5">/\/$/</span><span class="s0">.test(e))</span>
+        <span class="s1">var </span><span class="s0">c = self.cache[e] || self.cache[makeAbs(self</span><span class="s2">, </span><span class="s0">e)]</span>
+        <span class="s1">if </span><span class="s0">(notDir &amp;&amp; c)</span>
+          <span class="s0">notDir = c !== </span><span class="s3">'DIR' </span><span class="s0">&amp;&amp; !Array.isArray(c)</span>
+        <span class="s1">return </span><span class="s0">notDir</span>
+      <span class="s0">})</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span>
+
+  <span class="s1">if </span><span class="s0">(self.ignore.length)</span>
+    <span class="s0">all = all.filter(</span><span class="s1">function</span><span class="s0">(m) {</span>
+      <span class="s1">return </span><span class="s0">!isIgnored(self</span><span class="s2">, </span><span class="s0">m)</span>
+    <span class="s0">})</span>
+
+  <span class="s0">self.found = all</span>
+<span class="s0">}</span>
+
+<span class="s1">function </span><span class="s0">mark (self</span><span class="s2">, </span><span class="s0">p) {</span>
+  <span class="s1">var </span><span class="s0">abs = makeAbs(self</span><span class="s2">, </span><span class="s0">p)</span>
+  <span class="s1">var </span><span class="s0">c = self.cache[abs]</span>
+  <span class="s1">var </span><span class="s0">m = p</span>
+  <span class="s1">if </span><span class="s0">(c) {</span>
+    <span class="s1">var </span><span class="s0">isDir = c === </span><span class="s3">'DIR' </span><span class="s0">|| Array.isArray(c)</span>
+    <span class="s1">var </span><span class="s0">slash = p.slice(-</span><span class="s5">1</span><span class="s0">) === </span><span class="s3">'/'</span>
+
+    <span class="s1">if </span><span class="s0">(isDir &amp;&amp; !slash)</span>
+      <span class="s0">m += </span><span class="s3">'/'</span>
+    <span class="s1">else if </span><span class="s0">(!isDir &amp;&amp; slash)</span>
+      <span class="s0">m = m.slice(</span><span class="s5">0</span><span class="s2">, </span><span class="s0">-</span><span class="s5">1</span><span class="s0">)</span>
+
+    <span class="s1">if </span><span class="s0">(m !== p) {</span>
+      <span class="s1">var </span><span class="s0">mabs = makeAbs(self</span><span class="s2">, </span><span class="s0">m)</span>
+      <span class="s0">self.statCache[mabs] = self.statCache[abs]</span>
+      <span class="s0">self.cache[mabs] = self.cache[abs]</span>
+    <span class="s0">}</span>
+  <span class="s0">}</span>
+
+  <span class="s1">return </span><span class="s0">m</span>
+<span class="s0">}</span>
+
+<span class="s4">// lotta situps...</span>
+<span class="s1">function </span><span class="s0">makeAbs (self</span><span class="s2">, </span><span class="s0">f) {</span>
+  <span class="s1">var </span><span class="s0">abs = f</span>
+  <span class="s1">if </span><span class="s0">(f.charAt(</span><span class="s5">0</span><span class="s0">) === </span><span class="s3">'/'</span><span class="s0">) {</span>
+    <span class="s0">abs = path.join(self.root</span><span class="s2">, </span><span class="s0">f)</span>
+  <span class="s0">} </span><span class="s1">else if </span><span class="s0">(isAbsolute(f) || f === </span><span class="s3">''</span><span class="s0">) {</span>
+    <span class="s0">abs = f</span>
+  <span class="s0">} </span><span class="s1">else if </span><span class="s0">(self.changedCwd) {</span>
+    <span class="s0">abs = path.resolve(self.cwd</span><span class="s2">, </span><span class="s0">f)</span>
+  <span class="s0">} </span><span class="s1">else </span><span class="s0">{</span>
+    <span class="s0">abs = path.resolve(f)</span>
+  <span class="s0">}</span>
+
+  <span class="s1">if </span><span class="s0">(process.platform === </span><span class="s3">'win32'</span><span class="s0">)</span>
+    <span class="s0">abs = abs.replace(</span><span class="s5">/\\/g</span><span class="s2">, </span><span class="s3">'/'</span><span class="s0">)</span>
+
+  <span class="s1">return </span><span class="s0">abs</span>
+<span class="s0">}</span>
+
+
+<span class="s4">// Return true, if pattern ends with globstar '**', for the accompanying parent directory.</span>
+<span class="s4">// Ex:- If node_modules/** is the pattern, add 'node_modules' to ignore list along with it's contents</span>
+<span class="s1">function </span><span class="s0">isIgnored (self</span><span class="s2">, </span><span class="s0">path) {</span>
+  <span class="s1">if </span><span class="s0">(!self.ignore.length)</span>
+    <span class="s1">return false</span>
+
+  <span class="s1">return </span><span class="s0">self.ignore.some(</span><span class="s1">function</span><span class="s0">(item) {</span>
+    <span class="s1">return </span><span class="s0">item.matcher.match(path) || !!(item.gmatcher &amp;&amp; item.gmatcher.match(path))</span>
+  <span class="s0">})</span>
+<span class="s0">}</span>
+
+<span class="s1">function </span><span class="s0">childrenIgnored (self</span><span class="s2">, </span><span class="s0">path) {</span>
+  <span class="s1">if </span><span class="s0">(!self.ignore.length)</span>
+    <span class="s1">return false</span>
+
+  <span class="s1">return </span><span class="s0">self.ignore.some(</span><span class="s1">function</span><span class="s0">(item) {</span>
+    <span class="s1">return </span><span class="s0">!!(item.gmatcher &amp;&amp; item.gmatcher.match(path))</span>
+  <span class="s0">})</span>
+<span class="s0">}</span>
+</pre>
+</body>
+</html>

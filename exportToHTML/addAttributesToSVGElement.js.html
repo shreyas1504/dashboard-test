@@ -1,0 +1,105 @@
+<html>
+<head>
+<title>addAttributesToSVGElement.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8ea765;}
+.s1 { color: #cc7832;}
+.s2 { color: #cfd2d5;}
+.s3 { color: #cc7832; font-weight: bold;}
+.s4 { color: #8a8a8a; font-style: italic;}
+.s5 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+addAttributesToSVGElement.js</font>
+</center></td></tr></table>
+<pre><span class="s0">'use strict'</span><span class="s1">;</span>
+
+<span class="s2">exports.type = </span><span class="s0">'full'</span><span class="s1">;</span>
+
+<span class="s2">exports.active = </span><span class="s3">false</span><span class="s1">;</span>
+
+<span class="s2">exports.description = </span><span class="s0">'adds attributes to an outer &lt;svg&gt; element'</span><span class="s1">;</span>
+
+<span class="s3">var </span><span class="s2">ENOCLS = </span><span class="s0">`Error in plugin &quot;addAttributesToSVGElement&quot;: absent parameters. 
+It should have a list of &quot;attributes&quot; or one &quot;attribute&quot;. 
+Config example: 
+ 
+plugins: 
+- addAttributesToSVGElement: 
+    attribute: &quot;mySvg&quot; 
+ 
+plugins: 
+- addAttributesToSVGElement: 
+    attributes: [&quot;mySvg&quot;, &quot;size-big&quot;] 
+ 
+plugins: 
+- addAttributesToSVGElement: 
+    attributes: 
+        - focusable: false 
+        - data-image: icon`</span><span class="s1">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Add attributes to an outer &lt;svg&gt; element. Example config:</span>
+ <span class="s4">*</span>
+ <span class="s4">* plugins:</span>
+ <span class="s4">* - addAttributesToSVGElement:</span>
+ <span class="s4">*     attribute: 'data-icon'</span>
+ <span class="s4">*</span>
+ <span class="s4">* plugins:</span>
+ <span class="s4">* - addAttributesToSVGElement:</span>
+ <span class="s4">*     attributes: ['data-icon', 'data-disabled']</span>
+ <span class="s4">*</span>
+ <span class="s4">* plugins:</span>
+ <span class="s4">* - addAttributesToSVGElement:</span>
+ <span class="s4">*     attributes:</span>
+ <span class="s4">*         - focusable: false</span>
+ <span class="s4">*         - data-image: icon</span>
+ <span class="s4">*</span>
+ <span class="s4">* </span><span class="s5">@author </span><span class="s4">April Arcus</span>
+ <span class="s4">*/</span>
+<span class="s2">exports.fn = </span><span class="s3">function</span><span class="s2">(data</span><span class="s1">, </span><span class="s2">params) {</span>
+    <span class="s3">if </span><span class="s2">(!params || !(Array.isArray(params.attributes) || params.attribute)) {</span>
+        <span class="s2">console.error(ENOCLS)</span><span class="s1">;</span>
+        <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">var </span><span class="s2">attributes = params.attributes || [ params.attribute ]</span><span class="s1">,</span>
+        <span class="s2">svg = data.content[</span><span class="s6">0</span><span class="s2">]</span><span class="s1">;</span>
+
+    <span class="s3">if </span><span class="s2">(svg.isElem(</span><span class="s0">'svg'</span><span class="s2">)) {</span>
+        <span class="s2">attributes.forEach(</span><span class="s3">function </span><span class="s2">(attribute) {</span>
+            <span class="s3">if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">attribute === </span><span class="s0">'string'</span><span class="s2">) {</span>
+                <span class="s3">if </span><span class="s2">(!svg.hasAttr(attribute)) {</span>
+                    <span class="s2">svg.addAttr({</span>
+                        <span class="s2">name: attribute</span><span class="s1">,</span>
+                        <span class="s2">prefix: </span><span class="s0">''</span><span class="s1">,</span>
+                        <span class="s2">local: attribute</span>
+                    <span class="s2">})</span><span class="s1">;</span>
+                <span class="s2">}</span>
+            <span class="s2">} </span><span class="s3">else if </span><span class="s2">(</span><span class="s3">typeof </span><span class="s2">attribute === </span><span class="s0">'object'</span><span class="s2">) {</span>
+                <span class="s2">Object.keys(attribute).forEach(</span><span class="s3">function </span><span class="s2">(key) {</span>
+                    <span class="s3">if </span><span class="s2">(!svg.hasAttr(key)) {</span>
+                        <span class="s2">svg.addAttr({</span>
+                            <span class="s2">name: key</span><span class="s1">,</span>
+                            <span class="s2">value: attribute[key]</span><span class="s1">,</span>
+                            <span class="s2">prefix: </span><span class="s0">''</span><span class="s1">,</span>
+                            <span class="s2">local: key</span>
+                        <span class="s2">})</span><span class="s1">;</span>
+                    <span class="s2">}</span>
+                <span class="s2">})</span><span class="s1">;</span>
+            <span class="s2">}</span>
+        <span class="s2">})</span><span class="s1">;</span>
+    <span class="s2">}</span>
+
+    <span class="s3">return </span><span class="s2">data</span><span class="s1">;</span>
+
+<span class="s2">}</span><span class="s1">;</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,1013 @@
+<html>
+<head>
+<title>_path.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #cc7832; font-weight: bold;}
+.s5 { color: #6897bb;}
+.s6 { color: #8a8a8a; font-style: italic;}
+.s7 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s8 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_path.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* global a2c */</span>
+<span class="s2">'use strict'</span><span class="s3">;</span>
+
+<span class="s4">var </span><span class="s1">rNumber = String.raw</span><span class="s2">`[-+]?(?:</span><span class="s3">\d</span><span class="s2">*</span><span class="s3">\.\d</span><span class="s2">+|</span><span class="s3">\d</span><span class="s2">+</span><span class="s3">\.</span><span class="s2">?)(?:[eE][-+]?</span><span class="s3">\d</span><span class="s2">+)?</span><span class="s3">\s</span><span class="s2">*`</span><span class="s3">,</span>
+    <span class="s1">rCommaWsp = String.raw</span><span class="s2">`(?:</span><span class="s3">\s</span><span class="s2">,?</span><span class="s3">\s</span><span class="s2">*|,</span><span class="s3">\s</span><span class="s2">*)`</span><span class="s3">,</span>
+    <span class="s1">rNumberCommaWsp = </span><span class="s2">`(</span><span class="s1">${rNumber}</span><span class="s2">)` </span><span class="s1">+ rCommaWsp</span><span class="s3">,</span>
+    <span class="s1">rFlagCommaWsp = </span><span class="s2">`([01])</span><span class="s1">${rCommaWsp}</span><span class="s2">?`</span><span class="s3">,</span>
+    <span class="s1">rCoordinatePair = String.raw</span><span class="s2">`(</span><span class="s1">${rNumber}</span><span class="s2">)</span><span class="s1">${rCommaWsp}</span><span class="s2">?(</span><span class="s1">${rNumber}</span><span class="s2">)`</span><span class="s3">,</span>
+    <span class="s1">rArcSeq = (rNumberCommaWsp + </span><span class="s2">'?'</span><span class="s1">).repeat(</span><span class="s5">2</span><span class="s1">) + rNumberCommaWsp + rFlagCommaWsp.repeat(</span><span class="s5">2</span><span class="s1">) + rCoordinatePair</span><span class="s3">;</span>
+
+<span class="s4">var </span><span class="s1">regPathInstructions = </span><span class="s5">/([MmLlHhVvCcSsQqTtAaZz])\s*/</span><span class="s3">,</span>
+    <span class="s1">regCoordinateSequence = </span><span class="s4">new </span><span class="s1">RegExp(rNumber</span><span class="s3">, </span><span class="s2">'g'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">regArcArgumentSequence = </span><span class="s4">new </span><span class="s1">RegExp(rArcSeq</span><span class="s3">, </span><span class="s2">'g'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">regNumericValues = </span><span class="s5">/[-+]?(\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/</span><span class="s3">,</span>
+    <span class="s1">transform2js = require(</span><span class="s2">'./_transforms'</span><span class="s1">).transform2js</span><span class="s3">,</span>
+    <span class="s1">transformsMultiply = require(</span><span class="s2">'./_transforms'</span><span class="s1">).transformsMultiply</span><span class="s3">,</span>
+    <span class="s1">transformArc = require(</span><span class="s2">'./_transforms'</span><span class="s1">).transformArc</span><span class="s3">,</span>
+    <span class="s1">collections = require(</span><span class="s2">'./_collections.js'</span><span class="s1">)</span><span class="s3">,</span>
+    <span class="s1">referencesProps = collections.referencesProps</span><span class="s3">,</span>
+    <span class="s1">defaultStrokeWidth = collections.attrsGroupsDefaults.presentation[</span><span class="s2">'stroke-width'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s1">cleanupOutData = require(</span><span class="s2">'../lib/svgo/tools'</span><span class="s1">).cleanupOutData</span><span class="s3">,</span>
+    <span class="s1">removeLeadingZero = require(</span><span class="s2">'../lib/svgo/tools'</span><span class="s1">).removeLeadingZero</span><span class="s3">,</span>
+    <span class="s1">prevCtrlPoint</span><span class="s3">;</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Convert path string to JS representation.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{String} pathString input string</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} params plugin params</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Array} output array</span>
+ <span class="s6">*/</span>
+<span class="s1">exports.path2js = </span><span class="s4">function</span><span class="s1">(path) {</span>
+    <span class="s4">if </span><span class="s1">(path.pathJS) </span><span class="s4">return </span><span class="s1">path.pathJS</span><span class="s3">;</span>
+
+    <span class="s4">var </span><span class="s1">paramsLength = { </span><span class="s8">// Number of parameters of every path command</span>
+            <span class="s1">H: </span><span class="s5">1</span><span class="s3">, </span><span class="s1">V: </span><span class="s5">1</span><span class="s3">, </span><span class="s1">M: </span><span class="s5">2</span><span class="s3">, </span><span class="s1">L: </span><span class="s5">2</span><span class="s3">, </span><span class="s1">T: </span><span class="s5">2</span><span class="s3">, </span><span class="s1">Q: </span><span class="s5">4</span><span class="s3">, </span><span class="s1">S: </span><span class="s5">4</span><span class="s3">, </span><span class="s1">C: </span><span class="s5">6</span><span class="s3">, </span><span class="s1">A: </span><span class="s5">7</span><span class="s3">,</span>
+            <span class="s1">h: </span><span class="s5">1</span><span class="s3">, </span><span class="s1">v: </span><span class="s5">1</span><span class="s3">, </span><span class="s1">m: </span><span class="s5">2</span><span class="s3">, </span><span class="s1">l: </span><span class="s5">2</span><span class="s3">, </span><span class="s1">t: </span><span class="s5">2</span><span class="s3">, </span><span class="s1">q: </span><span class="s5">4</span><span class="s3">, </span><span class="s1">s: </span><span class="s5">4</span><span class="s3">, </span><span class="s1">c: </span><span class="s5">6</span><span class="s3">, </span><span class="s1">a: </span><span class="s5">7</span>
+        <span class="s1">}</span><span class="s3">,</span>
+        <span class="s1">pathData = []</span><span class="s3">,   </span><span class="s8">// JS representation of the path data</span>
+        <span class="s1">instruction</span><span class="s3">, </span><span class="s8">// current instruction context</span>
+        <span class="s1">startMoveto = </span><span class="s4">false</span><span class="s3">;</span>
+
+    <span class="s8">// splitting path string into array like ['M', '10 50', 'L', '20 30']</span>
+    <span class="s1">path.attr(</span><span class="s2">'d'</span><span class="s1">).value.split(regPathInstructions).forEach(</span><span class="s4">function</span><span class="s1">(data) {</span>
+        <span class="s4">if </span><span class="s1">(!data) </span><span class="s4">return</span><span class="s3">;</span>
+        <span class="s4">if </span><span class="s1">(!startMoveto) {</span>
+            <span class="s4">if </span><span class="s1">(data == </span><span class="s2">'M' </span><span class="s1">|| data == </span><span class="s2">'m'</span><span class="s1">) {</span>
+                <span class="s1">startMoveto = </span><span class="s4">true</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s4">else return</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s8">// instruction item</span>
+        <span class="s4">if </span><span class="s1">(regPathInstructions.test(data)) {</span>
+            <span class="s1">instruction = data</span><span class="s3">;</span>
+
+            <span class="s8">// z - instruction w/o data</span>
+            <span class="s4">if </span><span class="s1">(instruction == </span><span class="s2">'Z' </span><span class="s1">|| instruction == </span><span class="s2">'z'</span><span class="s1">) {</span>
+                <span class="s1">pathData.push({</span>
+                    <span class="s1">instruction: </span><span class="s2">'z'</span>
+                <span class="s1">})</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s8">// data item</span>
+        <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+            <span class="s0">/* jshint boss: true */</span>
+            <span class="s4">if </span><span class="s1">(instruction == </span><span class="s2">'A' </span><span class="s1">|| instruction == </span><span class="s2">'a'</span><span class="s1">) {</span>
+                <span class="s4">var </span><span class="s1">newData = []</span><span class="s3">;</span>
+                <span class="s4">for </span><span class="s1">(</span><span class="s4">var </span><span class="s1">args</span><span class="s3">; </span><span class="s1">(args = regArcArgumentSequence.exec(data))</span><span class="s3">;</span><span class="s1">) {</span>
+                    <span class="s4">for </span><span class="s1">(</span><span class="s4">var </span><span class="s1">i = </span><span class="s5">1</span><span class="s3">; </span><span class="s1">i &lt; args.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+                        <span class="s1">newData.push(args[i])</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+                <span class="s1">data = newData</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+                <span class="s1">data = data.match(regCoordinateSequence)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+            <span class="s4">if </span><span class="s1">(!data) </span><span class="s4">return</span><span class="s3">;</span>
+
+            <span class="s1">data = data.map(Number)</span><span class="s3">;</span>
+            <span class="s8">// Subsequent moveto pairs of coordinates are threated as implicit lineto commands</span>
+            <span class="s8">// http://www.w3.org/TR/SVG/paths.html#PathDataMovetoCommands</span>
+            <span class="s4">if </span><span class="s1">(instruction == </span><span class="s2">'M' </span><span class="s1">|| instruction == </span><span class="s2">'m'</span><span class="s1">) {</span>
+                <span class="s1">pathData.push({</span>
+                    <span class="s1">instruction: pathData.length == </span><span class="s5">0 </span><span class="s1">? </span><span class="s2">'M' </span><span class="s1">: instruction</span><span class="s3">,</span>
+                    <span class="s1">data: data.splice(</span><span class="s5">0</span><span class="s3">, </span><span class="s5">2</span><span class="s1">)</span>
+                <span class="s1">})</span><span class="s3">;</span>
+                <span class="s1">instruction = instruction == </span><span class="s2">'M' </span><span class="s1">? </span><span class="s2">'L' </span><span class="s1">: </span><span class="s2">'l'</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s4">for </span><span class="s1">(</span><span class="s4">var </span><span class="s1">pair = paramsLength[instruction]</span><span class="s3">; </span><span class="s1">data.length</span><span class="s3">;</span><span class="s1">) {</span>
+                <span class="s1">pathData.push({</span>
+                    <span class="s1">instruction: instruction</span><span class="s3">,</span>
+                    <span class="s1">data: data.splice(</span><span class="s5">0</span><span class="s3">, </span><span class="s1">pair)</span>
+                <span class="s1">})</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s8">// First moveto is actually absolute. Subsequent coordinates were separated above.</span>
+    <span class="s4">if </span><span class="s1">(pathData.length &amp;&amp; pathData[</span><span class="s5">0</span><span class="s1">].instruction == </span><span class="s2">'m'</span><span class="s1">) {</span>
+        <span class="s1">pathData[</span><span class="s5">0</span><span class="s1">].instruction = </span><span class="s2">'M'</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s1">path.pathJS = pathData</span><span class="s3">;</span>
+
+    <span class="s4">return </span><span class="s1">pathData</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Convert relative Path data to absolute.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} data input data</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Array} output data</span>
+ <span class="s6">*/</span>
+<span class="s4">var </span><span class="s1">relative2absolute = exports.relative2absolute = </span><span class="s4">function</span><span class="s1">(data) {</span>
+    <span class="s4">var </span><span class="s1">currentPoint = [</span><span class="s5">0</span><span class="s3">, </span><span class="s5">0</span><span class="s1">]</span><span class="s3">,</span>
+        <span class="s1">subpathPoint = [</span><span class="s5">0</span><span class="s3">, </span><span class="s5">0</span><span class="s1">]</span><span class="s3">,</span>
+        <span class="s1">i</span><span class="s3">;</span>
+
+    <span class="s4">return </span><span class="s1">data.map(</span><span class="s4">function</span><span class="s1">(item) {</span>
+
+        <span class="s4">var </span><span class="s1">instruction = item.instruction</span><span class="s3">,</span>
+            <span class="s1">itemData = item.data &amp;&amp; item.data.slice()</span><span class="s3">;</span>
+
+        <span class="s4">if </span><span class="s1">(instruction == </span><span class="s2">'M'</span><span class="s1">) {</span>
+
+            <span class="s1">set(currentPoint</span><span class="s3">, </span><span class="s1">itemData)</span><span class="s3">;</span>
+            <span class="s1">set(subpathPoint</span><span class="s3">, </span><span class="s1">itemData)</span><span class="s3">;</span>
+
+        <span class="s1">} </span><span class="s4">else if </span><span class="s1">(</span><span class="s2">'mlcsqt'</span><span class="s1">.indexOf(instruction) &gt; -</span><span class="s5">1</span><span class="s1">) {</span>
+
+            <span class="s4">for </span><span class="s1">(i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; itemData.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+                <span class="s1">itemData[i] += currentPoint[i % </span><span class="s5">2</span><span class="s1">]</span><span class="s3">;</span>
+            <span class="s1">}</span>
+            <span class="s1">set(currentPoint</span><span class="s3">, </span><span class="s1">itemData)</span><span class="s3">;</span>
+
+            <span class="s4">if </span><span class="s1">(instruction == </span><span class="s2">'m'</span><span class="s1">) {</span>
+                <span class="s1">set(subpathPoint</span><span class="s3">, </span><span class="s1">itemData)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+        <span class="s1">} </span><span class="s4">else if </span><span class="s1">(instruction == </span><span class="s2">'a'</span><span class="s1">) {</span>
+
+            <span class="s1">itemData[</span><span class="s5">5</span><span class="s1">] += currentPoint[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+            <span class="s1">itemData[</span><span class="s5">6</span><span class="s1">] += currentPoint[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+            <span class="s1">set(currentPoint</span><span class="s3">, </span><span class="s1">itemData)</span><span class="s3">;</span>
+
+        <span class="s1">} </span><span class="s4">else if </span><span class="s1">(instruction == </span><span class="s2">'h'</span><span class="s1">) {</span>
+
+            <span class="s1">itemData[</span><span class="s5">0</span><span class="s1">] += currentPoint[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+            <span class="s1">currentPoint[</span><span class="s5">0</span><span class="s1">] = itemData[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+
+        <span class="s1">} </span><span class="s4">else if </span><span class="s1">(instruction == </span><span class="s2">'v'</span><span class="s1">) {</span>
+
+            <span class="s1">itemData[</span><span class="s5">0</span><span class="s1">] += currentPoint[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+            <span class="s1">currentPoint[</span><span class="s5">1</span><span class="s1">] = itemData[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+
+        <span class="s1">} </span><span class="s4">else if </span><span class="s1">(</span><span class="s2">'MZLCSQTA'</span><span class="s1">.indexOf(instruction) &gt; -</span><span class="s5">1</span><span class="s1">) {</span>
+
+            <span class="s1">set(currentPoint</span><span class="s3">, </span><span class="s1">itemData)</span><span class="s3">;</span>
+
+        <span class="s1">} </span><span class="s4">else if </span><span class="s1">(instruction == </span><span class="s2">'H'</span><span class="s1">) {</span>
+
+            <span class="s1">currentPoint[</span><span class="s5">0</span><span class="s1">] = itemData[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+
+        <span class="s1">} </span><span class="s4">else if </span><span class="s1">(instruction == </span><span class="s2">'V'</span><span class="s1">) {</span>
+
+            <span class="s1">currentPoint[</span><span class="s5">1</span><span class="s1">] = itemData[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+
+        <span class="s1">} </span><span class="s4">else if </span><span class="s1">(instruction == </span><span class="s2">'z'</span><span class="s1">) {</span>
+
+            <span class="s1">set(currentPoint</span><span class="s3">, </span><span class="s1">subpathPoint)</span><span class="s3">;</span>
+
+        <span class="s1">}</span>
+
+        <span class="s4">return </span><span class="s1">instruction == </span><span class="s2">'z' </span><span class="s1">?</span>
+            <span class="s1">{ instruction: </span><span class="s2">'z' </span><span class="s1">} :</span>
+            <span class="s1">{</span>
+                <span class="s1">instruction: instruction.toUpperCase()</span><span class="s3">,</span>
+                <span class="s1">data: itemData</span>
+            <span class="s1">}</span><span class="s3">;</span>
+
+    <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Apply transformation(s) to the Path data.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} elem current element</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} path input path data</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} params whether to apply transforms to stroked lines and transform precision (used for stroke width)</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Array} output path data</span>
+ <span class="s6">*/</span>
+<span class="s1">exports.applyTransforms = </span><span class="s4">function</span><span class="s1">(elem</span><span class="s3">, </span><span class="s1">path</span><span class="s3">, </span><span class="s1">params) {</span>
+    <span class="s8">// if there are no 'stroke' attr and references to other objects such as</span>
+    <span class="s8">// gradiends or clip-path which are also subjects to transform.</span>
+    <span class="s4">if </span><span class="s1">(!elem.hasAttr(</span><span class="s2">'transform'</span><span class="s1">) || !elem.attr(</span><span class="s2">'transform'</span><span class="s1">).value ||</span>
+        <span class="s1">elem.someAttr(</span><span class="s4">function</span><span class="s1">(attr) {</span>
+            <span class="s4">return </span><span class="s1">~referencesProps.indexOf(attr.name) &amp;&amp; ~attr.value.indexOf(</span><span class="s2">'url('</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}))</span>
+        <span class="s4">return </span><span class="s1">path</span><span class="s3">;</span>
+
+    <span class="s4">var </span><span class="s1">matrix = transformsMultiply(transform2js(elem.attr(</span><span class="s2">'transform'</span><span class="s1">).value))</span><span class="s3">,</span>
+        <span class="s1">stroke = elem.computedAttr(</span><span class="s2">'stroke'</span><span class="s1">)</span><span class="s3">,</span>
+        <span class="s1">id = elem.computedAttr(</span><span class="s2">'id'</span><span class="s1">)</span><span class="s3">,</span>
+        <span class="s1">transformPrecision = params.transformPrecision</span><span class="s3">,</span>
+        <span class="s1">newPoint</span><span class="s3">, </span><span class="s1">scale</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s1">(stroke &amp;&amp; stroke != </span><span class="s2">'none'</span><span class="s1">) {</span>
+        <span class="s4">if </span><span class="s1">(!params.applyTransformsStroked ||</span>
+            <span class="s1">(matrix.data[</span><span class="s5">0</span><span class="s1">] != matrix.data[</span><span class="s5">3</span><span class="s1">] || matrix.data[</span><span class="s5">1</span><span class="s1">] != -matrix.data[</span><span class="s5">2</span><span class="s1">]) &amp;&amp;</span>
+            <span class="s1">(matrix.data[</span><span class="s5">0</span><span class="s1">] != -matrix.data[</span><span class="s5">3</span><span class="s1">] || matrix.data[</span><span class="s5">1</span><span class="s1">] != matrix.data[</span><span class="s5">2</span><span class="s1">]))</span>
+            <span class="s4">return </span><span class="s1">path</span><span class="s3">;</span>
+
+        <span class="s8">// &quot;stroke-width&quot; should be inside the part with ID, otherwise it can be overrided in &lt;use&gt;</span>
+        <span class="s4">if </span><span class="s1">(id) {</span>
+            <span class="s4">var </span><span class="s1">idElem = elem</span><span class="s3">,</span>
+                <span class="s1">hasStrokeWidth = </span><span class="s4">false</span><span class="s3">;</span>
+
+            <span class="s4">do </span><span class="s1">{</span>
+                <span class="s4">if </span><span class="s1">(idElem.hasAttr(</span><span class="s2">'stroke-width'</span><span class="s1">)) hasStrokeWidth = </span><span class="s4">true</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s4">while </span><span class="s1">(!idElem.hasAttr(</span><span class="s2">'id'</span><span class="s3">, </span><span class="s1">id) &amp;&amp; !hasStrokeWidth &amp;&amp; (idElem = idElem.parentNode))</span><span class="s3">;</span>
+
+            <span class="s4">if </span><span class="s1">(!hasStrokeWidth) </span><span class="s4">return </span><span class="s1">path</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">scale = +Math.sqrt(matrix.data[</span><span class="s5">0</span><span class="s1">] * matrix.data[</span><span class="s5">0</span><span class="s1">] + matrix.data[</span><span class="s5">1</span><span class="s1">] * matrix.data[</span><span class="s5">1</span><span class="s1">]).toFixed(transformPrecision)</span><span class="s3">;</span>
+
+        <span class="s4">if </span><span class="s1">(scale !== </span><span class="s5">1</span><span class="s1">) {</span>
+            <span class="s4">var </span><span class="s1">strokeWidth = elem.computedAttr(</span><span class="s2">'stroke-width'</span><span class="s1">) || defaultStrokeWidth</span><span class="s3">;</span>
+
+            <span class="s4">if </span><span class="s1">(!elem.hasAttr(</span><span class="s2">'vector-effect'</span><span class="s1">) || elem.attr(</span><span class="s2">'vector-effect'</span><span class="s1">).value !== </span><span class="s2">'non-scaling-stroke'</span><span class="s1">) {</span>
+                <span class="s4">if </span><span class="s1">(elem.hasAttr(</span><span class="s2">'stroke-width'</span><span class="s1">)) {</span>
+                    <span class="s1">elem.attrs[</span><span class="s2">'stroke-width'</span><span class="s1">].value = elem.attrs[</span><span class="s2">'stroke-width'</span><span class="s1">].value.trim()</span>
+                        <span class="s1">.replace(regNumericValues</span><span class="s3">, </span><span class="s4">function</span><span class="s1">(num) {</span>
+                            <span class="s4">return </span><span class="s1">removeLeadingZero(num * scale)</span><span class="s3">;</span>
+                        <span class="s1">})</span><span class="s3">;</span>
+                <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+                    <span class="s1">elem.addAttr({</span>
+                        <span class="s1">name: </span><span class="s2">'stroke-width'</span><span class="s3">,</span>
+                        <span class="s1">prefix: </span><span class="s2">''</span><span class="s3">,</span>
+                        <span class="s1">local: </span><span class="s2">'stroke-width'</span><span class="s3">,</span>
+                        <span class="s1">value: strokeWidth.replace(regNumericValues</span><span class="s3">, </span><span class="s4">function</span><span class="s1">(num) {</span>
+                            <span class="s4">return </span><span class="s1">removeLeadingZero(num * scale)</span><span class="s3">;</span>
+                        <span class="s1">})</span>
+                    <span class="s1">})</span><span class="s3">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">} </span><span class="s4">else if </span><span class="s1">(id) { </span><span class="s8">// Stroke and stroke-width can be redefined with &lt;use&gt;</span>
+        <span class="s4">return </span><span class="s1">path</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">path.forEach(</span><span class="s4">function</span><span class="s1">(pathItem) {</span>
+
+        <span class="s4">if </span><span class="s1">(pathItem.data) {</span>
+
+            <span class="s8">// h -&gt; l</span>
+            <span class="s4">if </span><span class="s1">(pathItem.instruction === </span><span class="s2">'h'</span><span class="s1">) {</span>
+
+                <span class="s1">pathItem.instruction = </span><span class="s2">'l'</span><span class="s3">;</span>
+                <span class="s1">pathItem.data[</span><span class="s5">1</span><span class="s1">] = </span><span class="s5">0</span><span class="s3">;</span>
+
+            <span class="s8">// v -&gt; l</span>
+            <span class="s1">} </span><span class="s4">else if </span><span class="s1">(pathItem.instruction === </span><span class="s2">'v'</span><span class="s1">) {</span>
+
+                <span class="s1">pathItem.instruction = </span><span class="s2">'l'</span><span class="s3">;</span>
+                <span class="s1">pathItem.data[</span><span class="s5">1</span><span class="s1">] = pathItem.data[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+                <span class="s1">pathItem.data[</span><span class="s5">0</span><span class="s1">] = </span><span class="s5">0</span><span class="s3">;</span>
+
+            <span class="s1">}</span>
+
+            <span class="s8">// if there is a translate() transform</span>
+            <span class="s4">if </span><span class="s1">(pathItem.instruction === </span><span class="s2">'M' </span><span class="s1">&amp;&amp;</span>
+                <span class="s1">(matrix.data[</span><span class="s5">4</span><span class="s1">] !== </span><span class="s5">0 </span><span class="s1">||</span>
+                <span class="s1">matrix.data[</span><span class="s5">5</span><span class="s1">] !== </span><span class="s5">0</span><span class="s1">)</span>
+            <span class="s1">) {</span>
+
+                <span class="s8">// then apply it only to the first absoluted M</span>
+                <span class="s1">newPoint = transformPoint(matrix.data</span><span class="s3">, </span><span class="s1">pathItem.data[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">pathItem.data[</span><span class="s5">1</span><span class="s1">])</span><span class="s3">;</span>
+                <span class="s1">set(pathItem.data</span><span class="s3">, </span><span class="s1">newPoint)</span><span class="s3">;</span>
+                <span class="s1">set(pathItem.coords</span><span class="s3">, </span><span class="s1">newPoint)</span><span class="s3">;</span>
+
+                <span class="s8">// clear translate() data from transform matrix</span>
+                <span class="s1">matrix.data[</span><span class="s5">4</span><span class="s1">] = </span><span class="s5">0</span><span class="s3">;</span>
+                <span class="s1">matrix.data[</span><span class="s5">5</span><span class="s1">] = </span><span class="s5">0</span><span class="s3">;</span>
+
+            <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+
+                <span class="s4">if </span><span class="s1">(pathItem.instruction == </span><span class="s2">'a'</span><span class="s1">) {</span>
+
+                    <span class="s1">transformArc(pathItem.data</span><span class="s3">, </span><span class="s1">matrix.data)</span><span class="s3">;</span>
+
+                    <span class="s8">// reduce number of digits in rotation angle</span>
+                    <span class="s4">if </span><span class="s1">(Math.abs(pathItem.data[</span><span class="s5">2</span><span class="s1">]) &gt; </span><span class="s5">80</span><span class="s1">) {</span>
+                        <span class="s4">var </span><span class="s1">a = pathItem.data[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">,</span>
+                            <span class="s1">rotation = pathItem.data[</span><span class="s5">2</span><span class="s1">]</span><span class="s3">;</span>
+                        <span class="s1">pathItem.data[</span><span class="s5">0</span><span class="s1">] = pathItem.data[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+                        <span class="s1">pathItem.data[</span><span class="s5">1</span><span class="s1">] = a</span><span class="s3">;</span>
+                        <span class="s1">pathItem.data[</span><span class="s5">2</span><span class="s1">] = rotation + (rotation &gt; </span><span class="s5">0 </span><span class="s1">? -</span><span class="s5">90 </span><span class="s1">: </span><span class="s5">90</span><span class="s1">)</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+
+                    <span class="s1">newPoint = transformPoint(matrix.data</span><span class="s3">, </span><span class="s1">pathItem.data[</span><span class="s5">5</span><span class="s1">]</span><span class="s3">, </span><span class="s1">pathItem.data[</span><span class="s5">6</span><span class="s1">])</span><span class="s3">;</span>
+                    <span class="s1">pathItem.data[</span><span class="s5">5</span><span class="s1">] = newPoint[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+                    <span class="s1">pathItem.data[</span><span class="s5">6</span><span class="s1">] = newPoint[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+
+                <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+
+                    <span class="s4">for </span><span class="s1">(</span><span class="s4">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; pathItem.data.length</span><span class="s3">; </span><span class="s1">i += </span><span class="s5">2</span><span class="s1">) {</span>
+                        <span class="s1">newPoint = transformPoint(matrix.data</span><span class="s3">, </span><span class="s1">pathItem.data[i]</span><span class="s3">, </span><span class="s1">pathItem.data[i + </span><span class="s5">1</span><span class="s1">])</span><span class="s3">;</span>
+                        <span class="s1">pathItem.data[i] = newPoint[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+                        <span class="s1">pathItem.data[i + </span><span class="s5">1</span><span class="s1">] = newPoint[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+
+                <span class="s1">pathItem.coords[</span><span class="s5">0</span><span class="s1">] = pathItem.base[</span><span class="s5">0</span><span class="s1">] + pathItem.data[pathItem.data.length - </span><span class="s5">2</span><span class="s1">]</span><span class="s3">;</span>
+                <span class="s1">pathItem.coords[</span><span class="s5">1</span><span class="s1">] = pathItem.base[</span><span class="s5">1</span><span class="s1">] + pathItem.data[pathItem.data.length - </span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+
+            <span class="s1">}</span>
+
+        <span class="s1">}</span>
+
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s8">// remove transform attr</span>
+    <span class="s1">elem.removeAttr(</span><span class="s2">'transform'</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s4">return </span><span class="s1">path</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Apply transform 3x3 matrix to x-y point.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} matrix transform 3x3 matrix</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} point x-y point</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Array} point with new coordinates</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">transformPoint(matrix</span><span class="s3">, </span><span class="s1">x</span><span class="s3">, </span><span class="s1">y) {</span>
+
+    <span class="s4">return </span><span class="s1">[</span>
+        <span class="s1">matrix[</span><span class="s5">0</span><span class="s1">] * x + matrix[</span><span class="s5">2</span><span class="s1">] * y + matrix[</span><span class="s5">4</span><span class="s1">]</span><span class="s3">,</span>
+        <span class="s1">matrix[</span><span class="s5">1</span><span class="s1">] * x + matrix[</span><span class="s5">3</span><span class="s1">] * y + matrix[</span><span class="s5">5</span><span class="s1">]</span>
+    <span class="s1">]</span><span class="s3">;</span>
+
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Compute Cubic Bézie bounding box.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@see </span><span class="s6">http://processingjs.nihongoresources.com/bezierinfo/</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Float} xa</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Float} ya</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Float} xb</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Float} yb</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Float} xc</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Float} yc</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Float} xd</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Float} yd</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Object}</span>
+ <span class="s6">*/</span>
+<span class="s1">exports.computeCubicBoundingBox = </span><span class="s4">function</span><span class="s1">(xa</span><span class="s3">, </span><span class="s1">ya</span><span class="s3">, </span><span class="s1">xb</span><span class="s3">, </span><span class="s1">yb</span><span class="s3">, </span><span class="s1">xc</span><span class="s3">, </span><span class="s1">yc</span><span class="s3">, </span><span class="s1">xd</span><span class="s3">, </span><span class="s1">yd) {</span>
+
+    <span class="s4">var </span><span class="s1">minx = Number.POSITIVE_INFINITY</span><span class="s3">,</span>
+        <span class="s1">miny = Number.POSITIVE_INFINITY</span><span class="s3">,</span>
+        <span class="s1">maxx = Number.NEGATIVE_INFINITY</span><span class="s3">,</span>
+        <span class="s1">maxy = Number.NEGATIVE_INFINITY</span><span class="s3">,</span>
+        <span class="s1">ts</span><span class="s3">,</span>
+        <span class="s1">t</span><span class="s3">,</span>
+        <span class="s1">x</span><span class="s3">,</span>
+        <span class="s1">y</span><span class="s3">,</span>
+        <span class="s1">i</span><span class="s3">;</span>
+
+    <span class="s8">// X</span>
+    <span class="s4">if </span><span class="s1">(xa &lt; minx) { minx = xa</span><span class="s3">; </span><span class="s1">}</span>
+    <span class="s4">if </span><span class="s1">(xa &gt; maxx) { maxx = xa</span><span class="s3">; </span><span class="s1">}</span>
+    <span class="s4">if </span><span class="s1">(xd &lt; minx) { minx= xd</span><span class="s3">; </span><span class="s1">}</span>
+    <span class="s4">if </span><span class="s1">(xd &gt; maxx) { maxx = xd</span><span class="s3">; </span><span class="s1">}</span>
+
+    <span class="s1">ts = computeCubicFirstDerivativeRoots(xa</span><span class="s3">, </span><span class="s1">xb</span><span class="s3">, </span><span class="s1">xc</span><span class="s3">, </span><span class="s1">xd)</span><span class="s3">;</span>
+
+    <span class="s4">for </span><span class="s1">(i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; ts.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+
+        <span class="s1">t = ts[i]</span><span class="s3">;</span>
+
+        <span class="s4">if </span><span class="s1">(t &gt;= </span><span class="s5">0 </span><span class="s1">&amp;&amp; t &lt;= </span><span class="s5">1</span><span class="s1">) {</span>
+            <span class="s1">x = computeCubicBaseValue(t</span><span class="s3">, </span><span class="s1">xa</span><span class="s3">, </span><span class="s1">xb</span><span class="s3">, </span><span class="s1">xc</span><span class="s3">, </span><span class="s1">xd)</span><span class="s3">;</span>
+            <span class="s8">// y = computeCubicBaseValue(t, ya, yb, yc, yd);</span>
+
+            <span class="s4">if </span><span class="s1">(x &lt; minx) { minx = x</span><span class="s3">; </span><span class="s1">}</span>
+            <span class="s4">if </span><span class="s1">(x &gt; maxx) { maxx = x</span><span class="s3">; </span><span class="s1">}</span>
+        <span class="s1">}</span>
+
+    <span class="s1">}</span>
+
+    <span class="s8">// Y</span>
+    <span class="s4">if </span><span class="s1">(ya &lt; miny) { miny = ya</span><span class="s3">; </span><span class="s1">}</span>
+    <span class="s4">if </span><span class="s1">(ya &gt; maxy) { maxy = ya</span><span class="s3">; </span><span class="s1">}</span>
+    <span class="s4">if </span><span class="s1">(yd &lt; miny) { miny = yd</span><span class="s3">; </span><span class="s1">}</span>
+    <span class="s4">if </span><span class="s1">(yd &gt; maxy) { maxy = yd</span><span class="s3">; </span><span class="s1">}</span>
+
+    <span class="s1">ts = computeCubicFirstDerivativeRoots(ya</span><span class="s3">, </span><span class="s1">yb</span><span class="s3">, </span><span class="s1">yc</span><span class="s3">, </span><span class="s1">yd)</span><span class="s3">;</span>
+
+    <span class="s4">for </span><span class="s1">(i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; ts.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+
+        <span class="s1">t = ts[i]</span><span class="s3">;</span>
+
+        <span class="s4">if </span><span class="s1">(t &gt;= </span><span class="s5">0 </span><span class="s1">&amp;&amp; t &lt;= </span><span class="s5">1</span><span class="s1">) {</span>
+            <span class="s8">// x = computeCubicBaseValue(t, xa, xb, xc, xd);</span>
+            <span class="s1">y = computeCubicBaseValue(t</span><span class="s3">, </span><span class="s1">ya</span><span class="s3">, </span><span class="s1">yb</span><span class="s3">, </span><span class="s1">yc</span><span class="s3">, </span><span class="s1">yd)</span><span class="s3">;</span>
+
+            <span class="s4">if </span><span class="s1">(y &lt; miny) { miny = y</span><span class="s3">; </span><span class="s1">}</span>
+            <span class="s4">if </span><span class="s1">(y &gt; maxy) { maxy = y</span><span class="s3">; </span><span class="s1">}</span>
+        <span class="s1">}</span>
+
+    <span class="s1">}</span>
+
+    <span class="s4">return </span><span class="s1">{</span>
+        <span class="s1">minx: minx</span><span class="s3">,</span>
+        <span class="s1">miny: miny</span><span class="s3">,</span>
+        <span class="s1">maxx: maxx</span><span class="s3">,</span>
+        <span class="s1">maxy: maxy</span>
+    <span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s8">// compute the value for the cubic bezier function at time=t</span>
+<span class="s4">function </span><span class="s1">computeCubicBaseValue(t</span><span class="s3">, </span><span class="s1">a</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">c</span><span class="s3">, </span><span class="s1">d) {</span>
+
+    <span class="s4">var </span><span class="s1">mt = </span><span class="s5">1 </span><span class="s1">- t</span><span class="s3">;</span>
+
+    <span class="s4">return </span><span class="s1">mt * mt * mt * a + </span><span class="s5">3 </span><span class="s1">* mt * mt * t * b + </span><span class="s5">3 </span><span class="s1">* mt * t * t * c + t * t * t * d</span><span class="s3">;</span>
+
+<span class="s1">}</span>
+
+<span class="s8">// compute the value for the first derivative of the cubic bezier function at time=t</span>
+<span class="s4">function </span><span class="s1">computeCubicFirstDerivativeRoots(a</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">c</span><span class="s3">, </span><span class="s1">d) {</span>
+
+    <span class="s4">var </span><span class="s1">result = [-</span><span class="s5">1</span><span class="s3">, </span><span class="s1">-</span><span class="s5">1</span><span class="s1">]</span><span class="s3">,</span>
+        <span class="s1">tl = -a + </span><span class="s5">2 </span><span class="s1">* b - c</span><span class="s3">,</span>
+        <span class="s1">tr = -Math.sqrt(-a * (c - d) + b * b - b * (c + d) + c * c)</span><span class="s3">,</span>
+        <span class="s1">dn = -a + </span><span class="s5">3 </span><span class="s1">* b - </span><span class="s5">3 </span><span class="s1">* c + d</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s1">(dn !== </span><span class="s5">0</span><span class="s1">) {</span>
+        <span class="s1">result[</span><span class="s5">0</span><span class="s1">] = (tl + tr) / dn</span><span class="s3">;</span>
+        <span class="s1">result[</span><span class="s5">1</span><span class="s1">] = (tl - tr) / dn</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">return </span><span class="s1">result</span><span class="s3">;</span>
+
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Compute Quadratic Bézier bounding box.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@see </span><span class="s6">http://processingjs.nihongoresources.com/bezierinfo/</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Float} xa</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Float} ya</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Float} xb</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Float} yb</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Float} xc</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Float} yc</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Object}</span>
+ <span class="s6">*/</span>
+<span class="s1">exports.computeQuadraticBoundingBox = </span><span class="s4">function</span><span class="s1">(xa</span><span class="s3">, </span><span class="s1">ya</span><span class="s3">, </span><span class="s1">xb</span><span class="s3">, </span><span class="s1">yb</span><span class="s3">, </span><span class="s1">xc</span><span class="s3">, </span><span class="s1">yc) {</span>
+
+    <span class="s4">var </span><span class="s1">minx = Number.POSITIVE_INFINITY</span><span class="s3">,</span>
+        <span class="s1">miny = Number.POSITIVE_INFINITY</span><span class="s3">,</span>
+        <span class="s1">maxx = Number.NEGATIVE_INFINITY</span><span class="s3">,</span>
+        <span class="s1">maxy = Number.NEGATIVE_INFINITY</span><span class="s3">,</span>
+        <span class="s1">t</span><span class="s3">,</span>
+        <span class="s1">x</span><span class="s3">,</span>
+        <span class="s1">y</span><span class="s3">;</span>
+
+    <span class="s8">// X</span>
+    <span class="s4">if </span><span class="s1">(xa &lt; minx) { minx = xa</span><span class="s3">; </span><span class="s1">}</span>
+    <span class="s4">if </span><span class="s1">(xa &gt; maxx) { maxx = xa</span><span class="s3">; </span><span class="s1">}</span>
+    <span class="s4">if </span><span class="s1">(xc &lt; minx) { minx = xc</span><span class="s3">; </span><span class="s1">}</span>
+    <span class="s4">if </span><span class="s1">(xc &gt; maxx) { maxx = xc</span><span class="s3">; </span><span class="s1">}</span>
+
+    <span class="s1">t = computeQuadraticFirstDerivativeRoot(xa</span><span class="s3">, </span><span class="s1">xb</span><span class="s3">, </span><span class="s1">xc)</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s1">(t &gt;= </span><span class="s5">0 </span><span class="s1">&amp;&amp; t &lt;= </span><span class="s5">1</span><span class="s1">) {</span>
+        <span class="s1">x = computeQuadraticBaseValue(t</span><span class="s3">, </span><span class="s1">xa</span><span class="s3">, </span><span class="s1">xb</span><span class="s3">, </span><span class="s1">xc)</span><span class="s3">;</span>
+        <span class="s8">// y = computeQuadraticBaseValue(t, ya, yb, yc);</span>
+
+        <span class="s4">if </span><span class="s1">(x &lt; minx) { minx = x</span><span class="s3">; </span><span class="s1">}</span>
+        <span class="s4">if </span><span class="s1">(x &gt; maxx) { maxx = x</span><span class="s3">; </span><span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s8">// Y</span>
+    <span class="s4">if </span><span class="s1">(ya &lt; miny) { miny = ya</span><span class="s3">; </span><span class="s1">}</span>
+    <span class="s4">if </span><span class="s1">(ya &gt; maxy) { maxy = ya</span><span class="s3">; </span><span class="s1">}</span>
+    <span class="s4">if </span><span class="s1">(yc &lt; miny) { miny = yc</span><span class="s3">; </span><span class="s1">}</span>
+    <span class="s4">if </span><span class="s1">(yc &gt; maxy) { maxy = yc</span><span class="s3">; </span><span class="s1">}</span>
+
+    <span class="s1">t = computeQuadraticFirstDerivativeRoot(ya</span><span class="s3">, </span><span class="s1">yb</span><span class="s3">, </span><span class="s1">yc)</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s1">(t &gt;= </span><span class="s5">0 </span><span class="s1">&amp;&amp; t &lt;=</span><span class="s5">1 </span><span class="s1">) {</span>
+        <span class="s8">// x = computeQuadraticBaseValue(t, xa, xb, xc);</span>
+        <span class="s1">y = computeQuadraticBaseValue(t</span><span class="s3">, </span><span class="s1">ya</span><span class="s3">, </span><span class="s1">yb</span><span class="s3">, </span><span class="s1">yc)</span><span class="s3">;</span>
+
+        <span class="s4">if </span><span class="s1">(y &lt; miny) { miny = y</span><span class="s3">; </span><span class="s1">}</span>
+        <span class="s4">if </span><span class="s1">(y &gt; maxy) { maxy = y </span><span class="s3">; </span><span class="s1">}</span>
+
+    <span class="s1">}</span>
+
+    <span class="s4">return </span><span class="s1">{</span>
+        <span class="s1">minx: minx</span><span class="s3">,</span>
+        <span class="s1">miny: miny</span><span class="s3">,</span>
+        <span class="s1">maxx: maxx</span><span class="s3">,</span>
+        <span class="s1">maxy: maxy</span>
+    <span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s8">// compute the value for the quadratic bezier function at time=t</span>
+<span class="s4">function </span><span class="s1">computeQuadraticBaseValue(t</span><span class="s3">, </span><span class="s1">a</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">c) {</span>
+
+    <span class="s4">var </span><span class="s1">mt = </span><span class="s5">1 </span><span class="s1">- t</span><span class="s3">;</span>
+
+    <span class="s4">return </span><span class="s1">mt * mt * a + </span><span class="s5">2 </span><span class="s1">* mt * t * b + t * t * c</span><span class="s3">;</span>
+
+<span class="s1">}</span>
+
+<span class="s8">// compute the value for the first derivative of the quadratic bezier function at time=t</span>
+<span class="s4">function </span><span class="s1">computeQuadraticFirstDerivativeRoot(a</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">c) {</span>
+
+    <span class="s4">var </span><span class="s1">t = -</span><span class="s5">1</span><span class="s3">,</span>
+        <span class="s1">denominator = a - </span><span class="s5">2 </span><span class="s1">* b + c</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s1">(denominator !== </span><span class="s5">0</span><span class="s1">) {</span>
+        <span class="s1">t = (a - b) / denominator</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">return </span><span class="s1">t</span><span class="s3">;</span>
+
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Convert path array to string.</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} path input path data</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Object} params plugin params</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{String} output path string</span>
+ <span class="s6">*/</span>
+<span class="s1">exports.js2path = </span><span class="s4">function</span><span class="s1">(path</span><span class="s3">, </span><span class="s1">data</span><span class="s3">, </span><span class="s1">params) {</span>
+
+    <span class="s1">path.pathJS = data</span><span class="s3">;</span>
+
+    <span class="s4">if </span><span class="s1">(params.collapseRepeated) {</span>
+        <span class="s1">data = collapseRepeated(data)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">path.attr(</span><span class="s2">'d'</span><span class="s1">).value = data.reduce(</span><span class="s4">function</span><span class="s1">(pathString</span><span class="s3">, </span><span class="s1">item) {</span>
+        <span class="s4">var </span><span class="s1">strData = </span><span class="s2">''</span><span class="s3">;</span>
+        <span class="s4">if </span><span class="s1">(item.data) {</span>
+            <span class="s1">strData = cleanupOutData(item.data</span><span class="s3">, </span><span class="s1">params</span><span class="s3">, </span><span class="s1">item.instruction)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s4">return </span><span class="s1">pathString += item.instruction + strData</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">, </span><span class="s2">''</span><span class="s1">)</span><span class="s3">;</span>
+
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Collapse repeated instructions data</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} path input path data</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Array} output path data</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">collapseRepeated(data) {</span>
+
+    <span class="s4">var </span><span class="s1">prev</span><span class="s3">,</span>
+        <span class="s1">prevIndex</span><span class="s3">;</span>
+
+    <span class="s8">// copy an array and modifieds item to keep original data untouched</span>
+    <span class="s1">data = data.reduce(</span><span class="s4">function</span><span class="s1">(newPath</span><span class="s3">, </span><span class="s1">item) {</span>
+        <span class="s4">if </span><span class="s1">(</span>
+            <span class="s1">prev &amp;&amp; item.data &amp;&amp;</span>
+            <span class="s1">item.instruction == prev.instruction</span>
+        <span class="s1">) {</span>
+            <span class="s8">// concat previous data with current</span>
+            <span class="s4">if </span><span class="s1">(item.instruction != </span><span class="s2">'M'</span><span class="s1">) {</span>
+                <span class="s1">prev = newPath[prevIndex] = {</span>
+                    <span class="s1">instruction: prev.instruction</span><span class="s3">,</span>
+                    <span class="s1">data: prev.data.concat(item.data)</span><span class="s3">,</span>
+                    <span class="s1">coords: item.coords</span><span class="s3">,</span>
+                    <span class="s1">base: prev.base</span>
+                <span class="s1">}</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+                <span class="s1">prev.data = item.data</span><span class="s3">;</span>
+                <span class="s1">prev.coords = item.coords</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+            <span class="s1">newPath.push(item)</span><span class="s3">;</span>
+            <span class="s1">prev = item</span><span class="s3">;</span>
+            <span class="s1">prevIndex = newPath.length - </span><span class="s5">1</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s4">return </span><span class="s1">newPath</span><span class="s3">;</span>
+    <span class="s1">}</span><span class="s3">, </span><span class="s1">[])</span><span class="s3">;</span>
+
+    <span class="s4">return </span><span class="s1">data</span><span class="s3">;</span>
+
+<span class="s1">}</span>
+
+<span class="s4">function </span><span class="s1">set(dest</span><span class="s3">, </span><span class="s1">source) {</span>
+    <span class="s1">dest[</span><span class="s5">0</span><span class="s1">] = source[source.length - </span><span class="s5">2</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s1">dest[</span><span class="s5">1</span><span class="s1">] = source[source.length - </span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s4">return </span><span class="s1">dest</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Checks if two paths have an intersection by checking convex hulls</span>
+ <span class="s6">* collision using Gilbert-Johnson-Keerthi distance algorithm</span>
+ <span class="s6">* http://entropyinteractive.com/2011/04/gjk-algorithm/</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} path1 JS path representation</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">{Array} path2 JS path representation</span>
+ <span class="s6">* </span><span class="s7">@return </span><span class="s6">{Boolean}</span>
+ <span class="s6">*/</span>
+<span class="s1">exports.intersects = </span><span class="s4">function</span><span class="s1">(path1</span><span class="s3">, </span><span class="s1">path2) {</span>
+    <span class="s4">if </span><span class="s1">(path1.length &lt; </span><span class="s5">3 </span><span class="s1">|| path2.length &lt; </span><span class="s5">3</span><span class="s1">) </span><span class="s4">return false</span><span class="s3">; </span><span class="s8">// nothing to fill</span>
+
+    <span class="s8">// Collect points of every subpath.</span>
+    <span class="s4">var </span><span class="s1">points1 = relative2absolute(path1).reduce(gatherPoints</span><span class="s3">, </span><span class="s1">[])</span><span class="s3">,</span>
+        <span class="s1">points2 = relative2absolute(path2).reduce(gatherPoints</span><span class="s3">, </span><span class="s1">[])</span><span class="s3">;</span>
+
+    <span class="s8">// Axis-aligned bounding box check.</span>
+    <span class="s4">if </span><span class="s1">(points1.maxX &lt;= points2.minX || points2.maxX &lt;= points1.minX ||</span>
+        <span class="s1">points1.maxY &lt;= points2.minY || points2.maxY &lt;= points1.minY ||</span>
+        <span class="s1">points1.every(</span><span class="s4">function </span><span class="s1">(set1) {</span>
+            <span class="s4">return </span><span class="s1">points2.every(</span><span class="s4">function </span><span class="s1">(set2) {</span>
+                <span class="s4">return </span><span class="s1">set1[set1.maxX][</span><span class="s5">0</span><span class="s1">] &lt;= set2[set2.minX][</span><span class="s5">0</span><span class="s1">] ||</span>
+                    <span class="s1">set2[set2.maxX][</span><span class="s5">0</span><span class="s1">] &lt;= set1[set1.minX][</span><span class="s5">0</span><span class="s1">] ||</span>
+                    <span class="s1">set1[set1.maxY][</span><span class="s5">1</span><span class="s1">] &lt;= set2[set2.minY][</span><span class="s5">1</span><span class="s1">] ||</span>
+                    <span class="s1">set2[set2.maxY][</span><span class="s5">1</span><span class="s1">] &lt;= set1[set1.minY][</span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+            <span class="s1">})</span><span class="s3">;</span>
+        <span class="s1">})</span>
+    <span class="s1">) </span><span class="s4">return false</span><span class="s3">;</span>
+
+    <span class="s8">// Get a convex hull from points of each subpath. Has the most complexity O(n·log n).</span>
+    <span class="s4">var </span><span class="s1">hullNest1 = points1.map(convexHull)</span><span class="s3">,</span>
+        <span class="s1">hullNest2 = points2.map(convexHull)</span><span class="s3">;</span>
+
+    <span class="s8">// Check intersection of every subpath of the first path with every subpath of the second.</span>
+    <span class="s4">return </span><span class="s1">hullNest1.some(</span><span class="s4">function</span><span class="s1">(hull1) {</span>
+        <span class="s4">if </span><span class="s1">(hull1.length &lt; </span><span class="s5">3</span><span class="s1">) </span><span class="s4">return false</span><span class="s3">;</span>
+
+        <span class="s4">return </span><span class="s1">hullNest2.some(</span><span class="s4">function</span><span class="s1">(hull2) {</span>
+            <span class="s4">if </span><span class="s1">(hull2.length &lt; </span><span class="s5">3</span><span class="s1">) </span><span class="s4">return false</span><span class="s3">;</span>
+
+            <span class="s4">var </span><span class="s1">simplex = [getSupport(hull1</span><span class="s3">, </span><span class="s1">hull2</span><span class="s3">, </span><span class="s1">[</span><span class="s5">1</span><span class="s3">, </span><span class="s5">0</span><span class="s1">])]</span><span class="s3">, </span><span class="s8">// create the initial simplex</span>
+                <span class="s1">direction = minus(simplex[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">; </span><span class="s8">// set the direction to point towards the origin</span>
+
+            <span class="s4">var </span><span class="s1">iterations = </span><span class="s5">1e4</span><span class="s3">; </span><span class="s8">// infinite loop protection, 10 000 iterations is more than enough</span>
+            <span class="s4">while </span><span class="s1">(</span><span class="s4">true</span><span class="s1">) {</span>
+                <span class="s4">if </span><span class="s1">(iterations-- == </span><span class="s5">0</span><span class="s1">) {</span>
+                    <span class="s1">console.error(</span><span class="s2">'Error: infinite loop while processing mergePaths plugin.'</span><span class="s1">)</span><span class="s3">;</span>
+                    <span class="s4">return true</span><span class="s3">; </span><span class="s8">// true is the safe value that means “do nothing with paths”</span>
+                <span class="s1">}</span>
+                <span class="s8">// add a new point</span>
+                <span class="s1">simplex.push(getSupport(hull1</span><span class="s3">, </span><span class="s1">hull2</span><span class="s3">, </span><span class="s1">direction))</span><span class="s3">;</span>
+                <span class="s8">// see if the new point was on the correct side of the origin</span>
+                <span class="s4">if </span><span class="s1">(dot(direction</span><span class="s3">, </span><span class="s1">simplex[simplex.length - </span><span class="s5">1</span><span class="s1">]) &lt;= </span><span class="s5">0</span><span class="s1">) </span><span class="s4">return false</span><span class="s3">;</span>
+                <span class="s8">// process the simplex</span>
+                <span class="s4">if </span><span class="s1">(processSimplex(simplex</span><span class="s3">, </span><span class="s1">direction)) </span><span class="s4">return true</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">})</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s4">function </span><span class="s1">getSupport(a</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">direction) {</span>
+        <span class="s4">return </span><span class="s1">sub(supportPoint(a</span><span class="s3">, </span><span class="s1">direction)</span><span class="s3">, </span><span class="s1">supportPoint(b</span><span class="s3">, </span><span class="s1">minus(direction)))</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s8">// Computes farthest polygon point in particular direction.</span>
+    <span class="s8">// Thanks to knowledge of min/max x and y coordinates we can choose a quadrant to search in.</span>
+    <span class="s8">// Since we're working on convex hull, the dot product is increasing until we find the farthest point.</span>
+    <span class="s4">function </span><span class="s1">supportPoint(polygon</span><span class="s3">, </span><span class="s1">direction) {</span>
+        <span class="s4">var </span><span class="s1">index = direction[</span><span class="s5">1</span><span class="s1">] &gt;= </span><span class="s5">0 </span><span class="s1">?</span>
+                <span class="s1">direction[</span><span class="s5">0</span><span class="s1">] &lt; </span><span class="s5">0 </span><span class="s1">? polygon.maxY : polygon.maxX :</span>
+                <span class="s1">direction[</span><span class="s5">0</span><span class="s1">] &lt; </span><span class="s5">0 </span><span class="s1">? polygon.minX : polygon.minY</span><span class="s3">,</span>
+            <span class="s1">max = -Infinity</span><span class="s3">,</span>
+            <span class="s1">value</span><span class="s3">;</span>
+        <span class="s4">while </span><span class="s1">((value = dot(polygon[index]</span><span class="s3">, </span><span class="s1">direction)) &gt; max) {</span>
+            <span class="s1">max = value</span><span class="s3">;</span>
+            <span class="s1">index = ++index % polygon.length</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s4">return </span><span class="s1">polygon[(index || polygon.length) - </span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s4">function </span><span class="s1">processSimplex(simplex</span><span class="s3">, </span><span class="s1">direction) {</span>
+    <span class="s0">/* jshint -W004 */</span>
+
+    <span class="s8">// we only need to handle to 1-simplex and 2-simplex</span>
+    <span class="s4">if </span><span class="s1">(simplex.length == </span><span class="s5">2</span><span class="s1">) { </span><span class="s8">// 1-simplex</span>
+        <span class="s4">var </span><span class="s1">a = simplex[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">,</span>
+            <span class="s1">b = simplex[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">,</span>
+            <span class="s1">AO = minus(simplex[</span><span class="s5">1</span><span class="s1">])</span><span class="s3">,</span>
+            <span class="s1">AB = sub(b</span><span class="s3">, </span><span class="s1">a)</span><span class="s3">;</span>
+        <span class="s8">// AO is in the same direction as AB</span>
+        <span class="s4">if </span><span class="s1">(dot(AO</span><span class="s3">, </span><span class="s1">AB) &gt; </span><span class="s5">0</span><span class="s1">) {</span>
+            <span class="s8">// get the vector perpendicular to AB facing O</span>
+            <span class="s1">set(direction</span><span class="s3">, </span><span class="s1">orth(AB</span><span class="s3">, </span><span class="s1">a))</span><span class="s3">;</span>
+        <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+            <span class="s1">set(direction</span><span class="s3">, </span><span class="s1">AO)</span><span class="s3">;</span>
+            <span class="s8">// only A remains in the simplex</span>
+            <span class="s1">simplex.shift()</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">} </span><span class="s4">else </span><span class="s1">{ </span><span class="s8">// 2-simplex</span>
+        <span class="s4">var </span><span class="s1">a = simplex[</span><span class="s5">2</span><span class="s1">]</span><span class="s3">, </span><span class="s8">// [a, b, c] = simplex</span>
+            <span class="s1">b = simplex[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">,</span>
+            <span class="s1">c = simplex[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">,</span>
+            <span class="s1">AB = sub(b</span><span class="s3">, </span><span class="s1">a)</span><span class="s3">,</span>
+            <span class="s1">AC = sub(c</span><span class="s3">, </span><span class="s1">a)</span><span class="s3">,</span>
+            <span class="s1">AO = minus(a)</span><span class="s3">,</span>
+            <span class="s1">ACB = orth(AB</span><span class="s3">, </span><span class="s1">AC)</span><span class="s3">, </span><span class="s8">// the vector perpendicular to AB facing away from C</span>
+            <span class="s1">ABC = orth(AC</span><span class="s3">, </span><span class="s1">AB)</span><span class="s3">; </span><span class="s8">// the vector perpendicular to AC facing away from B</span>
+
+        <span class="s4">if </span><span class="s1">(dot(ACB</span><span class="s3">, </span><span class="s1">AO) &gt; </span><span class="s5">0</span><span class="s1">) {</span>
+            <span class="s4">if </span><span class="s1">(dot(AB</span><span class="s3">, </span><span class="s1">AO) &gt; </span><span class="s5">0</span><span class="s1">) { </span><span class="s8">// region 4</span>
+                <span class="s1">set(direction</span><span class="s3">, </span><span class="s1">ACB)</span><span class="s3">;</span>
+                <span class="s1">simplex.shift()</span><span class="s3">; </span><span class="s8">// simplex = [b, a]</span>
+            <span class="s1">} </span><span class="s4">else </span><span class="s1">{ </span><span class="s8">// region 5</span>
+                <span class="s1">set(direction</span><span class="s3">, </span><span class="s1">AO)</span><span class="s3">;</span>
+                <span class="s1">simplex.splice(</span><span class="s5">0</span><span class="s3">, </span><span class="s5">2</span><span class="s1">)</span><span class="s3">; </span><span class="s8">// simplex = [a]</span>
+            <span class="s1">}</span>
+        <span class="s1">} </span><span class="s4">else if </span><span class="s1">(dot(ABC</span><span class="s3">, </span><span class="s1">AO) &gt; </span><span class="s5">0</span><span class="s1">) {</span>
+            <span class="s4">if </span><span class="s1">(dot(AC</span><span class="s3">, </span><span class="s1">AO) &gt; </span><span class="s5">0</span><span class="s1">) { </span><span class="s8">// region 6</span>
+                <span class="s1">set(direction</span><span class="s3">, </span><span class="s1">ABC)</span><span class="s3">;</span>
+                <span class="s1">simplex.splice(</span><span class="s5">1</span><span class="s3">, </span><span class="s5">1</span><span class="s1">)</span><span class="s3">; </span><span class="s8">// simplex = [c, a]</span>
+            <span class="s1">} </span><span class="s4">else </span><span class="s1">{ </span><span class="s8">// region 5 (again)</span>
+                <span class="s1">set(direction</span><span class="s3">, </span><span class="s1">AO)</span><span class="s3">;</span>
+                <span class="s1">simplex.splice(</span><span class="s5">0</span><span class="s3">, </span><span class="s5">2</span><span class="s1">)</span><span class="s3">; </span><span class="s8">// simplex = [a]</span>
+            <span class="s1">}</span>
+        <span class="s1">} </span><span class="s4">else </span><span class="s8">// region 7</span>
+            <span class="s4">return true</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s4">return false</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">function </span><span class="s1">minus(v) {</span>
+    <span class="s4">return </span><span class="s1">[-v[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">-v[</span><span class="s5">1</span><span class="s1">]]</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">function </span><span class="s1">sub(v1</span><span class="s3">, </span><span class="s1">v2) {</span>
+    <span class="s4">return </span><span class="s1">[v1[</span><span class="s5">0</span><span class="s1">] - v2[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">v1[</span><span class="s5">1</span><span class="s1">] - v2[</span><span class="s5">1</span><span class="s1">]]</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">function </span><span class="s1">dot(v1</span><span class="s3">, </span><span class="s1">v2) {</span>
+    <span class="s4">return </span><span class="s1">v1[</span><span class="s5">0</span><span class="s1">] * v2[</span><span class="s5">0</span><span class="s1">] + v1[</span><span class="s5">1</span><span class="s1">] * v2[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">function </span><span class="s1">orth(v</span><span class="s3">, </span><span class="s1">from) {</span>
+    <span class="s4">var </span><span class="s1">o = [-v[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">v[</span><span class="s5">0</span><span class="s1">]]</span><span class="s3">;</span>
+    <span class="s4">return </span><span class="s1">dot(o</span><span class="s3">, </span><span class="s1">minus(from)) &lt; </span><span class="s5">0 </span><span class="s1">? minus(o) : o</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">function </span><span class="s1">gatherPoints(points</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">index</span><span class="s3">, </span><span class="s1">path) {</span>
+
+    <span class="s4">var </span><span class="s1">subPath = points.length &amp;&amp; points[points.length - </span><span class="s5">1</span><span class="s1">]</span><span class="s3">,</span>
+        <span class="s1">prev = index &amp;&amp; path[index - </span><span class="s5">1</span><span class="s1">]</span><span class="s3">,</span>
+        <span class="s1">basePoint = subPath.length &amp;&amp; subPath[subPath.length - </span><span class="s5">1</span><span class="s1">]</span><span class="s3">,</span>
+        <span class="s1">data = item.data</span><span class="s3">,</span>
+        <span class="s1">ctrlPoint = basePoint</span><span class="s3">;</span>
+
+    <span class="s4">switch </span><span class="s1">(item.instruction) {</span>
+        <span class="s4">case </span><span class="s2">'M'</span><span class="s1">:</span>
+            <span class="s1">points.push(subPath = [])</span><span class="s3">;</span>
+            <span class="s4">break</span><span class="s3">;</span>
+        <span class="s4">case </span><span class="s2">'H'</span><span class="s1">:</span>
+            <span class="s1">addPoint(subPath</span><span class="s3">, </span><span class="s1">[data[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">basePoint[</span><span class="s5">1</span><span class="s1">]])</span><span class="s3">;</span>
+            <span class="s4">break</span><span class="s3">;</span>
+        <span class="s4">case </span><span class="s2">'V'</span><span class="s1">:</span>
+            <span class="s1">addPoint(subPath</span><span class="s3">, </span><span class="s1">[basePoint[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">data[</span><span class="s5">0</span><span class="s1">]])</span><span class="s3">;</span>
+            <span class="s4">break</span><span class="s3">;</span>
+        <span class="s4">case </span><span class="s2">'Q'</span><span class="s1">:</span>
+            <span class="s1">addPoint(subPath</span><span class="s3">, </span><span class="s1">data.slice(</span><span class="s5">0</span><span class="s3">, </span><span class="s5">2</span><span class="s1">))</span><span class="s3">;</span>
+            <span class="s1">prevCtrlPoint = [data[</span><span class="s5">2</span><span class="s1">] - data[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">data[</span><span class="s5">3</span><span class="s1">] - data[</span><span class="s5">1</span><span class="s1">]]</span><span class="s3">; </span><span class="s8">// Save control point for shorthand</span>
+            <span class="s4">break</span><span class="s3">;</span>
+        <span class="s4">case </span><span class="s2">'T'</span><span class="s1">:</span>
+            <span class="s4">if </span><span class="s1">(prev.instruction == </span><span class="s2">'Q' </span><span class="s1">|| prev.instruction == </span><span class="s2">'T'</span><span class="s1">) {</span>
+                <span class="s1">ctrlPoint = [basePoint[</span><span class="s5">0</span><span class="s1">] + prevCtrlPoint[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">basePoint[</span><span class="s5">1</span><span class="s1">] + prevCtrlPoint[</span><span class="s5">1</span><span class="s1">]]</span><span class="s3">;</span>
+                <span class="s1">addPoint(subPath</span><span class="s3">, </span><span class="s1">ctrlPoint)</span><span class="s3">;</span>
+                <span class="s1">prevCtrlPoint = [data[</span><span class="s5">0</span><span class="s1">] - ctrlPoint[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">data[</span><span class="s5">1</span><span class="s1">] - ctrlPoint[</span><span class="s5">1</span><span class="s1">]]</span><span class="s3">;</span>
+            <span class="s1">}</span>
+            <span class="s4">break</span><span class="s3">;</span>
+        <span class="s4">case </span><span class="s2">'C'</span><span class="s1">:</span>
+            <span class="s8">// Approximate quibic Bezier curve with middle points between control points</span>
+            <span class="s1">addPoint(subPath</span><span class="s3">, </span><span class="s1">[</span><span class="s5">.5 </span><span class="s1">* (basePoint[</span><span class="s5">0</span><span class="s1">] + data[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">, </span><span class="s5">.5 </span><span class="s1">* (basePoint[</span><span class="s5">1</span><span class="s1">] + data[</span><span class="s5">1</span><span class="s1">])])</span><span class="s3">;</span>
+            <span class="s1">addPoint(subPath</span><span class="s3">, </span><span class="s1">[</span><span class="s5">.5 </span><span class="s1">* (data[</span><span class="s5">0</span><span class="s1">] + data[</span><span class="s5">2</span><span class="s1">])</span><span class="s3">, </span><span class="s5">.5 </span><span class="s1">* (data[</span><span class="s5">1</span><span class="s1">] + data[</span><span class="s5">3</span><span class="s1">])])</span><span class="s3">;</span>
+            <span class="s1">addPoint(subPath</span><span class="s3">, </span><span class="s1">[</span><span class="s5">.5 </span><span class="s1">* (data[</span><span class="s5">2</span><span class="s1">] + data[</span><span class="s5">4</span><span class="s1">])</span><span class="s3">, </span><span class="s5">.5 </span><span class="s1">* (data[</span><span class="s5">3</span><span class="s1">] + data[</span><span class="s5">5</span><span class="s1">])])</span><span class="s3">;</span>
+            <span class="s1">prevCtrlPoint = [data[</span><span class="s5">4</span><span class="s1">] - data[</span><span class="s5">2</span><span class="s1">]</span><span class="s3">, </span><span class="s1">data[</span><span class="s5">5</span><span class="s1">] - data[</span><span class="s5">3</span><span class="s1">]]</span><span class="s3">; </span><span class="s8">// Save control point for shorthand</span>
+            <span class="s4">break</span><span class="s3">;</span>
+        <span class="s4">case </span><span class="s2">'S'</span><span class="s1">:</span>
+            <span class="s4">if </span><span class="s1">(prev.instruction == </span><span class="s2">'C' </span><span class="s1">|| prev.instruction == </span><span class="s2">'S'</span><span class="s1">) {</span>
+                <span class="s1">addPoint(subPath</span><span class="s3">, </span><span class="s1">[basePoint[</span><span class="s5">0</span><span class="s1">] + </span><span class="s5">.5 </span><span class="s1">* prevCtrlPoint[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">basePoint[</span><span class="s5">1</span><span class="s1">] + </span><span class="s5">.5 </span><span class="s1">* prevCtrlPoint[</span><span class="s5">1</span><span class="s1">]])</span><span class="s3">;</span>
+                <span class="s1">ctrlPoint = [basePoint[</span><span class="s5">0</span><span class="s1">] + prevCtrlPoint[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">basePoint[</span><span class="s5">1</span><span class="s1">] + prevCtrlPoint[</span><span class="s5">1</span><span class="s1">]]</span><span class="s3">;</span>
+            <span class="s1">}</span>
+            <span class="s1">addPoint(subPath</span><span class="s3">, </span><span class="s1">[</span><span class="s5">.5 </span><span class="s1">* (ctrlPoint[</span><span class="s5">0</span><span class="s1">] + data[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">, </span><span class="s5">.5 </span><span class="s1">* (ctrlPoint[</span><span class="s5">1</span><span class="s1">]+ data[</span><span class="s5">1</span><span class="s1">])])</span><span class="s3">;</span>
+            <span class="s1">addPoint(subPath</span><span class="s3">, </span><span class="s1">[</span><span class="s5">.5 </span><span class="s1">* (data[</span><span class="s5">0</span><span class="s1">] + data[</span><span class="s5">2</span><span class="s1">])</span><span class="s3">, </span><span class="s5">.5 </span><span class="s1">* (data[</span><span class="s5">1</span><span class="s1">] + data[</span><span class="s5">3</span><span class="s1">])])</span><span class="s3">;</span>
+            <span class="s1">prevCtrlPoint = [data[</span><span class="s5">2</span><span class="s1">] - data[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">data[</span><span class="s5">3</span><span class="s1">] - data[</span><span class="s5">1</span><span class="s1">]]</span><span class="s3">;</span>
+            <span class="s4">break</span><span class="s3">;</span>
+        <span class="s4">case </span><span class="s2">'A'</span><span class="s1">:</span>
+            <span class="s8">// Convert the arc to bezier curves and use the same approximation</span>
+            <span class="s4">var </span><span class="s1">curves = a2c.apply(</span><span class="s5">0</span><span class="s3">, </span><span class="s1">basePoint.concat(data))</span><span class="s3">;</span>
+            <span class="s4">for </span><span class="s1">(</span><span class="s4">var </span><span class="s1">cData</span><span class="s3">; </span><span class="s1">(cData = curves.splice(</span><span class="s5">0</span><span class="s3">,</span><span class="s5">6</span><span class="s1">).map(toAbsolute)).length</span><span class="s3">;</span><span class="s1">) {</span>
+                <span class="s1">addPoint(subPath</span><span class="s3">, </span><span class="s1">[</span><span class="s5">.5 </span><span class="s1">* (basePoint[</span><span class="s5">0</span><span class="s1">] + cData[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">, </span><span class="s5">.5 </span><span class="s1">* (basePoint[</span><span class="s5">1</span><span class="s1">] + cData[</span><span class="s5">1</span><span class="s1">])])</span><span class="s3">;</span>
+                <span class="s1">addPoint(subPath</span><span class="s3">, </span><span class="s1">[</span><span class="s5">.5 </span><span class="s1">* (cData[</span><span class="s5">0</span><span class="s1">] + cData[</span><span class="s5">2</span><span class="s1">])</span><span class="s3">, </span><span class="s5">.5 </span><span class="s1">* (cData[</span><span class="s5">1</span><span class="s1">] + cData[</span><span class="s5">3</span><span class="s1">])])</span><span class="s3">;</span>
+                <span class="s1">addPoint(subPath</span><span class="s3">, </span><span class="s1">[</span><span class="s5">.5 </span><span class="s1">* (cData[</span><span class="s5">2</span><span class="s1">] + cData[</span><span class="s5">4</span><span class="s1">])</span><span class="s3">, </span><span class="s5">.5 </span><span class="s1">* (cData[</span><span class="s5">3</span><span class="s1">] + cData[</span><span class="s5">5</span><span class="s1">])])</span><span class="s3">;</span>
+                <span class="s4">if </span><span class="s1">(curves.length) addPoint(subPath</span><span class="s3">, </span><span class="s1">basePoint = cData.slice(-</span><span class="s5">2</span><span class="s1">))</span><span class="s3">;</span>
+            <span class="s1">}</span>
+            <span class="s4">break</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s8">// Save final command coordinates</span>
+    <span class="s4">if </span><span class="s1">(data &amp;&amp; data.length &gt;= </span><span class="s5">2</span><span class="s1">) addPoint(subPath</span><span class="s3">, </span><span class="s1">data.slice(-</span><span class="s5">2</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s4">return </span><span class="s1">points</span><span class="s3">;</span>
+
+    <span class="s4">function </span><span class="s1">toAbsolute(n</span><span class="s3">, </span><span class="s1">i) { </span><span class="s4">return </span><span class="s1">n + basePoint[i % </span><span class="s5">2</span><span class="s1">] }</span>
+
+    <span class="s8">// Writes data about the extreme points on each axle</span>
+    <span class="s4">function </span><span class="s1">addPoint(path</span><span class="s3">, </span><span class="s1">point) {</span>
+        <span class="s4">if </span><span class="s1">(!path.length || point[</span><span class="s5">1</span><span class="s1">] &gt; path[path.maxY][</span><span class="s5">1</span><span class="s1">]) {</span>
+            <span class="s1">path.maxY = path.length</span><span class="s3">;</span>
+            <span class="s1">points.maxY = points.length ? Math.max(point[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">points.maxY) : point[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s4">if </span><span class="s1">(!path.length || point[</span><span class="s5">0</span><span class="s1">] &gt; path[path.maxX][</span><span class="s5">0</span><span class="s1">]) {</span>
+            <span class="s1">path.maxX = path.length</span><span class="s3">;</span>
+            <span class="s1">points.maxX = points.length ? Math.max(point[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">points.maxX) : point[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s4">if </span><span class="s1">(!path.length || point[</span><span class="s5">1</span><span class="s1">] &lt; path[path.minY][</span><span class="s5">1</span><span class="s1">]) {</span>
+            <span class="s1">path.minY = path.length</span><span class="s3">;</span>
+            <span class="s1">points.minY = points.length ? Math.min(point[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">points.minY) : point[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s4">if </span><span class="s1">(!path.length || point[</span><span class="s5">0</span><span class="s1">] &lt; path[path.minX][</span><span class="s5">0</span><span class="s1">]) {</span>
+            <span class="s1">path.minX = path.length</span><span class="s3">;</span>
+            <span class="s1">points.minX = points.length ? Math.min(point[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">points.minX) : point[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s1">path.push(point)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+ <span class="s6">* Forms a convex hull from set of points of every subpath using monotone chain convex hull algorithm.</span>
+ <span class="s6">* http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain</span>
+ <span class="s6">*</span>
+ <span class="s6">* </span><span class="s7">@param </span><span class="s6">points An array of [X, Y] coordinates</span>
+ <span class="s6">*/</span>
+<span class="s4">function </span><span class="s1">convexHull(points) {</span>
+    <span class="s0">/* jshint -W004 */</span>
+
+    <span class="s1">points.sort(</span><span class="s4">function</span><span class="s1">(a</span><span class="s3">, </span><span class="s1">b) {</span>
+        <span class="s4">return </span><span class="s1">a[</span><span class="s5">0</span><span class="s1">] == b[</span><span class="s5">0</span><span class="s1">] ? a[</span><span class="s5">1</span><span class="s1">] - b[</span><span class="s5">1</span><span class="s1">] : a[</span><span class="s5">0</span><span class="s1">] - b[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s4">var </span><span class="s1">lower = []</span><span class="s3">,</span>
+        <span class="s1">minY = </span><span class="s5">0</span><span class="s3">,</span>
+        <span class="s1">bottom = </span><span class="s5">0</span><span class="s3">;</span>
+    <span class="s4">for </span><span class="s1">(</span><span class="s4">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">; </span><span class="s1">i &lt; points.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+        <span class="s4">while </span><span class="s1">(lower.length &gt;= </span><span class="s5">2 </span><span class="s1">&amp;&amp; cross(lower[lower.length - </span><span class="s5">2</span><span class="s1">]</span><span class="s3">, </span><span class="s1">lower[lower.length - </span><span class="s5">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">points[i]) &lt;= </span><span class="s5">0</span><span class="s1">) {</span>
+            <span class="s1">lower.pop()</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s4">if </span><span class="s1">(points[i][</span><span class="s5">1</span><span class="s1">] &lt; points[minY][</span><span class="s5">1</span><span class="s1">]) {</span>
+            <span class="s1">minY = i</span><span class="s3">;</span>
+            <span class="s1">bottom = lower.length</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s1">lower.push(points[i])</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">var </span><span class="s1">upper = []</span><span class="s3">,</span>
+        <span class="s1">maxY = points.length - </span><span class="s5">1</span><span class="s3">,</span>
+        <span class="s1">top = </span><span class="s5">0</span><span class="s3">;</span>
+    <span class="s4">for </span><span class="s1">(</span><span class="s4">var </span><span class="s1">i = points.length</span><span class="s3">; </span><span class="s1">i--</span><span class="s3">;</span><span class="s1">) {</span>
+        <span class="s4">while </span><span class="s1">(upper.length &gt;= </span><span class="s5">2 </span><span class="s1">&amp;&amp; cross(upper[upper.length - </span><span class="s5">2</span><span class="s1">]</span><span class="s3">, </span><span class="s1">upper[upper.length - </span><span class="s5">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">points[i]) &lt;= </span><span class="s5">0</span><span class="s1">) {</span>
+            <span class="s1">upper.pop()</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s4">if </span><span class="s1">(points[i][</span><span class="s5">1</span><span class="s1">] &gt; points[maxY][</span><span class="s5">1</span><span class="s1">]) {</span>
+            <span class="s1">maxY = i</span><span class="s3">;</span>
+            <span class="s1">top = upper.length</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s1">upper.push(points[i])</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s8">// last points are equal to starting points of the other part</span>
+    <span class="s1">upper.pop()</span><span class="s3">;</span>
+    <span class="s1">lower.pop()</span><span class="s3">;</span>
+
+    <span class="s4">var </span><span class="s1">hull = lower.concat(upper)</span><span class="s3">;</span>
+
+    <span class="s1">hull.minX = </span><span class="s5">0</span><span class="s3">; </span><span class="s8">// by sorting</span>
+    <span class="s1">hull.maxX = lower.length</span><span class="s3">;</span>
+    <span class="s1">hull.minY = bottom</span><span class="s3">;</span>
+    <span class="s1">hull.maxY = (lower.length + top) % hull.length</span><span class="s3">;</span>
+
+    <span class="s4">return </span><span class="s1">hull</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s4">function </span><span class="s1">cross(o</span><span class="s3">, </span><span class="s1">a</span><span class="s3">, </span><span class="s1">b) {</span>
+    <span class="s4">return </span><span class="s1">(a[</span><span class="s5">0</span><span class="s1">] - o[</span><span class="s5">0</span><span class="s1">]) * (b[</span><span class="s5">1</span><span class="s1">] - o[</span><span class="s5">1</span><span class="s1">]) - (a[</span><span class="s5">1</span><span class="s1">] - o[</span><span class="s5">1</span><span class="s1">]) * (b[</span><span class="s5">0</span><span class="s1">] - o[</span><span class="s5">0</span><span class="s1">])</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">/* Based on code from Snap.svg (Apache 2 license). http://snapsvg.io/ 
+ * Thanks to Dmitry Baranovskiy for his great work! 
+ */</span>
+
+<span class="s8">// jshint ignore: start</span>
+<span class="s4">function </span><span class="s1">a2c(x1</span><span class="s3">, </span><span class="s1">y1</span><span class="s3">, </span><span class="s1">rx</span><span class="s3">, </span><span class="s1">ry</span><span class="s3">, </span><span class="s1">angle</span><span class="s3">, </span><span class="s1">large_arc_flag</span><span class="s3">, </span><span class="s1">sweep_flag</span><span class="s3">, </span><span class="s1">x2</span><span class="s3">, </span><span class="s1">y2</span><span class="s3">, </span><span class="s1">recursive) {</span>
+    <span class="s8">// for more information of where this Math came from visit:</span>
+    <span class="s8">// http://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes</span>
+    <span class="s4">var </span><span class="s1">_120 = Math.PI * </span><span class="s5">120 </span><span class="s1">/ </span><span class="s5">180</span><span class="s3">,</span>
+        <span class="s1">rad = Math.PI / </span><span class="s5">180 </span><span class="s1">* (+angle || </span><span class="s5">0</span><span class="s1">)</span><span class="s3">,</span>
+        <span class="s1">res = []</span><span class="s3">,</span>
+        <span class="s1">rotateX = </span><span class="s4">function</span><span class="s1">(x</span><span class="s3">, </span><span class="s1">y</span><span class="s3">, </span><span class="s1">rad) { </span><span class="s4">return </span><span class="s1">x * Math.cos(rad) - y * Math.sin(rad) }</span><span class="s3">,</span>
+        <span class="s1">rotateY = </span><span class="s4">function</span><span class="s1">(x</span><span class="s3">, </span><span class="s1">y</span><span class="s3">, </span><span class="s1">rad) { </span><span class="s4">return </span><span class="s1">x * Math.sin(rad) + y * Math.cos(rad) }</span><span class="s3">;</span>
+    <span class="s4">if </span><span class="s1">(!recursive) {</span>
+        <span class="s1">x1 = rotateX(x1</span><span class="s3">, </span><span class="s1">y1</span><span class="s3">, </span><span class="s1">-rad)</span><span class="s3">;</span>
+        <span class="s1">y1 = rotateY(x1</span><span class="s3">, </span><span class="s1">y1</span><span class="s3">, </span><span class="s1">-rad)</span><span class="s3">;</span>
+        <span class="s1">x2 = rotateX(x2</span><span class="s3">, </span><span class="s1">y2</span><span class="s3">, </span><span class="s1">-rad)</span><span class="s3">;</span>
+        <span class="s1">y2 = rotateY(x2</span><span class="s3">, </span><span class="s1">y2</span><span class="s3">, </span><span class="s1">-rad)</span><span class="s3">;</span>
+        <span class="s4">var </span><span class="s1">x = (x1 - x2) / </span><span class="s5">2</span><span class="s3">,</span>
+            <span class="s1">y = (y1 - y2) / </span><span class="s5">2</span><span class="s3">;</span>
+        <span class="s4">var </span><span class="s1">h = (x * x) / (rx * rx) + (y * y) / (ry * ry)</span><span class="s3">;</span>
+        <span class="s4">if </span><span class="s1">(h &gt; </span><span class="s5">1</span><span class="s1">) {</span>
+            <span class="s1">h = Math.sqrt(h)</span><span class="s3">;</span>
+            <span class="s1">rx = h * rx</span><span class="s3">;</span>
+            <span class="s1">ry = h * ry</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s4">var </span><span class="s1">rx2 = rx * rx</span><span class="s3">,</span>
+            <span class="s1">ry2 = ry * ry</span><span class="s3">,</span>
+            <span class="s1">k = (large_arc_flag == sweep_flag ? -</span><span class="s5">1 </span><span class="s1">: </span><span class="s5">1</span><span class="s1">) *</span>
+                <span class="s1">Math.sqrt(Math.abs((rx2 * ry2 - rx2 * y * y - ry2 * x * x) / (rx2 * y * y + ry2 * x * x)))</span><span class="s3">,</span>
+            <span class="s1">cx = k * rx * y / ry + (x1 + x2) / </span><span class="s5">2</span><span class="s3">,</span>
+            <span class="s1">cy = k * -ry * x / rx + (y1 + y2) / </span><span class="s5">2</span><span class="s3">,</span>
+            <span class="s1">f1 = Math.asin(((y1 - cy) / ry).toFixed(</span><span class="s5">9</span><span class="s1">))</span><span class="s3">,</span>
+            <span class="s1">f2 = Math.asin(((y2 - cy) / ry).toFixed(</span><span class="s5">9</span><span class="s1">))</span><span class="s3">;</span>
+
+        <span class="s1">f1 = x1 &lt; cx ? Math.PI - f1 : f1</span><span class="s3">;</span>
+        <span class="s1">f2 = x2 &lt; cx ? Math.PI - f2 : f2</span><span class="s3">;</span>
+        <span class="s1">f1 &lt; </span><span class="s5">0 </span><span class="s1">&amp;&amp; (f1 = Math.PI * </span><span class="s5">2 </span><span class="s1">+ f1)</span><span class="s3">;</span>
+        <span class="s1">f2 &lt; </span><span class="s5">0 </span><span class="s1">&amp;&amp; (f2 = Math.PI * </span><span class="s5">2 </span><span class="s1">+ f2)</span><span class="s3">;</span>
+        <span class="s4">if </span><span class="s1">(sweep_flag &amp;&amp; f1 &gt; f2) {</span>
+            <span class="s1">f1 = f1 - Math.PI * </span><span class="s5">2</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s4">if </span><span class="s1">(!sweep_flag &amp;&amp; f2 &gt; f1) {</span>
+            <span class="s1">f2 = f2 - Math.PI * </span><span class="s5">2</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+        <span class="s1">f1 = recursive[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+        <span class="s1">f2 = recursive[</span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+        <span class="s1">cx = recursive[</span><span class="s5">2</span><span class="s1">]</span><span class="s3">;</span>
+        <span class="s1">cy = recursive[</span><span class="s5">3</span><span class="s1">]</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s4">var </span><span class="s1">df = f2 - f1</span><span class="s3">;</span>
+    <span class="s4">if </span><span class="s1">(Math.abs(df) &gt; _120) {</span>
+        <span class="s4">var </span><span class="s1">f2old = f2</span><span class="s3">,</span>
+            <span class="s1">x2old = x2</span><span class="s3">,</span>
+            <span class="s1">y2old = y2</span><span class="s3">;</span>
+        <span class="s1">f2 = f1 + _120 * (sweep_flag &amp;&amp; f2 &gt; f1 ? </span><span class="s5">1 </span><span class="s1">: -</span><span class="s5">1</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">x2 = cx + rx * Math.cos(f2)</span><span class="s3">;</span>
+        <span class="s1">y2 = cy + ry * Math.sin(f2)</span><span class="s3">;</span>
+        <span class="s1">res = a2c(x2</span><span class="s3">, </span><span class="s1">y2</span><span class="s3">, </span><span class="s1">rx</span><span class="s3">, </span><span class="s1">ry</span><span class="s3">, </span><span class="s1">angle</span><span class="s3">, </span><span class="s5">0</span><span class="s3">, </span><span class="s1">sweep_flag</span><span class="s3">, </span><span class="s1">x2old</span><span class="s3">, </span><span class="s1">y2old</span><span class="s3">, </span><span class="s1">[f2</span><span class="s3">, </span><span class="s1">f2old</span><span class="s3">, </span><span class="s1">cx</span><span class="s3">, </span><span class="s1">cy])</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s1">df = f2 - f1</span><span class="s3">;</span>
+    <span class="s4">var </span><span class="s1">c1 = Math.cos(f1)</span><span class="s3">,</span>
+        <span class="s1">s1 = Math.sin(f1)</span><span class="s3">,</span>
+        <span class="s1">c2 = Math.cos(f2)</span><span class="s3">,</span>
+        <span class="s1">s2 = Math.sin(f2)</span><span class="s3">,</span>
+        <span class="s1">t = Math.tan(df / </span><span class="s5">4</span><span class="s1">)</span><span class="s3">,</span>
+        <span class="s1">hx = </span><span class="s5">4 </span><span class="s1">/ </span><span class="s5">3 </span><span class="s1">* rx * t</span><span class="s3">,</span>
+        <span class="s1">hy = </span><span class="s5">4 </span><span class="s1">/ </span><span class="s5">3 </span><span class="s1">* ry * t</span><span class="s3">,</span>
+        <span class="s1">m = [</span>
+            <span class="s1">- hx * s1</span><span class="s3">, </span><span class="s1">hy * c1</span><span class="s3">,</span>
+            <span class="s1">x2 + hx * s2 - x1</span><span class="s3">, </span><span class="s1">y2 - hy * c2 - y1</span><span class="s3">,</span>
+            <span class="s1">x2 - x1</span><span class="s3">, </span><span class="s1">y2 - y1</span>
+        <span class="s1">]</span><span class="s3">;</span>
+    <span class="s4">if </span><span class="s1">(recursive) {</span>
+        <span class="s4">return </span><span class="s1">m.concat(res)</span><span class="s3">;</span>
+    <span class="s1">} </span><span class="s4">else </span><span class="s1">{</span>
+        <span class="s1">res = m.concat(res)</span><span class="s3">;</span>
+        <span class="s4">var </span><span class="s1">newres = []</span><span class="s3">;</span>
+        <span class="s4">for </span><span class="s1">(</span><span class="s4">var </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">, </span><span class="s1">n = res.length</span><span class="s3">; </span><span class="s1">i &lt; n</span><span class="s3">; </span><span class="s1">i++) {</span>
+            <span class="s1">newres[i] = i % </span><span class="s5">2 </span><span class="s1">? rotateY(res[i - </span><span class="s5">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">res[i]</span><span class="s3">, </span><span class="s1">rad) : rotateX(res[i]</span><span class="s3">, </span><span class="s1">res[i + </span><span class="s5">1</span><span class="s1">]</span><span class="s3">, </span><span class="s1">rad)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s4">return </span><span class="s1">newres</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+<span class="s8">// jshint ignore: end</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,431 @@
+<html>
+<head>
+<title>package_task.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8a8a8a;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #cc7832; font-weight: bold;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #8a8a8a; font-style: italic;}
+.s6 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+.s7 { color: #808080;}
+.s8 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+package_task.js</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * Jake JavaScript build tool 
+ * Copyright 2112 Matthew Eernisse (mde@fleegix.org) 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *         http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+*/</span>
+
+<span class="s2">let </span><span class="s1">path = require(</span><span class="s3">'path'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">let </span><span class="s1">fs = require(</span><span class="s3">'fs'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s2">let </span><span class="s1">exec = require(</span><span class="s3">'child_process'</span><span class="s1">).exec</span><span class="s4">;</span>
+<span class="s2">let </span><span class="s1">FileList = require(</span><span class="s3">'filelist'</span><span class="s1">).FileList</span><span class="s4">;</span>
+
+<span class="s5">/**</span>
+  <span class="s6">@name </span><span class="s5">jake</span>
+  <span class="s6">@namespace </span><span class="s5">jake</span>
+<span class="s5">*/</span>
+<span class="s5">/**</span>
+  <span class="s6">@name </span><span class="s5">jake.PackageTask</span>
+  <span class="s6">@constructor</span>
+  <span class="s6">@description </span><span class="s5">Instantiating a PackageTask creates a number of Jake</span>
+  <span class="s5">Tasks that make packaging and distributing your software easy.</span>
+
+  <span class="s6">@param </span><span class="s5">{String} name The name of the project</span>
+  <span class="s6">@param </span><span class="s5">{String} version The current project version (will be</span>
+  <span class="s5">appended to the project-name in the package-archive</span>
+  <span class="s6">@param </span><span class="s5">{Function} definition Defines the contents of the package,</span>
+  <span class="s5">and format of the package-archive. Will be executed on the instantiated</span>
+  <span class="s5">PackageTask (i.e., 'this', will be the PackageTask instance),</span>
+  <span class="s5">to set the various instance-propertiess.</span>
+
+  <span class="s6">@example</span>
+  <span class="s5">let t = new jake.PackageTask('rous', 'v' + version, function () {</span>
+    <span class="s5">let files = [</span>
+      <span class="s5">'Capfile'</span>
+    <span class="s5">, 'Jakefile'</span>
+    <span class="s5">, 'README.md'</span>
+    <span class="s5">, 'package.json'</span>
+    <span class="s5">, 'app/*'</span>
+    <span class="s5">, 'bin/*'</span>
+    <span class="s5">, 'config/*'</span>
+    <span class="s5">, 'lib/*'</span>
+    <span class="s5">, 'node_modules/*'</span>
+    <span class="s5">];</span>
+    <span class="s5">this.packageFiles.include(files);</span>
+    <span class="s5">this.packageFiles.exclude('node_modules/foobar');</span>
+    <span class="s5">this.needTarGz = true;</span>
+  <span class="s5">});</span>
+
+ <span class="s5">*/</span>
+<span class="s2">let </span><span class="s1">PackageTask = </span><span class="s2">function </span><span class="s1">() {</span>
+  <span class="s2">let </span><span class="s1">args = Array.prototype.slice.call(arguments)</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">name = args.shift()</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">version = args.shift()</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">definition = args.pop()</span><span class="s4">;</span>
+  <span class="s2">let </span><span class="s1">prereqs = args.pop() || []</span><span class="s4">; </span><span class="s7">// Optional</span>
+
+  <span class="s1">prereqs = [].concat(prereqs)</span><span class="s4">; </span><span class="s7">// Accept string or list</span>
+
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#name</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{String}</span>
+    <span class="s6">@description </span><span class="s5">The name of the project</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.name = name</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#version</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{String}</span>
+    <span class="s6">@description </span><span class="s5">The project version-string</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.version = version</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#prereqs</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{Array}</span>
+    <span class="s6">@description </span><span class="s5">Tasks to run before packaging</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.prereqs = prereqs</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#packageDir</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{String='pkg'}</span>
+    <span class="s6">@description </span><span class="s5">The directory-name to use for packaging the software</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.packageDir = </span><span class="s3">'pkg'</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#packageFiles</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{jake.FileList}</span>
+    <span class="s6">@description </span><span class="s5">The list of files and directories to include in the</span>
+    <span class="s5">package-archive</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.packageFiles = </span><span class="s2">new </span><span class="s1">FileList()</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#needTar</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{Boolean=false}</span>
+    <span class="s6">@description </span><span class="s5">If set to true, uses the `tar` utility to create</span>
+    <span class="s5">a gzip .tgz archive of the package</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.needTar = </span><span class="s2">false</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#needTarGz</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{Boolean=false}</span>
+    <span class="s6">@description </span><span class="s5">If set to true, uses the `tar` utility to create</span>
+    <span class="s5">a gzip .tar.gz archive of the package</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.needTarGz = </span><span class="s2">false</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#needTarBz2</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{Boolean=false}</span>
+    <span class="s6">@description </span><span class="s5">If set to true, uses the `tar` utility to create</span>
+    <span class="s5">a bzip2 .bz2 archive of the package</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.needTarBz2 = </span><span class="s2">false</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#needJar</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{Boolean=false}</span>
+    <span class="s6">@description </span><span class="s5">If set to true, uses the `jar` utility to create</span>
+    <span class="s5">a .jar archive of the package</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.needJar = </span><span class="s2">false</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#needZip</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{Boolean=false}</span>
+    <span class="s6">@description </span><span class="s5">If set to true, uses the `zip` utility to create</span>
+    <span class="s5">a .zip archive of the package</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.needZip = </span><span class="s2">false</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#manifestFile</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{String=null}</span>
+    <span class="s6">@description </span><span class="s5">Can be set to point the `jar` utility at a manifest</span>
+    <span class="s5">file to use in a .jar archive. If unset, one will be automatically</span>
+    <span class="s5">created by the `jar` utility. This path should be relative to the</span>
+    <span class="s5">root of the package directory (this.packageDir above, likely 'pkg')</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.manifestFile = </span><span class="s2">null</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#tarCommand</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{String='tar'}</span>
+    <span class="s6">@description </span><span class="s5">The shell-command to use for creating tar archives.</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.tarCommand = </span><span class="s3">'tar'</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#jarCommand</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{String='jar'}</span>
+    <span class="s6">@description </span><span class="s5">The shell-command to use for creating jar archives.</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.jarCommand = </span><span class="s3">'jar'</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#zipCommand</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{String='zip'}</span>
+    <span class="s6">@description </span><span class="s5">The shell-command to use for creating zip archives.</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.zipCommand = </span><span class="s3">'zip'</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#archiveNoBaseDir</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{Boolean=false}</span>
+    <span class="s6">@description </span><span class="s5">Simple option for performing the archive on the</span>
+    <span class="s5">contents of the directory instead of the directory itself</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.archiveNoBaseDir = </span><span class="s2">false</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#archiveChangeDir</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{String=null}</span>
+    <span class="s6">@description </span><span class="s5">Equivalent to the '-C' command for the `tar` and `jar`</span>
+    <span class="s5">commands. (&quot;Change to this directory before adding files.&quot;)</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.archiveChangeDir = </span><span class="s2">null</span><span class="s4">;</span>
+  <span class="s5">/**</span>
+    <span class="s6">@name </span><span class="s5">jake.PackageTask#archiveContentDir</span>
+    <span class="s6">@public</span>
+    <span class="s6">@type </span><span class="s5">{String=null}</span>
+    <span class="s6">@description </span><span class="s5">Specifies the files and directories to include in the</span>
+    <span class="s5">package-archive. If unset, this will default to the main package</span>
+    <span class="s5">directory -- i.e., name + version.</span>
+   <span class="s5">*/</span>
+  <span class="s2">this</span><span class="s1">.archiveContentDir = </span><span class="s2">null</span><span class="s4">;</span>
+
+  <span class="s2">if </span><span class="s1">(</span><span class="s2">typeof </span><span class="s1">definition == </span><span class="s3">'function'</span><span class="s1">) {</span>
+    <span class="s1">definition.call(</span><span class="s2">this</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s2">this</span><span class="s1">.define()</span><span class="s4">;</span>
+<span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">PackageTask.prototype = </span><span class="s2">new </span><span class="s1">(</span><span class="s2">function </span><span class="s1">() {</span>
+
+  <span class="s2">let </span><span class="s1">_compressOpts = {</span>
+    <span class="s1">Tar: {</span>
+      <span class="s1">ext: </span><span class="s3">'.tgz'</span><span class="s4">,</span>
+      <span class="s1">flags: </span><span class="s3">'czf'</span><span class="s4">,</span>
+      <span class="s1">cmd: </span><span class="s3">'tar'</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s1">TarGz: {</span>
+      <span class="s1">ext: </span><span class="s3">'.tar.gz'</span><span class="s4">,</span>
+      <span class="s1">flags: </span><span class="s3">'czf'</span><span class="s4">,</span>
+      <span class="s1">cmd: </span><span class="s3">'tar'</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s1">TarBz2: {</span>
+      <span class="s1">ext: </span><span class="s3">'.tar.bz2'</span><span class="s4">,</span>
+      <span class="s1">flags: </span><span class="s3">'cjf'</span><span class="s4">,</span>
+      <span class="s1">cmd: </span><span class="s3">'tar'</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s1">Jar: {</span>
+      <span class="s1">ext: </span><span class="s3">'.jar'</span><span class="s4">,</span>
+      <span class="s1">flags: </span><span class="s3">'cf'</span><span class="s4">,</span>
+      <span class="s1">cmd: </span><span class="s3">'jar'</span>
+    <span class="s1">}</span><span class="s4">,</span>
+    <span class="s1">Zip: {</span>
+      <span class="s1">ext: </span><span class="s3">'.zip'</span><span class="s4">,</span>
+      <span class="s1">flags: </span><span class="s3">'qr'</span><span class="s4">,</span>
+      <span class="s1">cmd: </span><span class="s3">'zip'</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s2">this</span><span class="s1">.define = </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">let </span><span class="s1">self = </span><span class="s2">this</span><span class="s4">;</span>
+    <span class="s2">let </span><span class="s1">packageDirPath = </span><span class="s2">this</span><span class="s1">.packageDirPath()</span><span class="s4">;</span>
+    <span class="s2">let </span><span class="s1">compressTaskArr = []</span><span class="s4">;</span>
+
+    <span class="s1">desc(</span><span class="s3">'Build the package for distribution'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">task(</span><span class="s3">'package'</span><span class="s4">, </span><span class="s1">self.prereqs.concat([</span><span class="s3">'clobberPackage'</span><span class="s4">, </span><span class="s3">'buildPackage'</span><span class="s1">]))</span><span class="s4">;</span>
+    <span class="s7">// Backward-compat alias</span>
+    <span class="s1">task(</span><span class="s3">'repackage'</span><span class="s4">, </span><span class="s1">[</span><span class="s3">'package'</span><span class="s1">])</span><span class="s4">;</span>
+
+    <span class="s1">task(</span><span class="s3">'clobberPackage'</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s1">jake.rmRf(self.packageDir</span><span class="s4">, </span><span class="s1">{silent: </span><span class="s2">true</span><span class="s1">})</span><span class="s4">;</span>
+    <span class="s1">})</span><span class="s4">;</span>
+
+    <span class="s1">desc(</span><span class="s3">'Remove the package'</span><span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">task(</span><span class="s3">'clobber'</span><span class="s4">, </span><span class="s1">[</span><span class="s3">'clobberPackage'</span><span class="s1">])</span><span class="s4">;</span>
+
+    <span class="s2">let </span><span class="s1">doCommand = </span><span class="s2">function </span><span class="s1">(p) {</span>
+      <span class="s2">let </span><span class="s1">filename = path.resolve(self.packageDir + </span><span class="s3">'/' </span><span class="s1">+ self.packageName() +</span>
+                                  <span class="s1">_compressOpts[p].ext)</span><span class="s4">;</span>
+      <span class="s2">if </span><span class="s1">(process.platform == </span><span class="s3">'win32'</span><span class="s1">) {</span>
+        <span class="s7">// Windows full path may have drive letter, which is going to cause</span>
+        <span class="s7">// namespace problems, so strip it.</span>
+        <span class="s2">if </span><span class="s1">(filename.length &gt; </span><span class="s8">2 </span><span class="s1">&amp;&amp; filename[</span><span class="s8">1</span><span class="s1">] == </span><span class="s3">':'</span><span class="s1">) {</span>
+          <span class="s1">filename = filename.substr(</span><span class="s8">2</span><span class="s1">)</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+      <span class="s1">compressTaskArr.push(filename)</span><span class="s4">;</span>
+
+      <span class="s1">file(filename</span><span class="s4">, </span><span class="s1">[packageDirPath]</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+        <span class="s2">let </span><span class="s1">cmd</span><span class="s4">;</span>
+        <span class="s2">let </span><span class="s1">opts = _compressOpts[p]</span><span class="s4">;</span>
+        <span class="s7">// Directory to move to when doing the compression-task</span>
+        <span class="s7">// Changes in the case of zip for emulating -C option</span>
+        <span class="s2">let </span><span class="s1">chdir = self.packageDir</span><span class="s4">;</span>
+        <span class="s7">// Save the current dir so it's possible to pop back up</span>
+        <span class="s7">// after compressing</span>
+        <span class="s2">let </span><span class="s1">currDir = process.cwd()</span><span class="s4">;</span>
+        <span class="s2">let </span><span class="s1">archiveChangeDir</span><span class="s4">;</span>
+        <span class="s2">let </span><span class="s1">archiveContentDir</span><span class="s4">;</span>
+
+        <span class="s2">if </span><span class="s1">(self.archiveNoBaseDir) {</span>
+          <span class="s1">archiveChangeDir = self.packageName()</span><span class="s4">;</span>
+          <span class="s1">archiveContentDir = </span><span class="s3">'.'</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s2">else </span><span class="s1">{</span>
+          <span class="s1">archiveChangeDir = self.archiveChangeDir</span><span class="s4">;</span>
+          <span class="s1">archiveContentDir = self.archiveContentDir</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">cmd = self[opts.cmd + </span><span class="s3">'Command'</span><span class="s1">]</span><span class="s4">;</span>
+        <span class="s1">cmd += </span><span class="s3">' -' </span><span class="s1">+ opts.flags</span><span class="s4">;</span>
+        <span class="s2">if </span><span class="s1">(opts.cmd == </span><span class="s3">'jar' </span><span class="s1">&amp;&amp; self.manifestFile) {</span>
+          <span class="s1">cmd += </span><span class="s3">'m'</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s7">// The name of the archive to create -- use full path</span>
+        <span class="s7">// so compression can be performed from a different dir</span>
+        <span class="s7">// if needed</span>
+        <span class="s1">cmd += </span><span class="s3">' ' </span><span class="s1">+ filename</span><span class="s4">;</span>
+
+        <span class="s2">if </span><span class="s1">(opts.cmd == </span><span class="s3">'jar' </span><span class="s1">&amp;&amp; self.manifestFile) {</span>
+          <span class="s1">cmd += </span><span class="s3">' ' </span><span class="s1">+ self.manifestFile</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s7">// Where to perform the compression -- -C option isn't</span>
+        <span class="s7">// supported in zip, so actually do process.chdir for this</span>
+        <span class="s2">if </span><span class="s1">(archiveChangeDir) {</span>
+          <span class="s2">if </span><span class="s1">(opts.cmd == </span><span class="s3">'zip'</span><span class="s1">) {</span>
+            <span class="s1">chdir = path.join(chdir</span><span class="s4">, </span><span class="s1">archiveChangeDir)</span><span class="s4">;</span>
+          <span class="s1">}</span>
+          <span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">cmd += </span><span class="s3">' -C ' </span><span class="s1">+ archiveChangeDir</span><span class="s4">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+
+        <span class="s7">// Where to get the archive content</span>
+        <span class="s2">if </span><span class="s1">(archiveContentDir) {</span>
+          <span class="s1">cmd += </span><span class="s3">' ' </span><span class="s1">+ archiveContentDir</span><span class="s4">;</span>
+        <span class="s1">}</span>
+        <span class="s2">else </span><span class="s1">{</span>
+          <span class="s1">cmd += </span><span class="s3">' ' </span><span class="s1">+ self.packageName()</span><span class="s4">;</span>
+        <span class="s1">}</span>
+
+        <span class="s7">// Move into the desired dir (usually packageDir) to compress</span>
+        <span class="s7">// Return back up to the current dir after the exec</span>
+        <span class="s1">process.chdir(chdir)</span><span class="s4">;</span>
+
+        <span class="s1">exec(cmd</span><span class="s4">, </span><span class="s2">function </span><span class="s1">(err</span><span class="s4">, </span><span class="s1">stdout</span><span class="s4">, </span><span class="s1">stderr) {</span>
+          <span class="s2">if </span><span class="s1">(err) { </span><span class="s2">throw </span><span class="s1">err</span><span class="s4">; </span><span class="s1">}</span>
+
+          <span class="s7">// Return back up to the starting directory (see above,</span>
+          <span class="s7">// before exec)</span>
+          <span class="s1">process.chdir(currDir)</span><span class="s4">;</span>
+
+          <span class="s1">complete()</span><span class="s4">;</span>
+        <span class="s1">})</span><span class="s4">;</span>
+      <span class="s1">}</span><span class="s4">, </span><span class="s1">{async: </span><span class="s2">true</span><span class="s1">})</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">;</span>
+
+    <span class="s2">for </span><span class="s1">(</span><span class="s2">let </span><span class="s1">p </span><span class="s2">in </span><span class="s1">_compressOpts) {</span>
+      <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">[</span><span class="s3">'need' </span><span class="s1">+ p]) {</span>
+        <span class="s1">doCommand(p)</span><span class="s4">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s1">task(</span><span class="s3">'buildPackage'</span><span class="s4">, </span><span class="s1">compressTaskArr</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {})</span><span class="s4">;</span>
+
+    <span class="s1">directory(</span><span class="s2">this</span><span class="s1">.packageDir)</span><span class="s4">;</span>
+
+    <span class="s1">file(packageDirPath</span><span class="s4">, </span><span class="s2">this</span><span class="s1">.packageFiles</span><span class="s4">, </span><span class="s2">function </span><span class="s1">() {</span>
+      <span class="s1">jake.mkdirP(packageDirPath)</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">fileList = []</span><span class="s4">;</span>
+      <span class="s1">self.packageFiles.forEach(</span><span class="s2">function </span><span class="s1">(name) {</span>
+        <span class="s2">let </span><span class="s1">f = path.join(self.packageDirPath()</span><span class="s4">, </span><span class="s1">name)</span><span class="s4">;</span>
+        <span class="s2">let </span><span class="s1">fDir = path.dirname(f)</span><span class="s4">;</span>
+        <span class="s1">jake.mkdirP(fDir</span><span class="s4">, </span><span class="s1">{silent: </span><span class="s2">true</span><span class="s1">})</span><span class="s4">;</span>
+
+        <span class="s7">// Add both files and directories</span>
+        <span class="s1">fileList.push({</span>
+          <span class="s1">from: name</span><span class="s4">,</span>
+          <span class="s1">to: f</span>
+        <span class="s1">})</span><span class="s4">;</span>
+      <span class="s1">})</span><span class="s4">;</span>
+      <span class="s2">let </span><span class="s1">_copyFile = </span><span class="s2">function </span><span class="s1">() {</span>
+        <span class="s2">let </span><span class="s1">file = fileList.pop()</span><span class="s4">;</span>
+        <span class="s2">let </span><span class="s1">stat</span><span class="s4">;</span>
+        <span class="s2">if </span><span class="s1">(file) {</span>
+          <span class="s1">stat = fs.statSync(file.from)</span><span class="s4">;</span>
+          <span class="s7">// Target is a directory, just create it</span>
+          <span class="s2">if </span><span class="s1">(stat.isDirectory()) {</span>
+            <span class="s1">jake.mkdirP(file.to</span><span class="s4">, </span><span class="s1">{silent: </span><span class="s2">true</span><span class="s1">})</span><span class="s4">;</span>
+            <span class="s1">_copyFile()</span><span class="s4">;</span>
+          <span class="s1">}</span>
+          <span class="s7">// Otherwise copy the file</span>
+          <span class="s2">else </span><span class="s1">{</span>
+            <span class="s1">jake.cpR(file.from</span><span class="s4">, </span><span class="s1">file.to</span><span class="s4">, </span><span class="s1">{silent: </span><span class="s2">true</span><span class="s1">})</span><span class="s4">;</span>
+            <span class="s1">_copyFile()</span><span class="s4">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s2">else </span><span class="s1">{</span>
+          <span class="s1">complete()</span><span class="s4">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span><span class="s4">;</span>
+      <span class="s1">_copyFile()</span><span class="s4">;</span>
+    <span class="s1">}</span><span class="s4">, </span><span class="s1">{async: </span><span class="s2">true</span><span class="s1">})</span><span class="s4">;</span>
+
+
+  <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s2">this</span><span class="s1">.packageName = </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">if </span><span class="s1">(</span><span class="s2">this</span><span class="s1">.version) {</span>
+      <span class="s2">return this</span><span class="s1">.name + </span><span class="s3">'-' </span><span class="s1">+ </span><span class="s2">this</span><span class="s1">.version</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s2">else </span><span class="s1">{</span>
+      <span class="s2">return this</span><span class="s1">.name</span><span class="s4">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+  <span class="s2">this</span><span class="s1">.packageDirPath = </span><span class="s2">function </span><span class="s1">() {</span>
+    <span class="s2">return this</span><span class="s1">.packageDir + </span><span class="s3">'/' </span><span class="s1">+ </span><span class="s2">this</span><span class="s1">.packageName()</span><span class="s4">;</span>
+  <span class="s1">}</span><span class="s4">;</span>
+
+<span class="s1">})()</span><span class="s4">;</span>
+
+<span class="s1">jake.PackageTask = PackageTask</span><span class="s4">;</span>
+<span class="s1">exports.PackageTask = PackageTask</span><span class="s4">;</span>
+
+</pre>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<html>
+<head>
+<title>react-scripts</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8a8a8a; font-style: italic;}
+.s3 { color: #8ea765;}
+.s4 { color: #cc7832;}
+.s5 { color: #cc7832; font-weight: bold;}
+.s6 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+react-scripts</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env node</span>
+<span class="s2">/**</span>
+ <span class="s2">* Copyright (c) 2015-present, Facebook, Inc.</span>
+ <span class="s2">*</span>
+ <span class="s2">* This source code is licensed under the MIT license found in the</span>
+ <span class="s2">* LICENSE file in the root directory of this source tree.</span>
+ <span class="s2">*/</span>
+
+<span class="s3">'use strict'</span><span class="s4">;</span>
+
+<span class="s0">// Makes the script crash on unhandled rejections instead of silently</span>
+<span class="s0">// ignoring them. In the future, promise rejections that are not handled will</span>
+<span class="s0">// terminate the Node.js process with a non-zero exit code.</span>
+<span class="s1">process.on(</span><span class="s3">'unhandledRejection'</span><span class="s4">, </span><span class="s1">err =&gt; {</span>
+  <span class="s5">throw </span><span class="s1">err</span><span class="s4">;</span>
+<span class="s1">})</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">spawn = require(</span><span class="s3">'react-dev-utils/crossSpawn'</span><span class="s1">)</span><span class="s4">;</span>
+<span class="s5">const </span><span class="s1">args = process.argv.slice(</span><span class="s6">2</span><span class="s1">)</span><span class="s4">;</span>
+
+<span class="s5">const </span><span class="s1">scriptIndex = args.findIndex(</span>
+  <span class="s1">x =&gt; x === </span><span class="s3">'build' </span><span class="s1">|| x === </span><span class="s3">'eject' </span><span class="s1">|| x === </span><span class="s3">'start' </span><span class="s1">|| x === </span><span class="s3">'test'</span>
+<span class="s1">)</span><span class="s4">;</span>
+<span class="s5">const </span><span class="s1">script = scriptIndex === -</span><span class="s6">1 </span><span class="s1">? args[</span><span class="s6">0</span><span class="s1">] : args[scriptIndex]</span><span class="s4">;</span>
+<span class="s5">const </span><span class="s1">nodeArgs = scriptIndex &gt; </span><span class="s6">0 </span><span class="s1">? args.slice(</span><span class="s6">0</span><span class="s4">, </span><span class="s1">scriptIndex) : []</span><span class="s4">;</span>
+
+<span class="s5">if </span><span class="s1">([</span><span class="s3">'build'</span><span class="s4">, </span><span class="s3">'eject'</span><span class="s4">, </span><span class="s3">'start'</span><span class="s4">, </span><span class="s3">'test'</span><span class="s1">].includes(script)) {</span>
+  <span class="s5">const </span><span class="s1">result = spawn.sync(</span>
+    <span class="s1">process.execPath</span><span class="s4">,</span>
+    <span class="s1">nodeArgs</span>
+      <span class="s1">.concat(require.resolve(</span><span class="s3">'../scripts/' </span><span class="s1">+ script))</span>
+      <span class="s1">.concat(args.slice(scriptIndex + </span><span class="s6">1</span><span class="s1">))</span><span class="s4">,</span>
+    <span class="s1">{ stdio: </span><span class="s3">'inherit' </span><span class="s1">}</span>
+  <span class="s1">)</span><span class="s4">;</span>
+  <span class="s5">if </span><span class="s1">(result.signal) {</span>
+    <span class="s5">if </span><span class="s1">(result.signal === </span><span class="s3">'SIGKILL'</span><span class="s1">) {</span>
+      <span class="s1">console.log(</span>
+        <span class="s3">'The build failed because the process exited too early. ' </span><span class="s1">+</span>
+          <span class="s3">'This probably means the system ran out of memory or someone called ' </span><span class="s1">+</span>
+          <span class="s3">'`kill -9` on the process.'</span>
+      <span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">} </span><span class="s5">else if </span><span class="s1">(result.signal === </span><span class="s3">'SIGTERM'</span><span class="s1">) {</span>
+      <span class="s1">console.log(</span>
+        <span class="s3">'The build failed because the process exited too early. ' </span><span class="s1">+</span>
+          <span class="s3">'Someone might have called `kill` or `killall`, or the system could ' </span><span class="s1">+</span>
+          <span class="s3">'be shutting down.'</span>
+      <span class="s1">)</span><span class="s4">;</span>
+    <span class="s1">}</span>
+    <span class="s1">process.exit(</span><span class="s6">1</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">}</span>
+  <span class="s1">process.exit(result.status)</span><span class="s4">;</span>
+<span class="s1">} </span><span class="s5">else </span><span class="s1">{</span>
+  <span class="s1">console.log(</span><span class="s3">'Unknown script &quot;' </span><span class="s1">+ script + </span><span class="s3">'&quot;.'</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">console.log(</span><span class="s3">'Perhaps you need to update react-scripts?'</span><span class="s1">)</span><span class="s4">;</span>
+  <span class="s1">console.log(</span>
+    <span class="s3">'See: https://facebook.github.io/create-react-app/docs/updating-to-new-releases'</span>
+  <span class="s1">)</span><span class="s4">;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

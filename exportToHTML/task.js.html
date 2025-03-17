@@ -1,0 +1,482 @@
+<html>
+<head>
+<title>task.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #808080;}
+.s5 { color: #6897bb;}
+.s6 { color: #8a8a8a; font-style: italic;}
+.s7 { color: #8a8a8a; font-weight: bold; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+task.js</font>
+</center></td></tr></table>
+<pre><span class="s0">let </span><span class="s1">EventEmitter = require(</span><span class="s2">'events'</span><span class="s1">).EventEmitter</span><span class="s3">;</span>
+<span class="s0">let </span><span class="s1">async = require(</span><span class="s2">'async'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s0">let </span><span class="s1">chalk = require(</span><span class="s2">'chalk'</span><span class="s1">)</span><span class="s3">;</span>
+<span class="s4">// 'rule' module is required at the bottom because circular deps</span>
+
+<span class="s4">// Used for task value, so better not to use</span>
+<span class="s4">// null, since value should be unset/uninitialized</span>
+<span class="s0">let </span><span class="s1">UNDEFINED_VALUE</span><span class="s3">;</span>
+
+<span class="s0">const </span><span class="s1">ROOT_TASK_NAME = </span><span class="s2">'__rootTask__'</span><span class="s3">;</span>
+<span class="s0">const </span><span class="s1">POLLING_INTERVAL = </span><span class="s5">100</span><span class="s3">;</span>
+
+<span class="s4">// Parse any positional args attached to the task-name</span>
+<span class="s0">function </span><span class="s1">parsePrereqName(name) {</span>
+  <span class="s0">let </span><span class="s1">taskArr = name.split(</span><span class="s2">'['</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s0">let </span><span class="s1">taskName = taskArr[</span><span class="s5">0</span><span class="s1">]</span><span class="s3">;</span>
+  <span class="s0">let </span><span class="s1">taskArgs = []</span><span class="s3">;</span>
+  <span class="s0">if </span><span class="s1">(taskArr[</span><span class="s5">1</span><span class="s1">]) {</span>
+    <span class="s1">taskArgs = taskArr[</span><span class="s5">1</span><span class="s1">].replace(</span><span class="s5">/\]$/</span><span class="s3">, </span><span class="s2">''</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">taskArgs = taskArgs.split(</span><span class="s2">','</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+  <span class="s0">return </span><span class="s1">{</span>
+    <span class="s1">name: taskName</span><span class="s3">,</span>
+    <span class="s1">args: taskArgs</span>
+  <span class="s1">}</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s6">/**</span>
+  <span class="s7">@name </span><span class="s6">jake.Task</span>
+  <span class="s7">@class</span>
+  <span class="s7">@extends </span><span class="s6">EventEmitter</span>
+  <span class="s7">@description </span><span class="s6">A Jake Task</span>
+
+  <span class="s7">@param </span><span class="s6">{String} name The name of the Task</span>
+  <span class="s7">@param </span><span class="s6">{Array} [prereqs] Prerequisites to be run before this task</span>
+  <span class="s7">@param </span><span class="s6">{Function} [action] The action to perform for this task</span>
+  <span class="s7">@param </span><span class="s6">{Object} [opts]</span>
+    <span class="s7">@param </span><span class="s6">{Array} [opts.asyc=false] Perform this task asynchronously.</span>
+    <span class="s6">If you flag a task with this option, you must call the global</span>
+    <span class="s6">`complete` method inside the task's action, for execution to proceed</span>
+    <span class="s6">to the next task.</span>
+ <span class="s6">*/</span>
+<span class="s0">class </span><span class="s1">Task </span><span class="s0">extends </span><span class="s1">EventEmitter {</span>
+
+  <span class="s1">constructor(name</span><span class="s3">, </span><span class="s1">prereqs</span><span class="s3">, </span><span class="s1">action</span><span class="s3">, </span><span class="s1">options) {</span>
+    <span class="s4">// EventEmitter ctor takes no args</span>
+    <span class="s0">super</span><span class="s1">()</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(name.indexOf(</span><span class="s2">':'</span><span class="s1">) &gt; -</span><span class="s5">1</span><span class="s1">) {</span>
+      <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">'Task name cannot include a colon. It is used internally as namespace delimiter.'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s0">let </span><span class="s1">opts = options || {}</span><span class="s3">;</span>
+
+    <span class="s0">this</span><span class="s1">._currentPrereqIndex = </span><span class="s5">0</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">._internal = </span><span class="s0">false</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">._skipped = </span><span class="s0">false</span><span class="s3">;</span>
+
+    <span class="s0">this</span><span class="s1">.name = name</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.prereqs = prereqs</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.action = action</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.async = </span><span class="s0">false</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.taskStatus = Task.runStatuses.UNSTARTED</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.description = </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.args = []</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.value = UNDEFINED_VALUE</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.concurrency = </span><span class="s5">1</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.startTime = </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.endTime = </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.directory = </span><span class="s0">null</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.namespace = </span><span class="s0">null</span><span class="s3">;</span>
+
+    <span class="s4">// Support legacy async-flag -- if not explicitly passed or falsy, will</span>
+    <span class="s4">// be set to empty-object</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">opts == </span><span class="s2">'boolean' </span><span class="s1">&amp;&amp; opts === </span><span class="s0">true</span><span class="s1">) {</span>
+      <span class="s0">this</span><span class="s1">.async = </span><span class="s0">true</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s0">else </span><span class="s1">{</span>
+      <span class="s0">if </span><span class="s1">(opts.async) {</span>
+        <span class="s0">this</span><span class="s1">.async = </span><span class="s0">true</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s0">if </span><span class="s1">(opts.concurrency) {</span>
+        <span class="s0">this</span><span class="s1">.concurrency = opts.concurrency</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s4">//Do a test on self dependencies for this task</span>
+    <span class="s0">if</span><span class="s1">(Array.isArray(</span><span class="s0">this</span><span class="s1">.prereqs) &amp;&amp; </span><span class="s0">this</span><span class="s1">.prereqs.indexOf(</span><span class="s0">this</span><span class="s1">.name) !== -</span><span class="s5">1</span><span class="s1">) {</span>
+      <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">&quot;Cannot use prereq &quot; </span><span class="s1">+ </span><span class="s0">this</span><span class="s1">.name + </span><span class="s2">&quot; as a dependency of itself&quot;</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s1">get fullName() {</span>
+    <span class="s0">return this</span><span class="s1">._getFullName()</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">get params() {</span>
+    <span class="s0">return this</span><span class="s1">._getParams()</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_initInvocationChain() {</span>
+    <span class="s4">// Legacy global invocation chain</span>
+    <span class="s1">jake._invocationChain.push(</span><span class="s0">this</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s4">// New root chain</span>
+    <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">._invocationChain) {</span>
+      <span class="s0">this</span><span class="s1">._invocationChainRoot = </span><span class="s0">true</span><span class="s3">;</span>
+      <span class="s0">this</span><span class="s1">._invocationChain = []</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(jake.currentRunningTask) {</span>
+        <span class="s1">jake.currentRunningTask._waitForChains = jake.currentRunningTask._waitForChains || []</span><span class="s3">;</span>
+        <span class="s1">jake.currentRunningTask._waitForChains.push(</span><span class="s0">this</span><span class="s1">._invocationChain)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+    <span class="s7">@name </span><span class="s6">jake.Task#invoke</span>
+    <span class="s7">@function</span>
+    <span class="s7">@description </span><span class="s6">Runs prerequisites, then this task. If the task has already</span>
+    <span class="s6">been run, will not run the task again.</span>
+   <span class="s6">*/</span>
+  <span class="s1">invoke() {</span>
+    <span class="s0">this</span><span class="s1">._initInvocationChain()</span><span class="s3">;</span>
+
+    <span class="s0">this</span><span class="s1">.args = Array.prototype.slice.call(arguments)</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.reenabled = </span><span class="s0">false</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.runPrereqs()</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+    <span class="s7">@name </span><span class="s6">jake.Task#execute</span>
+    <span class="s7">@function</span>
+    <span class="s7">@description </span><span class="s6">Run only this task, without prereqs. If the task has already</span>
+    <span class="s6">been run, *will* run the task again.</span>
+   <span class="s6">*/</span>
+  <span class="s1">execute() {</span>
+    <span class="s0">this</span><span class="s1">._initInvocationChain()</span><span class="s3">;</span>
+
+    <span class="s0">this</span><span class="s1">.args = Array.prototype.slice.call(arguments)</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.reenable()</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.reenabled = </span><span class="s0">true</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.run()</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">runPrereqs() {</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.prereqs &amp;&amp; </span><span class="s0">this</span><span class="s1">.prereqs.length) {</span>
+
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.concurrency &gt; </span><span class="s5">1</span><span class="s1">) {</span>
+        <span class="s1">async.eachLimit(</span><span class="s0">this</span><span class="s1">.prereqs</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.concurrency</span><span class="s3">,</span>
+
+          <span class="s1">(name</span><span class="s3">, </span><span class="s1">cb) =&gt; {</span>
+            <span class="s0">let </span><span class="s1">parsed = parsePrereqName(name)</span><span class="s3">;</span>
+
+            <span class="s0">let </span><span class="s1">prereq = </span><span class="s0">this</span><span class="s1">.namespace.resolveTask(parsed.name) ||</span>
+          <span class="s1">jake.attemptRule(name</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.namespace</span><span class="s3">, </span><span class="s5">0</span><span class="s1">) ||</span>
+          <span class="s1">jake.createPlaceholderFileTask(name</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.namespace)</span><span class="s3">;</span>
+
+            <span class="s0">if </span><span class="s1">(!prereq) {</span>
+              <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">'Unknown task &quot;' </span><span class="s1">+ name + </span><span class="s2">'&quot;'</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s4">//Test for circular invocation</span>
+            <span class="s0">if</span><span class="s1">(prereq === </span><span class="s0">this</span><span class="s1">) {</span>
+              <span class="s1">setImmediate(</span><span class="s0">function </span><span class="s1">() {</span>
+                <span class="s1">cb(</span><span class="s0">new </span><span class="s1">Error(</span><span class="s2">&quot;Cannot use prereq &quot; </span><span class="s1">+ prereq.name + </span><span class="s2">&quot; as a dependency of itself&quot;</span><span class="s1">))</span><span class="s3">;</span>
+              <span class="s1">})</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">if </span><span class="s1">(prereq.taskStatus == Task.runStatuses.DONE) {</span>
+            <span class="s4">//prereq already done, return</span>
+              <span class="s1">setImmediate(cb)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+            <span class="s0">else </span><span class="s1">{</span>
+            <span class="s4">//wait for complete before calling cb</span>
+              <span class="s1">prereq.once(</span><span class="s2">'_done'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+                <span class="s1">prereq.removeAllListeners(</span><span class="s2">'_done'</span><span class="s1">)</span><span class="s3">;</span>
+                <span class="s1">setImmediate(cb)</span><span class="s3">;</span>
+              <span class="s1">})</span><span class="s3">;</span>
+              <span class="s4">// Start the prereq if we are the first to encounter it</span>
+              <span class="s0">if </span><span class="s1">(prereq.taskStatus === Task.runStatuses.UNSTARTED) {</span>
+                <span class="s1">prereq.taskStatus = Task.runStatuses.STARTED</span><span class="s3">;</span>
+                <span class="s1">prereq.invoke.apply(prereq</span><span class="s3">, </span><span class="s1">parsed.args)</span><span class="s3">;</span>
+              <span class="s1">}</span>
+            <span class="s1">}</span>
+          <span class="s1">}</span><span class="s3">,</span>
+
+          <span class="s1">(err) =&gt; {</span>
+          <span class="s4">//async callback is called after all prereqs have run.</span>
+            <span class="s0">if </span><span class="s1">(err) {</span>
+              <span class="s0">throw </span><span class="s1">err</span><span class="s3">;</span>
+            <span class="s1">}</span>
+            <span class="s0">else </span><span class="s1">{</span>
+              <span class="s1">setImmediate(</span><span class="s0">this</span><span class="s1">.run.bind(</span><span class="s0">this</span><span class="s1">))</span><span class="s3">;</span>
+            <span class="s1">}</span>
+          <span class="s1">}</span>
+        <span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s0">else </span><span class="s1">{</span>
+        <span class="s1">setImmediate(</span><span class="s0">this</span><span class="s1">.nextPrereq.bind(</span><span class="s0">this</span><span class="s1">))</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s0">else </span><span class="s1">{</span>
+      <span class="s1">setImmediate(</span><span class="s0">this</span><span class="s1">.run.bind(</span><span class="s0">this</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s1">nextPrereq() {</span>
+    <span class="s0">let </span><span class="s1">self = </span><span class="s0">this</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">index = </span><span class="s0">this</span><span class="s1">._currentPrereqIndex</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">name = </span><span class="s0">this</span><span class="s1">.prereqs[index]</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">prereq</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">parsed</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(name) {</span>
+
+      <span class="s1">parsed = parsePrereqName(name)</span><span class="s3">;</span>
+
+      <span class="s1">prereq = </span><span class="s0">this</span><span class="s1">.namespace.resolveTask(parsed.name) ||</span>
+          <span class="s1">jake.attemptRule(name</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.namespace</span><span class="s3">, </span><span class="s5">0</span><span class="s1">) ||</span>
+          <span class="s1">jake.createPlaceholderFileTask(name</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.namespace)</span><span class="s3">;</span>
+
+      <span class="s0">if </span><span class="s1">(!prereq) {</span>
+        <span class="s0">throw new </span><span class="s1">Error(</span><span class="s2">'Unknown task &quot;' </span><span class="s1">+ name + </span><span class="s2">'&quot;'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s4">// Do when done</span>
+      <span class="s0">if </span><span class="s1">(prereq.taskStatus == Task.runStatuses.DONE) {</span>
+        <span class="s1">self.handlePrereqDone(prereq)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+      <span class="s0">else </span><span class="s1">{</span>
+        <span class="s1">prereq.once(</span><span class="s2">'_done'</span><span class="s3">, </span><span class="s1">() =&gt; {</span>
+          <span class="s0">this</span><span class="s1">.handlePrereqDone(prereq)</span><span class="s3">;</span>
+          <span class="s1">prereq.removeAllListeners(</span><span class="s2">'_done'</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">})</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(prereq.taskStatus == Task.runStatuses.UNSTARTED) {</span>
+          <span class="s1">prereq.taskStatus = Task.runStatuses.STARTED</span><span class="s3">;</span>
+          <span class="s1">prereq._invocationChain = </span><span class="s0">this</span><span class="s1">._invocationChain</span><span class="s3">;</span>
+          <span class="s1">prereq.invoke.apply(prereq</span><span class="s3">, </span><span class="s1">parsed.args)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s6">/**</span>
+    <span class="s7">@name </span><span class="s6">jake.Task#reenable</span>
+    <span class="s7">@function</span>
+    <span class="s7">@description </span><span class="s6">Reenables a task so that it can be run again.</span>
+   <span class="s6">*/</span>
+  <span class="s1">reenable(deep) {</span>
+    <span class="s0">let </span><span class="s1">prereqs</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">prereq</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">._skipped = </span><span class="s0">false</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.taskStatus = Task.runStatuses.UNSTARTED</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.value = UNDEFINED_VALUE</span><span class="s3">;</span>
+    <span class="s0">if </span><span class="s1">(deep &amp;&amp; </span><span class="s0">this</span><span class="s1">.prereqs) {</span>
+      <span class="s1">prereqs = </span><span class="s0">this</span><span class="s1">.prereqs</span><span class="s3">;</span>
+      <span class="s0">for </span><span class="s1">(</span><span class="s0">let </span><span class="s1">i = </span><span class="s5">0</span><span class="s3">, </span><span class="s1">ii = prereqs.length</span><span class="s3">; </span><span class="s1">i &lt; ii</span><span class="s3">; </span><span class="s1">i++) {</span>
+        <span class="s1">prereq = jake.Task[prereqs[i]]</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(prereq) {</span>
+          <span class="s1">prereq.reenable(deep)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s1">handlePrereqDone(prereq) {</span>
+    <span class="s0">this</span><span class="s1">._currentPrereqIndex++</span><span class="s3">;</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">._currentPrereqIndex &lt; </span><span class="s0">this</span><span class="s1">.prereqs.length) {</span>
+      <span class="s1">setImmediate(</span><span class="s0">this</span><span class="s1">.nextPrereq.bind(</span><span class="s0">this</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s0">else </span><span class="s1">{</span>
+      <span class="s1">setImmediate(</span><span class="s0">this</span><span class="s1">.run.bind(</span><span class="s0">this</span><span class="s1">))</span><span class="s3">;</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s1">isNeeded() {</span>
+    <span class="s0">let </span><span class="s1">needed = </span><span class="s0">true</span><span class="s3">;</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.taskStatus == Task.runStatuses.DONE) {</span>
+      <span class="s1">needed = </span><span class="s0">false</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s0">return </span><span class="s1">needed</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">run() {</span>
+    <span class="s0">let </span><span class="s1">val</span><span class="s3">, </span><span class="s1">previous</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">hasAction = </span><span class="s0">typeof this</span><span class="s1">.action == </span><span class="s2">'function'</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.isNeeded()) {</span>
+      <span class="s0">this</span><span class="s1">.emit(</span><span class="s2">'skip'</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s0">this</span><span class="s1">.emit(</span><span class="s2">'_done'</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s0">else </span><span class="s1">{</span>
+      <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">._invocationChain.length) {</span>
+        <span class="s1">previous = </span><span class="s0">this</span><span class="s1">._invocationChain[</span><span class="s0">this</span><span class="s1">._invocationChain.length - </span><span class="s5">1</span><span class="s1">]</span><span class="s3">;</span>
+        <span class="s4">// If this task is repeating and its previous is equal to this, don't check its status because it was set to UNSTARTED by the reenable() method</span>
+        <span class="s0">if </span><span class="s1">(!(</span><span class="s0">this</span><span class="s1">.reenabled &amp;&amp; previous == </span><span class="s0">this</span><span class="s1">)) {</span>
+          <span class="s0">if </span><span class="s1">(previous.taskStatus != Task.runStatuses.DONE) {</span>
+            <span class="s0">let </span><span class="s1">now = (</span><span class="s0">new </span><span class="s1">Date()).getTime()</span><span class="s3">;</span>
+            <span class="s0">if </span><span class="s1">(now - </span><span class="s0">this</span><span class="s1">.startTime &gt; jake._taskTimeout) {</span>
+              <span class="s0">return </span><span class="s1">jake.fail(</span><span class="s2">`Timed out waiting for task: </span><span class="s1">${previous.name} </span><span class="s2">with status of </span><span class="s1">${previous.taskStatus}</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+            <span class="s1">}</span>
+            <span class="s1">setTimeout(</span><span class="s0">this</span><span class="s1">.run.bind(</span><span class="s0">this</span><span class="s1">)</span><span class="s3">, </span><span class="s1">POLLING_INTERVAL)</span><span class="s3">;</span>
+            <span class="s0">return</span><span class="s3">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+      <span class="s0">if </span><span class="s1">(!(</span><span class="s0">this</span><span class="s1">.reenabled &amp;&amp; previous == </span><span class="s0">this</span><span class="s1">)) {</span>
+        <span class="s0">this</span><span class="s1">._invocationChain.push(</span><span class="s0">this</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">if </span><span class="s1">(!(</span><span class="s0">this</span><span class="s1">._internal || jake.program.opts.quiet)) {</span>
+        <span class="s1">jake.emit(</span><span class="s2">'started'</span><span class="s3">, </span><span class="s1">{</span>
+          <span class="s1">name: </span><span class="s0">this</span><span class="s1">.fullName</span><span class="s3">,</span>
+          <span class="s1">task: </span><span class="s0">this</span><span class="s3">,</span>
+        <span class="s1">})</span><span class="s3">;</span>
+        <span class="s1">console.log(</span><span class="s2">&quot;Starting '&quot; </span><span class="s1">+ chalk.green(</span><span class="s0">this</span><span class="s1">.fullName) + </span><span class="s2">&quot;'...&quot;</span><span class="s1">)</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+      <span class="s0">this</span><span class="s1">.startTime = (</span><span class="s0">new </span><span class="s1">Date()).getTime()</span><span class="s3">;</span>
+      <span class="s0">this</span><span class="s1">.emit(</span><span class="s2">'start'</span><span class="s1">)</span><span class="s3">;</span>
+
+      <span class="s1">jake.currentRunningTask = </span><span class="s0">this</span><span class="s3">;</span>
+
+      <span class="s0">if </span><span class="s1">(hasAction) {</span>
+        <span class="s0">try </span><span class="s1">{</span>
+          <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.directory) {</span>
+            <span class="s1">process.chdir(</span><span class="s0">this</span><span class="s1">.directory)</span><span class="s3">;</span>
+          <span class="s1">}</span>
+
+          <span class="s1">val = </span><span class="s0">this</span><span class="s1">.action.apply(</span><span class="s0">this</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.args)</span><span class="s3">;</span>
+
+          <span class="s0">if </span><span class="s1">(</span><span class="s0">typeof </span><span class="s1">val == </span><span class="s2">'object' </span><span class="s1">&amp;&amp; </span><span class="s0">typeof </span><span class="s1">val.then == </span><span class="s2">'function'</span><span class="s1">) {</span>
+            <span class="s0">this</span><span class="s1">.async = </span><span class="s0">true</span><span class="s3">;</span>
+
+            <span class="s1">val.then(</span>
+              <span class="s1">(result) =&gt; {</span>
+                <span class="s1">setImmediate(() =&gt; {</span>
+                  <span class="s0">this</span><span class="s1">.complete(result)</span><span class="s3">;</span>
+                <span class="s1">})</span><span class="s3">;</span>
+              <span class="s1">}</span><span class="s3">,</span>
+              <span class="s1">(err) =&gt; {</span>
+                <span class="s1">setImmediate(() =&gt; {</span>
+                  <span class="s0">this</span><span class="s1">.errorOut(err)</span><span class="s3">;</span>
+                <span class="s1">})</span><span class="s3">;</span>
+              <span class="s1">})</span><span class="s3">;</span>
+          <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s0">catch </span><span class="s1">(err) {</span>
+          <span class="s0">this</span><span class="s1">.errorOut(err)</span><span class="s3">;</span>
+          <span class="s0">return</span><span class="s3">; </span><span class="s4">// Bail out, not complete</span>
+        <span class="s1">}</span>
+      <span class="s1">}</span>
+
+      <span class="s0">if </span><span class="s1">(!(hasAction &amp;&amp; </span><span class="s0">this</span><span class="s1">.async)) {</span>
+        <span class="s1">setImmediate(() =&gt; {</span>
+          <span class="s0">this</span><span class="s1">.complete(val)</span><span class="s3">;</span>
+        <span class="s1">})</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s1">errorOut(err) {</span>
+    <span class="s0">this</span><span class="s1">.taskStatus = Task.runStatuses.ERROR</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">._invocationChain.chainStatus = Task.runStatuses.ERROR</span><span class="s3">;</span>
+    <span class="s0">this</span><span class="s1">.emit(</span><span class="s2">'error'</span><span class="s3">, </span><span class="s1">err)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">complete(val) {</span>
+
+    <span class="s0">if </span><span class="s1">(Array.isArray(</span><span class="s0">this</span><span class="s1">._waitForChains)) {</span>
+      <span class="s0">let </span><span class="s1">stillWaiting = </span><span class="s0">this</span><span class="s1">._waitForChains.some((chain) =&gt; {</span>
+        <span class="s0">return </span><span class="s1">!(chain.chainStatus == Task.runStatuses.DONE ||</span>
+              <span class="s1">chain.chainStatus == Task.runStatuses.ERROR)</span><span class="s3">;</span>
+      <span class="s1">})</span><span class="s3">;</span>
+      <span class="s0">if </span><span class="s1">(stillWaiting) {</span>
+        <span class="s0">let </span><span class="s1">now = (</span><span class="s0">new </span><span class="s1">Date()).getTime()</span><span class="s3">;</span>
+        <span class="s0">let </span><span class="s1">elapsed = now - </span><span class="s0">this</span><span class="s1">.startTime</span><span class="s3">;</span>
+        <span class="s0">if </span><span class="s1">(elapsed &gt; jake._taskTimeout) {</span>
+          <span class="s0">return </span><span class="s1">jake.fail(</span><span class="s2">`Timed out waiting for task: </span><span class="s1">${</span><span class="s0">this</span><span class="s1">.name} </span><span class="s2">with status of </span><span class="s1">${</span><span class="s0">this</span><span class="s1">.taskStatus}</span><span class="s2">. Elapsed: </span><span class="s1">${elapsed}</span><span class="s2">`</span><span class="s1">)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+        <span class="s1">setTimeout(() =&gt; {</span>
+          <span class="s0">this</span><span class="s1">.complete(val)</span><span class="s3">;</span>
+        <span class="s1">}</span><span class="s3">, </span><span class="s1">POLLING_INTERVAL)</span><span class="s3">;</span>
+        <span class="s0">return</span><span class="s3">;</span>
+      <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s1">jake._invocationChain.splice(jake._invocationChain.indexOf(</span><span class="s0">this</span><span class="s1">)</span><span class="s3">, </span><span class="s5">1</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">._invocationChainRoot) {</span>
+      <span class="s0">this</span><span class="s1">._invocationChain.chainStatus = Task.runStatuses.DONE</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">this</span><span class="s1">._currentPrereqIndex = </span><span class="s5">0</span><span class="s3">;</span>
+
+    <span class="s4">// If 'complete' getting called because task has been</span>
+    <span class="s4">// run already, value will not be passed -- leave in place</span>
+    <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">._skipped) {</span>
+      <span class="s0">this</span><span class="s1">.taskStatus = Task.runStatuses.DONE</span><span class="s3">;</span>
+      <span class="s0">this</span><span class="s1">.value = val</span><span class="s3">;</span>
+
+      <span class="s0">this</span><span class="s1">.emit(</span><span class="s2">'complete'</span><span class="s3">, </span><span class="s0">this</span><span class="s1">.value)</span><span class="s3">;</span>
+      <span class="s0">this</span><span class="s1">.emit(</span><span class="s2">'_done'</span><span class="s1">)</span><span class="s3">;</span>
+
+      <span class="s0">this</span><span class="s1">.endTime = (</span><span class="s0">new </span><span class="s1">Date()).getTime()</span><span class="s3">;</span>
+      <span class="s0">let </span><span class="s1">taskTime = </span><span class="s0">this</span><span class="s1">.endTime - </span><span class="s0">this</span><span class="s1">.startTime</span><span class="s3">;</span>
+
+      <span class="s0">if </span><span class="s1">(!(</span><span class="s0">this</span><span class="s1">._internal || jake.program.opts.quiet)) {</span>
+        <span class="s1">jake.emit(</span><span class="s2">'finished'</span><span class="s3">, </span><span class="s1">{</span>
+          <span class="s1">name: </span><span class="s0">this</span><span class="s1">.fullName</span><span class="s3">,</span>
+          <span class="s1">task: </span><span class="s0">this</span><span class="s3">,</span>
+          <span class="s1">time: taskTime</span><span class="s3">,</span>
+        <span class="s1">})</span><span class="s3">;</span>
+        <span class="s1">console.log(</span><span class="s2">&quot;Finished '&quot; </span><span class="s1">+ chalk.green(</span><span class="s0">this</span><span class="s1">.fullName) + </span><span class="s2">&quot;' after &quot; </span><span class="s1">+ chalk.magenta(taskTime + </span><span class="s2">' ms'</span><span class="s1">))</span><span class="s3">;</span>
+      <span class="s1">}</span>
+
+    <span class="s1">}</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_getFullName() {</span>
+    <span class="s0">let </span><span class="s1">ns = </span><span class="s0">this</span><span class="s1">.namespace</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">path = (ns &amp;&amp; ns.path) || </span><span class="s2">''</span><span class="s3">;</span>
+    <span class="s1">path = (path &amp;&amp; path.split(</span><span class="s2">':'</span><span class="s1">)) || []</span><span class="s3">;</span>
+    <span class="s0">if </span><span class="s1">(</span><span class="s0">this</span><span class="s1">.namespace !== jake.defaultNamespace) {</span>
+      <span class="s1">path.push(</span><span class="s0">this</span><span class="s1">.namespace.name)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+    <span class="s1">path.push(</span><span class="s0">this</span><span class="s1">.name)</span><span class="s3">;</span>
+    <span class="s0">return </span><span class="s1">path.join(</span><span class="s2">':'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s1">_getParams() {</span>
+    <span class="s0">if </span><span class="s1">(!</span><span class="s0">this</span><span class="s1">.action) </span><span class="s0">return </span><span class="s2">&quot;&quot;</span><span class="s3">;</span>
+    <span class="s0">let </span><span class="s1">params = (</span><span class="s0">new </span><span class="s1">RegExp(</span><span class="s2">'(?:'</span><span class="s1">+</span><span class="s0">this</span><span class="s1">.action.name+</span><span class="s2">'</span><span class="s3">\\</span><span class="s2">s*|^)</span><span class="s3">\\</span><span class="s2">s*</span><span class="s3">\\</span><span class="s2">((.*?)</span><span class="s3">\\</span><span class="s2">)'</span><span class="s1">).exec(</span><span class="s0">this</span><span class="s1">.action.toString().replace(</span><span class="s5">/\n/g</span><span class="s3">, </span><span class="s2">''</span><span class="s1">)) || [</span><span class="s2">''</span><span class="s1">])[</span><span class="s5">1</span><span class="s1">].replace(</span><span class="s5">/\/\*.*?\*\//g</span><span class="s3">, </span><span class="s2">''</span><span class="s1">).replace(</span><span class="s5">/ /g</span><span class="s3">, </span><span class="s2">''</span><span class="s1">)</span><span class="s3">;</span>
+    <span class="s0">return </span><span class="s1">params</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">static </span><span class="s1">getBaseNamespacePath(fullName) {</span>
+    <span class="s0">return </span><span class="s1">fullName.split(</span><span class="s2">':'</span><span class="s1">).slice(</span><span class="s5">0</span><span class="s3">, </span><span class="s1">-</span><span class="s5">1</span><span class="s1">).join(</span><span class="s2">':'</span><span class="s1">)</span><span class="s3">;</span>
+  <span class="s1">}</span>
+
+  <span class="s0">static </span><span class="s1">getBaseTaskName(fullName) {</span>
+    <span class="s0">return </span><span class="s1">fullName.split(</span><span class="s2">':'</span><span class="s1">).pop()</span><span class="s3">;</span>
+  <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">Task.runStatuses = {</span>
+  <span class="s1">UNSTARTED: </span><span class="s2">'unstarted'</span><span class="s3">,</span>
+  <span class="s1">DONE: </span><span class="s2">'done'</span><span class="s3">,</span>
+  <span class="s1">STARTED: </span><span class="s2">'started'</span><span class="s3">,</span>
+  <span class="s1">ERROR: </span><span class="s2">'error'</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s1">Task.ROOT_TASK_NAME = ROOT_TASK_NAME</span><span class="s3">;</span>
+
+<span class="s1">exports.Task = Task</span><span class="s3">;</span>
+
+<span class="s4">// Required here because circular deps</span>
+<span class="s1">require(</span><span class="s2">'../rule'</span><span class="s1">)</span><span class="s3">;</span>
+
+</pre>
+</body>
+</html>

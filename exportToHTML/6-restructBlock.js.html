@@ -1,0 +1,322 @@
+<html>
+<head>
+<title>6-restructBlock.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832; font-weight: bold;}
+.s1 { color: #cfd2d5;}
+.s2 { color: #8ea765;}
+.s3 { color: #cc7832;}
+.s4 { color: #6897bb;}
+.s5 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#1c1c1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+6-restructBlock.js</font>
+</center></td></tr></table>
+<pre><span class="s0">var </span><span class="s1">resolveProperty = require(</span><span class="s2">'css-tree'</span><span class="s1">).property</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">resolveKeyword = require(</span><span class="s2">'css-tree'</span><span class="s1">).keyword</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">walk = require(</span><span class="s2">'css-tree'</span><span class="s1">).walk</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">generate = require(</span><span class="s2">'css-tree'</span><span class="s1">).generate</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">fingerprintId = </span><span class="s4">1</span><span class="s3">;</span>
+<span class="s0">var </span><span class="s1">dontRestructure = {</span>
+    <span class="s2">'src'</span><span class="s1">: </span><span class="s4">1 </span><span class="s5">// https://github.com/afelix/csso/issues/50</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">DONT_MIX_VALUE = {</span>
+    <span class="s5">// https://developer.mozilla.org/en-US/docs/Web/CSS/display#Browser_compatibility</span>
+    <span class="s2">'display'</span><span class="s1">: </span><span class="s4">/table|ruby|flex|-(flex)?box$|grid|contents|run-in/i</span><span class="s3">,</span>
+    <span class="s5">// https://developer.mozilla.org/en/docs/Web/CSS/text-align</span>
+    <span class="s2">'text-align'</span><span class="s1">: </span><span class="s4">/^(start|end|match-parent|justify-all)$/i</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">SAFE_VALUES = {</span>
+    <span class="s1">cursor: [</span>
+        <span class="s2">'auto'</span><span class="s3">, </span><span class="s2">'crosshair'</span><span class="s3">, </span><span class="s2">'default'</span><span class="s3">, </span><span class="s2">'move'</span><span class="s3">, </span><span class="s2">'text'</span><span class="s3">, </span><span class="s2">'wait'</span><span class="s3">, </span><span class="s2">'help'</span><span class="s3">,</span>
+        <span class="s2">'n-resize'</span><span class="s3">, </span><span class="s2">'e-resize'</span><span class="s3">, </span><span class="s2">'s-resize'</span><span class="s3">, </span><span class="s2">'w-resize'</span><span class="s3">,</span>
+        <span class="s2">'ne-resize'</span><span class="s3">, </span><span class="s2">'nw-resize'</span><span class="s3">, </span><span class="s2">'se-resize'</span><span class="s3">, </span><span class="s2">'sw-resize'</span><span class="s3">,</span>
+        <span class="s2">'pointer'</span><span class="s3">, </span><span class="s2">'progress'</span><span class="s3">, </span><span class="s2">'not-allowed'</span><span class="s3">, </span><span class="s2">'no-drop'</span><span class="s3">, </span><span class="s2">'vertical-text'</span><span class="s3">, </span><span class="s2">'all-scroll'</span><span class="s3">,</span>
+        <span class="s2">'col-resize'</span><span class="s3">, </span><span class="s2">'row-resize'</span>
+    <span class="s1">]</span><span class="s3">,</span>
+    <span class="s1">overflow: [</span>
+        <span class="s2">'hidden'</span><span class="s3">, </span><span class="s2">'visible'</span><span class="s3">, </span><span class="s2">'scroll'</span><span class="s3">, </span><span class="s2">'auto'</span>
+    <span class="s1">]</span><span class="s3">,</span>
+    <span class="s1">position: [</span>
+        <span class="s2">'static'</span><span class="s3">, </span><span class="s2">'relative'</span><span class="s3">, </span><span class="s2">'absolute'</span><span class="s3">, </span><span class="s2">'fixed'</span>
+    <span class="s1">]</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">var </span><span class="s1">NEEDLESS_TABLE = {</span>
+    <span class="s2">'border-width'</span><span class="s1">: [</span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-style'</span><span class="s1">: [</span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-color'</span><span class="s1">: [</span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-top'</span><span class="s1">: [</span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-right'</span><span class="s1">: [</span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-bottom'</span><span class="s1">: [</span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-left'</span><span class="s1">: [</span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-top-width'</span><span class="s1">: [</span><span class="s2">'border-top'</span><span class="s3">, </span><span class="s2">'border-width'</span><span class="s3">, </span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-right-width'</span><span class="s1">: [</span><span class="s2">'border-right'</span><span class="s3">, </span><span class="s2">'border-width'</span><span class="s3">, </span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-bottom-width'</span><span class="s1">: [</span><span class="s2">'border-bottom'</span><span class="s3">, </span><span class="s2">'border-width'</span><span class="s3">, </span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-left-width'</span><span class="s1">: [</span><span class="s2">'border-left'</span><span class="s3">, </span><span class="s2">'border-width'</span><span class="s3">, </span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-top-style'</span><span class="s1">: [</span><span class="s2">'border-top'</span><span class="s3">, </span><span class="s2">'border-style'</span><span class="s3">, </span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-right-style'</span><span class="s1">: [</span><span class="s2">'border-right'</span><span class="s3">, </span><span class="s2">'border-style'</span><span class="s3">, </span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-bottom-style'</span><span class="s1">: [</span><span class="s2">'border-bottom'</span><span class="s3">, </span><span class="s2">'border-style'</span><span class="s3">, </span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-left-style'</span><span class="s1">: [</span><span class="s2">'border-left'</span><span class="s3">, </span><span class="s2">'border-style'</span><span class="s3">, </span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-top-color'</span><span class="s1">: [</span><span class="s2">'border-top'</span><span class="s3">, </span><span class="s2">'border-color'</span><span class="s3">, </span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-right-color'</span><span class="s1">: [</span><span class="s2">'border-right'</span><span class="s3">, </span><span class="s2">'border-color'</span><span class="s3">, </span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-bottom-color'</span><span class="s1">: [</span><span class="s2">'border-bottom'</span><span class="s3">, </span><span class="s2">'border-color'</span><span class="s3">, </span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'border-left-color'</span><span class="s1">: [</span><span class="s2">'border-left'</span><span class="s3">, </span><span class="s2">'border-color'</span><span class="s3">, </span><span class="s2">'border'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'margin-top'</span><span class="s1">: [</span><span class="s2">'margin'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'margin-right'</span><span class="s1">: [</span><span class="s2">'margin'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'margin-bottom'</span><span class="s1">: [</span><span class="s2">'margin'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'margin-left'</span><span class="s1">: [</span><span class="s2">'margin'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'padding-top'</span><span class="s1">: [</span><span class="s2">'padding'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'padding-right'</span><span class="s1">: [</span><span class="s2">'padding'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'padding-bottom'</span><span class="s1">: [</span><span class="s2">'padding'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'padding-left'</span><span class="s1">: [</span><span class="s2">'padding'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'font-style'</span><span class="s1">: [</span><span class="s2">'font'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'font-variant'</span><span class="s1">: [</span><span class="s2">'font'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'font-weight'</span><span class="s1">: [</span><span class="s2">'font'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'font-size'</span><span class="s1">: [</span><span class="s2">'font'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'font-family'</span><span class="s1">: [</span><span class="s2">'font'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'list-style-type'</span><span class="s1">: [</span><span class="s2">'list-style'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'list-style-position'</span><span class="s1">: [</span><span class="s2">'list-style'</span><span class="s1">]</span><span class="s3">,</span>
+    <span class="s2">'list-style-image'</span><span class="s1">: [</span><span class="s2">'list-style'</span><span class="s1">]</span>
+<span class="s1">}</span><span class="s3">;</span>
+
+<span class="s0">function </span><span class="s1">getPropertyFingerprint(propertyName</span><span class="s3">, </span><span class="s1">declaration</span><span class="s3">, </span><span class="s1">fingerprints) {</span>
+    <span class="s0">var </span><span class="s1">realName = resolveProperty(propertyName).basename</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(realName === </span><span class="s2">'background'</span><span class="s1">) {</span>
+        <span class="s0">return </span><span class="s1">propertyName + </span><span class="s2">':' </span><span class="s1">+ generate(declaration.value)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">var </span><span class="s1">declarationId = declaration.id</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">fingerprint = fingerprints[declarationId]</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(!fingerprint) {</span>
+        <span class="s0">switch </span><span class="s1">(declaration.value.type) {</span>
+            <span class="s0">case </span><span class="s2">'Value'</span><span class="s1">:</span>
+                <span class="s0">var </span><span class="s1">vendorId = </span><span class="s2">''</span><span class="s3">;</span>
+                <span class="s0">var </span><span class="s1">iehack = </span><span class="s2">''</span><span class="s3">;</span>
+                <span class="s0">var </span><span class="s1">special = {}</span><span class="s3">;</span>
+                <span class="s0">var </span><span class="s1">raw = </span><span class="s0">false</span><span class="s3">;</span>
+
+                <span class="s1">declaration.value.children.each(</span><span class="s0">function </span><span class="s1">walk(node) {</span>
+                    <span class="s0">switch </span><span class="s1">(node.type) {</span>
+                        <span class="s0">case </span><span class="s2">'Value'</span><span class="s1">:</span>
+                        <span class="s0">case </span><span class="s2">'Brackets'</span><span class="s1">:</span>
+                        <span class="s0">case </span><span class="s2">'Parentheses'</span><span class="s1">:</span>
+                            <span class="s1">node.children.each(walk)</span><span class="s3">;</span>
+                            <span class="s0">break</span><span class="s3">;</span>
+
+                        <span class="s0">case </span><span class="s2">'Raw'</span><span class="s1">:</span>
+                            <span class="s1">raw = </span><span class="s0">true</span><span class="s3">;</span>
+                            <span class="s0">break</span><span class="s3">;</span>
+
+                        <span class="s0">case </span><span class="s2">'Identifier'</span><span class="s1">:</span>
+                            <span class="s0">var </span><span class="s1">name = node.name</span><span class="s3">;</span>
+
+                            <span class="s0">if </span><span class="s1">(!vendorId) {</span>
+                                <span class="s1">vendorId = resolveKeyword(name).vendor</span><span class="s3">;</span>
+                            <span class="s1">}</span>
+
+                            <span class="s0">if </span><span class="s1">(</span><span class="s4">/\\[09]/</span><span class="s1">.test(name)) {</span>
+                                <span class="s1">iehack = RegExp.lastMatch</span><span class="s3">;</span>
+                            <span class="s1">}</span>
+
+                            <span class="s0">if </span><span class="s1">(SAFE_VALUES.hasOwnProperty(realName)) {</span>
+                                <span class="s0">if </span><span class="s1">(SAFE_VALUES[realName].indexOf(name) === -</span><span class="s4">1</span><span class="s1">) {</span>
+                                    <span class="s1">special[name] = </span><span class="s0">true</span><span class="s3">;</span>
+                                <span class="s1">}</span>
+                            <span class="s1">} </span><span class="s0">else if </span><span class="s1">(DONT_MIX_VALUE.hasOwnProperty(realName)) {</span>
+                                <span class="s0">if </span><span class="s1">(DONT_MIX_VALUE[realName].test(name)) {</span>
+                                    <span class="s1">special[name] = </span><span class="s0">true</span><span class="s3">;</span>
+                                <span class="s1">}</span>
+                            <span class="s1">}</span>
+
+                            <span class="s0">break</span><span class="s3">;</span>
+
+                        <span class="s0">case </span><span class="s2">'Function'</span><span class="s1">:</span>
+                            <span class="s0">var </span><span class="s1">name = node.name</span><span class="s3">;</span>
+
+                            <span class="s0">if </span><span class="s1">(!vendorId) {</span>
+                                <span class="s1">vendorId = resolveKeyword(name).vendor</span><span class="s3">;</span>
+                            <span class="s1">}</span>
+
+                            <span class="s0">if </span><span class="s1">(name === </span><span class="s2">'rect'</span><span class="s1">) {</span>
+                                <span class="s5">// there are 2 forms of rect:</span>
+                                <span class="s5">//   rect(&lt;top&gt;, &lt;right&gt;, &lt;bottom&gt;, &lt;left&gt;) - standart</span>
+                                <span class="s5">//   rect(&lt;top&gt; &lt;right&gt; &lt;bottom&gt; &lt;left&gt;) – backwards compatible syntax</span>
+                                <span class="s5">// only the same form values can be merged</span>
+                                <span class="s0">var </span><span class="s1">hasComma = node.children.some(</span><span class="s0">function</span><span class="s1">(node) {</span>
+                                    <span class="s0">return </span><span class="s1">node.type === </span><span class="s2">'Operator' </span><span class="s1">&amp;&amp; node.value === </span><span class="s2">','</span><span class="s3">;</span>
+                                <span class="s1">})</span><span class="s3">;</span>
+                                <span class="s0">if </span><span class="s1">(!hasComma) {</span>
+                                    <span class="s1">name = </span><span class="s2">'rect-backward'</span><span class="s3">;</span>
+                                <span class="s1">}</span>
+                            <span class="s1">}</span>
+
+                            <span class="s1">special[name + </span><span class="s2">'()'</span><span class="s1">] = </span><span class="s0">true</span><span class="s3">;</span>
+
+                            <span class="s5">// check nested tokens too</span>
+                            <span class="s1">node.children.each(walk)</span><span class="s3">;</span>
+
+                            <span class="s0">break</span><span class="s3">;</span>
+
+                        <span class="s0">case </span><span class="s2">'Dimension'</span><span class="s1">:</span>
+                            <span class="s0">var </span><span class="s1">unit = node.unit</span><span class="s3">;</span>
+
+                            <span class="s0">if </span><span class="s1">(</span><span class="s4">/\\[09]/</span><span class="s1">.test(unit)) {</span>
+                                <span class="s1">iehack = RegExp.lastMatch</span><span class="s3">;</span>
+                            <span class="s1">}</span>
+
+                            <span class="s0">switch </span><span class="s1">(unit) {</span>
+                                <span class="s5">// is not supported until IE11</span>
+                                <span class="s0">case </span><span class="s2">'rem'</span><span class="s1">:</span>
+
+                                <span class="s5">// v* units is too buggy across browsers and better</span>
+                                <span class="s5">// don't merge values with those units</span>
+                                <span class="s0">case </span><span class="s2">'vw'</span><span class="s1">:</span>
+                                <span class="s0">case </span><span class="s2">'vh'</span><span class="s1">:</span>
+                                <span class="s0">case </span><span class="s2">'vmin'</span><span class="s1">:</span>
+                                <span class="s0">case </span><span class="s2">'vmax'</span><span class="s1">:</span>
+                                <span class="s0">case </span><span class="s2">'vm'</span><span class="s1">: </span><span class="s5">// IE9 supporting &quot;vm&quot; instead of &quot;vmin&quot;.</span>
+                                    <span class="s1">special[unit] = </span><span class="s0">true</span><span class="s3">;</span>
+                                    <span class="s0">break</span><span class="s3">;</span>
+                            <span class="s1">}</span>
+                            <span class="s0">break</span><span class="s3">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">})</span><span class="s3">;</span>
+
+                <span class="s1">fingerprint = raw</span>
+                    <span class="s1">? </span><span class="s2">'!' </span><span class="s1">+ fingerprintId++</span>
+                    <span class="s1">: </span><span class="s2">'!' </span><span class="s1">+ Object.keys(special).sort() + </span><span class="s2">'|' </span><span class="s1">+ iehack + vendorId</span><span class="s3">;</span>
+                <span class="s0">break</span><span class="s3">;</span>
+
+            <span class="s0">case </span><span class="s2">'Raw'</span><span class="s1">:</span>
+                <span class="s1">fingerprint = </span><span class="s2">'!' </span><span class="s1">+ declaration.value.value</span><span class="s3">;</span>
+                <span class="s0">break</span><span class="s3">;</span>
+
+            <span class="s0">default</span><span class="s1">:</span>
+                <span class="s1">fingerprint = generate(declaration.value)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">fingerprints[declarationId] = fingerprint</span><span class="s3">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">return </span><span class="s1">propertyName + fingerprint</span><span class="s3">;</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">needless(props</span><span class="s3">, </span><span class="s1">declaration</span><span class="s3">, </span><span class="s1">fingerprints) {</span>
+    <span class="s0">var </span><span class="s1">property = resolveProperty(declaration.property)</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(NEEDLESS_TABLE.hasOwnProperty(property.basename)) {</span>
+        <span class="s0">var </span><span class="s1">table = NEEDLESS_TABLE[property.basename]</span><span class="s3">;</span>
+
+        <span class="s0">for </span><span class="s1">(</span><span class="s0">var </span><span class="s1">i = </span><span class="s4">0</span><span class="s3">; </span><span class="s1">i &lt; table.length</span><span class="s3">; </span><span class="s1">i++) {</span>
+            <span class="s0">var </span><span class="s1">ppre = getPropertyFingerprint(property.prefix + table[i]</span><span class="s3">, </span><span class="s1">declaration</span><span class="s3">, </span><span class="s1">fingerprints)</span><span class="s3">;</span>
+            <span class="s0">var </span><span class="s1">prev = props.hasOwnProperty(ppre) ? props[ppre] : </span><span class="s0">null</span><span class="s3">;</span>
+
+            <span class="s0">if </span><span class="s1">(prev &amp;&amp; (!declaration.important || prev.item.data.important)) {</span>
+                <span class="s0">return </span><span class="s1">prev</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s0">function </span><span class="s1">processRule(rule</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">list</span><span class="s3">, </span><span class="s1">props</span><span class="s3">, </span><span class="s1">fingerprints) {</span>
+    <span class="s0">var </span><span class="s1">declarations = rule.block.children</span><span class="s3">;</span>
+
+    <span class="s1">declarations.eachRight(</span><span class="s0">function</span><span class="s1">(declaration</span><span class="s3">, </span><span class="s1">declarationItem) {</span>
+        <span class="s0">var </span><span class="s1">property = declaration.property</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">fingerprint = getPropertyFingerprint(property</span><span class="s3">, </span><span class="s1">declaration</span><span class="s3">, </span><span class="s1">fingerprints)</span><span class="s3">;</span>
+        <span class="s0">var </span><span class="s1">prev = props[fingerprint]</span><span class="s3">;</span>
+
+        <span class="s0">if </span><span class="s1">(prev &amp;&amp; !dontRestructure.hasOwnProperty(property)) {</span>
+            <span class="s0">if </span><span class="s1">(declaration.important &amp;&amp; !prev.item.data.important) {</span>
+                <span class="s1">props[fingerprint] = {</span>
+                    <span class="s1">block: declarations</span><span class="s3">,</span>
+                    <span class="s1">item: declarationItem</span>
+                <span class="s1">}</span><span class="s3">;</span>
+
+                <span class="s1">prev.block.remove(prev.item)</span><span class="s3">;</span>
+
+                <span class="s5">// TODO: use it when we can refer to several points in source</span>
+                <span class="s5">// declaration.loc = {</span>
+                <span class="s5">//     primary: declaration.loc,</span>
+                <span class="s5">//     merged: prev.item.data.loc</span>
+                <span class="s5">// };</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                <span class="s1">declarations.remove(declarationItem)</span><span class="s3">;</span>
+
+                <span class="s5">// TODO: use it when we can refer to several points in source</span>
+                <span class="s5">// prev.item.data.loc = {</span>
+                <span class="s5">//     primary: prev.item.data.loc,</span>
+                <span class="s5">//     merged: declaration.loc</span>
+                <span class="s5">// };</span>
+            <span class="s1">}</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s0">var </span><span class="s1">prev = needless(props</span><span class="s3">, </span><span class="s1">declaration</span><span class="s3">, </span><span class="s1">fingerprints)</span><span class="s3">;</span>
+
+            <span class="s0">if </span><span class="s1">(prev) {</span>
+                <span class="s1">declarations.remove(declarationItem)</span><span class="s3">;</span>
+
+                <span class="s5">// TODO: use it when we can refer to several points in source</span>
+                <span class="s5">// prev.item.data.loc = {</span>
+                <span class="s5">//     primary: prev.item.data.loc,</span>
+                <span class="s5">//     merged: declaration.loc</span>
+                <span class="s5">// };</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                <span class="s1">declaration.fingerprint = fingerprint</span><span class="s3">;</span>
+
+                <span class="s1">props[fingerprint] = {</span>
+                    <span class="s1">block: declarations</span><span class="s3">,</span>
+                    <span class="s1">item: declarationItem</span>
+                <span class="s1">}</span><span class="s3">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">})</span><span class="s3">;</span>
+
+    <span class="s0">if </span><span class="s1">(declarations.isEmpty()) {</span>
+        <span class="s1">list.remove(item)</span><span class="s3">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s1">module.exports = </span><span class="s0">function </span><span class="s1">restructBlock(ast) {</span>
+    <span class="s0">var </span><span class="s1">stylesheetMap = {}</span><span class="s3">;</span>
+    <span class="s0">var </span><span class="s1">fingerprints = Object.create(</span><span class="s0">null</span><span class="s1">)</span><span class="s3">;</span>
+
+    <span class="s1">walk(ast</span><span class="s3">, </span><span class="s1">{</span>
+        <span class="s1">visit: </span><span class="s2">'Rule'</span><span class="s3">,</span>
+        <span class="s1">reverse: </span><span class="s0">true</span><span class="s3">,</span>
+        <span class="s1">enter: </span><span class="s0">function</span><span class="s1">(node</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">list) {</span>
+            <span class="s0">var </span><span class="s1">stylesheet = </span><span class="s0">this</span><span class="s1">.block || </span><span class="s0">this</span><span class="s1">.stylesheet</span><span class="s3">;</span>
+            <span class="s0">var </span><span class="s1">ruleId = (node.pseudoSignature || </span><span class="s2">''</span><span class="s1">) + </span><span class="s2">'|' </span><span class="s1">+ node.prelude.children.first().id</span><span class="s3">;</span>
+            <span class="s0">var </span><span class="s1">ruleMap</span><span class="s3">;</span>
+            <span class="s0">var </span><span class="s1">props</span><span class="s3">;</span>
+
+            <span class="s0">if </span><span class="s1">(!stylesheetMap.hasOwnProperty(stylesheet.id)) {</span>
+                <span class="s1">ruleMap = {}</span><span class="s3">;</span>
+                <span class="s1">stylesheetMap[stylesheet.id] = ruleMap</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                <span class="s1">ruleMap = stylesheetMap[stylesheet.id]</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s0">if </span><span class="s1">(ruleMap.hasOwnProperty(ruleId)) {</span>
+                <span class="s1">props = ruleMap[ruleId]</span><span class="s3">;</span>
+            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                <span class="s1">props = {}</span><span class="s3">;</span>
+                <span class="s1">ruleMap[ruleId] = props</span><span class="s3">;</span>
+            <span class="s1">}</span>
+
+            <span class="s1">processRule.call(</span><span class="s0">this</span><span class="s3">, </span><span class="s1">node</span><span class="s3">, </span><span class="s1">item</span><span class="s3">, </span><span class="s1">list</span><span class="s3">, </span><span class="s1">props</span><span class="s3">, </span><span class="s1">fingerprints)</span><span class="s3">;</span>
+        <span class="s1">}</span>
+    <span class="s1">})</span><span class="s3">;</span>
+<span class="s1">}</span><span class="s3">;</span>
+</pre>
+</body>
+</html>
